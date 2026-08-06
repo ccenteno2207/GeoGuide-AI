@@ -1,0 +1,1 @@
+digraph G { rankdir=LR; "Route API" -> "Routing Provider" -> "Routing Engine"; "Route API" -> "Corridor Builder" -> PostGIS -> "Ranking Engine" -> "Route API"; }

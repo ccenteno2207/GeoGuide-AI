@@ -1,0 +1,13 @@
+@startuml
+actor User
+component "Flutter" as App
+component "Nginx/TLS" as Edge
+component "Spring Security" as Sec
+component "REST API" as API
+database "PostgreSQL/PostGIS" as DB
+User --> App
+App --> Edge : HTTPS
+Edge --> Sec
+Sec --> API : authenticated/authorized
+API --> DB
+@enduml

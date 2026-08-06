@@ -1,0 +1,1 @@
+digraph G { rankdir=LR; User -> Flutter -> "Nginx/TLS" -> "Spring Security" -> "REST API" -> "PostgreSQL/PostGIS"; }

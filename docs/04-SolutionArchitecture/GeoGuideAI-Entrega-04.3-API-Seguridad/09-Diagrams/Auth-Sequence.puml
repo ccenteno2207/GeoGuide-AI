@@ -1,0 +1,14 @@
+@startuml
+actor Usuario
+participant "Flutter" as App
+participant "API" as API
+participant "Auth Service" as Auth
+database "PostgreSQL" as DB
+Usuario -> App: credenciales
+App -> API: POST /auth/login
+API -> Auth: validar
+Auth -> DB: buscar usuario/hash
+DB --> Auth: datos
+Auth --> API: identidad válida
+API --> App: access + refresh token
+@enduml

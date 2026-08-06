@@ -1,0 +1,1 @@
+digraph G { node [shape=record]; User -> Route; User -> Favorite; PointOfInterest -> Category; PointOfInterest -> Review; PointOfInterest -> Favorite; }

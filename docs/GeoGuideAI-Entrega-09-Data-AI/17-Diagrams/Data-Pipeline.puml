@@ -1,0 +1,14 @@
+@startuml
+cloud "OSM / Official / Curated Sources" as Sources
+component "Ingestion" as I
+database "Raw/Staging" as Raw
+component "Normalize + Validate" as N
+component "Deduplicate + Quality" as Q
+database "PostgreSQL/PostGIS
+Golden Record" as DB
+Sources --> I
+I --> Raw
+Raw --> N
+N --> Q
+Q --> DB
+@enduml

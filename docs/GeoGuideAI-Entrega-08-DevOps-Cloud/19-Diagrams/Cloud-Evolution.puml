@@ -1,0 +1,13 @@
+@startuml
+rectangle "Stage 1
+Linux + Docker Compose" as S1
+rectangle "Stage 2
+Cloud VM" as S2
+rectangle "Stage 3
+Selective Managed Services" as S3
+rectangle "Stage 4
+Orchestration if justified" as S4
+S1 --> S2
+S2 --> S3
+S3 --> S4
+@enduml

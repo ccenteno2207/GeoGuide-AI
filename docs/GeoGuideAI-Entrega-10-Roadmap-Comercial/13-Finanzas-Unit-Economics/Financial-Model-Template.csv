@@ -1,0 +1,7 @@
+metric,assumption,value,unit,notes
+Monthly Active Users,baseline,TBD,users,Set after pilot
+Trips per MAU,baseline,TBD,trips/month,Set after pilot
+Infra Cost,baseline,TBD,USD/month,Measure actual server/cloud
+AI Cost,baseline,TBD,USD/month,Measure only when AI enabled
+Revenue per User,experiment,TBD,USD/month,Do not assume before validation
+B2B/B2G Revenue,experiment,TBD,USD/month,Contract dependent

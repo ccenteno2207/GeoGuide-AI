@@ -1,0 +1,14 @@
+@startuml
+[*] --> Documentation
+Documentation --> Infrastructure
+Infrastructure --> Backend
+Backend --> Data
+Data --> Routing
+Routing --> Discovery
+Discovery --> Mobile
+Mobile --> VerticalSlice
+VerticalSlice --> OfflineDriving
+OfflineDriving --> Deployment
+Deployment --> RoadPilot
+RoadPilot --> ClosedBeta
+@enduml

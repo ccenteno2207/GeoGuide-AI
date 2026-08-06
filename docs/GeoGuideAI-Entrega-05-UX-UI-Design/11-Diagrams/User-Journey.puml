@@ -1,0 +1,18 @@
+@startuml
+start
+:Open GeoGuide AI;
+:Allow location;
+:Select origin;
+:Select destination;
+:Calculate route;
+:Display route;
+:Discover POIs;
+if (Interested?) then (yes)
+  :Open POI preview;
+  :Open details;
+  :Save or visit;
+else (no)
+  :Continue route;
+endif
+stop
+@enduml

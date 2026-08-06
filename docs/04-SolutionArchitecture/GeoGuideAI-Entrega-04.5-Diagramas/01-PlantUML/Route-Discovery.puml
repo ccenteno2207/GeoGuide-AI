@@ -1,0 +1,14 @@
+@startuml
+component "Route API" as API
+component "Routing Provider" as RP
+component "Open Source Routing Engine" as RE
+component "Corridor Builder" as CB
+database "PostGIS" as DB
+component "Ranking Engine" as Rank
+API --> RP
+RP --> RE
+API --> CB
+CB --> DB
+DB --> Rank
+Rank --> API
+@enduml

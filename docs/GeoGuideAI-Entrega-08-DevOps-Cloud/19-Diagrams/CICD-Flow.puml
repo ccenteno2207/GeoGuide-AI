@@ -1,0 +1,13 @@
+@startuml
+actor Developer
+component GitHub
+component "GitHub Actions" as CI
+component Registry
+node "Linux Pilot Server" as Server
+Developer --> GitHub : Pull Request / Push
+GitHub --> CI
+CI --> CI : Build + Test + Scan
+CI --> Registry : Push immutable image
+CI --> Server : Controlled deploy
+Server --> CI : Health / Smoke result
+@enduml

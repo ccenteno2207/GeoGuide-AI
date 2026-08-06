@@ -1,0 +1,14 @@
+@startuml
+node "Linux Server" {
+  node "Docker" {
+    component Nginx
+    component "Spring Boot"
+    database "PostgreSQL/PostGIS"
+    component Redis
+    component MinIO
+    component "Routing Engine"
+  }
+}
+node "Mobile Device" { component "Flutter App" }
+"Flutter App" --> Nginx : HTTPS
+@enduml

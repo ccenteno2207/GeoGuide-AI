@@ -1,0 +1,33 @@
+@startuml
+package "Flutter App" {
+  package Presentation {
+    [Screens]
+    [Widgets]
+    [Riverpod Controllers]
+  }
+  package Application {
+    [Use Cases]
+  }
+  package Domain {
+    [Entities]
+    [Repository Ports]
+  }
+  package Data {
+    [API Repositories]
+    [Local Repositories]
+    [DTO Mappers]
+  }
+  package Infrastructure {
+    [HTTP Client]
+    [GPS Adapter]
+    [SQLite/Drift]
+    [Secure Storage]
+    [Map Adapter]
+  }
+
+  Presentation --> Application
+  Application --> Domain
+  Data ..> Domain
+  Data --> Infrastructure
+}
+@enduml

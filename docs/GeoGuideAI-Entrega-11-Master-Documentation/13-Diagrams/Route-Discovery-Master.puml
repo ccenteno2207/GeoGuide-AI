@@ -1,0 +1,18 @@
+@startuml
+actor User
+component Mobile
+component Backend
+component Routing
+database PostGIS
+component "Discovery Engine" as D
+User --> Mobile
+Mobile --> Backend : origin/destination
+Backend --> Routing : calculate
+Routing --> Backend : route geometry
+Backend --> D
+D --> PostGIS : corridor candidates
+PostGIS --> D : POIs
+D --> D : filter + detour + rank
+D --> Backend
+Backend --> Mobile : route + POIs
+@enduml

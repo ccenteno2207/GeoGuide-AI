@@ -1,0 +1,17 @@
+@startuml
+actor User
+component "GeoGuide Backend" as API
+component "AI Application Service" as AI
+component "Retriever" as R
+database "PostGIS + pgvector" as DB
+component "LanguageModelProvider" as LLM
+User --> API
+API --> AI
+AI --> R
+R --> DB
+DB --> R
+R --> AI
+AI --> LLM
+LLM --> AI
+AI --> API
+@enduml

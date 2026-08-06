@@ -1,0 +1,16 @@
+@startuml
+start
+:Route active;
+:Receive location update;
+:Calculate progress;
+:Find next POI;
+if (POI eligible for announcement?) then (yes)
+  :Show minimal card;
+  :Optional audio announcement;
+  :Mark as announced;
+else (no)
+  :Continue;
+endif
+:Update map;
+stop
+@enduml

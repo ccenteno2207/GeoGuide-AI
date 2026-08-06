@@ -1,0 +1,17 @@
+rules:
+  - id: valid_latitude
+    field: location.lat
+    type: range
+    min: -90
+    max: 90
+  - id: valid_longitude
+    field: location.lon
+    type: range
+    min: -180
+    max: 180
+  - id: required_name
+    field: name
+    type: required
+  - id: required_source
+    field: sourceSystem
+    type: required

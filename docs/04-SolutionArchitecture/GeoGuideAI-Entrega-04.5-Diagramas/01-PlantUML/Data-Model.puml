@@ -1,0 +1,13 @@
+@startuml
+entity User
+entity Route
+entity PointOfInterest
+entity Category
+entity Favorite
+entity Review
+User ||--o{ Route
+User ||--o{ Favorite
+PointOfInterest }o--|| Category
+PointOfInterest ||--o{ Review
+PointOfInterest ||--o{ Favorite
+@enduml

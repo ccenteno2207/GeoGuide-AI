@@ -1,0 +1,22 @@
+# Checklist de Seguridad
+
+- [ ] HTTPS habilitado.
+- [ ] TLS moderno configurado.
+- [ ] Password hashing robusto.
+- [ ] Access token con expiración corta.
+- [ ] Refresh token rotado.
+- [ ] RBAC aplicado.
+- [ ] Validación de entradas.
+- [ ] Manejo uniforme de errores.
+- [ ] CORS restringido.
+- [ ] Secrets fuera del repositorio.
+- [ ] Rate limiting.
+- [ ] Logs sin secretos.
+- [ ] Correlation ID.
+- [ ] Auditoría administrativa.
+- [ ] Dependencias escaneadas.
+- [ ] SAST en CI.
+- [ ] Pruebas de autorización.
+- [ ] Pruebas de inputs inválidos.
+- [ ] Backups probados.
+- [ ] Runbook de incidentes.

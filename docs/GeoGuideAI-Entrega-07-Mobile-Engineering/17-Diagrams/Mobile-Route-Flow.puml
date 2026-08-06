@@ -1,0 +1,19 @@
+@startuml
+actor User
+participant "Map Screen" as UI
+participant "Route Controller" as C
+participant "Plan Route UseCase" as UC
+participant "Route Repository" as R
+participant "GeoGuide API" as API
+
+User -> UI: set origin/destination
+UI -> C: calculate
+C -> UC
+UC -> R
+R -> API: POST /routes/plan
+API --> R: route
+R --> UC
+UC --> C
+C --> UI: route state
+UI --> User: polyline + summary
+@enduml

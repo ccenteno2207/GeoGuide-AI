@@ -1,0 +1,18 @@
+@startuml
+skinparam componentStyle rectangle
+actor Usuario
+component "Flutter App" as Mobile
+component "Nginx" as Nginx
+component "Spring Boot API" as API
+component "Spring Security" as Security
+database "PostgreSQL + PostGIS" as DB
+component "Redis" as Redis
+component "MinIO" as Minio
+Usuario --> Mobile
+Mobile --> Nginx : HTTPS
+Nginx --> API
+API --> Security
+API --> DB
+API --> Redis
+API --> Minio
+@enduml

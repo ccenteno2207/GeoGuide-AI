@@ -1,0 +1,93 @@
+openapi: 3.1.0
+info:
+  title: GeoGuide AI API
+  version: 1.0.0
+  description: API inicial para rutas y descubrimiento de puntos de interés.
+servers:
+  - url: https://api.example.org/api/v1
+paths:
+  /places/{id}:
+    get:
+      summary: Obtener detalle de un punto de interés
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Punto de interés encontrado
+        '404':
+          description: Punto de interés no encontrado
+  /places/nearby:
+    get:
+      summary: Buscar puntos de interés cercanos
+      parameters:
+        - in: query
+          name: lat
+          required: true
+          schema: { type: number, format: double }
+        - in: query
+          name: lon
+          required: true
+          schema: { type: number, format: double }
+        - in: query
+          name: radiusMeters
+          required: false
+          schema: { type: integer, minimum: 100, maximum: 50000, default: 5000 }
+      responses:
+        '200':
+          description: Lista de puntos cercanos
+  /routes/plan:
+    post:
+      summary: Calcular una ruta entre origen y destino
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoutePlanRequest'
+      responses:
+        '200':
+          description: Ruta calculada
+  /routes/discover:
+    post:
+      summary: Descubrir POIs dentro de un corredor alrededor de una ruta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteDiscoveryRequest'
+      responses:
+        '200':
+          description: POIs relevantes encontrados
+components:
+  schemas:
+    GeoPoint:
+      type: object
+      required: [lat, lon]
+      properties:
+        lat: { type: number, format: double }
+        lon: { type: number, format: double }
+    RoutePlanRequest:
+      type: object
+      required: [origin, destination]
+      properties:
+        origin: { $ref: '#/components/schemas/GeoPoint' }
+        destination: { $ref: '#/components/schemas/GeoPoint' }
+    RouteDiscoveryRequest:
+      type: object
+      required: [routeGeometry]
+      properties:
+        routeGeometry:
+          type: string
+          description: Polyline o GeoJSON codificado
+        corridorMeters:
+          type: integer
+          default: 5000
+        categories:
+          type: array
+          items: { type: string }

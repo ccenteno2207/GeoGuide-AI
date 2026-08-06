@@ -1,0 +1,9 @@
+@startuml
+actor Traveler
+rectangle "GeoGuide AI" as System
+cloud "OpenStreetMap" as OSM
+cloud "Routing Engine" as Routing
+Traveler --> System
+System --> OSM : map data
+System --> Routing : route calculation
+@enduml

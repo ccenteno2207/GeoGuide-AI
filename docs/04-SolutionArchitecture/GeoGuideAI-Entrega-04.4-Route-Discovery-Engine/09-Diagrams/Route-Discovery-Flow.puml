@@ -1,0 +1,24 @@
+@startuml
+actor User
+participant "Flutter App" as App
+participant "Route API" as API
+participant "Routing Adapter" as Routing
+participant "Routing Engine" as Engine
+participant "Discovery Service" as Discovery
+database "PostGIS" as DB
+participant "Ranking Engine" as Rank
+
+User -> App: origin + destination
+App -> API: POST /routes/discover
+API -> Routing: calculateRoute()
+Routing -> Engine: routing request
+Engine --> Routing: route geometry
+Routing --> API: normalized route
+API -> Discovery: discover(route, filters)
+Discovery -> DB: spatial query
+DB --> Discovery: POI candidates
+Discovery -> Rank: score candidates
+Rank --> Discovery: ranked POIs
+Discovery --> API: result
+API --> App: route + POIs
+@enduml

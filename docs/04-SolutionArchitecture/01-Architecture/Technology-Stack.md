@@ -1,0 +1,5 @@
+- Flutter
+- Spring Boot
+- PostgreSQL/PostGIS
+- Docker
+- Nginx

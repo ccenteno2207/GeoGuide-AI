@@ -1,0 +1,19 @@
+@startuml
+actor "Mobile App" as Mobile
+cloud Internet
+node "Linux Server" {
+  component Nginx
+  component "Spring Boot Backend" as API
+  database "PostgreSQL/PostGIS" as DB
+  component Redis
+  component MinIO
+  component "Routing Engine" as Routing
+}
+Mobile --> Internet
+Internet --> Nginx : HTTPS 443
+Nginx --> API
+API --> DB
+API --> Redis
+API --> MinIO
+API --> Routing
+@enduml

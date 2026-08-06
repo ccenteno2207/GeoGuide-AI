@@ -1,0 +1,1 @@
+digraph G { rankdir=LR; node [shape=box,style=rounded]; User -> "Flutter App" -> Nginx -> "Spring Boot API"; "Spring Boot API" -> "PostgreSQL/PostGIS"; "Spring Boot API" -> Redis; "Spring Boot API" -> MinIO; "Spring Boot API" -> "Routing Engine"; }

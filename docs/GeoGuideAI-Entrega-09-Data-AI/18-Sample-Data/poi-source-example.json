@@ -1,0 +1,14 @@
+{
+  "sourceSystem": "example_official_source",
+  "sourceId": "poi-001",
+  "name": "Lugar de ejemplo",
+  "category": "ARCHAEOLOGICAL_SITE",
+  "location": {
+    "lat": -12.0,
+    "lon": -77.0
+  },
+  "source": {
+    "retrievedAt": "YYYY-MM-DD",
+    "license": "REVIEW_REQUIRED"
+  }
+}

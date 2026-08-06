@@ -1,0 +1,13 @@
+@startuml
+[*] --> Map
+Map --> OriginSearch
+OriginSearch --> Map
+Map --> DestinationSearch
+DestinationSearch --> Map
+Map --> RouteView
+RouteView --> PoiPreview
+PoiPreview --> PoiDetail
+RouteView --> DrivingMode
+Map --> Favorites
+Map --> Settings
+@enduml

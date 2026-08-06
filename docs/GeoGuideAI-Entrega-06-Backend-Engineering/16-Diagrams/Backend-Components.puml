@@ -1,0 +1,36 @@
+@startuml
+package "GeoGuide Backend" {
+  package Places {
+    [Places API]
+    [Places Application]
+    [Places Domain]
+    [PostGIS Adapter]
+  }
+  package Routes {
+    [Routes API]
+    [Route Application]
+    [Route Domain]
+    [Routing Adapter]
+  }
+  package Discovery {
+    [Discovery API]
+    [Discovery Application]
+    [Discovery Domain]
+  }
+  database "PostgreSQL/PostGIS" as DB
+  component "Routing Engine" as RE
+
+  [Places API] --> [Places Application]
+  [Places Application] --> [Places Domain]
+  [PostGIS Adapter] --> DB
+
+  [Routes API] --> [Route Application]
+  [Route Application] --> [Route Domain]
+  [Routing Adapter] --> RE
+
+  [Discovery API] --> [Discovery Application]
+  [Discovery Application] --> [Discovery Domain]
+  [Discovery Domain] ..> [Route Domain]
+  [Discovery Domain] ..> [Places Domain]
+}
+@enduml

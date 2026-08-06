@@ -1,0 +1,27 @@
+openapi: 3.1.0
+info:
+  title: GeoGuide AI Backend API
+  version: 1.0.0
+paths:
+  /api/v1/places/{id}:
+    get:
+      summary: Get point of interest
+      responses:
+        '200': { description: OK }
+        '404': { description: Not found }
+  /api/v1/places/nearby:
+    get:
+      summary: Find nearby POIs
+      responses:
+        '200': { description: OK }
+  /api/v1/routes/plan:
+    post:
+      summary: Plan route
+      responses:
+        '200': { description: Route calculated }
+        '503': { description: Routing provider unavailable }
+  /api/v1/routes/discover:
+    post:
+      summary: Discover POIs along route
+      responses:
+        '200': { description: Discovery result }

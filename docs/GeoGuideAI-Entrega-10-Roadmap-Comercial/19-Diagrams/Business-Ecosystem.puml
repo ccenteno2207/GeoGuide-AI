@@ -1,0 +1,14 @@
+@startuml
+actor Traveler
+actor Destination
+actor "Local Business" as Business
+actor Institution
+rectangle "GeoGuide AI" as Geo
+Traveler --> Geo : routes / discovery
+Geo --> Traveler : POIs / context
+Destination --> Geo : verified content
+Institution --> Geo : territorial data
+Business --> Geo : services / future offers
+Geo --> Destination : visibility / aggregate insights
+Geo --> Institution : platform / aggregate analytics
+@enduml

@@ -1,0 +1,20 @@
+@startuml
+actor Mobile
+participant Nginx
+participant Controller
+participant UseCase
+participant Domain
+participant Repository
+database PostGIS
+
+Mobile -> Nginx: HTTPS
+Nginx -> Controller: REST
+Controller -> UseCase: Command/Query
+UseCase -> Domain: business rules
+UseCase -> Repository: port
+Repository -> PostGIS: SQL/spatial
+PostGIS --> Repository: result
+Repository --> UseCase
+UseCase --> Controller
+Controller --> Mobile: JSON
+@enduml

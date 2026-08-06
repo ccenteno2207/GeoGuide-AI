@@ -1,0 +1,17 @@
+@startuml
+actor User
+component "Flutter Mobile App" as Mobile
+component "Nginx" as Nginx
+component "Spring Boot API" as API
+database "PostgreSQL/PostGIS" as DB
+component "Redis" as Redis
+component "MinIO" as Minio
+component "Routing Engine" as Routing
+User --> Mobile
+Mobile --> Nginx
+Nginx --> API
+API --> DB
+API --> Redis
+API --> Minio
+API --> Routing
+@enduml

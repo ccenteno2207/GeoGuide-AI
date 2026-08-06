@@ -1,0 +1,20 @@
+@startuml
+actor Traveler
+rectangle "Flutter Mobile" as Mobile
+rectangle "Nginx / HTTPS" as Edge
+rectangle "Spring Boot Modular Monolith" as API
+database "PostgreSQL + PostGIS" as DB
+rectangle Redis
+rectangle MinIO
+rectangle "Routing Engine" as Routing
+rectangle "Optional AI Layer" as AI
+
+Traveler --> Mobile
+Mobile --> Edge
+Edge --> API
+API --> DB
+API --> Redis
+API --> MinIO
+API --> Routing
+API ..> AI
+@enduml

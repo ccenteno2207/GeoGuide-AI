@@ -1,0 +1,14 @@
+@startuml
+component "Route" as Route
+component "PostGIS Candidate Search" as GIS
+component "Detour / Progress" as Geo
+component "Data Quality" as Quality
+component "User Preferences" as Pref
+component "Hybrid Ranking" as Rank
+Route --> GIS
+GIS --> Geo
+Geo --> Rank
+Quality --> Rank
+Pref --> Rank
+Rank --> [Recommended POIs]
+@enduml
