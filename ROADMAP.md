@@ -1,25 +1,21 @@
 # Roadmap
 
-## Fase 1
-Fundación y documentación.
+The priority is the First Operational Pilot.
 
-## Fase 2
-Modelo de negocio y requisitos.
+| Priority | Milestone |
+| --- | --- |
+| P0 | Repository & Documentation Readiness |
+| P1 | Local Infrastructure |
+| P2 | Backend Bootstrap |
+| P3 | POI Data |
+| P4 | Routing |
+| P5 | Route Discovery |
+| P6 | Mobile Bootstrap |
+| P7 | First Vertical Slice |
+| P8 | POI Experience |
+| P9 | Offline + Driving |
+| P10 | Quality + Security |
+| P11 | Linux Server Deployment |
+| P12 | Real Road Pilot |
 
-## Fase 3
-Arquitectura.
-
-## Fase 4
-MVP Backend.
-
-## Fase 5
-Frontend y Mobile.
-
-## Fase 6
-Motor IA.
-
-## Fase 7
-DevOps y despliegue.
-
-## Fase 8
-Beta Open Source.
+AI does not block the core MVP. Kubernetes, microservices, and mandatory public cloud remain out of scope.
