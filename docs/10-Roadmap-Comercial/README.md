@@ -2,7 +2,7 @@
 
 ## Propósito
 Definir cómo GeoGuide AI pasa de un piloto tecnológico a un producto sostenible,
-manteniendo el núcleo open source y evitando monetizaciones que degraden la experiencia
+aplicando una estrategia tecnologica Open Source First y evitando monetizaciones que degraden la experiencia
 del viajero.
 
 ## Tesis comercial

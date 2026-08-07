@@ -1,4 +1,3 @@
-# Análisis de Mercado
+# Market Analysis
 
-Competidores: Google Maps, Waze, Roadtrippers.
-Diferenciador: enfoque Open Source + IA + turismo.
+Diferenciador: estrategia tecnologica Open Source First, IA opcional y turismo. La licencia del producto esta en revision; consulte `docs/00-Executive/LICENSING-STATUS.md`.
