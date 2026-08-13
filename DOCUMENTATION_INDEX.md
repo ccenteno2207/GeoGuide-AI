@@ -33,7 +33,9 @@
 | Need | Read |
 | --- | --- |
 | Architecture decision | Accepted ADR, then Entrega 04.6 |
+| Product scope and MVP boundaries | `PROJECT_CONTEXT.md`, `docs/00-Executive/MVP_SCOPE.md`, and Product Master |
 | Route Discovery | `docs/04-SolutionArchitecture/04-Route-Discovery-Engine/` |
+| Voice, contextual interaction, and Driving Mode | `ADR-027`, `docs/07-Mobile-Engineering/10-Driving-Mode/`, and AI UX |
 | Database and PostGIS | `02-Geospatial-Data-Model/` and Backend Engineering |
 | Mobile | `docs/07-Mobile-Engineering/` |
 | DevOps | `docs/08-DevOps-Cloud/` |
@@ -43,3 +45,5 @@
 
 Archived documents must not be used as current architecture or implementation
 guidance unless explicitly requested.
+
+“AI optional in the core MVP” means route, POI, corridor, ranking, and factual place cards cannot depend on an LLM. It does not negate the strategic voice channel: voice remains an adapter over the same channel-independent GeoGuide use cases used by Flutter and future clients.

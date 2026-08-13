@@ -1,3 +1,5 @@
 # AI Development Guide
 
 Read, in order: `AGENTS.md`, `PROJECT_CONTEXT.md`, `DOCUMENTATION_INDEX.md`, Entrega 04.6, and relevant specialized documentation. Authority order is: most recent accepted ADR, Entrega 04.6, specialized current documentation, Entrega 11, Foundation, then archive. Read `docs/00-Executive/LICENSING-STATUS.md` before any licensing-related work. `docs/archive/` is historical and must not guide implementation. Do not change architecture or `LICENSE` without explicit approval.
+
+Before generating code, preserve the product boundary: GeoGuide AI is a geographic discovery platform, not a Google Maps/Waze clone or generic chatbot. Route and proximity discovery work from reliable facts without an LLM. Treat voice as a channel over shared application services: STT -> contextual intent -> GeoGuide use cases -> TTS. Never duplicate business logic in Flutter UI, voice handlers, prompts, or provider adapters. Keep driving responses short and distraction low. Do not pull advanced AI, complex personalization, generated itineraries, CarPlay, Android Auto, or real-time traffic into the MVP without an explicit scope decision and an ADR when architectural.

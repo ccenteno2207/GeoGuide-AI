@@ -7,6 +7,11 @@ convertir una ruta geográfica en una experiencia de descubrimiento confiable.
 La IA es una capa de enriquecimiento y recomendación; no reemplaza las fuentes
 factuales ni el motor geoespacial.
 
+La IA también puede apoyar la interpretación contextual y la redacción de respuestas,
+pero voz no equivale a LLM: el flujo STT → intención/contexto → servicios GeoGuide →
+TTS reutiliza casos de uso independientes del canal y debe admitir intenciones
+acotadas sin modelo generativo.
+
 ## Principio fundamental
 **Facts first, AI second.**
 

@@ -17,6 +17,7 @@ Usos válidos:
 - tags;
 - búsqueda semántica;
 - RAG.
+- interpretación contextual y redacción breve para voz, siempre opcionales.
 
 ## Prohibido
 Usar el LLM como autoridad para:
@@ -25,6 +26,10 @@ Usar el LLM como autoridad para:
 - precios;
 - cierres;
 - hechos históricos sin respaldo.
+
+UI y TTS deben presentar la misma separación entre hechos, fuente y contenido
+generado. Audio, transcripciones, ubicación y contexto de viaje aplican minimización,
+consentimiento y retención explícita; no se conserva historial GPS por defecto.
 
 ## Vector Search
 pgvector antes de introducir una base adicional.

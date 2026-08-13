@@ -21,6 +21,11 @@ Persistencia y sincronización futura de favoritos.
 ## driving
 Modo de interacción reducida.
 
+## interaction
+Orquestación independiente del canal para intención, contexto autorizado y respuestas
+adaptadas. Los adaptadores STT/TTS no duplican lógica de `discovery`, `places`,
+`route_planning` ni `driving`.
+
 ## settings
 Preferencias de categorías y configuración.
 

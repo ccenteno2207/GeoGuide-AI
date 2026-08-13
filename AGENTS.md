@@ -6,6 +6,10 @@ Authority: most recent accepted ADR; Entrega 04.6; Entregas 04.1-10; Entrega 11;
 
 The MVP uses Flutter/Dart, Java 21/Spring Boot 3, Modular Monolith, Clean Architecture, PostgreSQL/PostGIS, Redis, MinIO, OpenStreetMap, RoutingProvider, Linux, Docker Compose, Nginx, and GitHub Actions. Route Discovery is the priority; Facts First, AI Second.
 
+GeoGuide AI is an Open Source mobile platform for intelligent geographic discovery. It is not a Google Maps/Waze replacement and not a generic chatbot. It discovers trustworthy cultural, historical, archaeological, natural, gastronomic, and other POIs around the current location and along a route. Real-time traffic is not an MVP requirement.
+
+Voice is a strategic hands-free channel, especially while driving: STT -> contextual intent -> channel-independent GeoGuide services -> TTS. Location, active route, nearby POIs, preferences, and travel state form the authorized session context. Keep spoken responses brief and visual distraction minimal in Driving/Travel Mode. Do not put domain or application logic in Flutter screens, STT/TTS adapters, or prompts; visual UI, voice, and future clients reuse the same application services. Advanced AI, complex personalization, generated itineraries, CarPlay, and Android Auto are later evolution unless explicitly brought into scope.
+
 `LICENSE` must never be modified, replaced, or re-licensed by an AI agent without explicit approval from the project owner. Do not change architecture, stack, or contracts without an ADR where applicable. Do not introduce Kubernetes, microservices, or mandatory public cloud. Preserve `RoutingProvider`, `ObjectStorageProvider`, `LanguageModelProvider`, repositories, and adapters. Use PostGIS where it adds value. Do not permanently store GPS history by default.
 
 Documentation is in Spanish where practical; code is in English. Use OpenAPI for HTTP contracts and prefer PlantUML for new textual diagrams.

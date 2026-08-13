@@ -13,7 +13,7 @@
 - nombre;
 - categoría;
 - distancia a ruta;
-- desvío estimado;
+- desvío y tiempo adicional estimados cuando la evolución del backend los provea;
 - progreso;
 - resumen;
 - imagen si existe.

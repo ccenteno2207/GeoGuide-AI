@@ -7,10 +7,12 @@
 4. Corridor Builder genera un buffer alrededor de la geometría.
 5. POI Repository consulta PostGIS.
 6. Candidate Filter elimina candidatos inválidos o duplicados.
-7. Detour Estimator calcula el costo aproximado de desviación.
-8. Ranking Engine asigna una puntuación.
-9. Sequence Builder ordena POIs según progreso sobre la ruta.
-10. API devuelve ruta + puntos descubiertos.
+7. Ranking Engine asigna una puntuación con señales disponibles en el MVP.
+8. Sequence Builder ordena POIs según progreso sobre la ruta.
+9. API devuelve ruta + puntos descubiertos.
+
+En una evolución posterior, Detour Estimator calcula distancia de desvío y tiempo
+adicional aproximados antes del ranking.
 
 ## Componentes
 - RoutePlanningService
@@ -24,6 +26,10 @@
 - RouteProgressCalculator
 - DiscoveryCache
 - DiscoveryMetrics
+
+`DetourEstimator` es un componente planificado, no una dependencia del núcleo inicial.
+El corredor, la consulta espacial y el ranking básico funcionan sin una estimación de
+desvío.
 
 ## Regla de desacoplamiento
 El dominio no debe depender directamente de GraphHopper, OSRM o Valhalla.

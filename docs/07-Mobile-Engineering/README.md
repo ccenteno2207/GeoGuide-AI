@@ -15,6 +15,11 @@ La aplicación móvil permitirá:
 - trabajar con conectividad limitada;
 - operar en un modo de conducción con interacción reducida.
 
+La voz manos libres es un canal estratégico e incremental: STT → intención con
+contexto autorizado → casos de uso GeoGuide → TTS. La interfaz Flutter y los
+adaptadores de voz comparten servicios de aplicación; el núcleo móvil no depende de un
+LLM, CarPlay ni Android Auto.
+
 ## Stack de referencia
 - Flutter
 - Dart
@@ -38,5 +43,6 @@ La aplicación móvil permitirá:
 - Driving-safe UX.
 - Arquitectura modular.
 - UI separada de dominio e infraestructura.
+- Servicios de aplicación independientes del canal.
 - APIs desacopladas mediante repositories/data sources.
 - No lógica GIS compleja dentro de widgets.

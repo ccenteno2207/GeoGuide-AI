@@ -9,12 +9,15 @@ la fuente de verdad técnica para desarrollo, pruebas y despliegue.
 
 ## 1. Visión
 
-GeoGuide AI es una plataforma móvil geoespacial que permite planificar una ruta entre
-origen y destino y descubrir puntos de interés a lo largo del recorrido: cataratas,
-lagunas, sitios arqueológicos, miradores, museos y otros lugares relevantes.
+GeoGuide AI es una plataforma móvil Open Source de descubrimiento geográfico. Permite
+descubrir puntos de interés alrededor de la ubicación actual y a lo largo de una ruta:
+patrimonio cultural e histórico, sitios arqueológicos, naturaleza, gastronomía,
+miradores, museos y otros lugares relevantes.
 
 No pretende replicar las capacidades de tráfico de Waze o Google Maps en el MVP.
 El diferencial es el descubrimiento contextual del territorio durante un viaje.
+No es un chatbot genérico. La IA contextual enriquece una base factual y los canales
+visual y de voz reutilizan los mismos servicios de aplicación.
 
 ---
 
@@ -32,6 +35,8 @@ El diferencial es el descubrimiento contextual del territorio durante un viaje.
 10. Observabilidad desde el inicio.
 11. Evolución incremental antes que microservicios prematuros.
 12. Documentación y ADR como parte del producto.
+13. Servicios de aplicación independientes del canal.
+14. Facts First, AI Second; el núcleo funciona sin LLM.
 
 ---
 
@@ -43,6 +48,7 @@ El diferencial es el descubrimiento contextual del territorio durante un viaje.
 - GPS del dispositivo.
 - Consumo de APIs REST.
 - Caché local futura para modo offline.
+- Adaptadores sustituibles de STT/TTS cuando se habilite voz.
 
 ### Edge
 - Nginx.
@@ -82,6 +88,9 @@ El diferencial es el descubrimiento contextual del territorio durante un viaje.
 El viajero interactúa con GeoGuide AI. GeoGuide AI consume datos cartográficos y un
 motor de rutas.
 
+La interacción puede ser visual o por voz. En ambos casos se invocan los mismos casos
+de uso; STT/TTS son adaptadores y no contienen reglas de dominio.
+
 ### Nivel 2
 Contenedores principales:
 - Flutter App.
@@ -103,6 +112,7 @@ Módulos backend:
 - Reviews.
 - Administration.
 - Observability.
+- Interaction/Context application services, sin acoplarlos a UI, STT, TTS o LLM.
 
 ---
 
@@ -193,12 +203,27 @@ Flujo:
 3. construir corredor;
 4. ejecutar consulta espacial;
 5. obtener candidatos;
-6. estimar desvío;
-7. rankear;
-8. ordenar según progreso;
-9. devolver resultados.
+6. rankear con señales disponibles en el MVP;
+7. ordenar según progreso;
+8. devolver resultados.
+
+En una evolución posterior, el flujo incorpora la estimación de distancia de desvío y
+tiempo adicional como señales opcionales. Esta evolución no bloquea la entrega inicial
+del corredor, búsqueda espacial, ranking básico y orden por progreso.
 
 El algoritmo de ranking debe permanecer explicable y versionado.
+
+La misma capacidad geoespacial soporta descubrimiento por proximidad a una ubicación
+autorizada, sin requerir que exista una ruta activa.
+
+## 8.1 Interacción contextual y voz
+
+Flujo estratégico: STT → interpretación de intención y contexto → casos de uso
+GeoGuide → TTS. El contexto autorizado puede incluir ubicación, ruta activa, POIs
+cercanos, preferencias y estado del viaje. Driving/Travel Mode limita la longitud de
+las respuestas y la interacción visual. Un LLM es opcional y se accede únicamente por
+`LanguageModelProvider`; consultar rutas, proximidad, ranking y fichas factuales no
+depende de él. Véase ADR-027.
 
 ---
 
@@ -304,6 +329,9 @@ Piloto sobre una ruta real y conjunto controlado de POIs.
 - IA generativa como fuente única de información factual;
 - arquitectura de microservicios distribuida;
 - Kubernetes.
+- IA avanzada, personalización compleja e itinerarios generados;
+- CarPlay y Android Auto;
+- usar voz o IA como sustituto de los servicios geoespaciales y datos confiables.
 
 ---
 

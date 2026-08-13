@@ -2,12 +2,17 @@
 
 Mobile
 → Backend
-→ AI Application Service
+→ Channel-independent GeoGuide Application Service
 → Retrieval/Search
 → Trusted POI Knowledge
-→ Optional Local/Open Model
+→ Optional AI Application Service / Local or Open Model
 → Guardrails
 → Response.
+
+La voz sigue `STT → interpretación contextual → servicios GeoGuide → TTS`. STT y TTS
+son adaptadores; el contexto autorizado de sesión se minimiza y las reglas de negocio
+permanecen en los servicios compartidos. Las intenciones acotadas deben poder resolverse
+sin LLM.
 
 ## Desacoplamiento
 Definir puerto `LanguageModelProvider`.

@@ -1,5 +1,9 @@
 # API del Route Discovery Engine
 
+> **Fases del contrato:** el corredor y los resultados de POIs pertenecen al núcleo
+> MVP. `maxDetourMeters` y `estimatedDetourMeters` son extensiones planificadas para una
+> versión posterior; no deben ser obligatorios ni bloquear la respuesta inicial.
+
 ## POST /api/v1/routes/discover
 
 ### Request
