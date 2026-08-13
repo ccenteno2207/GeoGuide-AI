@@ -13,9 +13,11 @@
 - route
 - corridorMeters
 - categories
-- maxDetourMeters
 - limit
 - userPreferences
+
+Evolución posterior, opcional:
+- maxDetourMeters
 
 ## PointOfInterest
 - id
@@ -32,9 +34,15 @@
 - poi
 - distanceToRouteMeters
 - routeProgress
-- estimatedDetourMeters
 - score
 - reasonCodes
+
+Evolución posterior, opcional:
+- estimatedDetourMeters
+- estimatedAdditionalTimeSeconds
+
+La ausencia de estos campos de evolución no invalida un candidato ni bloquea Route
+Discovery en el núcleo MVP.
 
 ## DiscoveryResult
 - route

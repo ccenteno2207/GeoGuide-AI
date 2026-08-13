@@ -277,6 +277,24 @@ Métricas del dominio:
 - ADR-010: Route Discovery como dominio independiente.
 - ADR-011: RoutingProvider.
 - ADR-012: PostGIS como núcleo espacial.
+- ADR-013: Modular Monolith para el MVP.
+- ADR-014: Flyway para migraciones.
+- ADR-015: Testcontainers para integración.
+- ADR-016: Flutter para Mobile.
+- ADR-017: Riverpod recomendado, sujeto a validación en bootstrap.
+- ADR-018: almacenamiento local aceptado para baseline.
+- ADR-019: librería de mapas pendiente de validación técnica final.
+- ADR-020: Docker Compose para el MVP.
+- ADR-021: núcleo cloud agnostic.
+- ADR-022: GitHub Actions para CI/CD.
+- ADR-023: Facts First, AI Second.
+- ADR-024: pgvector para futura búsqueda semántica.
+- ADR-025: abstracción `LanguageModelProvider`.
+- ADR-026: el LLM no es requisito del núcleo MVP.
+- ADR-027: interacción independiente del canal y voz contextual.
+
+El estado formal y la ruta vigente de cada decisión se consultan en
+`docs/02-Architecture/ADR-REGISTRY.md`; esta lista no sustituye al registro.
 
 ---
 

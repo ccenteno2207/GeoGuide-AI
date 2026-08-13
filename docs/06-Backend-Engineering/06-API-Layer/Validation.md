@@ -16,7 +16,11 @@ Longitude: -180 a 180.
 Definir límites máximos para:
 - radiusMeters;
 - corridorMeters;
-- maxDetourMeters;
 - page size.
+
+Cuando se implemente la evolución de cálculo de desvío:
+- `maxDetourMeters` será opcional y tendrá límites configurados;
+- su ausencia no impedirá descubrimiento por corredor ni ranking básico;
+- distancia de desvío y tiempo adicional se identificarán como estimaciones.
 
 Los límites exactos serán configuración/documentación, no valores duplicados.

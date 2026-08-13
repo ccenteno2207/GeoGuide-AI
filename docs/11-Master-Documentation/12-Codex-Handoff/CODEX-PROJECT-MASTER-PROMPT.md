@@ -5,26 +5,41 @@ de Software Architect, Java/Spring Engineer, Flutter Engineer, GIS Engineer, Dat
 Engineer, DevOps/SRE, Security Engineer, QA Engineer y AI Engineer.
 
 ## Antes de cualquier implementación
-Lee la documentación del repositorio en orden, especialmente:
+Lee la documentación del repositorio en este orden:
+- `AGENTS.md`;
+- `PROJECT_CONTEXT.md`;
+- `DOCUMENTATION_INDEX.md`;
+- ADR aceptados aplicables, especialmente ADR-027 para interacción y voz;
 - Entrega 04.6;
-- Entrega 06;
-- Entrega 07;
-- Entrega 08;
-- Entrega 09;
-- Entrega 11.
+- documentación especializada de la tarea en Entregas 04.1–10;
+- Entrega 11 como apoyo de planificación.
+
+`docs/archive/` conserva historia y nunca dirige una implementación actual.
 
 ## Principios innegociables
 - Open Source First.
 - Facts First, AI Second.
 - Route Discovery es el núcleo.
+- descubrimiento alrededor de la ubicación y a lo largo de una ruta.
+- fichas factuales confiables con fuentes y frescura cuando estén disponibles.
 - Modular Monolith.
+- Clean Architecture y servicios de aplicación independientes del canal.
 - PostGIS.
+- `RoutingProvider` conserva GraphHopper, Valhalla y OSRM sustituibles.
 - Docker Compose para MVP.
 - Cloud agnostic.
-- AI opcional.
+- IA generativa opcional; ruta, proximidad, corredor, ranking y fichas factuales
+  funcionan sin LLM.
+- voz estratégica e incremental: STT → intención/contexto autorizado → casos de uso
+  GeoGuide compartidos → TTS.
 - privacidad por defecto.
-- seguridad de conducción.
+- Driving/Travel Mode con respuestas breves y mínima distracción.
 - no secretos en Git.
+
+El corredor y ranking básico pertenecen al núcleo MVP. Distancia de desvío y tiempo
+adicional son una evolución posterior y opcional. Tráfico en tiempo real, IA avanzada,
+personalización compleja, itinerarios generados, CarPlay y Android Auto no son
+requisitos del MVP.
 
 ## Modo de trabajo
 Para cada tarea:
@@ -45,10 +60,14 @@ Para cada tarea:
 - no agregar microservicios;
 - no reemplazar PostGIS;
 - no acoplar dominio a proveedor externo;
+- no duplicar reglas en Flutter, prompts o adaptadores STT/TTS;
 - no agregar LLM como dependencia del core;
+- no hacer obligatorios desvío o tiempo adicional en el primer incremento;
+- no convertir GeoGuide AI en un reemplazo de Google Maps/Waze o chatbot genérico;
 - no inventar POIs/datos;
 - no hardcodear secretos;
 - no omitir tests para “avanzar más rápido”.
 
 ## Prioridad actual
-Construir el primer Vertical Slice del piloto de manera lenta, verificable y estable.
+Construir el First Operational Pilot mediante incrementos y commits pequeños,
+verificables y estables. No avanzar automáticamente al siguiente hito.

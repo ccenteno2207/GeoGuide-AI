@@ -17,9 +17,12 @@ Orquesta:
 2. corridor;
 3. candidates;
 4. filtering;
-5. detour;
-6. ranking;
-7. sequencing.
+5. ranking con señales disponibles;
+6. sequencing.
+
+En una evolución posterior puede orquestar estimación de distancia de desvío y tiempo
+adicional antes del ranking. Esa estimación es opcional: no bloquea corredor, consulta
+espacial, filtrado, ranking básico ni secuenciación.
 
 ### RankingPolicy
 Permite evolucionar el algoritmo sin acoplarlo a controllers o persistencia.

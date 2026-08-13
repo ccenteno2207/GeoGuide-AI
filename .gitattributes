@@ -1,0 +1,18 @@
+# Store text consistently as LF across Windows, Linux, CI, and containers.
+* text=auto eol=lf
+
+# Windows command scripts require CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Binary formats must never be line-ending normalized.
+*.docx binary
+*.gif binary
+*.ico binary
+*.jar binary
+*.jpeg binary
+*.jpg binary
+*.pdf binary
+*.png binary
+*.zip binary
