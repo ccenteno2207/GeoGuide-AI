@@ -32,3 +32,7 @@ __pycache__/
 *.py[cod]
 .venv/
 venv/
+
+# Local routing datasets and generated graphs
+infrastructure/routing/data/*
+!infrastructure/routing/data/.gitkeep

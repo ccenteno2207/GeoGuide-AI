@@ -16,3 +16,9 @@ Voice is a strategic hands-free channel, especially during driving. The intended
 Kubernetes, microservices, mandatory public cloud, advanced AI/personalization and itinerary generation, CarPlay/Android Auto, and real-time traffic are outside the MVP.
 
 Start at [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md). Architecture follows accepted ADRs and Entrega 04.6. Licensing status is in [LICENSING-STATUS.md](docs/00-Executive/LICENSING-STATUS.md); `LICENSE` remains the current legal file.
+
+## Estado de implementación
+
+P0 (preparación documental) está completada y P1 (infraestructura local) está en curso.
+La configuración inicial de PostgreSQL/PostGIS, Redis y MinIO, junto con sus instrucciones
+de operación, se encuentra en [infrastructure/README.md](infrastructure/README.md).
