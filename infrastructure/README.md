@@ -37,6 +37,9 @@ locales.
 
 ## Motor de rutas
 
-El routing spike de P1 se registra en `routing/ROUTING-SPIKE.md`. El motor no forma
-parte de este Compose hasta seleccionar un extracto OSM pequeño del corredor piloto y
-medir las alternativas. Cualquier motor se consumirá después mediante `RoutingProvider`.
+El routing spike de P1 se registra en `routing/ROUTING-SPIKE.md`. GraphHopper 11.0,
+OSRM 26.8.0 MLD y Valhalla 3.8.2 ya se midieron con el mismo PBF congelado y seis
+casos. GraphHopper se mantiene como recomendación provisional equilibrada y OSRM como
+alternativa de mayor rendimiento observado; la selección no queda cerrada hasta validar
+calidad de ruta y contrato, confirmar la ADR e incorporar un único servicio al Compose.
+Cualquier motor se consumirá mediante `RoutingProvider`.

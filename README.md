@@ -19,6 +19,8 @@ Start at [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md). Architecture follows 
 
 ## Estado de implementación
 
-P0 (preparación documental) está completada y P1 (infraestructura local) está en curso.
+P0 (preparación documental) está completada. La infraestructura base de P1 está
+validada y su routing spike comparativo está completado; queda confirmar el motor e
+incorporarlo al Compose antes de cerrar P1.
 La configuración inicial de PostgreSQL/PostGIS, Redis y MinIO, junto con sus instrucciones
 de operación, se encuentra en [infrastructure/README.md](infrastructure/README.md).

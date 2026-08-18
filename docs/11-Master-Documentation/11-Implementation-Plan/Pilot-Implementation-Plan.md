@@ -8,11 +8,9 @@
 - conventions.
 
 ## P1 – Local Infrastructure
-- Docker Compose;
-- PostGIS;
-- Redis;
-- MinIO;
-- routing spike.
+- Docker Compose: completado y validado;
+- PostGIS, Redis y MinIO: salud, función y persistencia validadas;
+- routing spike: benchmark completado; selección e incorporación al Compose pendientes.
 
 ## P2 – Backend Bootstrap
 - Spring Boot;
