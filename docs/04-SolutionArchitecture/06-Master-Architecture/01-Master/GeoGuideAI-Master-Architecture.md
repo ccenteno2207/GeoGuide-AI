@@ -9,10 +9,12 @@ la fuente de verdad técnica para desarrollo, pruebas y despliegue.
 
 ## 1. Visión
 
-GeoGuide AI es una plataforma móvil Open Source de descubrimiento geográfico. Permite
-descubrir puntos de interés alrededor de la ubicación actual y a lo largo de una ruta:
-patrimonio cultural e histórico, sitios arqueológicos, naturaleza, gastronomía,
-miradores, museos y otros lugares relevantes.
+GeoGuide AI es una plataforma móvil de descubrimiento geográfico construida con una
+estrategia tecnológica Open Source First. Esta estrategia no determina la licencia del
+producto, cuyo estado legal vigente se rige por `LICENSE`. Permite descubrir puntos de
+interés alrededor de la ubicación actual y a lo largo de una ruta: patrimonio cultural
+e histórico, sitios arqueológicos, naturaleza, gastronomía, miradores, museos y otros
+lugares relevantes.
 
 No pretende replicar las capacidades de tráfico de Waze o Google Maps en el MVP.
 El diferencial es el descubrimiento contextual del territorio durante un viaje.

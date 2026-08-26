@@ -1,6 +1,11 @@
 # GeoGuide AI
 
-GeoGuide AI is an Open Source mobile platform for intelligent geographic discovery. It reveals trustworthy cultural, historical, archaeological, natural, gastronomic, and other POIs around the user's location and along a route. It is not a replacement for Google Maps/Waze and not a generic chatbot.
+GeoGuide AI is a mobile platform for intelligent geographic discovery built with an
+Open Source First technology strategy. This strategy does not determine the product
+license; `LICENSE` is the current legal file. The platform reveals trustworthy
+cultural, historical, archaeological, natural, gastronomic, and other POIs around the
+user's location and along a route. It is not a replacement for Google Maps/Waze and not
+a generic chatbot.
 
 The First Operational Pilot centers on the Route Discovery Engine: it calculates or receives a route, builds a spatial corridor, finds relevant candidates, and returns explainable results. Detour distance and additional travel time can be added incrementally; real-time traffic is not required for the MVP.
 

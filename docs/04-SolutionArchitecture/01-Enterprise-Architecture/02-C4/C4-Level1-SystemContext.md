@@ -1,6 +1,7 @@
 # C4 Nivel 1
 Actor: viajero, incluida la interacción manos libres durante conducción
-Sistema: GeoGuide AI, plataforma Open Source de descubrimiento por proximidad y ruta
+Sistema: GeoGuide AI, plataforma de descubrimiento por proximidad y ruta construida
+con una estrategia tecnológica Open Source First; `LICENSE` rige su estado legal
 Sistemas externos:
 - OpenStreetMap
 - GraphHopper/OSRM

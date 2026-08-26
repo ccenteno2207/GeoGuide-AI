@@ -6,7 +6,11 @@ First Operational Pilot.
 
 ## Product definition
 
-GeoGuide AI is an Open Source mobile platform for intelligent geographic discovery. It helps people understand what is worth discovering around their current location and along a planned or active route. It is neither a replacement for Google Maps/Waze nor a generic chatbot.
+GeoGuide AI is a mobile platform for intelligent geographic discovery built with an
+Open Source First technology strategy. This strategy does not determine the product
+license, whose current legal status is governed by `LICENSE`. The product helps people
+understand what is worth discovering around their current location and along a planned
+or active route. It is neither a replacement for Google Maps/Waze nor a generic chatbot.
 
 The product covers cultural, historical, archaeological, natural, gastronomic, and other useful POIs. Enriched place cards distinguish reliable sourced facts from generated summaries. Route Discovery analyzes POIs near a route corridor; detour distance and additional time may be introduced incrementally.
 

@@ -1,10 +1,12 @@
 # Product Vision
 
-GeoGuide AI busca convertirse en una plataforma móvil Open Source líder para el
-descubrimiento geográfico inteligente alrededor de la ubicación y durante viajes
-terrestres. Permite entender qué lugares culturales, históricos, arqueológicos,
-naturales, gastronómicos y de otras categorías merecen ser descubiertos. La licencia
-del producto está en revisión; consulte `docs/00-Executive/LICENSING-STATUS.md`.
+GeoGuide AI busca convertirse en una plataforma móvil líder para el descubrimiento
+geográfico inteligente, construida con una estrategia tecnológica Open Source First.
+Esta estrategia no determina la licencia del producto, cuyo estado legal vigente se
+rige por `LICENSE`; consulte también `docs/00-Executive/LICENSING-STATUS.md`. Permite
+entender qué lugares culturales, históricos, arqueológicos, naturales, gastronómicos y
+de otras categorías merecen ser descubiertos alrededor de la ubicación y durante
+viajes terrestres.
 
 ## Valor diferencial
 
