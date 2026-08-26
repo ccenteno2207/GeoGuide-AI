@@ -2,12 +2,14 @@
 
 **Estado:** Aceptado
 
+**Refinada por:** [ADR-028 – GraphHopper como motor inicial de routing](../../../02-Architecture/ADR/04-Route-Discovery/ADR-028-GraphHopper-Initial-Routing-Engine.md)
+
 ## Decisión
 Definir una interfaz `RoutingProvider`.
 
-## Implementación inicial recomendada
-GraphHopper puede utilizarse en el piloto autohospedado, manteniendo la posibilidad
-de sustituirlo por Valhalla u OSRM.
+## Implementación inicial
+GraphHopper 11.0 se adopta para el piloto autohospedado según ADR-028, manteniendo
+la posibilidad de sustituirlo por Valhalla u OSRM.
 
 ## Criterios de cambio
 - cobertura;

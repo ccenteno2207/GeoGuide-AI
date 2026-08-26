@@ -2,8 +2,8 @@
 
 ## Estado y objetivo
 
-**Estado:** benchmark técnico completado; selección operativa provisional, pendiente de
-confirmación por ADR y de incorporación al Compose.
+**Estado:** benchmark técnico y revisión cartográfica completados; GraphHopper 11.0
+seleccionado por ADR-028, pendiente de prueba contractual e incorporación al Compose.
 
 El spike compara implementaciones sustituibles de `RoutingProvider` con evidencia del
 corredor piloto. No cambia la abstracción aprobada ni acopla el dominio a un motor.
@@ -65,9 +65,11 @@ alcanzaron ~253.7 MiB y ~360.7 MiB. Valhalla produjo 62 tiles empaquetados.
 | 5 | 180.42 km / 2h 34m 47s | 181.53 km / 2h 55m 14s | 188.716 km / 2h 30m 07s |
 | 6 | 54.51 km / 53m 25s | 55.07 km / 1h 00m 55s | 55.677 km / 49m 02s |
 
-Los tres motores encontraron ruta, pero las diferencias de distancia y ETA —en
-especial casos 3, 5 y 6— requieren inspección cartográfica y contraste en campo. El
-spike demuestra respuesta funcional, no que una geometría o ETA sea la más correcta.
+Los tres motores encontraron ruta. La inspección cartográfica posterior de las 18
+geometrías no reveló discontinuidades ni desvíos bloqueantes y confirmó el mismo
+corredor general en los seis casos. Las diferencias de ETA —en especial casos 3, 5 y
+6— siguen requiriendo contraste en campo; no deben interpretarse aisladamente como
+calidad de ruta porque cada motor utiliza supuestos de velocidad distintos.
 
 ## Latencia
 
@@ -118,12 +120,12 @@ Las muestras completas y resúmenes permanecen preservados fuera de Git.
 Las licencias de imágenes y dependencias deben verificarse antes de producción; esta
 tabla no reemplaza la revisión de licenciamiento.
 
-## Recomendación provisional
+## Decisión
 
-Mantener **GraphHopper 11.0 como implementación inicial provisional** de
-`RoutingProvider`. No fue el más rápido, pero ofrece el mejor equilibrio observado entre
-latencia suficiente, disco, operación y alineación con Java, consistente con ADR-002 y
-ADR-011.
+Adoptar **GraphHopper 11.0 como implementación inicial** de `RoutingProvider`, según
+ADR-028. No fue el más rápido, pero ofrece el mejor equilibrio observado entre latencia
+suficiente, disco, operación, calidad visual y alineación con Java, consistente con
+ADR-002 y ADR-011.
 
 Conservar **OSRM 26.8.0 MLD como alternativa preferida de rendimiento**. Fue claramente
 el más rápido y usó menos RAM. Debe reconsiderarse como primera opción si P4 confirma
@@ -140,10 +142,10 @@ Cada servicio fue detenido antes de iniciar el siguiente. Al final quedaron úni
 PostgreSQL/PostGIS, Redis y MinIO; ~14 GiB disponibles, swap sin uso y puertos 8989,
 5000 y 8002 cerrados.
 
-Pendiente para cerrar la selección:
+Pendiente para cerrar técnicamente P1:
 
-1. inspección visual y validación de geometría y ETA;
-2. prueba del contrato real de `RoutingProvider`, incluidos errores normalizados;
-3. confirmar ADR-011 o crear una ADR si cambia la implementación inicial;
-4. incorporar un único motor al Compose interno con health check;
-5. documentar actualización reproducible del PBF y artefactos.
+1. prueba del contrato real de `RoutingProvider`, incluidos errores normalizados;
+2. incorporar GraphHopper al Compose interno con health check;
+3. documentar actualización reproducible del PBF y artefactos;
+4. ejecutar la validación posterior a reinicio;
+5. contrastar ETA con evidencia de campo cuando esté disponible.

@@ -17,9 +17,10 @@ Decisiones clave:
 - Riverpod recomendado.
 - Drift/SQLite baseline.
 - Map library pendiente de spike.
-- Routing engine: spike técnico completado con GraphHopper 11.0, OSRM 26.8.0 MLD y
-  Valhalla 3.8.2. GraphHopper continúa como recomendación provisional del MVP por
-  equilibrio e integración; OSRM queda como alternativa de rendimiento. La selección
-  operativa sigue pendiente de calidad de ruta, contrato y confirmación de ADR-011.
+- Routing engine: ADR-028 adopta GraphHopper 11.0 como implementación inicial de
+  `RoutingProvider`, después del benchmark y la revisión visual de 18 geometrías.
+  OSRM 26.8.0 MLD queda como alternativa preferida de rendimiento y Valhalla 3.8.2
+  como opción futura para multimodalidad o routing temporal. La integración contractual
+  y operativa en Compose permanece pendiente.
 
 Consultar ADR originales para contexto completo.
