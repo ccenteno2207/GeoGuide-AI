@@ -1,13 +1,14 @@
 # Infraestructura local — P1
 
-Esta carpeta contiene la primera entrega ejecutable de P1. Levanta únicamente los
-servicios de datos que necesita el futuro backend: PostgreSQL/PostGIS, Redis y MinIO.
-El backend y Nginx se incorporarán en sus fases correspondientes; no se simulan aquí.
+Esta carpeta contiene la entrega ejecutable de P1. Levanta PostgreSQL/PostGIS, Redis,
+MinIO y GraphHopper como motor inicial de `RoutingProvider`. El backend y Nginx se
+incorporarán en sus fases correspondientes; no se simulan aquí.
 
 ## Requisitos
 
-- Docker Desktop con Docker Compose v2.
-- Puertos locales 5432, 6379, 9000 y 9001 disponibles, o valores alternativos en `.env`.
+- Docker Engine o Docker Desktop con Docker Compose v2.
+- Un archivo OSM PBF compatible con la configuración de GraphHopper.
+- Memoria suficiente para construir o cargar el grafo; el valor inicial de `-Xmx` es 4 GiB.
 
 ## Inicio
 
@@ -15,19 +16,25 @@ Desde esta carpeta:
 
 1. Copiar `.env.example` como `.env`.
 2. Reemplazar todos los valores `CHANGE_ME`.
-3. Validar con `docker compose config`.
-4. Iniciar con `docker compose up -d`.
-5. Confirmar con `docker compose ps` que los tres servicios están `healthy`.
+3. Definir `ROUTING_PBF_PATH` y `ROUTING_GRAPH_DIR` como rutas absolutas existentes.
+4. Conceder al UID/GID `10001:10001` acceso de escritura a `ROUTING_GRAPH_DIR`.
+5. Validar con `docker compose config`.
+6. Construir GraphHopper con `docker compose build graphhopper`.
+7. Iniciar con `docker compose up -d`.
+8. Confirmar con `docker compose ps` que los cuatro servicios están `healthy`.
 
-Los puertos se enlazan exclusivamente a `127.0.0.1`; no quedan expuestos a la red
-externa. La red Docker también es interna. Esta configuración es para desarrollo local,
-no para producción.
+Los servicios no publican puertos en el host y la red Docker es interna. Esta
+configuración es para desarrollo local, no para producción.
 
 ## Comprobaciones rápidas
 
 - PostgreSQL/PostGIS: `docker compose exec postgres psql -U geoguide_app -d geoguide -c "SELECT PostGIS_Full_Version();"`
 - Redis: `docker compose exec redis redis-cli ping`
-- MinIO: abrir `http://127.0.0.1:9001` e ingresar con las credenciales de `.env`.
+- MinIO: `docker compose exec minio curl -f http://localhost:9000/minio/health/live`.
+- GraphHopper: `docker compose exec graphhopper curl -f http://localhost:8989/info`.
+
+La API de GraphHopper queda disponible para futuros servicios de la misma red como
+`http://graphhopper:8989/route`; no se accede directamente desde el host.
 
 ## Detención y datos
 
@@ -37,9 +44,7 @@ locales.
 
 ## Motor de rutas
 
-El routing spike de P1 se registra en `routing/ROUTING-SPIKE.md`. GraphHopper 11.0,
-OSRM 26.8.0 MLD y Valhalla 3.8.2 ya se midieron con el mismo PBF congelado y seis
-casos. GraphHopper se mantiene como recomendación provisional equilibrada y OSRM como
-alternativa de mayor rendimiento observado; la selección no queda cerrada hasta validar
-calidad de ruta y contrato, confirmar la ADR e incorporar un único servicio al Compose.
-Cualquier motor se consumirá mediante `RoutingProvider`.
+El routing spike de P1 se registra en `routing/ROUTING-SPIKE.md`. ADR-028 adopta
+GraphHopper 11.0 como implementación inicial de `RoutingProvider`; OSRM permanece como
+alternativa preferida de rendimiento y Valhalla como opción futura multimodal o
+temporal. El PBF y el grafo generado permanecen fuera de Git.
