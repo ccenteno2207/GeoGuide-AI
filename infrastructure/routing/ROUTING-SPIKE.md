@@ -2,9 +2,8 @@
 
 ## Estado y objetivo
 
-**Estado:** benchmark técnico y revisión cartográfica completados; GraphHopper 11.0
-seleccionado por ADR-028 e incorporado al Compose interno con health check. P1 sigue en
-curso hasta validar ruta, contrato/errores y reutilización del grafo.
+**Estado:** completado. GraphHopper 11.0 fue seleccionado por ADR-028, incorporado al
+Compose interno y validado con ruta, error HTTP estructurado y reutilización del grafo.
 
 El spike compara implementaciones sustituibles de `RoutingProvider` con evidencia del
 corredor piloto. No cambia la abstracción aprobada ni acopla el dominio a un motor.
@@ -137,16 +136,21 @@ No usar **Valhalla 3.8.2 como motor inicial**. Su menor RAM idle y capacidades f
 no compensan todavía la latencia y complejidad observadas. Puede reevaluarse cuando
 multimodalidad o routing temporal sean requisitos y se construyan auxiliares completos.
 
-## Cierre y pendientes
+## Cierre técnico
 
 Cada servicio fue detenido antes de iniciar el siguiente. Al final quedaron únicamente
 PostgreSQL/PostGIS, Redis y MinIO; ~14 GiB disponibles, swap sin uso y puertos 8989,
 5000 y 8002 cerrados.
 
-Pendiente para cerrar técnicamente P1:
+La implementación operativa quedó validada el 26 de agosto de 2026:
 
-1. prueba del contrato real de `RoutingProvider`, incluidos errores normalizados;
-2. ejecutar la primera ruta operativa desde la red interna;
-3. documentar la actualización reproducible del PBF y artefactos;
-4. ejecutar la validación posterior a reinicio y confirmar reutilización del grafo;
+1. ruta interna resuelta sin errores: 10 615.548 m, 719 133 ms, `LineString` con
+   152 coordenadas;
+2. solicitud con un punto rechazada con HTTP 400 y JSON estructurado;
+3. reinicio con carga de `/data/graph-cache` en aproximadamente 2 s, sin reconstrucción,
+   y segunda ruta con resultado idéntico;
+4. grafo persistente de aproximadamente 42 MB, UID/GID 10001 y permisos 750;
+5. cuatro servicios `healthy` y ningún puerto de datos o routing publicado.
+
+El adaptador y la normalización de `RoutingProvider` corresponden a P4.
 5. contrastar ETA con evidencia de campo cuando esté disponible.

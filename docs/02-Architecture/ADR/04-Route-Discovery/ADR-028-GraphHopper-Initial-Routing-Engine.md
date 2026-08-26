@@ -124,16 +124,19 @@ para seleccionar una implementación inicial reversible mediante `RoutingProvide
 - medición de latencia, memoria, preparación y disco;
 - incorporación de GraphHopper al Compose interno sin publicar puertos;
 - health check interno y arranque operativo con grafo persistente;
+- ruta interna válida antes y después de reinicio;
+- respuesta HTTP 400 estructurada para una solicitud inválida;
+- reutilización del grafo persistente sin reconstrucción;
 - recuperación y normalización de 18 geometrías;
 - inspección cartográfica comparativa de los seis casos;
 - detención de los motores temporales y liberación de sus puertos.
 
-### Pendiente de implementación
+### Pendiente posterior a P1
 
 - prueba contractual del adaptador contra `RoutingProvider`;
 - normalización de errores, timeouts y ausencia de ruta;
-- primera ruta operativa desde la red interna y verificación de dependencia desde el backend;
-- validación de persistencia o reconstrucción controlada del grafo;
+- verificación de dependencia desde el backend;
+- implementación del adaptador real de `RoutingProvider`;
 - procedimiento documentado de actualización del PBF;
 - prueba posterior a reinicio de la VM;
 - contraste de ETA con evidencia de campo cuando esté disponible.
@@ -147,8 +150,7 @@ incompatibilidad de licencia o despliegue.
 
 ## Impacto sobre P1
 
-Este ADR cierra la **selección técnica del motor inicial**, pero no cierra P1. La
-integración interna en Compose y el health check ya fueron verificados. El cierre
-técnico todavía requiere la primera ruta operativa, la prueba contractual, la
-reutilización del grafo tras reinicio y el procedimiento reproducible de actualización
-del PBF.
+Este ADR y la evidencia operativa cierran la **selección e infraestructura del motor
+inicial en P1**. La integración, health check, ruta, error y reutilización del grafo
+fueron verificados. El adaptador contractual y la normalización de errores corresponden
+a P4.

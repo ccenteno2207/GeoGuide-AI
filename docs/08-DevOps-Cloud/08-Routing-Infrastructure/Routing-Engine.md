@@ -21,9 +21,10 @@ La selección final debe validarse con rutas reales del territorio objetivo.
 Los datos de OpenStreetMap necesarios para routing deben descargarse, procesarse y
 versionarse operacionalmente.
 
-El primer arranque operativo generó un grafo de aproximadamente 42 MB. Antes de cerrar
-P1 todavía deben verificarse la primera ruta interna, el contrato y errores normalizados,
-y la reutilización del grafo después de reinicio.
+El primer arranque operativo generó un grafo de aproximadamente 42 MB. P1 validó una
+ruta interna de 10 615.548 m, una solicitud inválida con HTTP 400 y la reutilización del
+grafo después del reinicio; el servidor inició en aproximadamente 2 s. El adaptador y
+la normalización de `RoutingProvider` corresponden a P4.
 
 ## Consideraciones
 - tamaño del extracto;
