@@ -55,6 +55,38 @@ services:
       start_period: 10s
     networks: [data]
 
+  graphhopper:
+    build:
+      context: ./routing/graphhopper
+      args:
+        GRAPHHOPPER_VERSION: ${GRAPHHOPPER_VERSION:-11.0}
+        GRAPHHOPPER_SHA256: ${GRAPHHOPPER_SHA256:-b59c024afe172ec6ec85b6327006c3138ec58c7d0bcd26253d0e42853f613def}
+    image: geoguide-ai/graphhopper:${GRAPHHOPPER_VERSION:-11.0}
+    restart: unless-stopped
+    command:
+      - -Xms${GRAPHHOPPER_XMS:-512m}
+      - -Xmx${GRAPHHOPPER_XMX:-4g}
+      - -jar
+      - /opt/graphhopper/graphhopper-web.jar
+      - server
+      - /opt/graphhopper/config.yml
+    mem_limit: ${GRAPHHOPPER_MEMORY_LIMIT:-5g}
+    volumes:
+      - type: bind
+        source: ${ROUTING_PBF_PATH:-./routing/data/peru-geoguide-pilot.osm.pbf}
+        target: /data/input.osm.pbf
+        read_only: true
+      - type: bind
+        source: ${ROUTING_GRAPH_DIR:-./routing/data/graph-cache}
+        target: /data/graph-cache
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://localhost:8989/info"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 120s
+    networks: [data]
+
 networks:
   data:
     internal: true
