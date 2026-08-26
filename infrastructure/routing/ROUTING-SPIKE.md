@@ -138,9 +138,10 @@ multimodalidad o routing temporal sean requisitos y se construyan auxiliares com
 
 ## Cierre técnico
 
-Cada servicio fue detenido antes de iniciar el siguiente. Al final quedaron únicamente
-PostgreSQL/PostGIS, Redis y MinIO; ~14 GiB disponibles, swap sin uso y puertos 8989,
-5000 y 8002 cerrados.
+Durante el cierre del benchmark comparativo, cada motor temporal fue detenido antes de
+iniciar el siguiente. En ese punto quedaron únicamente PostgreSQL/PostGIS, Redis y
+MinIO; ~14 GiB disponibles, swap sin uso y puertos 8989, 5000 y 8002 cerrados. Después
+de la selección, GraphHopper se incorporó al Compose operativo como cuarto servicio.
 
 La implementación operativa quedó validada el 26 de agosto de 2026:
 
@@ -153,4 +154,5 @@ La implementación operativa quedó validada el 26 de agosto de 2026:
 5. cuatro servicios `healthy` y ningún puerto de datos o routing publicado.
 
 El adaptador y la normalización de `RoutingProvider` corresponden a P4.
-5. contrastar ETA con evidencia de campo cuando esté disponible.
+
+Pendiente posterior a P1: contrastar ETA con evidencia de campo cuando esté disponible.
