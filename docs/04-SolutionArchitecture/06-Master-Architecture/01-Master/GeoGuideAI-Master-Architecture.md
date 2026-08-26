@@ -74,7 +74,8 @@ visual y de voz reutilizan los mismos servicios de aplicación.
 ### Routing
 - Interfaz `RoutingProvider`.
 - Motor open source autohospedado.
-- Implementación piloto recomendada: GraphHopper, sustituible por Valhalla u OSRM.
+- Implementación inicial del piloto: GraphHopper 11.0, seleccionada por ADR-028 y
+  sustituible por Valhalla u OSRM mediante `RoutingProvider`.
 
 ### Mapas/datos abiertos
 - OpenStreetMap.
@@ -292,6 +293,7 @@ Métricas del dominio:
 - ADR-025: abstracción `LanguageModelProvider`.
 - ADR-026: el LLM no es requisito del núcleo MVP.
 - ADR-027: interacción independiente del canal y voz contextual.
+- ADR-028: GraphHopper 11.0 como motor inicial de routing.
 
 El estado formal y la ruta vigente de cada decisión se consultan en
 `docs/02-Architecture/ADR-REGISTRY.md`; esta lista no sustituye al registro.

@@ -16,7 +16,8 @@ The product covers cultural, historical, archaeological, natural, gastronomic, a
 - Backend: Java 21, Spring Boot 3, Modular Monolith, Clean Architecture.
 - Data: PostgreSQL + PostGIS, Redis, and MinIO.
 - Maps/data: OpenStreetMap.
-- Routing: `RoutingProvider`; GraphHopper, Valhalla, and OSRM are candidates.
+- Routing: `RoutingProvider`; GraphHopper 11.0 is the initial implementation selected
+  by ADR-028. OSRM and Valhalla remain replaceable alternatives.
 - Infrastructure: Linux, Docker, Docker Compose, and Nginx.
 - CI/CD: GitHub Actions.
 - AI: contextual to location, route, POIs, preferences, and travel state; advanced generative capabilities remain optional and decoupled through `LanguageModelProvider`.

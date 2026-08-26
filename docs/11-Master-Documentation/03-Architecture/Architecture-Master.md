@@ -19,7 +19,9 @@ Redis.
 MinIO.
 
 ## Routing
-GraphHopper/Valhalla/OSRM sujeto a spike técnico.
+`RoutingProvider` desacopla el dominio del motor. GraphHopper 11.0 es la
+implementación inicial seleccionada por ADR-028; OSRM y Valhalla permanecen como
+alternativas sustituibles.
 
 ## Maps
 OpenStreetMap con cliente Flutter compatible.

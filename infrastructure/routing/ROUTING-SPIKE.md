@@ -3,7 +3,8 @@
 ## Estado y objetivo
 
 **Estado:** benchmark técnico y revisión cartográfica completados; GraphHopper 11.0
-seleccionado por ADR-028, pendiente de prueba contractual e incorporación al Compose.
+seleccionado por ADR-028 e incorporado al Compose interno con health check. P1 sigue en
+curso hasta validar ruta, contrato/errores y reutilización del grafo.
 
 El spike compara implementaciones sustituibles de `RoutingProvider` con evidencia del
 corredor piloto. No cambia la abstracción aprobada ni acopla el dominio a un motor.
@@ -145,7 +146,7 @@ PostgreSQL/PostGIS, Redis y MinIO; ~14 GiB disponibles, swap sin uso y puertos 8
 Pendiente para cerrar técnicamente P1:
 
 1. prueba del contrato real de `RoutingProvider`, incluidos errores normalizados;
-2. incorporar GraphHopper al Compose interno con health check;
-3. documentar actualización reproducible del PBF y artefactos;
-4. ejecutar la validación posterior a reinicio;
+2. ejecutar la primera ruta operativa desde la red interna;
+3. documentar la actualización reproducible del PBF y artefactos;
+4. ejecutar la validación posterior a reinicio y confirmar reutilización del grafo;
 5. contrastar ETA con evidencia de campo cuando esté disponible.

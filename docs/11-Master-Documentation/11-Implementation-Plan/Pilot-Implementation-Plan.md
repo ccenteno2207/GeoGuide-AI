@@ -10,7 +10,10 @@
 ## P1 – Local Infrastructure
 - Docker Compose: completado y validado;
 - PostGIS, Redis y MinIO: salud, función y persistencia validadas;
-- routing spike: benchmark completado; selección e incorporación al Compose pendientes.
+- routing spike: benchmark completado y GraphHopper 11.0 seleccionado por ADR-028;
+  servicio incorporado al Compose interno y verificado `healthy` sin puertos publicados.
+  Permanecen pendientes la primera ruta operativa, las pruebas del contrato y errores,
+  y la validación de reutilización del grafo después de reinicio.
 
 ## P2 – Backend Bootstrap
 - Spring Boot;
