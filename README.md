@@ -24,8 +24,13 @@ Start at [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md). Architecture follows 
 
 ## Estado de implementación
 
-P0 (preparación documental) está completada. La infraestructura base de P1 está
-validada y su routing spike comparativo está completado; queda confirmar el motor e
-incorporarlo al Compose antes de cerrar P1.
+P0 (preparación documental) y P1 (infraestructura local) están completadas. P2
+(backend bootstrap) está en curso sobre `feature/p2-backend-bootstrap`, con base
+`e21aeab`. Los checkpoints P2.0–P2.5 están implementados y validados: el backend arranca, empaqueta un
+JAR ejecutable, expone exclusivamente `/actuator/health` y tiene preparada la
+configuración JDBC/Flyway y la migración mínima de PostGIS. P2.6 está implementado y
+validado estáticamente mediante un Dockerfile multi-stage Java 21 con runtime no root;
+su build real en VM está pendiente. P2.7 no se ha iniciado, la integración real con
+PostgreSQL/Flyway no está validada y el hito M03 permanece pendiente.
 La configuración inicial de PostgreSQL/PostGIS, Redis y MinIO, junto con sus instrucciones
 de operación, se encuentra en [infrastructure/README.md](infrastructure/README.md).

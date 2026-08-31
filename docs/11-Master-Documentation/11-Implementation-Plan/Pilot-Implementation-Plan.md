@@ -15,10 +15,26 @@
 - hito M02: completado. P1 cumple su criterio de cierre técnico.
 
 ## P2 – Backend Bootstrap
-- Spring Boot;
-- health;
-- Flyway;
-- places.
+- estado: en curso en `feature/p2-backend-bootstrap`, base `e21aeab`;
+- P2.0–P2.5: implementados y validados;
+- P2.4: aplicación web/Actuator, único endpoint `health`, pruebas, empaquetado y health
+  temporal HTTP 200 / `UP` validados;
+- P2.5: JDBC/PostgreSQL/Flyway, configuración por variables y V001 mínima preparados;
+  pruebas, empaquetado y `git diff --check` validados;
+- limitación: todavía no existe integración real backend→PostgreSQL ni ejecución de
+  Flyway; PostgreSQL continúa exclusivamente en la red Docker interna sin publicar 5432;
+- revisión técnica posterior de P2.5: solo lectura, sin correcciones bloqueantes;
+- P2.6: Dockerfile multi-stage con `eclipse-temurin:21-jdk-jammy` para build mediante
+  Maven Wrapper y `eclipse-temurin:21-jre-jammy` para runtime no privilegiado
+  `10001:10001`; JAR construido dentro de Docker y `.dockerignore` creados;
+- validación P2.6: revisión estática satisfactoria, LF/shebang/`chmod +x` verificados;
+  Compose sin cambios y sin secretos ni alcance funcional adicional;
+- pendiente P2.6 en VM: `docker build`, `Config.User`, `id`, propietario del JAR y
+  arranque real; Docker no está disponible en la laptop;
+- pendientes de datos: conexión backend→PostgreSQL/PostGIS, V001 real,
+  `flyway_schema_history` y health con datasource real;
+- P2.7: no iniciado;
+- hito M03: pendiente.
 
 ## P3 – Seed Data
 - taxonomía;
