@@ -20,6 +20,36 @@ services:
       start_period: 10s
     networks: [data]
 
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    image: geoguide-ai/backend:p2.7
+    restart: unless-stopped
+    user: "10001:10001"
+    environment:
+      SPRING_PROFILES_ACTIVE: local
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-geoguide}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-geoguide_app}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD in infrastructure/.env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - bash
+        - -ec
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/8080;
+          printf 'GET /actuator/health HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n' >&3;
+          grep -q '"status":"UP"' <&3
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks: [data]
+
   redis:
     image: redis:7.4-alpine
     restart: unless-stopped
