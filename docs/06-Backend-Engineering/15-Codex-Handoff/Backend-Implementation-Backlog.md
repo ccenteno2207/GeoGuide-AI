@@ -11,9 +11,8 @@
 - [x] `.dockerignore` del backend creado; Compose permanece sin cambios.
 - estructura modular.
 
-Checkpoint actual: P2.0–P2.5 implementados y validados; P2.6 implementado y validado
-estáticamente. La validación dinámica Docker en VM está pendiente. P2.7 no iniciado,
-P2 sigue en curso y M03 no está cumplido.
+Checkpoint actual: P2.0–P2.6 implementados y validados. P2.6 tiene validación dinámica
+Docker completada en la VM. P2.7 no iniciado, P2 sigue en curso y M03 no está cumplido.
 
 ## B02 – Database
 - [x] dependencias JDBC, PostgreSQL y Flyway preparadas.
@@ -26,12 +25,17 @@ P2 sigue en curso y M03 no está cumplido.
 - point_of_interest.
 - índices.
 
-## Pendientes de validación Docker
-- [ ] `docker build` real en VM.
-- [ ] inspección de `Config.User`.
-- [ ] ejecución de `id` dentro de la imagen o contenedor.
-- [ ] comprobación del propietario del JAR.
+## Validación Docker
+- [x] `docker build` real en VM: `17/17 FINISHED`.
+- [x] inspección de `Config.User`: `10001:10001`.
+- [x] ejecución de `id`: usuario y grupo `geoguide` con UID/GID 10001.
+- [x] comprobación del propietario del JAR: `10001:10001`.
+- [x] ausencia de contenedores de validación en ejecución e imagen conservada en VM.
 - [ ] arranque real del backend en Docker.
+- [ ] incorporación y healthcheck del backend en Compose.
+- [ ] datasource y conexión PostgreSQL/PostGIS dentro de la red interna.
+- [ ] Flyway, V001, `flyway_schema_history` y health con datasource real.
+- [ ] comprobación de que no se publiquen innecesariamente puertos internos al host.
 
 ## B03 – Places
 - dominio.

@@ -27,12 +27,16 @@
 - P2.6: Dockerfile multi-stage con `eclipse-temurin:21-jdk-jammy` para build mediante
   Maven Wrapper y `eclipse-temurin:21-jre-jammy` para runtime no privilegiado
   `10001:10001`; JAR construido dentro de Docker y `.dockerignore` creados;
-- validación P2.6: revisión estática satisfactoria, LF/shebang/`chmod +x` verificados;
-  Compose sin cambios y sin secretos ni alcance funcional adicional;
-- pendiente P2.6 en VM: `docker build`, `Config.User`, `id`, propietario del JAR y
-  arranque real; Docker no está disponible en la laptop;
-- pendientes de datos: conexión backend→PostgreSQL/PostGIS, V001 real,
-  `flyway_schema_history` y health con datasource real;
+- validación P2.6: revisión estática satisfactoria y validación dinámica completada
+  en `srv-geoguide-ai`; build `17/17 FINISHED`, imagen
+  `geoguide-ai/backend:p2.6-validation` (`c0937ddd6204`, 457 MB), runtime y JAR
+  `10001:10001`, sin contenedores de validación activos;
+- estado VM durante la validación: rama `feature/p2-backend-bootstrap`, HEAD `05f5c33`
+  y working tree limpio; Compose sin cambios;
+- pendientes: incorporar y arrancar el backend en Compose, configurar datasource en la
+  red interna, conectar PostgreSQL/PostGIS, ejecutar Flyway/V001, comprobar
+  `flyway_schema_history`, validar health real y evitar publicaciones innecesarias de
+  puertos internos al host;
 - P2.7: no iniciado;
 - hito M03: pendiente.
 

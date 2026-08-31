@@ -23,12 +23,12 @@
 
 ### Changed
 - P1 y el hito M02 están completados. P2.0–P2.5 están implementados y validados sobre
-  `feature/p2-backend-bootstrap`; P2.6 está implementado y validado estáticamente,
-  P2.7 no se ha iniciado y M03 no está cumplido.
+  `feature/p2-backend-bootstrap`; P2.6 está implementado y validado dinámicamente en
+  la VM `srv-geoguide-ai`, P2.7 no se ha iniciado y M03 no está cumplido.
 - P2.5 fue revisado técnicamente en modo de solo lectura y no se encontraron
   correcciones bloqueantes para iniciar P2.6.
-- `backend/.gitkeep` fue retirado; los cambios acumulados de P2 permanecen en la rama
-  feature pendientes de checkpoint Git.
+- `backend/.gitkeep` fue retirado y el checkpoint P2.0–P2.6 quedó registrado en
+  `05f5c33` sobre la rama feature.
 - La descripción del producto aclara que Open Source First es una estrategia
   tecnológica y no determina la licencia del producto.
 
@@ -36,9 +36,9 @@
 - P2.5 valida configuración y preparación, no integración real con PostgreSQL.
 - La ejecución de V001, `flyway_schema_history`, permisos de `CREATE EXTENSION`,
   conexión backend→PostgreSQL y health con datasource real siguen pendientes.
-- El `docker build`, la inspección de `Config.User`, la ejecución de `id`, la
-  comprobación del propietario del JAR y el arranque real en Docker siguen pendientes
-  de validación dinámica en la VM; Docker no está disponible en la laptop.
+- El build de la imagen P2.6, `Config.User`, `id` y propietario del JAR fueron validados
+  dinámicamente en la VM. Siguen pendientes el arranque real del backend en Docker, su
+  incorporación a Compose y la integración con PostgreSQL/Flyway.
 
 ## 0.1.0 - Foundation
 

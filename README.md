@@ -29,8 +29,8 @@ P0 (preparación documental) y P1 (infraestructura local) están completadas. P2
 `e21aeab`. Los checkpoints P2.0–P2.5 están implementados y validados: el backend arranca, empaqueta un
 JAR ejecutable, expone exclusivamente `/actuator/health` y tiene preparada la
 configuración JDBC/Flyway y la migración mínima de PostGIS. P2.6 está implementado y
-validado estáticamente mediante un Dockerfile multi-stage Java 21 con runtime no root;
-su build real en VM está pendiente. P2.7 no se ha iniciado, la integración real con
-PostgreSQL/Flyway no está validada y el hito M03 permanece pendiente.
+validado dinámicamente en la VM mediante una imagen multi-stage Java 21 con runtime
+`10001:10001`. P2.7 no se ha iniciado; la incorporación del backend a Compose y la
+integración real con PostgreSQL/Flyway permanecen pendientes, al igual que M03.
 La configuración inicial de PostgreSQL/PostGIS, Redis y MinIO, junto con sus instrucciones
 de operación, se encuentra en [infrastructure/README.md](infrastructure/README.md).

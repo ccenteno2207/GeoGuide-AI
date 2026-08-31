@@ -29,8 +29,8 @@ backend sin introducir decisiones inconsistentes.
 ## Estado de implementación P2
 
 P2 está **EN CURSO** en `feature/p2-backend-bootstrap`, con base `e21aeab`.
-P2.0–P2.5 están implementados y validados. P2.6 está **IMPLEMENTADO Y VALIDADO
-ESTÁTICAMENTE**; P2.7 **NO SE HA INICIADO** y M03 no está cumplido.
+P2.0–P2.6 están implementados y validados. P2.6 está **VALIDADO DINÁMICAMENTE EN
+VM**; P2.7 **NO SE HA INICIADO** y M03 no está cumplido.
 
 P2.4 incorporó `spring-boot-starter-web`, `spring-boot-starter-actuator` y
 `application.yml`. Actuator expone exclusivamente `health`. `mvnw.cmd test` terminó
@@ -69,11 +69,28 @@ alcance.
 
 La revisión técnica estática de P2.6 fue satisfactoria. `mvnw` usa LF, conserva el
 shebang `#!/bin/sh` y el Dockerfile aplica `chmod +x`; Dockerfile y `.dockerignore`
-también usan LF, protegidos por `.gitattributes`. Docker no está disponible en la
-laptop, por lo que siguen pendientes en la VM: `docker build`, inspección de
-`Config.User`, ejecución de `id`, propietario del JAR y arranque real del backend en
-Docker. También permanecen pendientes la integración backend→PostgreSQL/PostGIS,
-ejecución real de V001, `flyway_schema_history` y health con datasource real.
+también usan LF, protegidos por `.gitattributes`.
+
+La validación dinámica se ejecutó posteriormente en la VM `srv-geoguide-ai`, sobre
+`feature/p2-backend-bootstrap` y HEAD `05f5c33`, con working tree limpio. El comando
+`docker build -t geoguide-ai/backend:p2.6-validation ./backend` completó `17/17
+FINISHED` en aproximadamente 271.5 segundos durante el primer build. La imagen
+`geoguide-ai/backend:p2.6-validation` quedó disponible con Image ID `c0937ddd6204` y
+tamaño observado de 457 MB.
+
+`docker image inspect` confirmó `User=10001:10001`; la ejecución dinámica de `id`
+devolvió `uid=10001(geoguide) gid=10001(geoguide) groups=10001(geoguide)`. La
+inspección de `/app` confirmó que `app.jar` pertenece a UID/GID `10001:10001`.
+`docker ps --filter ancestor=geoguide-ai/backend:p2.6-validation` confirmó que no
+quedaron contenedores de validación ejecutándose, mientras `docker image ls` confirmó
+que la imagen permanece disponible en la VM.
+
+Esta evidencia valida la construcción y el usuario runtime de P2.6, no el arranque de
+la aplicación ni su integración. Permanecen pendientes: incorporar el backend a Docker
+Compose, configurar el datasource en la red interna, conectar backend→PostgreSQL/PostGIS,
+ejecutar Flyway y V001, comprobar `flyway_schema_history`, validar health con datasource
+real, definir el healthcheck del backend en Compose y confirmar que los puertos internos
+no se publiquen innecesariamente al host.
 
 ## Principios
 - Modular Monolith para el MVP.

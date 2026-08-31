@@ -4,12 +4,11 @@
 
 First Operational Pilot. P2 (Backend Bootstrap) está en curso en la rama
 `feature/p2-backend-bootstrap`, basada en `e21aeab`. P2.0–P2.5 están implementados y
-validados; P2.6
-está implementado y validado estáticamente: existe un Dockerfile multi-stage Java 21
-con build mediante Maven Wrapper y runtime no privilegiado `10001:10001`. Docker no
-está disponible en la laptop, por lo que el build y las comprobaciones dinámicas quedan
-pendientes en la VM. P2.7 no se ha iniciado; la integración real con PostgreSQL/Flyway
-no está validada y M03 permanece pendiente.
+validados; P2.6 está implementado y validado dinámicamente en `srv-geoguide-ai`. La
+imagen multi-stage Java 21 fue construida con Maven Wrapper y se verificaron el runtime
+no privilegiado `10001:10001` y la propiedad del JAR. P2.7 no se ha iniciado; el
+backend aún no se incorporó a Compose, la integración real con PostgreSQL/Flyway no
+está validada y M03 permanece pendiente.
 
 ## Product definition
 
