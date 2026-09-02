@@ -36,3 +36,6 @@ venv/
 # Local routing datasets and generated graphs
 infrastructure/routing/data/*
 !infrastructure/routing/data/.gitkeep
+
+# Maven build output
+backend/target/

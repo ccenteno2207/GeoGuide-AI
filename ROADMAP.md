@@ -6,8 +6,8 @@ The priority is the First Operational Pilot.
 | --- | --- |
 | P0 | Repository & Documentation Readiness |
 | P1 | Local Infrastructure |
-| P2 | Backend Bootstrap |
-| P3 | POI Data |
+| P2 | Backend Bootstrap — P2.0–P2.8 completados y validados según su alcance; P2.7A completado y validado; M03 — API base disponible: CUMPLIDO TÉCNICAMENTE; checkpoint Git documental P2.8/M03 pendiente |
+| P3 | POI Data — NO INICIADO |
 | P4 | Routing |
 | P5 | Route Discovery |
 | P6 | Mobile Bootstrap |

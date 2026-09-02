@@ -1,8 +1,9 @@
 # Infraestructura local — P1
 
-Esta carpeta contiene la entrega ejecutable de P1. Levanta PostgreSQL/PostGIS, Redis,
-MinIO y GraphHopper como motor inicial de `RoutingProvider`. El backend y Nginx se
-incorporarán en sus fases correspondientes; no se simulan aquí.
+Esta carpeta contiene la infraestructura local validada en P1 y la incorporación del
+backend correspondiente a P2.7. Levanta PostgreSQL/PostGIS, el backend, Redis, MinIO y
+GraphHopper. El backend se conecta únicamente a PostgreSQL en este checkpoint; no integra
+Redis, MinIO ni GraphHopper. Nginx se incorporará en una fase posterior.
 
 ## Requisitos
 
@@ -19,9 +20,9 @@ Desde esta carpeta:
 3. Definir `ROUTING_PBF_PATH` y `ROUTING_GRAPH_DIR` como rutas absolutas existentes.
 4. Conceder al UID/GID `10001:10001` acceso de escritura a `ROUTING_GRAPH_DIR`.
 5. Validar con `docker compose config`.
-6. Construir GraphHopper con `docker compose build graphhopper`.
+6. Construir el backend y GraphHopper con `docker compose build backend graphhopper`.
 7. Iniciar con `docker compose up -d`.
-8. Confirmar con `docker compose ps` que los cuatro servicios están `healthy`.
+8. Confirmar con `docker compose ps` que los cinco servicios están `healthy`.
 
 Los servicios no publican puertos en el host y la red Docker es interna. Esta
 configuración es para desarrollo local, no para producción.
@@ -29,12 +30,71 @@ configuración es para desarrollo local, no para producción.
 ## Comprobaciones rápidas
 
 - PostgreSQL/PostGIS: `docker compose exec postgres psql -U geoguide_app -d geoguide -c "SELECT PostGIS_Full_Version();"`
+- Backend desde la red interna: `docker compose exec minio curl -fsS http://backend:8080/actuator/health`.
 - Redis: `docker compose exec redis redis-cli ping`
 - MinIO: `docker compose exec minio curl -f http://localhost:9000/minio/health/live`.
 - GraphHopper: `docker compose exec graphhopper curl -f http://localhost:8989/info`.
 
 La API de GraphHopper queda disponible para futuros servicios de la misma red como
 `http://graphhopper:8989/route`; no se accede directamente desde el host.
+
+## Backend P2.7
+
+El servicio `backend`:
+
+- se construye desde `../backend/Dockerfile` como `geoguide-ai/backend:p2.7`;
+- se ejecuta con UID/GID `10001:10001`;
+- activa el perfil Spring `local`;
+- usa `postgres` como hostname Docker y reutiliza `POSTGRES_DB`, `POSTGRES_USER` y
+  `POSTGRES_PASSWORD` sin versionar secretos;
+- espera a que el healthcheck de PostgreSQL termine correctamente;
+- expone su health solo dentro de la red `data`, sin publicar 8080 al host;
+- comprueba `/actuator/health` internamente mediante Bash, `/dev/tcp` y `grep`, sin
+  depender de `curl` o `wget` en la imagen backend.
+
+La URL JDBC interna resultante es:
+
+```text
+jdbc:postgresql://postgres:5432/geoguide
+```
+
+Flyway está habilitado por la configuración común del backend y ejecuta las migraciones
+al arrancar con el datasource disponible. La comprobación posterior de V001 puede
+realizarse desde la VM sin publicar PostgreSQL:
+
+```bash
+docker compose exec postgres sh -lc \
+'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "
+SELECT installed_rank, version, description, script, installed_by, success
+FROM flyway_schema_history
+ORDER BY installed_rank;
+"'
+
+docker compose exec postgres sh -lc \
+'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "
+SELECT extname, extversion FROM pg_extension WHERE extname = '\''postgis'\'';
+SELECT PostGIS_Full_Version();
+"'
+```
+
+El preflight de P2.7 confirmó que el rol actual `geoguide_app` tiene privilegios elevados
+suficientes para el baseline y que PostGIS 3.4.3 ya existe. Esos privilegios no se
+modifican en P2.7; reducirlos y separar un rol de migraciones es deuda técnica de
+hardening posterior.
+
+P2.7A quedó completado y validado. La validación real en VM confirmó DNS interno,
+datasource, baseline Flyway `0` con descripción `P1 pre-Flyway PostGIS state`, V001
+`001` con checksum `-1627021776`, PostGIS 3.4.3, health y reinicio estable. Flyway
+confirmó el schema en versión `001` y ninguna migración pendiente;
+`flyway_schema_history` conserva exactamente baseline `0` y V001, ambos exitosos. La
+evidencia `p1_persistence_test` permaneció intacta y su comparación before/after terminó
+con código 0. La red `geoguide-ai_data` conserva `internal=true`, sin bindings host para
+8080/5432, y los servicios P1 permanecen preservados. `baseline-on-migrate` no está
+habilitado permanentemente. No ejecutar `docker compose down -v`.
+
+P2.0–P2.8 están completados y validados según su alcance. M03 — API base disponible:
+**CUMPLIDO TÉCNICAMENTE**. Checkpoint Git documental de P2.8/M03: **PENDIENTE**.
+P3: **NO INICIADO**; no existe PR ni merge.
 
 ## Detención y datos
 

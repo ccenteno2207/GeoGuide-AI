@@ -2,7 +2,19 @@
 
 ## Status
 
-First Operational Pilot.
+First Operational Pilot. P2 (Backend Bootstrap) está técnicamente completada en la rama
+`feature/p2-backend-bootstrap`, basada en `e21aeab`; su último checkpoint Git previo a
+la auditoría es `095413f`. P2.0–P2.8 están completados y validados según su alcance;
+P2.7A está completado y validado. El backend Java
+21/Spring Boot 3.5.16 se ejecuta como UID/GID `10001:10001`, está incorporado a Compose
+sin publicar 8080 y se conecta a PostgreSQL/PostGIS por la red interna. Flyway adoptó
+controladamente el esquema P1 mediante baseline explícito `0`, con descripción
+`P1 pre-Flyway PostGIS state`, ejecutó V001 y demostró idempotencia tras reinicio.
+`mvnw.cmd verify` terminó con `BUILD SUCCESS`: 2 pruebas, 0 fallos, 0 errores y
+0 omitidas. M03 — API base disponible: **CUMPLIDO TÉCNICAMENTE**. Checkpoint Git
+documental de P2.8/M03: **PENDIENTE**. P3: **NO INICIADO**. El privilegio elevado
+actual de `geoguide_app` queda registrado como deuda de hardening posterior. No se ha
+creado PR ni realizado merge.
 
 ## Product definition
 
