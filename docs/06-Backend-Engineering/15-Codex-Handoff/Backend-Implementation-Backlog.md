@@ -8,19 +8,24 @@
 - [x] JAR ejecutable generado y health temporal validado con HTTP 200 / `UP`.
 - [x] Dockerfile multi-stage Java 21 implementado y revisado estáticamente, con build
   mediante Maven Wrapper y runtime no privilegiado `10001:10001`.
-- [x] `.dockerignore` del backend creado; Compose permanece sin cambios.
+- [x] `.dockerignore` del backend creado; Compose permaneció sin cambios durante P2.6.
+- [x] backend incorporado a Compose con healthcheck, datasource real y red interna sin
+  publicar 8080/5432.
 - estructura modular.
 
-Checkpoint actual: P2.0–P2.6 implementados y validados. P2.6 tiene validación dinámica
-Docker completada en la VM. P2.7 no iniciado, P2 sigue en curso y M03 no está cumplido.
+Checkpoint actual: P2.0–P2.8 completados y validados según su alcance; P2.7A completado
+y validado. `mvnw.cmd verify` terminó con `BUILD SUCCESS`: 2 pruebas, 0 fallos,
+0 errores y 0 omitidas. M03 — API base disponible: **CUMPLIDO TÉCNICAMENTE**.
+Checkpoint Git documental de P2.8/M03: **PENDIENTE**. P3: **NO INICIADO**; no existe
+PR ni merge.
 
 ## B02 – Database
 - [x] dependencias JDBC, PostgreSQL y Flyway preparadas.
 - [x] configuración común y perfil local mediante variables de entorno.
 - [x] V001 mínima para `CREATE EXTENSION IF NOT EXISTS postgis;`.
-- [ ] conexión real backend→PostgreSQL/PostGIS.
-- [ ] ejecución real de Flyway y comprobación de `flyway_schema_history`.
-- [ ] permisos de extensión y health con datasource real en VM.
+- [x] conexión real backend→PostgreSQL/PostGIS.
+- [x] baseline explícito versión 0, V001 y `flyway_schema_history` comprobados.
+- [x] PostGIS 3.4.3 y health con datasource real validados en VM.
 - category.
 - point_of_interest.
 - índices.
@@ -31,11 +36,12 @@ Docker completada en la VM. P2.7 no iniciado, P2 sigue en curso y M03 no está c
 - [x] ejecución de `id`: usuario y grupo `geoguide` con UID/GID 10001.
 - [x] comprobación del propietario del JAR: `10001:10001`.
 - [x] ausencia de contenedores de validación en ejecución e imagen conservada en VM.
-- [ ] arranque real del backend en Docker.
-- [ ] incorporación y healthcheck del backend en Compose.
-- [ ] datasource y conexión PostgreSQL/PostGIS dentro de la red interna.
-- [ ] Flyway, V001, `flyway_schema_history` y health con datasource real.
-- [ ] comprobación de que no se publiquen innecesariamente puertos internos al host.
+- [x] arranque real del backend en Docker.
+- [x] incorporación y healthcheck del backend en Compose.
+- [x] datasource y conexión PostgreSQL/PostGIS dentro de la red interna.
+- [x] Flyway, baseline 0, V001, `flyway_schema_history` y health real.
+- [x] ausencia de publicación de 8080 y 5432 al host.
+- [x] restart controlado e idempotencia Flyway.
 
 ## B03 – Places
 - dominio.

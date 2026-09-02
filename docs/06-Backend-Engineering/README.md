@@ -28,9 +28,11 @@ backend sin introducir decisiones inconsistentes.
 
 ## Estado de implementación P2
 
-P2 está **EN CURSO** en `feature/p2-backend-bootstrap`, con base `e21aeab`.
-P2.0–P2.6 están implementados y validados. P2.6 está **VALIDADO DINÁMICAMENTE EN
-VM**; P2.7 **NO SE HA INICIADO** y M03 no está cumplido.
+P2 alcanzó **CIERRE TÉCNICO AUDITADO** en `feature/p2-backend-bootstrap`, con base
+`e21aeab` y checkpoint técnico P2.7 `095413f`. P2.0–P2.8 están completados y validados
+según su alcance; P2.7A está completado y validado. M03 — API base disponible:
+**CUMPLIDO TÉCNICAMENTE**. Checkpoint Git documental de P2.8/M03: **PENDIENTE**.
+P3: **NO INICIADO**; no existe PR ni merge.
 
 P2.4 incorporó `spring-boot-starter-web`, `spring-boot-starter-actuator` y
 `application.yml`. Actuator expone exclusivamente `health`. `mvnw.cmd test` terminó
@@ -51,12 +53,12 @@ JDBC reales versionados. `V001__enable_postgis.sql` contiene funcionalmente solo
 (2 pruebas; 0 fallos, errores u omitidas), el empaquetado fue exitoso y
 `git diff --check` devolvió código 0.
 
-P2.5 valida preparación, no integración PostgreSQL real. `GeoGuideApplicationTests`
+P2.5 validó preparación, no integración PostgreSQL real. `GeoGuideApplicationTests`
 excluye datasource/Flyway y `FlywayMigrationTests` solo verifica presencia y contenido
 del SQL. PostgreSQL permanece en la red Docker interna, sin publicar 5432. Quedan
-pendientes la ejecución de V001, `flyway_schema_history`, permisos para
-`CREATE EXTENSION postgis` en la VM, conexión backend→PostgreSQL y health con
-datasource real. Una revisión técnica posterior de solo lectura no encontró
+pendientes en ese checkpoint la ejecución de V001, `flyway_schema_history`, permisos
+para `CREATE EXTENSION postgis` en la VM, conexión backend→PostgreSQL y health con
+datasource real; P2.7 los validó posteriormente. Una revisión técnica posterior de solo lectura no encontró
 correcciones bloqueantes; P2.5 quedó listo para iniciar P2.6.
 
 P2.6 creó `backend/Dockerfile` con build multi-stage Java 21. La etapa de build usa
@@ -85,12 +87,28 @@ inspección de `/app` confirmó que `app.jar` pertenece a UID/GID `10001:10001`.
 quedaron contenedores de validación ejecutándose, mientras `docker image ls` confirmó
 que la imagen permanece disponible en la VM.
 
-Esta evidencia valida la construcción y el usuario runtime de P2.6, no el arranque de
-la aplicación ni su integración. Permanecen pendientes: incorporar el backend a Docker
-Compose, configurar el datasource en la red interna, conectar backend→PostgreSQL/PostGIS,
-ejecutar Flyway y V001, comprobar `flyway_schema_history`, validar health con datasource
-real, definir el healthcheck del backend en Compose y confirmar que los puertos internos
-no se publiquen innecesariamente al host.
+Esta evidencia validó la construcción y el usuario runtime de P2.6. P2.7 incorporó el
+backend a Compose, únicamente en `geoguide-ai_data`, sin bindings de host para 8080 o
+5432. El backend resolvió `postgres`, abrió el datasource real y alcanzó Flyway.
+
+La primera ejecución se detuvo de forma segura porque `public` contenía PostGIS y la
+evidencia `p1_persistence_test`, pero no `flyway_schema_history`. Después de backup e
+inventario se adoptó el esquema mediante Flyway OSS 11.7.2 con baseline explícito `0`,
+descripción `P1 pre-Flyway PostGIS state`, sin habilitar permanentemente
+`baseline-on-migrate`. El historial final contiene exactamente dos filas exitosas:
+baseline `0` y V001 `001`, tipo SQL, checksum `-1627021776`.
+
+PostGIS permaneció en 3.4.3 y la comparación before/after de `p1_persistence_test`
+terminó sin diferencias. El backend quedó healthy y Actuator respondió
+`{"status":"UP"}`. Tras un restart controlado, Flyway confirmó el schema en versión
+`001` y ninguna migración pendiente; `flyway_schema_history` conservó exactamente
+baseline `0` y V001. El backend volvió a healthy y los cuatro servicios P1 permanecieron
+preservados.
+
+P2.8 ejecutó `mvnw.cmd verify` con Java 21.0.12.1 y Maven Wrapper 3.9.16: `BUILD
+SUCCESS`, 2 pruebas, 0 fallos, 0 errores y 0 omitidas. La cuenta `geoguide_app` conserva privilegios
+elevados; separar el rol de migraciones y aplicar mínimo privilegio queda como deuda de
+hardening posterior, no como bloqueo de M03.
 
 ## Principios
 - Modular Monolith para el MVP.

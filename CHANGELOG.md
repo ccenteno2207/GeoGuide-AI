@@ -20,11 +20,17 @@
 - ADR-028 selecciona GraphHopper 11.0 como motor inicial de routing.
 - GraphHopper integrado al Compose interno con health check y grafo persistente.
 - Evidencia de ruta válida, error HTTP 400 y reutilización del grafo tras reinicio.
+- Backend incorporado a Docker Compose en la red interna, sin publicar 8080 ni 5432,
+  con datasource PostgreSQL/PostGIS real y healthcheck interno.
+- Adopción controlada de Flyway sobre el esquema P1 mediante baseline explícito versión
+  `0`; V001 registrada con checksum `-1627021776` y evidencia P1 preservada.
 
 ### Changed
-- P1 y el hito M02 están completados. P2.0–P2.5 están implementados y validados sobre
-  `feature/p2-backend-bootstrap`; P2.6 está implementado y validado dinámicamente en
-  la VM `srv-geoguide-ai`, P2.7 no se ha iniciado y M03 no está cumplido.
+- P1 y M02 están completados. P2.0–P2.8 están completados y validados según su alcance
+  sobre `feature/p2-backend-bootstrap`; P2.7A completó y validó la adopción controlada
+  de Flyway. `mvnw.cmd verify` terminó con `BUILD SUCCESS`: 2 pruebas, 0 fallos,
+  0 errores y 0 omitidas. M03 — API base disponible: **CUMPLIDO TÉCNICAMENTE**.
+  Checkpoint Git documental de P2.8/M03: **PENDIENTE**. P3: **NO INICIADO**.
 - P2.5 fue revisado técnicamente en modo de solo lectura y no se encontraron
   correcciones bloqueantes para iniciar P2.6.
 - `backend/.gitkeep` fue retirado y el checkpoint P2.0–P2.6 quedó registrado en
@@ -33,12 +39,11 @@
   tecnológica y no determina la licencia del producto.
 
 ### Known limitations
-- P2.5 valida configuración y preparación, no integración real con PostgreSQL.
-- La ejecución de V001, `flyway_schema_history`, permisos de `CREATE EXTENSION`,
-  conexión backend→PostgreSQL y health con datasource real siguen pendientes.
-- El build de la imagen P2.6, `Config.User`, `id` y propietario del JAR fueron validados
-  dinámicamente en la VM. Siguen pendientes el arranque real del backend en Docker, su
-  incorporación a Compose y la integración con PostgreSQL/Flyway.
+- `geoguide_app` conserva privilegios elevados utilizados durante el bootstrap. La
+  separación de un rol de migraciones y la reducción de privilegios son deuda de
+  hardening posterior, fuera del alcance de P2.8.
+- El staging, commit y push del checkpoint documental de P2.8/M03, así como cualquier
+  PR o merge, no forman parte de esta auditoría y requieren aprobación posterior.
 
 ## 0.1.0 - Foundation
 

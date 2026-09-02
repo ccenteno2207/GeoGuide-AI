@@ -82,9 +82,19 @@ suficientes para el baseline y que PostGIS 3.4.3 ya existe. Esos privilegios no 
 modifican en P2.7; reducirlos y separar un rol de migraciones es deuda técnica de
 hardening posterior.
 
-La integración real, Flyway/V001, `flyway_schema_history`, health con datasource y DNS
-interno deben validarse en la VM antes de considerar cerrado el checkpoint. No ejecutar
-`docker compose down -v` durante esa validación.
+P2.7A quedó completado y validado. La validación real en VM confirmó DNS interno,
+datasource, baseline Flyway `0` con descripción `P1 pre-Flyway PostGIS state`, V001
+`001` con checksum `-1627021776`, PostGIS 3.4.3, health y reinicio estable. Flyway
+confirmó el schema en versión `001` y ninguna migración pendiente;
+`flyway_schema_history` conserva exactamente baseline `0` y V001, ambos exitosos. La
+evidencia `p1_persistence_test` permaneció intacta y su comparación before/after terminó
+con código 0. La red `geoguide-ai_data` conserva `internal=true`, sin bindings host para
+8080/5432, y los servicios P1 permanecen preservados. `baseline-on-migrate` no está
+habilitado permanentemente. No ejecutar `docker compose down -v`.
+
+P2.0–P2.8 están completados y validados según su alcance. M03 — API base disponible:
+**CUMPLIDO TÉCNICAMENTE**. Checkpoint Git documental de P2.8/M03: **PENDIENTE**.
+P3: **NO INICIADO**; no existe PR ni merge.
 
 ## Detención y datos
 
