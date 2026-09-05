@@ -7,10 +7,12 @@ import ai.geoguide.routing.application.RoutingError;
 import ai.geoguide.routing.application.RoutingException;
 import ai.geoguide.routing.domain.Route;
 import ai.geoguide.routing.domain.RoutePoint;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import org.junit.jupiter.api.AfterEach;
@@ -61,14 +63,75 @@ class GraphHopperRoutingProviderTests {
                 .isEqualTo(RoutingError.PROVIDER_ERROR);
     }
 
+    @Test
+    void mapsGraphHopperConfirmedNoRouteToNoRouteFound() throws Exception {
+        startServer(400, "{\"message\":\"Connection between locations not found\",\"hints\":[{\"details\":\"com.graphhopper.util.exceptions.ConnectionNotFoundException\"}]}");
+
+        assertRoutingError(provider(), RoutingError.NO_ROUTE_FOUND);
+    }
+
+    @Test
+    void mapsUnexpectedGraphHopperClientErrorToProviderError() throws Exception {
+        startServer(400, "{\"message\":\"The requested profile does not exist\",\"hints\":[{\"details\":\"java.lang.IllegalArgumentException\"}]}");
+
+        assertRoutingError(provider(), RoutingError.PROVIDER_ERROR);
+    }
+
+    @Test
+    void mapsClientReadTimeoutToProviderTimeout() throws Exception {
+        startDelayedServer(Duration.ofMillis(250));
+
+        assertRoutingError(provider(Duration.ofMillis(25)), RoutingError.PROVIDER_TIMEOUT);
+    }
+
+    @Test
+    void mapsConnectionFailureToProviderUnavailable() throws Exception {
+        int unavailablePort;
+        try (ServerSocket socket = new ServerSocket(0)) {
+            unavailablePort = socket.getLocalPort();
+        }
+
+        GraphHopperRoutingProvider unavailableProvider = provider(
+                "http://localhost:" + unavailablePort, Duration.ofSeconds(1));
+        assertRoutingError(unavailableProvider, RoutingError.PROVIDER_UNAVAILABLE);
+    }
+
     private GraphHopperRoutingProvider provider() {
-        return new GraphHopperRoutingProvider(
-                RestClient.builder(), "http://localhost:" + server.getAddress().getPort(), Duration.ofSeconds(1));
+        return provider(Duration.ofSeconds(1));
+    }
+
+    private GraphHopperRoutingProvider provider(Duration timeout) {
+        return provider("http://localhost:" + server.getAddress().getPort(), timeout);
+    }
+
+    private GraphHopperRoutingProvider provider(String baseUrl, Duration timeout) {
+        return new GraphHopperRoutingProvider(RestClient.builder(), new ObjectMapper(), baseUrl, timeout);
+    }
+
+    private void assertRoutingError(GraphHopperRoutingProvider routingProvider, RoutingError expectedError) {
+        assertThatThrownBy(() -> routingProvider.calculate(new RoutePoint(0, 0), new RoutePoint(1, 1), "car"))
+                .isInstanceOf(RoutingException.class)
+                .extracting(exception -> ((RoutingException) exception).error())
+                .isEqualTo(expectedError);
     }
 
     private void startServer(int status, String body) throws IOException {
         server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
         server.createContext("/route", exchange -> respond(exchange, status, body));
+        server.start();
+    }
+
+    private void startDelayedServer(Duration delay) throws IOException {
+        server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
+        server.createContext("/route", exchange -> {
+            try {
+                Thread.sleep(delay.toMillis());
+                respond(exchange, 200, "{\"paths\":[]}");
+            } catch (InterruptedException exception) {
+                Thread.currentThread().interrupt();
+                exchange.close();
+            }
+        });
         server.start();
     }
 

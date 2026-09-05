@@ -7,12 +7,15 @@ import ai.geoguide.routing.domain.Route;
 import ai.geoguide.routing.domain.RouteGeometry;
 import ai.geoguide.routing.domain.RoutePoint;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.HttpStatusCode;
+import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
@@ -20,12 +23,15 @@ import org.springframework.web.client.RestClientResponseException;
 public final class GraphHopperRoutingProvider implements RoutingProvider {
 
     private final RestClient restClient;
+    private final ObjectMapper objectMapper;
 
-    public GraphHopperRoutingProvider(RestClient.Builder restClientBuilder, String baseUrl, Duration timeout) {
+    public GraphHopperRoutingProvider(
+            RestClient.Builder restClientBuilder, ObjectMapper objectMapper, String baseUrl, Duration timeout) {
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(timeout);
         requestFactory.setReadTimeout(timeout);
         this.restClient = restClientBuilder.baseUrl(baseUrl).requestFactory(requestFactory).build();
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -40,7 +46,9 @@ public final class GraphHopperRoutingProvider implements RoutingProvider {
                             .build())
                     .retrieve()
                     .onStatus(HttpStatusCode::is4xxClientError, (request, clientResponse) -> {
-                        throw new RoutingException(RoutingError.NO_ROUTE_FOUND);
+                        throw new RoutingException(isConfirmedNoRoute(clientResponse)
+                                ? RoutingError.NO_ROUTE_FOUND
+                                : RoutingError.PROVIDER_ERROR);
                     })
                     .onStatus(HttpStatusCode::is5xxServerError, (request, clientResponse) -> {
                         throw new RoutingException(RoutingError.PROVIDER_ERROR);
@@ -59,6 +67,22 @@ public final class GraphHopperRoutingProvider implements RoutingProvider {
         } catch (RuntimeException exception) {
             throw new RoutingException(RoutingError.PROVIDER_ERROR, exception);
         }
+    }
+
+    private boolean isConfirmedNoRoute(ClientHttpResponse response) throws IOException {
+        JsonNode error = objectMapper.readTree(response.getBody());
+        if (error == null || !error.path("hints").isArray()) {
+            return false;
+        }
+        for (JsonNode hint : error.path("hints")) {
+            String details = hint.path("details").asText();
+            if (details.endsWith("ConnectionNotFoundException")
+                    || details.endsWith("PointNotFoundException")
+                    || details.endsWith("PointOutOfBoundsException")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private Route toRoute(RoutePoint origin, RoutePoint destination, JsonNode response) {
