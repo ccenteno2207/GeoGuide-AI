@@ -57,4 +57,7 @@ The product covers cultural, historical, archaeological, natural, gastronomic, a
 
 Kubernetes, microservices, mandatory public cloud, complex ML personalization,
 advanced generated itineraries, CarPlay/Android Auto integrations, and real-time traffic are outside the MVP. See
-`DOCUMENTATION_INDEX.md` for authority order: most recent accepted ADR, Entrega 04.6, specialized current documentation, Entrega 11, Foundation, then archive.
+`DOCUMENTATION_INDEX.md` for the current authority model and navigation. Authority
+is scoped by domain: accepted ADRs govern architecture, approved phase contracts govern
+authorized phase scope, `PROJECT_CONTEXT.md` records current state, and `ROADMAP.md`
+defines progression without authorizing implementation.
