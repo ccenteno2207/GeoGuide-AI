@@ -26,6 +26,11 @@
   `0`; V001 registrada con checksum `-1627021776` y evidencia P1 preservada.
 
 ### Changed
+- P1 y P2 están cerradas; M03 está cumplido y el PR #5 fue integrado en `main` mediante
+  el merge commit `07001b9`. Comenzó la consolidación documental P3.0: P3.0-A–F están
+  aprobados y P3.0-G está en curso sobre una rama exclusivamente documental. P3 se
+  define como Domain + Persistence + Data para el baseline POI de Lima → Obrajillo; su
+  implementación no ha comenzado y R3 no está cumplido.
 - P1 y M02 están completados. P2.0–P2.8 están completados y validados según su alcance
   sobre `feature/p2-backend-bootstrap`; P2.7A completó y validó la adopción controlada
   de Flyway. `mvnw.cmd verify` terminó con `BUILD SUCCESS`: 2 pruebas, 0 fallos,

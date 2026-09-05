@@ -2,19 +2,18 @@
 
 ## Status
 
-First Operational Pilot. P2 (Backend Bootstrap) está técnicamente completada en la rama
-`feature/p2-backend-bootstrap`, basada en `e21aeab`; su último checkpoint Git previo a
-la auditoría es `095413f`. P2.0–P2.8 están completados y validados según su alcance;
-P2.7A está completado y validado. El backend Java
-21/Spring Boot 3.5.16 se ejecuta como UID/GID `10001:10001`, está incorporado a Compose
-sin publicar 8080 y se conecta a PostgreSQL/PostGIS por la red interna. Flyway adoptó
-controladamente el esquema P1 mediante baseline explícito `0`, con descripción
-`P1 pre-Flyway PostGIS state`, ejecutó V001 y demostró idempotencia tras reinicio.
-`mvnw.cmd verify` terminó con `BUILD SUCCESS`: 2 pruebas, 0 fallos, 0 errores y
-0 omitidas. M03 — API base disponible: **CUMPLIDO TÉCNICAMENTE**. Checkpoint Git
-documental de P2.8/M03: **PENDIENTE**. P3: **NO INICIADO**. El privilegio elevado
-actual de `geoguide_app` queda registrado como deuda de hardening posterior. No se ha
-creado PR ni realizado merge.
+First Operational Pilot. P1 y P2 están cerradas; M03 — API base disponible está
+cumplido. El PR #5 fue integrado en `main` mediante el merge commit `07001b9`, que es el
+baseline Git de P3. El privilegio elevado actual de `geoguide_app` permanece registrado
+como deuda de hardening posterior.
+
+P3 — POI Data & Domain es la fase actual. P3.0-A–F están aprobados y P3.0-G se encuentra
+en consolidación documental. La implementación de P3 no ha comenzado. P3 comprende
+Domain + Persistence + Data para producir un
+baseline POI canónico, versionado, geoespacial, trazable, reproducible, idempotente y
+probado para Lima → Obrajillo. No incluye API HTTP, controllers, OpenAPI Places,
+search, nearby, routing, RoutingProvider, Route Discovery, ranking, Flutter, UX móvil,
+voz ni IA. R3 — Data: POIs piloto validados permanece pendiente.
 
 ## Product definition
 

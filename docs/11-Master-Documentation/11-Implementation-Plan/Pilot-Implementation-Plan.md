@@ -45,13 +45,25 @@
   0 fallos, 0 errores y 0 omitidas;
 - deuda no bloqueante: privilegios elevados de `geoguide_app`, a reducir en hardening;
 - M03 — API base disponible: **CUMPLIDO TÉCNICAMENTE**;
-- checkpoint Git documental de P2.8/M03: **PENDIENTE**; no existe PR ni merge.
+- P2 está cerrada; el PR #5 fue integrado en `main` mediante el merge commit `07001b9`.
 
-## P3 – Seed Data
-- estado: **NO INICIADO**;
-- taxonomía;
-- POIs del corredor piloto;
-- provenance.
+## P3 – POI Data & Domain
+- estado: P3.0-A–F aprobados y P3.0-G en consolidación documental; implementación
+  **NO INICIADA**;
+- alcance: Domain + Persistence + Data;
+- dominio mínimo POI y puerto de persistencia;
+- persistencia PostgreSQL/PostGIS y migraciones posteriores a V001;
+- taxonomía inicial y provenance;
+- dataset versionado del corredor Lima → Obrajillo;
+- carga reproducible e idempotente;
+- pruebas de dominio e integración con PostgreSQL/PostGIS real;
+- objetivo: baseline POI canónico, versionado, geoespacial, trazable, reproducible,
+  idempotente y probado;
+- R3 — Data: POIs piloto validados es el release gate para aceptar el dataset resultante
+  al cierre de P3 y permanece pendiente;
+- el contrato integral de cierre se define en [P3 Definition of Done](P3-Definition-of-Done.md);
+- API HTTP, search, nearby, routing, Route Discovery y experiencia POI pertenecen a
+  fases posteriores.
 
 ## P4 – Routing
 - origin/destination;

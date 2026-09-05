@@ -16,8 +16,9 @@
 Checkpoint actual: P2.0–P2.8 completados y validados según su alcance; P2.7A completado
 y validado. `mvnw.cmd verify` terminó con `BUILD SUCCESS`: 2 pruebas, 0 fallos,
 0 errores y 0 omitidas. M03 — API base disponible: **CUMPLIDO TÉCNICAMENTE**.
-Checkpoint Git documental de P2.8/M03: **PENDIENTE**. P3: **NO INICIADO**; no existe
-PR ni merge.
+P2 está cerrada; el PR #5 fue integrado en `main` mediante `07001b9`. P3.0-A–F están
+aprobados y P3.0-G está en consolidación documental. La implementación P3 no ha
+comenzado y R3 permanece pendiente.
 
 ## B02 – Database
 - [x] dependencias JDBC, PostgreSQL y Flyway preparadas.
@@ -26,9 +27,8 @@ PR ni merge.
 - [x] conexión real backend→PostgreSQL/PostGIS.
 - [x] baseline explícito versión 0, V001 y `flyway_schema_history` comprobados.
 - [x] PostGIS 3.4.3 y health con datasource real validados en VM.
-- category.
-- point_of_interest.
-- índices.
+- P3: migraciones posteriores a V001 para Category, PointOfInterest, provenance e
+  índice espacial, sin fijar todavía nombres ni cantidad de migraciones.
 
 ## Validación Docker
 - [x] `docker build` real en VM: `17/17 FINISHED`.
@@ -43,12 +43,16 @@ PR ni merge.
 - [x] ausencia de publicación de 8080 y 5432 al host.
 - [x] restart controlado e idempotencia Flyway.
 
-## B03 – Places
-- dominio.
-- repository.
-- GET /places/{id}.
-- nearby.
-- tests.
+## B03 – POI Data & Domain (P3)
+- dominio mínimo `PointOfInterest` y value objects del baseline;
+- puerto de persistencia y adaptador, sin fijar firma ni tecnología concreta;
+- persistencia PostgreSQL/PostGIS;
+- taxonomía, provenance y dataset Lima → Obrajillo;
+- carga reproducible e idempotente;
+- pruebas unitarias y de integración con PostgreSQL/PostGIS real.
+
+GET de Places, endpoints HTTP, search y nearby quedan fuera de P3 y se planificarán en
+fases posteriores. Routing, corredor, discovery y ranking permanecen en B04/B05.
 
 ## B04 – Routing
 - RoutingProvider.
