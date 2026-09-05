@@ -12,8 +12,8 @@ P3 — POI Data & Domain está implementado y validado técnicamente en la rama
 baseline POI canónico, versionado, geoespacial, trazable, reproducible, idempotente y
 probado para Lima → Obrajillo. No incluye API HTTP, controllers, OpenAPI Places,
 search, nearby, routing, RoutingProvider, Route Discovery, ranking, Flutter, UX móvil,
-voz ni IA. R3 — Data: POIs piloto validados cumple técnicamente; falta la revisión e
-integración del Pull Request de cierre.
+voz ni IA. R3 — Data: POIs piloto validados está cumplido. P3 fue cerrado mediante el
+PR #7 y el merge commit `aaa4c6b`.
 
 ## Product definition
 

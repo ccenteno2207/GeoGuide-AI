@@ -10,8 +10,8 @@ cierre P3/R3 prevalece este contrato dentro de su ámbito, sin sustituir ADR ace
 El runbook externo conserva aprobaciones, comandos y evidencia operativa, pero no es la
 fuente normativa del repositorio. Este contrato está aprobado documentalmente; la
 implementación P3 fue completada y validada técnicamente en
-`feature/p3-poi-data-domain`; el cierre definitivo permanece condicionado a la revisión e
-integración del Pull Request.
+`feature/p3-poi-data-domain`. El PR #7 fue revisado e integrado mediante `aaa4c6b`; P3 y
+R3 están cerrados.
 
 ## 2. Alcance
 
@@ -216,5 +216,5 @@ humana. Fuera de P3 permanecen todas las capacidades excluidas en la sección 2.
 ## 15. Aprobación y cierre
 
 Cada criterio aplicable se registra como `CUMPLE` o `NO CUMPLE`. La evidencia consolidada
-está en [P3 Validation Evidence](P3-Validation-Evidence.md). R3 cumple técnicamente y P3
-requiere revisión Git e integración del Pull Request final para su cierre definitivo.
+está en [P3 Validation Evidence](P3-Validation-Evidence.md). R3 y P3 están cerrados tras
+la integración del PR #7 y la sincronización limpia de `main`.

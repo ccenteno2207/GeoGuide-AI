@@ -7,7 +7,7 @@ The priority is the First Operational Pilot.
 | P0 | Repository & Documentation Readiness |
 | P1 | Local Infrastructure |
 | P2 | Backend Bootstrap — CERRADO; M03 cumplido; PR #5 integrado en `main` mediante `07001b9` |
-| P3 | POI Data & Domain — implementado y validado técnicamente; PR de cierre pendiente |
+| P3 | POI Data & Domain — CERRADO; R3 cumplido; PR #7 integrado mediante `aaa4c6b` |
 | P4 | Routing |
 | P5 | Route Discovery |
 | P6 | Mobile Bootstrap |

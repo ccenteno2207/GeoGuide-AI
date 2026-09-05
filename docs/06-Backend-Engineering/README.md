@@ -32,7 +32,7 @@ P2 alcanzó **CIERRE TÉCNICO AUDITADO** en `feature/p2-backend-bootstrap`, con 
 `e21aeab` y checkpoint técnico P2.7 `095413f`. P2.0–P2.8 están completados y validados
 según su alcance; P2.7A está completado y validado. M03 — API base disponible:
 **CUMPLIDO TÉCNICAMENTE**. El PR #5 cerró P2. P3 está implementado y validado
-técnicamente en `feature/p3-poi-data-domain`; su Pull Request de cierre está pendiente.
+técnicamente en `feature/p3-poi-data-domain`; el PR #7 fue integrado mediante `aaa4c6b`.
 
 P2.4 incorporó `spring-boot-starter-web`, `spring-boot-starter-actuator` y
 `application.yml`. Actuator expone exclusivamente `health`. `mvnw.cmd test` terminó

@@ -18,8 +18,7 @@ y validado. `mvnw.cmd verify` terminó con `BUILD SUCCESS`: 2 pruebas, 0 fallos,
 0 errores y 0 omitidas. M03 — API base disponible: **CUMPLIDO TÉCNICAMENTE**.
 P2 está cerrada; el PR #5 fue integrado en `main` mediante `07001b9`. P3.0-A–G están
 completados. P3 está implementado y validado técnicamente en
-`feature/p3-poi-data-domain`; R3 cumple técnicamente y falta integrar el Pull Request de
-cierre.
+`feature/p3-poi-data-domain`; R3 está cumplido y el PR #7 cerró P3 mediante `aaa4c6b`.
 
 ## B02 – Database
 - [x] dependencias JDBC, PostgreSQL y Flyway preparadas.

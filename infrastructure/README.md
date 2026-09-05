@@ -99,8 +99,8 @@ P3 fue aplicado y validado en la VM sin reconstruir la base: Flyway conservó ba
 `0` y V001 con checksum `-1627021776`, y aplicó V002–V004. La carga idempotente produjo
 15 categorías, 5 POIs y 10 registros de provenance. `p1_persistence_test`, el volumen
 `postgres_data`, la red `geoguide-ai_data` con `internal=true` y la ausencia de bindings
-sensibles permanecieron intactos. R3 cumple técnicamente; el cierre definitivo de P3
-queda sujeto a la integración de su Pull Request.
+sensibles permanecieron intactos. R3 está cumplido y el PR #7 cerró P3 mediante
+`aaa4c6b`.
 
 ## Detención y datos
 

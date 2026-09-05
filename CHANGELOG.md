@@ -37,7 +37,7 @@
 - P3 — POI Data & Domain fue implementado y validado técnicamente. La suite Java 21 en
   VM ejecutó 26 pruebas sin fallos, errores ni omisiones; Flyway migró el baseline
   heredado de V001 a V004 sin reconstrucción, preservando `p1_persistence_test`. R3
-  cumple técnicamente y el cierre definitivo queda sujeto al Pull Request de P3.
+  quedó cumplido. El PR #7 cerró P3 mediante el merge commit `aaa4c6b`.
 - P1 y P2 están cerradas; M03 está cumplido y el PR #5 fue integrado en `main` mediante
   el merge commit `07001b9`. P3.0-A–G fueron consolidados por el PR #6 y establecieron
   Domain + Persistence + Data como alcance del baseline POI de Lima → Obrajillo.

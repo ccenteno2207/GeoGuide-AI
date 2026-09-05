@@ -48,7 +48,7 @@
 - P2 está cerrada; el PR #5 fue integrado en `main` mediante el merge commit `07001b9`.
 
 ## P3 – POI Data & Domain
-- estado: implementación y validación técnica completadas; Pull Request de cierre pendiente;
+- estado: **CERRADO**; R3 cumplido; PR #7 integrado mediante `aaa4c6b`;
 - alcance: Domain + Persistence + Data;
 - dominio mínimo POI y puerto de persistencia;
 - persistencia PostgreSQL/PostGIS y migraciones posteriores a V001;
