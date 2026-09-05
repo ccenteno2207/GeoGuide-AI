@@ -15,8 +15,11 @@ configurables; timeout, indisponibilidad, ausencia de ruta, respuesta inválida 
 del proveedor se normalizan sin filtrar detalles internos. Las pruebas de aceptación y
 la validación real en VM están completadas.
 
-P5 — Route Discovery es la siguiente fase, pero **NO ESTÁ INICIADA**. Corredor,
-candidatos POI, ranking, progreso de ruta y `/routes/discover` permanecen pendientes.
+P5 — Route Discovery es la siguiente fase, pero **NO ESTÁ INICIADA** funcionalmente.
+P5.0-A y P5.0-B fueron aceptados; P5.0-C resolvió las contradicciones y P5.0-D congeló
+el `P5 PHASE CONTRACT v1`. La aprobación de fase y la ejecución autónoma funcional
+siguen pendientes de una instrucción explícita. Corredor, candidatos POI, ranking,
+progreso de ruta y `/routes/discover` permanecen sin implementar.
 P6–P12 están planificadas. El roadmap indica progresión, no autorización de ejecución.
 
 ## Product definition
