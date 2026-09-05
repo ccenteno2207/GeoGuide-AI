@@ -71,7 +71,7 @@ lo que no fue necesario ampliar el PBF ni ejecutar routing nuevo.
 
 `P3-DOD-01`–`P3-DOD-47`: **CUMPLE**.
 
-`R3-01`–`R3-15`: **CUMPLE TÉCNICAMENTE**.
+`R3-01`–`R3-15`: **CUMPLE**.
 
 `P3-DOD-48`: **CUMPLE** mediante PR #7, merge commit `aaa4c6b` y sincronización limpia
 de `main` en laptop y VM.
