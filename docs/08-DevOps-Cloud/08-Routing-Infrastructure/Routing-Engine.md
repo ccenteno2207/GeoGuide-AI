@@ -1,8 +1,8 @@
 # Infraestructura del Motor de Rutas
 
-GraphHopper 11.0 se ejecuta como servicio independiente en Docker y será consumido
-únicamente por el backend mediante `RoutingProvider`. ADR-028 registra su selección
-como motor inicial.
+GraphHopper 11.0 se ejecuta como servicio independiente en Docker y es consumido
+únicamente por el backend mediante el adaptador de `RoutingProvider`. ADR-028 registra
+su selección como motor inicial.
 
 ## Implementación vigente
 
@@ -15,7 +15,7 @@ como motor inicial.
 
 OSRM y Valhalla permanecen como alternativas técnicas sustituibles.
 
-La selección final debe validarse con rutas reales del territorio objetivo.
+La precisión de ETA sigue requiriendo contraste futuro con rutas reales del territorio.
 
 ## Datos
 Los datos de OpenStreetMap necesarios para routing deben descargarse, procesarse y
@@ -23,8 +23,12 @@ versionarse operacionalmente.
 
 El primer arranque operativo generó un grafo de aproximadamente 42 MB. P1 validó una
 ruta interna de 10 615.548 m, una solicitud inválida con HTTP 400 y la reutilización del
-grafo después del reinicio; el servidor inició en aproximadamente 2 s. El adaptador y
-la normalización de `RoutingProvider` corresponden a P4.
+grafo después del reinicio; el servidor inició en aproximadamente 2 s. P4 completó el
+adaptador backend, la configuración externa, la normalización de distancia/duración y
+errores, y `POST /api/v1/routes/plan` con GeoJSON `LineString`.
+
+El procedimiento de actualización del PBF y reconstrucción del grafo permanece
+diferido. P4 no modificó el PBF ni el bounding box y no implementó Route Discovery.
 
 ## Consideraciones
 - tamaño del extracto;

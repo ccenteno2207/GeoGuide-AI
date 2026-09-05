@@ -1,19 +1,22 @@
 # Backlog de Implementación
 
 ## Sprint técnico 1
-- Modelo interno Route.
-- RoutingProvider.
-- Adaptador inicial.
-- Endpoint `/routes/plan`.
-- Pruebas de contrato.
+- [x] Modelo interno Route.
+- [x] `RoutingProvider`.
+- [x] Adaptador GraphHopper 11.
+- [x] Endpoint `POST /api/v1/routes/plan`.
+- [x] Geometría GeoJSON `LineString`.
+- [x] Pruebas de contrato y normalización de errores.
 
-## Sprint técnico 2
-- Geometría LineString.
+Fundación de routing completada y cerrada en P4. Los siguientes sprints describen
+capacidades planificadas; no constituyen un contrato de alcance ni autorizan P5.
+
+## Sprint técnico 2 — NOT STARTED
 - Consulta PostGIS de corredor.
 - POI candidate model.
 - `/routes/discover`.
 
-## Sprint técnico 3
+## Sprint técnico 3 — NOT STARTED
 - Ranking.
 - Route progress.
 - Filtros de categorías.

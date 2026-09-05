@@ -14,7 +14,11 @@ Una historia backend está terminada cuando:
 - [ ] documentación afectada actualizada;
 - [ ] no contradice ADR sin aprobación.
 
-## Cierre técnico P3
+## Registro histórico de cierre técnico P3
+
+La sección siguiente conserva el contrato histórico de P3 y no representa el estado ni
+el alcance de la fase actual. Consultar `PROJECT_CONTEXT.md`, `ROADMAP.md` y el contrato
+de fase aprobado antes de ejecutar trabajo nuevo.
 
 El contrato integral y prevalente está en
 [P3 Definition of Done](../../11-Master-Documentation/11-Implementation-Plan/P3-Definition-of-Done.md).

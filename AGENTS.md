@@ -2,7 +2,7 @@
 
 Read `AGENTS.md`, `PROJECT_CONTEXT.md`, `DOCUMENTATION_INDEX.md`, Entrega 04.6, then task-relevant specialized documentation.
 
-Authority: most recent accepted ADR; Entrega 04.6; Entregas 04.1-10; Entrega 11; Foundation; archive. Archived documents are non-authoritative.
+Authority is scoped rather than a single linear chain: `AGENTS.md` defines global agent rules; `PROJECT_CONTEXT.md` defines current technical/product state; `ROADMAP.md` defines progression; accepted ADRs govern architecture; an approved phase contract governs the authorized scope of the current phase; `AI_DEVELOPMENT_GUIDE.md` defines the execution method; specialized documentation supplies technical detail. Entrega 04.6 remains the architecture baseline. Archived documents are non-authoritative.
 
 The MVP uses Flutter/Dart, Java 21/Spring Boot 3, Modular Monolith, Clean Architecture, PostgreSQL/PostGIS, Redis, MinIO, OpenStreetMap, RoutingProvider, Linux, Docker Compose, Nginx, and GitHub Actions. Route Discovery is the priority; Facts First, AI Second.
 
@@ -15,6 +15,8 @@ Voice is a strategic hands-free channel, especially while driving: STT -> contex
 Documentation is in Spanish where practical; code is in English. Use OpenAPI for HTTP contracts and prefer PlantUML for new textual diagrams.
 
 ## Engineering Workflow
+
+Roadmap placement does not authorize implementation. Future architecture does not automatically belong to the current phase. Proposal does not equal approval. Before implementing a major phase: audit documentation -> identify contradictions -> define and freeze scope -> obtain approval -> implement -> validate -> integrate -> validate post-merge -> formally close. A merged PR does not by itself close a phase.
 
 For every implementation task:
 
@@ -68,15 +70,20 @@ A task is complete only when:
 
 Current milestone progression:
 
-- P0 Repository & Documentation Readiness
-- P1 Local Infrastructure
-- P2 Backend Bootstrap
-- P3 POI Data
-- P4 Routing
-- P5 Route Discovery
-- P6 Mobile Bootstrap
-- P7 First Vertical Slice
+- P0 Repository & Documentation Readiness — CLOSED
+- P1 Local Infrastructure — CLOSED
+- P2 Backend Bootstrap — CLOSED
+- P3 POI Data — CLOSED
+- P4 Routing — CLOSED
+- P5 Route Discovery — NEXT / NOT STARTED
+- P6 Mobile Bootstrap — PLANNED
+- P7 First Vertical Slice — PLANNED
+- P8 POI Experience — PLANNED
+- P9 Offline + Driving — PLANNED
+- P10 Quality + Security — PLANNED
+- P11 Linux Server Deployment — PLANNED
+- P12 Real Road Pilot — PLANNED
 
-The immediate objective is the First Operational Pilot.
+The current post-P4 baseline concept is `f14ddc6`. Verify the effective `main` and `origin/main` before starting any authorized work instead of treating a recorded SHA as permanent.
 
 Do NOT attempt to build the entire product in a single task.

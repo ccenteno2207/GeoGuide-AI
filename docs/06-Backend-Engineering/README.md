@@ -26,7 +26,15 @@ backend sin introducir decisiones inconsistentes.
 - Testcontainers
 - Docker / Docker Compose
 
-## Estado de implementación P2
+## Estado de implementación
+
+P0–P4 están cerradas. El baseline posterior a P4 es `f14ddc6`; el PR #9 fue integrado
+y la validación post-merge terminó correctamente. P4 incorporó `RoutingProvider`, el
+adaptador GraphHopper 11, `POST /api/v1/routes/plan`, geometría GeoJSON `LineString`,
+configuración externa y errores normalizados sin persistencia. P5 — Route Discovery es
+la siguiente fase, pero no está iniciada.
+
+### Evidencia histórica P2
 
 P2 alcanzó **CIERRE TÉCNICO AUDITADO** en `feature/p2-backend-bootstrap`, con base
 `e21aeab` y checkpoint técnico P2.7 `095413f`. P2.0–P2.8 están completados y validados

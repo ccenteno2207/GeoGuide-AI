@@ -2,18 +2,22 @@
 
 ## Status
 
-First Operational Pilot. P1 y P2 están cerradas; M03 — API base disponible está
-cumplido. El PR #5 fue integrado en `main` mediante el merge commit `07001b9`, que es el
-baseline Git de P3. El privilegio elevado actual de `geoguide_app` permanece registrado
-como deuda de hardening posterior.
+First Operational Pilot. P0, P1, P2, P3 y P4 están cerradas. El baseline oficial
+posterior a P4 es `f14ddc6` (`f14ddc66bc36248e7417583cff5da64c5ff03eba`); el PR #9
+fue integrado y la validación post-merge de P4 terminó correctamente. El privilegio
+elevado actual de `geoguide_app` permanece registrado como deuda de hardening posterior.
 
-P3 — POI Data & Domain está implementado y validado técnicamente en la rama
-`feature/p3-poi-data-domain`. P3 comprende Domain + Persistence + Data para producir un
-baseline POI canónico, versionado, geoespacial, trazable, reproducible, idempotente y
-probado para Lima → Obrajillo. No incluye API HTTP, controllers, OpenAPI Places,
-search, nearby, routing, RoutingProvider, Route Discovery, ranking, Flutter, UX móvil,
-voz ni IA. R3 — Data: POIs piloto validados está cumplido. P3 fue cerrado mediante el
-PR #7 y el merge commit `aaa4c6b`.
+P4 implementó routing puro sin persistencia: el backend depende de `RoutingProvider`,
+GraphHopper 11 se integra mediante un adaptador sustituible y
+`POST /api/v1/routes/plan` devuelve distancia y duración normalizadas junto con una
+geometría GeoJSON `LineString`. La URL, el perfil y el timeout backend → proveedor son
+configurables; timeout, indisponibilidad, ausencia de ruta, respuesta inválida y errores
+del proveedor se normalizan sin filtrar detalles internos. Las pruebas de aceptación y
+la validación real en VM están completadas.
+
+P5 — Route Discovery es la siguiente fase, pero **NO ESTÁ INICIADA**. Corredor,
+candidatos POI, ranking, progreso de ruta y `/routes/discover` permanecen pendientes.
+P6–P12 están planificadas. El roadmap indica progresión, no autorización de ejecución.
 
 ## Product definition
 
@@ -53,4 +57,7 @@ The product covers cultural, historical, archaeological, natural, gastronomic, a
 
 Kubernetes, microservices, mandatory public cloud, complex ML personalization,
 advanced generated itineraries, CarPlay/Android Auto integrations, and real-time traffic are outside the MVP. See
-`DOCUMENTATION_INDEX.md` for authority order: most recent accepted ADR, Entrega 04.6, specialized current documentation, Entrega 11, Foundation, then archive.
+`DOCUMENTATION_INDEX.md` for the current authority model and navigation. Authority
+is scoped by domain: accepted ADRs govern architecture, approved phase contracts govern
+authorized phase scope, `PROJECT_CONTEXT.md` records current state, and `ROADMAP.md`
+defines progression without authorizing implementation.

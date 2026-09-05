@@ -24,14 +24,11 @@ Start at [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md). Architecture follows 
 
 ## Estado de implementación
 
-P0 (preparación documental), P1 (infraestructura local) y P2 (backend bootstrap) están
-cerradas. El PR #5 de P2 fue integrado en `main` mediante el merge commit `07001b9` y
-M03 — API base disponible está cumplido.
+P0–P4 están completadas y cerradas. El baseline posterior a P4 incluye el dominio y los
+datos POI, la infraestructura local y routing desacoplado mediante `RoutingProvider`,
+con GraphHopper 11 como implementación inicial.
 
-P3 — POI Data & Domain está implementado y validado en la rama
-`feature/p3-poi-data-domain`. El baseline incluye dominio POI, persistencia PostGIS,
-migraciones V002–V004, taxonomía y dataset versionados de Lima → Obrajillo. R3 — Data:
-POIs piloto validados está cumplido. P3 fue cerrado mediante el PR #7 y el merge commit
-`aaa4c6b`.
+La siguiente fase es P5 — Route Discovery, que **no está iniciada**. P6–P12 permanecen
+planificadas.
 La configuración inicial de PostgreSQL/PostGIS, Redis y MinIO, junto con sus instrucciones
 de operación, se encuentra en [infrastructure/README.md](infrastructure/README.md).

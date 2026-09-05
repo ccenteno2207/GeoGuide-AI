@@ -1,13 +1,17 @@
 # Documentation Index
 
-## Authority order
+## Ámbitos de autoridad y orden de lectura
 
-1. Most recent accepted ADR.
-2. Entrega 04.6: `docs/04-SolutionArchitecture/06-Master-Architecture/`.
-3. Specialized documentation in Entregas 04.1 through 10.
-4. Entrega 11 Master Documentation.
-5. Foundation documentation.
-6. `docs/archive/`, which is non-authoritative.
+1. `AGENTS.md`: reglas globales y punto de entrada de agentes.
+2. `PROJECT_CONTEXT.md`: estado técnico y de producto vigente.
+3. `ROADMAP.md`: progresión oficial P0–P12; no autoriza implementación.
+4. ADR aceptados aplicables: decisiones arquitectónicas.
+5. Entrega 04.6: baseline arquitectónica.
+6. Contrato de fase aprobado: alcance autorizado de la fase actual, sin poder
+   contradecir los ADR ni la arquitectura.
+7. `AI_DEVELOPMENT_GUIDE.md`, handoffs y documentación especializada: método y detalle.
+8. Entrega 11 y documentación Foundation: soporte y trazabilidad.
+9. `docs/archive/`: historia no autoritativa.
 
 ## Documentation domains
 
@@ -32,6 +36,7 @@
 
 | Need | Read |
 | --- | --- |
+| Current phase and implementation status | `AGENTS.md`, `PROJECT_CONTEXT.md`, and `ROADMAP.md` |
 | Architecture decision | Accepted ADR, then Entrega 04.6 |
 | Product scope and MVP boundaries | `PROJECT_CONTEXT.md`, `docs/00-Executive/MVP_SCOPE.md`, and Product Master |
 | Route Discovery | `docs/04-SolutionArchitecture/04-Route-Discovery-Engine/` |
@@ -42,10 +47,16 @@
 | Data and AI | `docs/09-Data-AI/` |
 | Commercial | `docs/10-Roadmap-Comercial/` |
 | Implementation plan | `docs/11-Master-Documentation/` |
+| P4 routing implementation | `PROJECT_CONTEXT.md`, Backend Engineering, Routing Infrastructure, Test Catalog, and Decision Register |
+| Current or future phase scope | Approved phase contract when one exists; roadmap placement alone is insufficient |
+| Codex execution method | `AI_DEVELOPMENT_GUIDE.md` and current Codex handoff documents |
 | P3 completion and R3 acceptance | `docs/11-Master-Documentation/11-Implementation-Plan/P3-Definition-of-Done.md` — canonical normative source |
 | P3 validation evidence | `docs/11-Master-Documentation/11-Implementation-Plan/P3-Validation-Evidence.md` |
 
 Archived documents must not be used as current architecture or implementation
 guidance unless explicitly requested.
+
+Current state: P0–P4 are closed; P5 — Route Discovery is next but not started; P6–P12
+are planned. No active instruction may turn this progression into automatic scope.
 
 “AI optional in the core MVP” means route, POI, corridor, ranking, and factual place cards cannot depend on an LLM. It does not negate the strategic voice channel: voice remains an adapter over the same channel-independent GeoGuide use cases used by Flutter and future clients.
