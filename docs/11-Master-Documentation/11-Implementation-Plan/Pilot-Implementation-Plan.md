@@ -48,8 +48,7 @@
 - P2 está cerrada; el PR #5 fue integrado en `main` mediante el merge commit `07001b9`.
 
 ## P3 – POI Data & Domain
-- estado: P3.0-A–F aprobados y P3.0-G en consolidación documental; implementación
-  **NO INICIADA**;
+- estado: implementación y validación técnica completadas; Pull Request de cierre pendiente;
 - alcance: Domain + Persistence + Data;
 - dominio mínimo POI y puerto de persistencia;
 - persistencia PostgreSQL/PostGIS y migraciones posteriores a V001;
@@ -60,7 +59,7 @@
 - objetivo: baseline POI canónico, versionado, geoespacial, trazable, reproducible,
   idempotente y probado;
 - R3 — Data: POIs piloto validados es el release gate para aceptar el dataset resultante
-  al cierre de P3 y permanece pendiente;
+  al cierre de P3 y cumple técnicamente;
 - el contrato integral de cierre se define en [P3 Definition of Done](P3-Definition-of-Done.md);
 - API HTTP, search, nearby, routing, Route Discovery y experiencia POI pertenecen a
   fases posteriores.

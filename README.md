@@ -28,8 +28,10 @@ P0 (preparación documental), P1 (infraestructura local) y P2 (backend bootstrap
 cerradas. El PR #5 de P2 fue integrado en `main` mediante el merge commit `07001b9` y
 M03 — API base disponible está cumplido.
 
-P3 — POI Data & Domain es la fase actual. P3.0-A–F están aprobados y P3.0-G se encuentra
-en consolidación documental. La implementación de P3 no ha comenzado y R3 — Data: POIs
-piloto validados permanece pendiente.
+P3 — POI Data & Domain está implementado y validado en la rama
+`feature/p3-poi-data-domain`. El baseline incluye dominio POI, persistencia PostGIS,
+migraciones V002–V004, taxonomía y dataset versionados de Lima → Obrajillo. R3 — Data:
+POIs piloto validados cumple técnicamente; el cierre definitivo de P3 queda sujeto a la
+revisión e integración de su Pull Request.
 La configuración inicial de PostgreSQL/PostGIS, Redis y MinIO, junto con sus instrucciones
 de operación, se encuentra en [infrastructure/README.md](infrastructure/README.md).

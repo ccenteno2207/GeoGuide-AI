@@ -3,6 +3,14 @@
 ## Unreleased
 
 ### Added
+- Dominio POI independiente de Spring/HTTP con `PointOfInterest`, `PoiId`, `GeoPoint`,
+  `Category`, provenance y puertos de persistencia.
+- Persistencia JDBC PostgreSQL/PostGIS mediante V002–V004: schema `geo`, categorías,
+  POIs `geometry(Point,4326)`, provenance, constraints e índices GiST/B-tree.
+- Taxonomía y dataset piloto versionados para Lima → Obrajillo, con carga reproducible
+  e idempotente, provenance MINCETUR/OpenStreetMap y reglas binarias de calidad.
+- Pruebas unitarias, de artefactos y Testcontainers con PostgreSQL/PostGIS real; evidencia
+  de validación sobre el baseline heredado en la VM.
 - Aplicación Spring Boot ejecutable con `spring-boot-starter-web` y Actuator limitado
   exclusivamente al endpoint `health`.
 - Preparación JDBC/Flyway para PostgreSQL con configuración común y perfil local
@@ -26,16 +34,18 @@
   `0`; V001 registrada con checksum `-1627021776` y evidencia P1 preservada.
 
 ### Changed
+- P3 — POI Data & Domain fue implementado y validado técnicamente. La suite Java 21 en
+  VM ejecutó 26 pruebas sin fallos, errores ni omisiones; Flyway migró el baseline
+  heredado de V001 a V004 sin reconstrucción, preservando `p1_persistence_test`. R3
+  cumple técnicamente y el cierre definitivo queda sujeto al Pull Request de P3.
 - P1 y P2 están cerradas; M03 está cumplido y el PR #5 fue integrado en `main` mediante
-  el merge commit `07001b9`. Comenzó la consolidación documental P3.0: P3.0-A–F están
-  aprobados y P3.0-G está en curso sobre una rama exclusivamente documental. P3 se
-  define como Domain + Persistence + Data para el baseline POI de Lima → Obrajillo; su
-  implementación no ha comenzado y R3 no está cumplido.
+  el merge commit `07001b9`. P3.0-A–G fueron consolidados por el PR #6 y establecieron
+  Domain + Persistence + Data como alcance del baseline POI de Lima → Obrajillo.
 - P1 y M02 están completados. P2.0–P2.8 están completados y validados según su alcance
   sobre `feature/p2-backend-bootstrap`; P2.7A completó y validó la adopción controlada
   de Flyway. `mvnw.cmd verify` terminó con `BUILD SUCCESS`: 2 pruebas, 0 fallos,
   0 errores y 0 omitidas. M03 — API base disponible: **CUMPLIDO TÉCNICAMENTE**.
-  Checkpoint Git documental de P2.8/M03: **PENDIENTE**. P3: **NO INICIADO**.
+  El cierre Git de P2.8/M03 se completó mediante el PR #5.
 - P2.5 fue revisado técnicamente en modo de solo lectura y no se encontraron
   correcciones bloqueantes para iniciar P2.6.
 - `backend/.gitkeep` fue retirado y el checkpoint P2.0–P2.6 quedó registrado en

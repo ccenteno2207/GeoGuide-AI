@@ -11,11 +11,13 @@ Sin secretos y vulnerabilidades críticas no aceptadas.
 
 ## R3 – Data
 R3 — Data: POIs piloto validados es el release gate para aceptar el dataset producido
-por P3. R3 permanece pendiente y solo cumple cuando todos los criterios aplicables
-siguientes cumplen:
+por P3. R3 cumple técnicamente para `p3-lima-obrajillo-v1`; el cierre definitivo de P3
+queda condicionado a la revisión e integración de su Pull Request. Los criterios
+aplicables verificados son:
 
 El contrato integral y prevalente de P3/R3 está en
 [P3 Definition of Done](P3-Definition-of-Done.md).
+La evidencia está en [P3 Validation Evidence](P3-Validation-Evidence.md).
 
 - integridad de identidad, nombre, categoría, ubicación y estado;
 - ubicación Point con SRID 4326;

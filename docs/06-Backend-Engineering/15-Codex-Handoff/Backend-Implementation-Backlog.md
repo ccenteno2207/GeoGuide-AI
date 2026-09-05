@@ -16,9 +16,10 @@
 Checkpoint actual: P2.0–P2.8 completados y validados según su alcance; P2.7A completado
 y validado. `mvnw.cmd verify` terminó con `BUILD SUCCESS`: 2 pruebas, 0 fallos,
 0 errores y 0 omitidas. M03 — API base disponible: **CUMPLIDO TÉCNICAMENTE**.
-P2 está cerrada; el PR #5 fue integrado en `main` mediante `07001b9`. P3.0-A–F están
-aprobados y P3.0-G está en consolidación documental. La implementación P3 no ha
-comenzado y R3 permanece pendiente.
+P2 está cerrada; el PR #5 fue integrado en `main` mediante `07001b9`. P3.0-A–G están
+completados. P3 está implementado y validado técnicamente en
+`feature/p3-poi-data-domain`; R3 cumple técnicamente y falta integrar el Pull Request de
+cierre.
 
 ## B02 – Database
 - [x] dependencias JDBC, PostgreSQL y Flyway preparadas.
@@ -27,8 +28,8 @@ comenzado y R3 permanece pendiente.
 - [x] conexión real backend→PostgreSQL/PostGIS.
 - [x] baseline explícito versión 0, V001 y `flyway_schema_history` comprobados.
 - [x] PostGIS 3.4.3 y health con datasource real validados en VM.
-- P3: migraciones posteriores a V001 para Category, PointOfInterest, provenance e
-  índice espacial, sin fijar todavía nombres ni cantidad de migraciones.
+- [x] P3: V002–V004 crean Category, PointOfInterest, provenance e índices posteriores a
+  V001; Testcontainers y el baseline heredado en VM fueron validados.
 
 ## Validación Docker
 - [x] `docker build` real en VM: `17/17 FINISHED`.

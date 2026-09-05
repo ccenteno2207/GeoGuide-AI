@@ -95,13 +95,12 @@ habilitado permanentemente. No ejecutar `docker compose down -v`.
 P2.0–P2.8 están completados y validados según su alcance. P2 está cerrada, M03 — API
 base disponible está cumplido y el PR #5 fue integrado en `main` mediante `07001b9`.
 
-P3.0 está en consolidación documental y su implementación no ha comenzado. Cuando P3
-se aplique, deberá conservar el baseline Flyway `0`, V001 con checksum `-1627021776` y
-`baseline-on-migrate` deshabilitado permanentemente. También deberá preservar el objeto
-y los datos históricos de `p1_persistence_test`, el volumen `postgres_data`, la base
-existente, la red `geoguide-ai_data` con `internal=true` y la ausencia de publicación al
-host de puertos internos sensibles. P3 todavía no se ha aplicado ni validado en la VM;
-R3 permanece pendiente.
+P3 fue aplicado y validado en la VM sin reconstruir la base: Flyway conservó baseline
+`0` y V001 con checksum `-1627021776`, y aplicó V002–V004. La carga idempotente produjo
+15 categorías, 5 POIs y 10 registros de provenance. `p1_persistence_test`, el volumen
+`postgres_data`, la red `geoguide-ai_data` con `internal=true` y la ausencia de bindings
+sensibles permanecieron intactos. R3 cumple técnicamente; el cierre definitivo de P3
+queda sujeto a la integración de su Pull Request.
 
 ## Detención y datos
 
