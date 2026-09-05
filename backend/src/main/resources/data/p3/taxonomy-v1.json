@@ -1,0 +1,20 @@
+{
+  "version": "p3-taxonomy-v1",
+  "categories": [
+    {"id":"01000000-0000-0000-0000-000000000001","code":"WATERFALL","name":"Catarata","active":true},
+    {"id":"01000000-0000-0000-0000-000000000002","code":"LAGOON","name":"Laguna","active":true},
+    {"id":"01000000-0000-0000-0000-000000000003","code":"MOUNTAIN","name":"Montaña","active":true},
+    {"id":"01000000-0000-0000-0000-000000000004","code":"FOREST","name":"Bosque","active":true},
+    {"id":"01000000-0000-0000-0000-000000000005","code":"BEACH","name":"Playa","active":true},
+    {"id":"01000000-0000-0000-0000-000000000006","code":"MUSEUM","name":"Museo","active":true},
+    {"id":"01000000-0000-0000-0000-000000000007","code":"ARCHAEOLOGICAL_SITE","name":"Sitio arqueológico","active":true},
+    {"id":"01000000-0000-0000-0000-000000000008","code":"MONUMENT","name":"Monumento","active":true},
+    {"id":"01000000-0000-0000-0000-000000000009","code":"HISTORIC_CHURCH","name":"Iglesia histórica","active":true},
+    {"id":"01000000-0000-0000-0000-000000000010","code":"VIEWPOINT","name":"Mirador","active":true},
+    {"id":"01000000-0000-0000-0000-000000000011","code":"FUEL","name":"Combustible","active":true},
+    {"id":"01000000-0000-0000-0000-000000000012","code":"HEALTH","name":"Salud","active":true},
+    {"id":"01000000-0000-0000-0000-000000000013","code":"FOOD","name":"Alimentación","active":true},
+    {"id":"01000000-0000-0000-0000-000000000014","code":"LODGING","name":"Hospedaje","active":true},
+    {"id":"01000000-0000-0000-0000-000000000015","code":"OTHER","name":"Otros","active":true}
+  ]
+}

@@ -34,6 +34,13 @@ universal ni de carga concurrente.
 | 5 | Lima Centro → Lunahuaná | `-12.0478931,-77.0459961` | `-13.0026086,-76.1623609` |
 | 6 | Lima → Obrajillo | `-12.002644,-77.094678` | `-11.6954053,-76.8352259` |
 
+> **Corrección de nomenclatura (P3):** la geocodificación verificable sitúa el destino
+> congelado del caso 6 en la Carretera Vencedores de Sángrar, sector Santa Rosa de
+> Quives, no en el pueblo de Obrajillo. Los resultados de 54–56 km conservan valor como
+> evidencia histórica de ese trazado, pero no prueban el tramo completo hasta Obrajillo.
+> El corredor de producto Lima → Obrajillo sí permanece dentro del bounding box P1; P3
+> no ejecuta routing nuevo ni modifica el PBF para corregir esta etiqueta histórica.
+
 El endpoint inicial de San Vicente no era enrutable y hacía fallar los casos 3 y 4.
 Se corrigió y congeló el punto de la tabla; GraphHopper lo ajustó a una vía a ~34 m.
 Los tres motores recibieron después la misma coordenada y realizaron su propio *snapping*.
