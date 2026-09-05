@@ -195,4 +195,28 @@ class PostgisIntegrationTests {
         assertThat(candidates).extracting(candidate -> candidate.name()).containsExactly("On route");
         assertThat(candidates.getFirst().routeProgress()).isBetween(0.0, 1.0);
     }
+
+    @Test
+    void discoveryCorridorQueryCanUseTheInheritedGistIndex() {
+        UUID categoryId = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO geo.category (id, code, name, active) VALUES (?, 'INDEX_TEST', 'Index test', true)", categoryId);
+        jdbcTemplate.update("INSERT INTO geo.point_of_interest (id, category_id, name, location, active, created_at, updated_at) VALUES (?, ?, 'Indexed POI', ST_SetSRID(ST_MakePoint(-77.00, -12.00), 4326), true, now(), now())", UUID.randomUUID(), categoryId);
+
+        jdbcTemplate.execute("SET enable_seqscan = off");
+        try {
+            var plan = jdbcTemplate.queryForList("""
+                    EXPLAIN (ANALYZE, BUFFERS, COSTS OFF)
+                    WITH route AS (SELECT ST_SetSRID(ST_GeomFromGeoJSON(?), 4326) AS geometry)
+                    SELECT p.id FROM geo.point_of_interest p CROSS JOIN route
+                    WHERE p.location && ST_Expand(route.geometry, ? / 111320.0)
+                      AND ST_DWithin(p.location::geography, route.geometry::geography, ?)
+                    LIMIT ?
+                    """, String.class,
+                    "{\"type\":\"LineString\",\"coordinates\":[[-77.02,-12.0],[-76.98,-12.0]]}", 1_000, 1_000, 20);
+
+            assertThat(plan).anyMatch(line -> line.contains("Index Scan"));
+        } finally {
+            jdbcTemplate.execute("RESET enable_seqscan");
+        }
+    }
 }
