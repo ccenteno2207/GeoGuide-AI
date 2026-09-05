@@ -2,6 +2,10 @@
 GeoGuide AI debe sentirse como un compañero de viaje y descubrimiento, no como un
 panel técnico GIS.
 
+CEFI da nombre a esa identidad conversacional dentro de GeoGuide AI: un copiloto que
+comunica información y opciones manteniendo el control en el usuario. No es una
+aplicación separada ni su definición autoriza una implementación.
+
 ## Objetivos
 - Llegar de origen a destino con una ruta clara.
 - Entender qué lugares interesantes existen en el trayecto.
