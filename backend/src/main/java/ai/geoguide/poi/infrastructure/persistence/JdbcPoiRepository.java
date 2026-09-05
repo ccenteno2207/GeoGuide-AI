@@ -14,12 +14,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-@ConditionalOnBean(JdbcTemplate.class)
+@ConditionalOnProperty(name = "spring.datasource.url")
 public class JdbcPoiRepository implements PoiRepository {
 
     private final JdbcTemplate jdbcTemplate;

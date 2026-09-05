@@ -4,12 +4,12 @@ import ai.geoguide.poi.application.port.CategoryRepository;
 import ai.geoguide.poi.domain.Category;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
-@ConditionalOnBean(JdbcTemplate.class)
+@ConditionalOnProperty(name = "spring.datasource.url")
 public class JdbcCategoryRepository implements CategoryRepository {
 
     private final JdbcTemplate jdbcTemplate;
