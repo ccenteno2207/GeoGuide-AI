@@ -1,0 +1,66 @@
+{
+  "version": "p3-lima-obrajillo-v1",
+  "corridor": "Lima → Obrajillo",
+  "pois": [
+    {
+      "id":"02000000-0000-0000-0000-000000000001",
+      "name":"Santuario de Santa Rosa de Quives",
+      "description":"Santuario asociado a la etapa de vida de Santa Rosa de Lima en Quives.",
+      "categoryCode":"HISTORIC_CHURCH",
+      "latitude":-11.6687314,"longitude":-76.7899852,"active":true,
+      "createdAt":"2026-09-04T00:00:00Z","updatedAt":"2026-09-04T00:00:00Z",
+      "provenance":[
+        {"id":"03000000-0000-0000-0000-000000000001","sourceSystem":"mincetur-inventario","sourceRecordId":"6009","sourceUrl":"https://consultasenlinea.mincetur.gob.pe/fichaInventario/index.aspx?cod_Ficha=6009","retrievedAt":"2026-09-04T00:00:00Z","license":"PUBLIC_INFORMATION_SOURCE_TERMS_APPLY","attribution":"MINCETUR — Inventario Nacional de Recursos Turísticos","incorporationMethod":"CURATED","logicalKey":"mincetur:6009"},
+        {"id":"03000000-0000-0000-0000-000000000002","sourceSystem":"openstreetmap","sourceRecordId":"node/6933500471","sourceUrl":"https://www.openstreetmap.org/node/6933500471","retrievedAt":"2026-09-04T00:00:00Z","license":"ODbL-1.0","attribution":"© OpenStreetMap contributors","incorporationMethod":"CURATED","logicalKey":"osm:node:6933500471"}
+      ]
+    },
+    {
+      "id":"02000000-0000-0000-0000-000000000002",
+      "name":"Petroglifos de Checta",
+      "description":"Sitio arqueológico de arte rupestre ubicado en el valle del río Chillón.",
+      "categoryCode":"ARCHAEOLOGICAL_SITE",
+      "latitude":-11.6929182,"longitude":-76.8150337,"active":true,
+      "createdAt":"2026-09-04T00:00:00Z","updatedAt":"2026-09-04T00:00:00Z",
+      "provenance":[
+        {"id":"03000000-0000-0000-0000-000000000003","sourceSystem":"mincetur-inventario","sourceRecordId":"2725","sourceUrl":"https://consultasenlinea.mincetur.gob.pe/fichaInventario/index.aspx?cod_Ficha=2725","retrievedAt":"2026-09-04T00:00:00Z","license":"PUBLIC_INFORMATION_SOURCE_TERMS_APPLY","attribution":"MINCETUR — Inventario Nacional de Recursos Turísticos","incorporationMethod":"CURATED","logicalKey":"mincetur:2725"},
+        {"id":"03000000-0000-0000-0000-000000000004","sourceSystem":"openstreetmap","sourceRecordId":"way/516267918","sourceUrl":"https://www.openstreetmap.org/way/516267918","retrievedAt":"2026-09-04T00:00:00Z","license":"ODbL-1.0","attribution":"© OpenStreetMap contributors","incorporationMethod":"CURATED","logicalKey":"osm:way:516267918"}
+      ]
+    },
+    {
+      "id":"02000000-0000-0000-0000-000000000003",
+      "name":"Plaza de Armas de Canta",
+      "description":"Espacio urbano principal de la ciudad de Canta y núcleo de su vida cívica.",
+      "categoryCode":"MONUMENT",
+      "latitude":-11.4669625,"longitude":-76.6247746,"active":true,
+      "createdAt":"2026-09-04T00:00:00Z","updatedAt":"2026-09-04T00:00:00Z",
+      "provenance":[
+        {"id":"03000000-0000-0000-0000-000000000005","sourceSystem":"mincetur-inventario","sourceRecordId":"14068","sourceUrl":"https://consultasenlinea.mincetur.gob.pe/fichaInventario/index.aspx?cod_Ficha=14068","retrievedAt":"2026-09-04T00:00:00Z","license":"PUBLIC_INFORMATION_SOURCE_TERMS_APPLY","attribution":"MINCETUR — Inventario Nacional de Recursos Turísticos","incorporationMethod":"CURATED","logicalKey":"mincetur:14068"},
+        {"id":"03000000-0000-0000-0000-000000000006","sourceSystem":"openstreetmap","sourceRecordId":"way/450034937","sourceUrl":"https://www.openstreetmap.org/way/450034937","retrievedAt":"2026-09-04T00:00:00Z","license":"ODbL-1.0","attribution":"© OpenStreetMap contributors","incorporationMethod":"CURATED","logicalKey":"osm:way:450034937"}
+      ]
+    },
+    {
+      "id":"02000000-0000-0000-0000-000000000004",
+      "name":"Plaza de Armas de Obrajillo",
+      "description":"Espacio central e histórico del pueblo de Obrajillo.",
+      "categoryCode":"MONUMENT",
+      "latitude":-11.4538209,"longitude":-76.6201906,"active":true,
+      "createdAt":"2026-09-04T00:00:00Z","updatedAt":"2026-09-04T00:00:00Z",
+      "provenance":[
+        {"id":"03000000-0000-0000-0000-000000000007","sourceSystem":"mincetur-inventario","sourceRecordId":"14060","sourceUrl":"https://consultasenlinea.mincetur.gob.pe/fichaInventario/index.aspx?cod_Ficha=14060","retrievedAt":"2026-09-04T00:00:00Z","license":"PUBLIC_INFORMATION_SOURCE_TERMS_APPLY","attribution":"MINCETUR — Inventario Nacional de Recursos Turísticos","incorporationMethod":"CURATED","logicalKey":"mincetur:14060"},
+        {"id":"03000000-0000-0000-0000-000000000008","sourceSystem":"openstreetmap","sourceRecordId":"way/450030775","sourceUrl":"https://www.openstreetmap.org/way/450030775","retrievedAt":"2026-09-04T00:00:00Z","license":"ODbL-1.0","attribution":"© OpenStreetMap contributors","incorporationMethod":"CURATED","logicalKey":"osm:way:450030775"}
+      ]
+    },
+    {
+      "id":"02000000-0000-0000-0000-000000000005",
+      "name":"Iglesia San Juan Bautista de Obrajillo",
+      "description":"Iglesia histórica situada junto a la plaza de Obrajillo.",
+      "categoryCode":"HISTORIC_CHURCH",
+      "latitude":-11.454071,"longitude":-76.6196202,"active":true,
+      "createdAt":"2026-09-04T00:00:00Z","updatedAt":"2026-09-04T00:00:00Z",
+      "provenance":[
+        {"id":"03000000-0000-0000-0000-000000000009","sourceSystem":"mincetur-inventario","sourceRecordId":null,"sourceUrl":"https://consultasenlinea.mincetur.gob.pe/fichaInventario/index.aspx?cod_Ficha=14060","retrievedAt":"2026-09-04T00:00:00Z","license":"PUBLIC_INFORMATION_SOURCE_TERMS_APPLY","attribution":"MINCETUR — Inventario Nacional de Recursos Turísticos; referencia incluida en la ficha 14060","incorporationMethod":"CURATED","logicalKey":"mincetur:14060:church-reference"},
+        {"id":"03000000-0000-0000-0000-000000000010","sourceSystem":"openstreetmap","sourceRecordId":"way/450030784","sourceUrl":"https://www.openstreetmap.org/way/450030784","retrievedAt":"2026-09-04T00:00:00Z","license":"ODbL-1.0","attribution":"© OpenStreetMap contributors","incorporationMethod":"CURATED","logicalKey":"osm:way:450030784"}
+      ]
+    }
+  ]
+}

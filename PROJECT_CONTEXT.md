@@ -7,13 +7,13 @@ cumplido. El PR #5 fue integrado en `main` mediante el merge commit `07001b9`, q
 baseline Git de P3. El privilegio elevado actual de `geoguide_app` permanece registrado
 como deuda de hardening posterior.
 
-P3 — POI Data & Domain es la fase actual. P3.0-A–F están aprobados y P3.0-G se encuentra
-en consolidación documental. La implementación de P3 no ha comenzado. P3 comprende
-Domain + Persistence + Data para producir un
+P3 — POI Data & Domain está implementado y validado técnicamente en la rama
+`feature/p3-poi-data-domain`. P3 comprende Domain + Persistence + Data para producir un
 baseline POI canónico, versionado, geoespacial, trazable, reproducible, idempotente y
 probado para Lima → Obrajillo. No incluye API HTTP, controllers, OpenAPI Places,
 search, nearby, routing, RoutingProvider, Route Discovery, ranking, Flutter, UX móvil,
-voz ni IA. R3 — Data: POIs piloto validados permanece pendiente.
+voz ni IA. R3 — Data: POIs piloto validados cumple técnicamente; falta la revisión e
+integración del Pull Request de cierre.
 
 ## Product definition
 

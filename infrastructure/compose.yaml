@@ -24,7 +24,7 @@ services:
     build:
       context: ../backend
       dockerfile: Dockerfile
-    image: geoguide-ai/backend:p2.7
+    image: geoguide-ai/backend:p3
     restart: unless-stopped
     user: "10001:10001"
     environment:
@@ -32,6 +32,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-geoguide}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-geoguide_app}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?Define POSTGRES_PASSWORD in infrastructure/.env}
+      GEOGUIDE_P3_DATA_ENABLED: "true"
     depends_on:
       postgres:
         condition: service_healthy

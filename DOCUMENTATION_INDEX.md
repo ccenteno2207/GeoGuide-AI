@@ -43,6 +43,7 @@
 | Commercial | `docs/10-Roadmap-Comercial/` |
 | Implementation plan | `docs/11-Master-Documentation/` |
 | P3 completion and R3 acceptance | `docs/11-Master-Documentation/11-Implementation-Plan/P3-Definition-of-Done.md` — canonical normative source |
+| P3 validation evidence | `docs/11-Master-Documentation/11-Implementation-Plan/P3-Validation-Evidence.md` |
 
 Archived documents must not be used as current architecture or implementation
 guidance unless explicitly requested.
