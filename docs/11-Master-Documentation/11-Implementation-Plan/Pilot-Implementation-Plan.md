@@ -65,10 +65,17 @@
   fases posteriores.
 
 ## P4 – Routing
-- origin/destination;
-- route geometry.
+- estado: **COMPLETADO / CERRADO**; PR #9 integrado mediante `f14ddc6` y validación
+  post-merge satisfactoria;
+- `RoutingProvider` y adaptador GraphHopper 11 implementados;
+- `POST /api/v1/routes/plan` con origen/destino, distancia, duración y geometría
+  GeoJSON `LineString`;
+- configuración externa y errores de routing normalizados;
+- pruebas de aceptación implementadas;
+- routing puro sin persistencia y sin incorporar alcance de Route Discovery.
 
 ## P5 – Route Discovery
+- estado: **SIGUIENTE / NO INICIADO**;
 - corridor;
 - candidates;
 - ranking;
@@ -99,3 +106,5 @@ prueba física controlada y registro de hallazgos.
 
 ## Regla
 No comenzar AI/RAG antes de completar el vertical slice estable.
+La posición en este plan no autoriza implementación: cada fase mayor requiere alcance
+congelado y aprobación explícita.

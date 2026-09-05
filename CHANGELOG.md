@@ -40,6 +40,11 @@
   `0`; V001 registrada con checksum `-1627021776` y evidencia P1 preservada.
 
 ### Changed
+- P4 — Routing fue completado y cerrado formalmente. El PR #9 fue integrado mediante
+  `f14ddc6` y la validación post-merge en VM terminó correctamente. El cierre incluye
+  `RoutingProvider`, el adaptador GraphHopper 11, `POST /api/v1/routes/plan`, geometría
+  GeoJSON `LineString`, normalización de distancia, duración y errores, y la suite de
+  aceptación. P5 — Route Discovery permanece no iniciado.
 - P3 — POI Data & Domain fue implementado y validado técnicamente. La suite Java 21 en
   VM ejecutó 26 pruebas sin fallos, errores ni omisiones; Flyway migró el baseline
   heredado de V001 a V004 sin reconstrucción, preservando `p1_persistence_test`. R3
@@ -63,8 +68,6 @@
 - `geoguide_app` conserva privilegios elevados utilizados durante el bootstrap. La
   separación de un rol de migraciones y la reducción de privilegios son deuda de
   hardening posterior, fuera del alcance de P2.8.
-- El staging, commit y push del checkpoint documental de P2.8/M03, así como cualquier
-  PR o merge, no forman parte de esta auditoría y requieren aprobación posterior.
 
 ## 0.1.0 - Foundation
 
