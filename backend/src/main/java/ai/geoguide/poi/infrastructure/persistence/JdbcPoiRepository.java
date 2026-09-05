@@ -74,8 +74,8 @@ public class JdbcPoiRepository implements PoiRepository {
                 category,
                 new GeoPoint(rs.getDouble("latitude"), rs.getDouble("longitude")),
                 rs.getBoolean("active"),
-                rs.getObject("created_at", Instant.class),
-                rs.getObject("updated_at", Instant.class),
+                rs.getTimestamp("created_at").toInstant(),
+                rs.getTimestamp("updated_at").toInstant(),
                 provenance);
     }
 
