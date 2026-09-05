@@ -39,6 +39,7 @@
 | Current phase and implementation status | `AGENTS.md`, `PROJECT_CONTEXT.md`, and `ROADMAP.md` |
 | Architecture decision | Accepted ADR, then Entrega 04.6 |
 | Product scope and MVP boundaries | `PROJECT_CONTEXT.md`, `docs/00-Executive/MVP_SCOPE.md`, and Product Master |
+| CEFI product identity | `PROJECT_CONTEXT.md` for current status; Product Master for the canonical product definition; UX Vision and AI UX for experience and safety principles |
 | Route Discovery | `docs/04-SolutionArchitecture/04-Route-Discovery-Engine/` |
 | Voice, contextual interaction, and Driving Mode | `ADR-027`, `docs/07-Mobile-Engineering/10-Driving-Mode/`, and AI UX |
 | Database and PostGIS | `02-Geospatial-Data-Model/` and Backend Engineering |

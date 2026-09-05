@@ -29,6 +29,14 @@ or active route. It is neither a replacement for Google Maps/Waze nor a generic 
 
 The product covers cultural, historical, archaeological, natural, gastronomic, and other useful POIs. Enriched place cards distinguish reliable sourced facts from generated summaries. Route Discovery analyzes POIs near a route corridor; detour distance and additional time may be introduced incrementally.
 
+### Conversational identity
+
+- **Product:** GeoGuide AI.
+- **Conversational identity:** CEFI.
+- **Role:** CEFI is GeoGuide AI's voice-oriented conversational copilot for the rutero. It uses shared GeoGuide capabilities to communicate information, context, and recommendations while preserving user control.
+- **Boundary:** CEFI does not replace Routing, Route Discovery, POI Data, or other technical and factual sources.
+- **Status:** Product concept and future experience capability. Implementation is **NOT AUTHORIZED** unless an approved phase contract explicitly includes it. CEFI documentation does not authorize implementation or add CEFI to P5, which remains **NEXT / NOT STARTED**.
+
 ## Approved MVP architecture
 
 - Mobile: Flutter / Dart.
