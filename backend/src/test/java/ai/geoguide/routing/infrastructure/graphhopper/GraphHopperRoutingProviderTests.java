@@ -12,6 +12,7 @@ import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClient;
@@ -61,7 +62,8 @@ class GraphHopperRoutingProviderTests {
     }
 
     private GraphHopperRoutingProvider provider() {
-        return new GraphHopperRoutingProvider(RestClient.builder(), "http://localhost:" + server.getAddress().getPort());
+        return new GraphHopperRoutingProvider(
+                RestClient.builder(), "http://localhost:" + server.getAddress().getPort(), Duration.ofSeconds(1));
     }
 
     private void startServer(int status, String body) throws IOException {

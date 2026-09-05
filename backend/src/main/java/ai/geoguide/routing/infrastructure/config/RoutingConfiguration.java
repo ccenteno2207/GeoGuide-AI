@@ -14,7 +14,7 @@ public class RoutingConfiguration {
 
     @Bean
     RoutingProvider routingProvider(RestClient.Builder restClientBuilder, RoutingProperties properties) {
-        return new GraphHopperRoutingProvider(restClientBuilder, properties.baseUrl());
+        return new GraphHopperRoutingProvider(restClientBuilder, properties.baseUrl(), properties.timeout());
     }
 
     @Bean

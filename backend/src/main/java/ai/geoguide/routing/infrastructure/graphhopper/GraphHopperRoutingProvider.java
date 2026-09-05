@@ -8,8 +8,10 @@ import ai.geoguide.routing.domain.RouteGeometry;
 import ai.geoguide.routing.domain.RoutePoint;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.net.SocketTimeoutException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
@@ -19,8 +21,11 @@ public final class GraphHopperRoutingProvider implements RoutingProvider {
 
     private final RestClient restClient;
 
-    public GraphHopperRoutingProvider(RestClient.Builder restClientBuilder, String baseUrl) {
-        this.restClient = restClientBuilder.baseUrl(baseUrl).build();
+    public GraphHopperRoutingProvider(RestClient.Builder restClientBuilder, String baseUrl, Duration timeout) {
+        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(timeout);
+        requestFactory.setReadTimeout(timeout);
+        this.restClient = restClientBuilder.baseUrl(baseUrl).requestFactory(requestFactory).build();
     }
 
     @Override
