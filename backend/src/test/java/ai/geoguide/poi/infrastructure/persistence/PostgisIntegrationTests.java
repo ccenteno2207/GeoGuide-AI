@@ -9,6 +9,10 @@ import ai.geoguide.poi.domain.PoiId;
 import ai.geoguide.poi.domain.PointOfInterest;
 import ai.geoguide.poi.domain.SourceReference;
 import ai.geoguide.poi.infrastructure.dataset.P3DatasetLoader;
+import ai.geoguide.discovery.domain.DiscoveryCriteria;
+import ai.geoguide.discovery.infrastructure.persistence.JdbcRoutePoiCandidateQuery;
+import ai.geoguide.routing.domain.RouteGeometry;
+import ai.geoguide.routing.domain.RoutePoint;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
 import java.util.List;
@@ -31,7 +35,7 @@ import org.testcontainers.utility.DockerImageName;
 
 @Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest
-@Import({JdbcPoiRepository.class, JdbcCategoryRepository.class})
+@Import({JdbcPoiRepository.class, JdbcCategoryRepository.class, JdbcRoutePoiCandidateQuery.class})
 class PostgisIntegrationTests {
 
     @Container
@@ -51,6 +55,9 @@ class PostgisIntegrationTests {
 
     @Autowired
     JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    JdbcRoutePoiCandidateQuery discoveryQuery;
 
     @Autowired
     Flyway flyway;
@@ -171,5 +178,21 @@ class PostgisIntegrationTests {
                 LEFT JOIN geo.poi_provenance pp ON pp.poi_id = p.id
                 WHERE pp.id IS NULL
                 """, Integer.class)).isZero();
+    }
+
+    @Test
+    void discoveryQueryUsesRouteCorridorActivePoisAndCategoryFilter() {
+        UUID categoryId = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO geo.category (id, code, name, active) VALUES (?, 'MUSEUM', 'Museum', true)", categoryId);
+        jdbcTemplate.update("INSERT INTO geo.point_of_interest (id, category_id, name, location, active, created_at, updated_at) VALUES (?, ?, 'On route', ST_SetSRID(ST_MakePoint(-77.00, -12.00), 4326), true, now(), now())", UUID.randomUUID(), categoryId);
+        jdbcTemplate.update("INSERT INTO geo.point_of_interest (id, category_id, name, location, active, created_at, updated_at) VALUES (?, ?, 'Inactive', ST_SetSRID(ST_MakePoint(-77.01, -12.00), 4326), false, now(), now())", UUID.randomUUID(), categoryId);
+        jdbcTemplate.update("INSERT INTO geo.point_of_interest (id, category_id, name, location, active, created_at, updated_at) VALUES (?, ?, 'Far', ST_SetSRID(ST_MakePoint(-77.00, -11.80), 4326), true, now(), now())", UUID.randomUUID(), categoryId);
+
+        var candidates = discoveryQuery.findAlong(new RouteGeometry(List.of(
+                new RoutePoint(-12.00, -77.02), new RoutePoint(-12.00, -76.98))),
+                new DiscoveryCriteria(java.util.Set.of("MUSEUM"), 1_000, 20));
+
+        assertThat(candidates).extracting(candidate -> candidate.name()).containsExactly("On route");
+        assertThat(candidates.getFirst().routeProgress()).isBetween(0.0, 1.0);
     }
 }
