@@ -92,9 +92,16 @@ con código 0. La red `geoguide-ai_data` conserva `internal=true`, sin bindings 
 8080/5432, y los servicios P1 permanecen preservados. `baseline-on-migrate` no está
 habilitado permanentemente. No ejecutar `docker compose down -v`.
 
-P2.0–P2.8 están completados y validados según su alcance. M03 — API base disponible:
-**CUMPLIDO TÉCNICAMENTE**. Checkpoint Git documental de P2.8/M03: **PENDIENTE**.
-P3: **NO INICIADO**; no existe PR ni merge.
+P2.0–P2.8 están completados y validados según su alcance. P2 está cerrada, M03 — API
+base disponible está cumplido y el PR #5 fue integrado en `main` mediante `07001b9`.
+
+P3.0 está en consolidación documental y su implementación no ha comenzado. Cuando P3
+se aplique, deberá conservar el baseline Flyway `0`, V001 con checksum `-1627021776` y
+`baseline-on-migrate` deshabilitado permanentemente. También deberá preservar el objeto
+y los datos históricos de `p1_persistence_test`, el volumen `postgres_data`, la base
+existente, la red `geoguide-ai_data` con `internal=true` y la ausencia de publicación al
+host de puertos internos sensibles. P3 todavía no se ha aplicado ni validado en la VM;
+R3 permanece pendiente.
 
 ## Detención y datos
 
