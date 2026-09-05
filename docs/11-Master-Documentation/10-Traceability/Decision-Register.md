@@ -20,7 +20,10 @@ Decisiones clave:
 - Routing engine: ADR-028 adopta GraphHopper 11.0 como implementación inicial de
   `RoutingProvider`, después del benchmark y la revisión visual de 18 geometrías.
   OSRM 26.8.0 MLD queda como alternativa preferida de rendimiento y Valhalla 3.8.2
-  como opción futura para multimodalidad o routing temporal. La integración contractual
-  y operativa en Compose permanece pendiente.
+  como opción futura para multimodalidad o routing temporal. La decisión permanece
+  aceptada; la infraestructura Compose quedó disponible en P1 y la integración backend
+  contractual mediante `RoutingProvider` y su adaptador quedó completada en P4. El
+  procedimiento operativo de actualización del PBF y reconstrucción del grafo permanece
+  diferido; no forma parte del cierre P4.
 
 Consultar ADR originales para contexto completo.

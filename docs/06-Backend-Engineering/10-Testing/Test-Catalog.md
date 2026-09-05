@@ -37,17 +37,27 @@ H2 no sustituye PostgreSQL/PostGIS real en los casos de integración espacial.
 `p1_persistence_test` se comprueba exclusivamente como protección operativa heredada;
 no es una prueba funcional de P3.
 
+## P4 – Routing
+
+| ID | Propósito | Tipo | Entorno | Estado |
+|---|---|---|---|---|
+| RTE-APP-01 | Validar aplicación y contrato de `RoutingProvider` | Unitaria | Maven | Implementada |
+| RTE-GH-01 | Normalizar respuesta GraphHopper | Adaptador HTTP controlado | Maven | Implementada |
+| RTE-GH-02 | Normalizar timeout, indisponibilidad, ausencia de ruta y respuesta inválida | Adaptador HTTP controlado | Maven | Implementada |
+| RTE-HTTP-01 | Validar `POST /api/v1/routes/plan` y GeoJSON `LineString` | Contrato HTTP | Maven | Implementada |
+| RTE-HTTP-02 | Validar solicitud inválida y Problem Details | Contrato HTTP | Maven | Implementada |
+| RTE-OPS-01 | Smoke backend → GraphHopper real | Operativa | VM | PASS post-merge |
+
+El cierre P4 registró `mvn verify`: 39 pruebas, 0 fallos, 0 errores y 4 omitidas. Las
+pruebas omitidas no se presentan como ejecutadas; la integración real requerida se
+validó separadamente en VM.
+
 ## Casos de fases posteriores
 
 ### Places API
 - consultar POI mediante API;
 - `nearby` devuelve POIs dentro del radio;
 - POI inactivo no aparece en resultados públicos.
-
-### Routes
-- route provider success;
-- timeout;
-- respuesta inválida.
 
 ### Discovery
 - sin candidatos;
@@ -63,5 +73,5 @@ no es una prueba funcional de P3.
 - roles;
 - JWT.
 
-Estos casos permanecen en el catálogo para fases posteriores; API, `nearby`, routing,
-Route Discovery, ranking y seguridad HTTP no bloquean P3 ni R3.
+Estos casos permanecen en el catálogo para fases posteriores; Places, `nearby`, Route
+Discovery, ranking y seguridad HTTP no están implementados por el cierre P4.

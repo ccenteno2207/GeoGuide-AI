@@ -13,12 +13,9 @@
   publicar 8080/5432.
 - estructura modular.
 
-Checkpoint actual: P2.0–P2.8 completados y validados según su alcance; P2.7A completado
-y validado. `mvnw.cmd verify` terminó con `BUILD SUCCESS`: 2 pruebas, 0 fallos,
-0 errores y 0 omitidas. M03 — API base disponible: **CUMPLIDO TÉCNICAMENTE**.
-P2 está cerrada; el PR #5 fue integrado en `main` mediante `07001b9`. P3.0-A–G están
-completados. P3 está implementado y validado técnicamente en
-`feature/p3-poi-data-domain`; R3 está cumplido y el PR #7 cerró P3 mediante `aaa4c6b`.
+Checkpoint actual: P0–P4 están cerradas. P4 fue integrado por el PR #9 mediante
+`f14ddc6` y superó la validación post-merge. P5 — Route Discovery es la siguiente fase,
+pero no está iniciada.
 
 ## B02 – Database
 - [x] dependencias JDBC, PostgreSQL y Flyway preparadas.
@@ -55,12 +52,14 @@ GET de Places, endpoints HTTP, search y nearby quedan fuera de P3 y se planifica
 fases posteriores. Routing, corredor, discovery y ranking permanecen en B04/B05.
 
 ## B04 – Routing
-- RoutingProvider.
-- adapter.
-- /routes/plan.
-- timeout/error handling.
+- [x] `RoutingProvider`.
+- [x] adaptador GraphHopper 11.
+- [x] `POST /api/v1/routes/plan` y GeoJSON `LineString`.
+- [x] configuración de timeout y normalización de errores.
+- [x] pruebas unitarias, de adaptador, contrato HTTP y smoke en VM.
 
 ## B05 – Discovery
+- estado: **NOT STARTED**; este backlog no constituye contrato de alcance P5.
 - corridor.
 - spatial query.
 - ranking.
