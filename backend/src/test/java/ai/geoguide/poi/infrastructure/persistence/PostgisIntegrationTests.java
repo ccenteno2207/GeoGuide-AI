@@ -109,10 +109,15 @@ class PostgisIntegrationTests {
                         created, "TEST-TERMS", "Test source", "CURATED", "official-test:record-1")));
 
         repository.save(poi);
-        repository.save(poi);
+        PointOfInterest revised = new PointOfInterest(
+                poi.id(), "Centro histórico actualizado", poi.description(), poi.category(),
+                poi.location(), false, poi.createdAt(), poi.updatedAt().plusSeconds(60),
+                poi.provenance());
+        repository.save(revised);
 
         PointOfInterest restored = repository.findById(poiId).orElseThrow();
-        assertThat(restored).usingRecursiveComparison().isEqualTo(poi);
+        assertThat(restored).usingRecursiveComparison().isEqualTo(revised);
+        assertThat(restored.active()).isFalse();
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.category", Integer.class)).isOne();
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest", Integer.class)).isOne();
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.poi_provenance", Integer.class)).isOne();
