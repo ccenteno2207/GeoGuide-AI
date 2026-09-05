@@ -3,6 +3,12 @@
 ## Unreleased
 
 ### Added
+- P4 Routing: `RoutingProvider` desacoplado, adaptador GraphHopper 11, configuración
+  externa de URL/timeout/perfil y modelo de ruta sin persistencia.
+- `POST /api/v1/routes/plan` para routing puro con distancia, duración y GeoJSON
+  `LineString`; errores normalizados como Problem Details sin filtrar detalles del proveedor.
+- Pruebas unitarias, de adaptador HTTP controlado y de contrato HTTP para ruta válida,
+  solicitud inválida, timeout, provider no disponible, ausencia de ruta y respuesta inválida.
 - Dominio POI independiente de Spring/HTTP con `PointOfInterest`, `PoiId`, `GeoPoint`,
   `Category`, provenance y puertos de persistencia.
 - Persistencia JDBC PostgreSQL/PostGIS mediante V002–V004: schema `geo`, categorías,
