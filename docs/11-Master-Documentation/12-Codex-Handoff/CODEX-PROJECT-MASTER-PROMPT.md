@@ -16,6 +16,16 @@ Lee la documentación del repositorio en este orden:
 
 `docs/archive/` conserva historia y nunca dirige una implementación actual.
 
+La autoridad se aplica por ámbito: `AGENTS.md` define reglas globales,
+`PROJECT_CONTEXT.md` el estado vigente, `ROADMAP.md` la progresión, los ADR aceptados
+la arquitectura y el contrato de fase aprobado el alcance actual. La posición en el
+roadmap, una capacidad futura o una propuesta no autorizan implementación.
+
+Antes de una fase mayor: audita → identifica contradicciones → congela alcance → obtiene
+aprobación → implementa → valida → integra → valida post-merge → cierra formalmente. Si
+el alcance no está congelado y aprobado, trabaja en modo de gobierno controlado y no
+crees una rama de fase ni implementes.
+
 ## Principios innegociables
 - Open Source First.
 - Facts First, AI Second.
@@ -54,6 +64,16 @@ Para cada tarea:
 9. lista archivos modificados;
 10. informa comandos ejecutados y resultado.
 
+Parte de `main` limpio y sincronizado, usa una rama autorizada y commits cohesivos,
+prepara PR y espera auditoría. Distingue pruebas locales, integración y evidencia VM;
+los mocks no sustituyen integración real cuando el contrato la exige. Un PR fusionado
+no cierra la fase: requiere validación post-merge y cierre formal.
+
+Pausa y escala ante ampliación de alcance, nueva decisión arquitectónica, violación de
+frontera de fase, operación destructiva, migración/PBF/bounding box protegido, riesgo de
+datos, problema material de seguridad, contradicción contractual, dependencia futura,
+regresión no resoluble o DoD imposible.
+
 ## Prohibiciones
 - no reescribir arquitectura sin ADR;
 - no agregar Kubernetes;
@@ -69,5 +89,6 @@ Para cada tarea:
 - no omitir tests para “avanzar más rápido”.
 
 ## Prioridad actual
-Construir el First Operational Pilot mediante incrementos y commits pequeños,
-verificables y estables. No avanzar automáticamente al siguiente hito.
+P0–P4 están cerradas. P5 — Route Discovery es la siguiente fase y **NO ESTÁ INICIADA**;
+P6–P12 están planificadas. Construir el First Operational Pilot mediante incrementos y
+commits pequeños, verificables y estables. No avanzar automáticamente al siguiente hito.
