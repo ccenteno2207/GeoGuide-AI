@@ -11,3 +11,9 @@ management:
     web:
       exposure:
         include: health
+
+geoguide:
+  routing:
+    base-url: ${ROUTING_BASE_URL:http://graphhopper:8989}
+    timeout: ${ROUTING_TIMEOUT:10s}
+    profile: ${ROUTING_PROFILE:car}
