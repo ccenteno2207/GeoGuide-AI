@@ -4,8 +4,8 @@
 
 Validación ejecutada el 4 de septiembre de 2026 sobre
 `feature/p3-poi-data-domain`. Los criterios técnicos y de datos de
-[P3 Definition of Done](P3-Definition-of-Done.md) cumplen. El cierre definitivo de P3
-queda condicionado a revisión e integración del Pull Request.
+[P3 Definition of Done](P3-Definition-of-Done.md) cumplen. El PR #7 fue integrado mediante
+`aaa4c6b` y `main` quedó sincronizada y limpia.
 
 ## Entornos
 
@@ -71,6 +71,7 @@ lo que no fue necesario ampliar el PBF ni ejecutar routing nuevo.
 
 `P3-DOD-01`–`P3-DOD-47`: **CUMPLE**.
 
-`R3-01`–`R3-15`: **CUMPLE TÉCNICAMENTE**.
+`R3-01`–`R3-15`: **CUMPLE**.
 
-`P3-DOD-48`: pendiente hasta integrar el Pull Request y comprobar `main` limpia.
+`P3-DOD-48`: **CUMPLE** mediante PR #7, merge commit `aaa4c6b` y sincronización limpia
+de `main` en laptop y VM.

@@ -31,7 +31,7 @@ M03 — API base disponible está cumplido.
 P3 — POI Data & Domain está implementado y validado en la rama
 `feature/p3-poi-data-domain`. El baseline incluye dominio POI, persistencia PostGIS,
 migraciones V002–V004, taxonomía y dataset versionados de Lima → Obrajillo. R3 — Data:
-POIs piloto validados cumple técnicamente; el cierre definitivo de P3 queda sujeto a la
-revisión e integración de su Pull Request.
+POIs piloto validados está cumplido. P3 fue cerrado mediante el PR #7 y el merge commit
+`aaa4c6b`.
 La configuración inicial de PostgreSQL/PostGIS, Redis y MinIO, junto con sus instrucciones
 de operación, se encuentra en [infrastructure/README.md](infrastructure/README.md).
