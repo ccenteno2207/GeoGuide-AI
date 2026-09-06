@@ -28,11 +28,11 @@ backend sin introducir decisiones inconsistentes.
 
 ## Estado de implementación
 
-P0–P4 están cerradas. El baseline posterior a P4 es `f14ddc6`; el PR #9 fue integrado
-y la validación post-merge terminó correctamente. P4 incorporó `RoutingProvider`, el
-adaptador GraphHopper 11, `POST /api/v1/routes/plan`, geometría GeoJSON `LineString`,
-configuración externa y errores normalizados sin persistencia. P5 — Route Discovery es
-la siguiente fase, pero no está iniciada.
+P0–P5 están cerradas. El baseline oficial resultante de P5 es
+`d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca`; el PR funcional #14 fue integrado y la
+validación post-merge terminó correctamente. P4 incorporó routing desacoplado y P5
+incorporó corredor PostGIS, ranking `DISCOVERY_V1`, `routeProgress` y
+`POST /api/v1/routes/discover`. P6 no está iniciada ni autorizada.
 
 ### Evidencia histórica P2
 

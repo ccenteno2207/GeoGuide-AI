@@ -89,6 +89,8 @@ regresión no resoluble o DoD imposible.
 - no omitir tests para “avanzar más rápido”.
 
 ## Prioridad actual
-P0–P4 están cerradas. P5 — Route Discovery es la siguiente fase y **NO ESTÁ INICIADA**;
-P6–P12 están planificadas. Construir el First Operational Pilot mediante incrementos y
-commits pequeños, verificables y estables. No avanzar automáticamente al siguiente hito.
+P0–P5 están cerradas. El baseline oficial resultante de P5 es
+`d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca`. P6 — Mobile Bootstrap **NO ESTÁ
+INICIADA NI AUTORIZADA**; P7–P12 están planificadas. Construir el First Operational
+Pilot mediante incrementos y commits pequeños, verificables y estables. No avanzar
+automáticamente al siguiente hito.

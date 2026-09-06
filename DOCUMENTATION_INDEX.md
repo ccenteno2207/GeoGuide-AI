@@ -50,7 +50,7 @@
 | Implementation plan | `docs/11-Master-Documentation/` |
 | P4 routing implementation | `PROJECT_CONTEXT.md`, Backend Engineering, Routing Infrastructure, Test Catalog, and Decision Register |
 | P5 frozen scope and execution contract | `docs/11-Master-Documentation/11-Implementation-Plan/P5-Phase-Contract-v1.md` and `P5-Governance-Decisions.md` |
-| P5 implementation validation evidence | `docs/11-Master-Documentation/11-Implementation-Plan/P5-Validation-Evidence.md` |
+| P5 validation and master closure evidence | `docs/11-Master-Documentation/11-Implementation-Plan/P5-Validation-Evidence.md` |
 | Current or future phase scope | Approved phase contract when one exists; roadmap placement alone is insufficient |
 | Codex execution method | `AI_DEVELOPMENT_GUIDE.md` and current Codex handoff documents |
 | P3 completion and R3 acceptance | `docs/11-Master-Documentation/11-Implementation-Plan/P3-Definition-of-Done.md` — canonical normative source |
@@ -59,7 +59,8 @@
 Archived documents must not be used as current architecture or implementation
 guidance unless explicitly requested.
 
-Current state: P0–P4 are closed; P5 — Route Discovery is next but not started; P6–P12
-are planned. No active instruction may turn this progression into automatic scope.
+Current state: P0–P5 are closed. The official post-P5 baseline is
+`d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca`; P6 is not started and not authorized,
+and P7–P12 are planned. No active instruction may turn this progression into automatic scope.
 
 “AI optional in the core MVP” means route, POI, corridor, ranking, and factual place cards cannot depend on an LLM. It does not negate the strategic voice channel: voice remains an adapter over the same channel-independent GeoGuide use cases used by Flutter and future clients.

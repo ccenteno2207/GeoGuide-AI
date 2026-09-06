@@ -29,11 +29,10 @@ Start at [DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md). Architecture follows 
 
 ## Estado de implementación
 
-P0–P4 están completadas y cerradas. El baseline posterior a P4 incluye el dominio y los
-datos POI, la infraestructura local y routing desacoplado mediante `RoutingProvider`,
-con GraphHopper 11 como implementación inicial.
+P0–P5 están completadas y cerradas. El baseline oficial resultante de P5 es
+`d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca`; incluye el dominio y los datos POI, la
+infraestructura local, routing desacoplado mediante `RoutingProvider` y Route Discovery.
 
-La siguiente fase es P5 — Route Discovery, que **no está iniciada**. P6–P12 permanecen
-planificadas.
+P6 — Mobile Bootstrap **no está iniciada ni autorizada**. P7–P12 permanecen planificadas.
 La configuración inicial de PostgreSQL/PostGIS, Redis y MinIO, junto con sus instrucciones
 de operación, se encuentra en [infrastructure/README.md](infrastructure/README.md).

@@ -77,8 +77,8 @@ Current milestone progression:
 - P2 Backend Bootstrap — CLOSED
 - P3 POI Data — CLOSED
 - P4 Routing — CLOSED
-- P5 Route Discovery — NEXT / NOT STARTED
-- P6 Mobile Bootstrap — PLANNED
+- P5 Route Discovery — CLOSED
+- P6 Mobile Bootstrap — NOT STARTED / NOT AUTHORIZED
 - P7 First Vertical Slice — PLANNED
 - P8 POI Experience — PLANNED
 - P9 Offline + Driving — PLANNED
@@ -86,6 +86,6 @@ Current milestone progression:
 - P11 Linux Server Deployment — PLANNED
 - P12 Real Road Pilot — PLANNED
 
-The current post-P4 baseline concept is `f14ddc6`. Verify the effective `main` and `origin/main` before starting any authorized work instead of treating a recorded SHA as permanent.
+The official post-P5 baseline is `d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca` (P0–P5 completed). Verify the effective `main` and `origin/main` before starting any authorized work instead of treating a recorded SHA as permanent. P6 has not started and is not authorized.
 
 Do NOT attempt to build the entire product in a single task.
