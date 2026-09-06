@@ -64,14 +64,23 @@ paths:
       responses:
         '200':
           description: POIs relevantes encontrados
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RouteDiscoveryResponse' }
+        '400': { description: Request discovery inválido }
+        '404': { description: Ruta no encontrada }
+        '500': { description: Error interno de discovery }
+        '502': { description: Error del proveedor de rutas }
+        '503': { description: Proveedor de rutas no disponible }
+        '504': { description: Timeout del proveedor de rutas }
 components:
   schemas:
     GeoPoint:
       type: object
-      required: [lat, lon]
+      required: [latitude, longitude]
       properties:
-        lat: { type: number, format: double }
-        lon: { type: number, format: double }
+        latitude: { type: number, format: double, minimum: -90, maximum: 90 }
+        longitude: { type: number, format: double, minimum: -180, maximum: 180 }
     RoutePlanRequest:
       type: object
       required: [origin, destination]
@@ -80,14 +89,38 @@ components:
         destination: { $ref: '#/components/schemas/GeoPoint' }
     RouteDiscoveryRequest:
       type: object
-      required: [routeGeometry]
+      required: [origin, destination]
       properties:
-        routeGeometry:
-          type: string
-          description: Polyline o GeoJSON codificado
+        origin: { $ref: '#/components/schemas/GeoPoint' }
+        destination: { $ref: '#/components/schemas/GeoPoint' }
         corridorMeters:
           type: integer
+          minimum: 1000
+          maximum: 10000
           default: 5000
+        limit: { type: integer, minimum: 1, maximum: 50, default: 20 }
         categories:
           type: array
           items: { type: string }
+    RouteDiscoveryResponse:
+      type: object
+      required: [route, results, algorithmVersion, generatedAt]
+      properties:
+        route: { type: object }
+        results:
+          type: array
+          maxItems: 50
+          items:
+            type: object
+            required: [id, name, category, location, distanceToRouteMeters, routeProgress, score, reasonCodes]
+            properties:
+              id: { type: string, format: uuid }
+              name: { type: string }
+              category: { type: string }
+              location: { $ref: '#/components/schemas/GeoPoint' }
+              distanceToRouteMeters: { type: number, minimum: 0 }
+              routeProgress: { type: number, minimum: 0, maximum: 1 }
+              score: { type: number, minimum: 0 }
+              reasonCodes: { type: array, items: { type: string, enum: [NEAR_ROUTE, CATEGORY_MATCH] } }
+        algorithmVersion: { type: string, enum: [DISCOVERY_V1] }
+        generatedAt: { type: string, format: date-time }

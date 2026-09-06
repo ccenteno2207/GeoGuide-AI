@@ -38,8 +38,23 @@ paths:
   /api/v1/routes/discover:
     post:
       summary: Discover POIs along route
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RouteDiscoveryRequest' }
       responses:
-        '200': { description: Discovery result }
+        '200':
+          description: Discovery result, including a valid empty results array
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RouteDiscoveryResponse' }
+        '400': { $ref: '#/components/responses/InvalidDiscoveryRequest' }
+        '404': { $ref: '#/components/responses/NoRouteFound' }
+        '500': { $ref: '#/components/responses/DiscoveryError' }
+        '502': { $ref: '#/components/responses/RoutingProviderError' }
+        '503': { $ref: '#/components/responses/RoutingProviderUnavailable' }
+        '504': { $ref: '#/components/responses/RoutingProviderTimeout' }
 components:
   schemas:
     RoutePoint:
@@ -77,6 +92,35 @@ components:
         distanceMeters: { type: number, format: double, minimum: 0 }
         durationSeconds: { type: number, format: double, minimum: 0 }
         geometry: { $ref: '#/components/schemas/GeoJsonLineString' }
+    RouteDiscoveryRequest:
+      type: object
+      required: [origin, destination]
+      properties:
+        origin: { $ref: '#/components/schemas/RoutePoint' }
+        destination: { $ref: '#/components/schemas/RoutePoint' }
+        categories: { type: array, uniqueItems: true, items: { type: string, minLength: 1 } }
+        corridorMeters: { type: integer, minimum: 1000, maximum: 10000, default: 5000 }
+        limit: { type: integer, minimum: 1, maximum: 50, default: 20 }
+    DiscoveryResult:
+      type: object
+      required: [id, name, category, location, distanceToRouteMeters, routeProgress, score, reasonCodes]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        category: { type: string }
+        location: { $ref: '#/components/schemas/RoutePoint' }
+        distanceToRouteMeters: { type: number, format: double, minimum: 0 }
+        routeProgress: { type: number, format: double, minimum: 0, maximum: 1 }
+        score: { type: number, format: double, minimum: 0 }
+        reasonCodes: { type: array, minItems: 1, items: { type: string, enum: [NEAR_ROUTE, CATEGORY_MATCH] } }
+    RouteDiscoveryResponse:
+      type: object
+      required: [route, results, algorithmVersion, generatedAt]
+      properties:
+        route: { $ref: '#/components/schemas/RoutePlanResponse' }
+        results: { type: array, maxItems: 50, items: { $ref: '#/components/schemas/DiscoveryResult' } }
+        algorithmVersion: { type: string, enum: [DISCOVERY_V1] }
+        generatedAt: { type: string, format: date-time }
     ProblemDetail:
       type: object
       required: [type, status, detail, code]
@@ -86,8 +130,14 @@ components:
         detail: { type: string }
         code:
           type: string
-          enum: [INVALID_REQUEST, PROVIDER_TIMEOUT, PROVIDER_UNAVAILABLE, NO_ROUTE_FOUND, PROVIDER_ERROR]
+          enum: [INVALID_REQUEST, INVALID_DISCOVERY_REQUEST, PROVIDER_TIMEOUT, PROVIDER_UNAVAILABLE, NO_ROUTE_FOUND, PROVIDER_ERROR, DISCOVERY_ERROR]
   responses:
+    InvalidDiscoveryRequest:
+      description: Invalid discovery request
+      content: { application/problem+json: { schema: { $ref: '#/components/schemas/ProblemDetail' } } }
+    DiscoveryError:
+      description: Internal discovery failure
+      content: { application/problem+json: { schema: { $ref: '#/components/schemas/ProblemDetail' } } }
     InvalidRoutingRequest:
       description: Invalid routing request
       content: { application/problem+json: { schema: { $ref: '#/components/schemas/ProblemDetail' } } }
