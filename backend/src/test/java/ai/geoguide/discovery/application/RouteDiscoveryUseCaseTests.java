@@ -46,6 +46,14 @@ class RouteDiscoveryUseCaseTests {
                 .isInstanceOf(IllegalStateException.class).hasMessage("routing unavailable");
     }
 
+    @Test
+    void rejectsUnknownCategoryBeforePlanning() {
+        var useCase = useCase(List.of());
+        assertThatThrownBy(() -> useCase.discover(route.origin(), route.destination(),
+                new DiscoveryCriteria(java.util.Set.of("UNKNOWN"), 5_000, 20)))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("unknown");
+    }
+
     private RouteDiscoveryUseCase useCase(List<RoutePoiCandidate> candidates) {
         return new RouteDiscoveryUseCase(new PlanRouteUseCase((origin, destination, profile) -> route, "car"),
                 (geometry, criteria) -> candidates, categories(), new CandidateFilter(), new DiscoveryRankingPolicy(),

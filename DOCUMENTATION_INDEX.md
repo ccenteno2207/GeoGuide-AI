@@ -50,6 +50,7 @@
 | Implementation plan | `docs/11-Master-Documentation/` |
 | P4 routing implementation | `PROJECT_CONTEXT.md`, Backend Engineering, Routing Infrastructure, Test Catalog, and Decision Register |
 | P5 frozen scope and execution contract | `docs/11-Master-Documentation/11-Implementation-Plan/P5-Phase-Contract-v1.md` and `P5-Governance-Decisions.md` |
+| P5 implementation validation evidence | `docs/11-Master-Documentation/11-Implementation-Plan/P5-Validation-Evidence.md` |
 | Current or future phase scope | Approved phase contract when one exists; roadmap placement alone is insufficient |
 | Codex execution method | `AI_DEVELOPMENT_GUIDE.md` and current Codex handoff documents |
 | P3 completion and R3 acceptance | `docs/11-Master-Documentation/11-Implementation-Plan/P3-Definition-of-Done.md` — canonical normative source |
