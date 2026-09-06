@@ -75,17 +75,19 @@
 - routing puro sin persistencia y sin incorporar alcance de Route Discovery.
 
 ## P5 — Route Discovery
-- estado funcional: **SIGUIENTE / NO INICIADO**;
-- gobierno: P5.0-A/B aceptados, P5.0-C cerrado y
-  [P5 Phase Contract v1](P5-Phase-Contract-v1.md) congelado en P5.0-D;
-- aprobación de fase y ejecución autónoma funcional: **NO AUTORIZADAS** hasta
-  instrucción explícita posterior;
-- corridor;
-- candidates;
-- ranking;
-- API.
+- estado: **COMPLETADO / CERRADO — 100%**;
+- gobierno: P5.0-A–P5.0-D y P5.1–P5.7 cerrados; el
+  [P5 Phase Contract v1](P5-Phase-Contract-v1.md) permanece congelado;
+- PR funcional #14 integrado; baseline resultante oficial
+  `d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca`;
+- Definition of Done: **23/23 — PASS**;
+- corredor PostGIS, candidatos POI, ranking `DISCOVERY_V1`, `routeProgress` y
+  `POST /api/v1/routes/discover` implementados;
+- validaciones local, PostGIS, HTTP, OpenAPI, regresión y VM: **PASS**;
+- Governance Stops: resueltos; ninguno abierto.
 
 ## P6 – Mobile Bootstrap
+- estado: **NO INICIADO / NO AUTORIZADO**;
 - Flutter;
 - map;
 - GPS.

@@ -2,9 +2,12 @@
 
 ## Línea base y alcance
 
-- Baseline oficial: `fbcbca048833fbce7ac8c3ac3e24aa3cc7d397eb`.
+- Baseline oficial de ejecución: `fbcbca048833fbce7ac8c3ac3e24aa3cc7d397eb`.
+- Baseline oficial resultante: `d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca`
+  (P0–P5 completados).
 - Rama: `feature/p5-route-discovery`.
 - Revisión validada en VM: `916773f3f4c736f966367a7a1cef5c7c34ce8c2a`.
+- PR funcional: #14 — MERGED.
 - Contrato: `P5 Phase Contract v1`; sin migraciones, persistencia discovery ni cambios P3/P4.
 
 ## Checkpoints
@@ -15,6 +18,9 @@
 | P5.2 | `0c947e8`, `5d2cb47` | PostGIS real, corredor, filtro, progreso y plan GiST | PASS |
 | P5.3 | `fc737de` | composición P4 → P5 y propagación de error | PASS |
 | P5.4 | `916773f` | 4 pruebas HTTP, Problem Details y OpenAPI | PASS |
+| P5.5 | `c2615dc` | validación integrada, evidencia y auditoría de alcance | PASS |
+| P5.6 | `d50fb8e` | PR #14 revisado e integrado en `main` | PASS |
+| P5.7 | `d50fb8e` | validación post-merge y auditoría DoD 23/23 | PASS |
 
 ## Validación local
 
@@ -53,3 +59,18 @@ Entorno autorizado `srv-geoguide-ai` (`manager@192.168.1.106`):
 ## Veredicto P5.5
 
 `PASS`: validación local, PostGIS real, VM, HTTP, no regresión y preservación completadas.
+
+## Cierre maestro
+
+- P5.0-A–P5.0-D y P5.1–P5.7: **CLOSED**.
+- P5 Route Discovery: **CLOSED — 100%**.
+- Definition of Done: **23/23 — PASS**.
+- PR funcional #14: **MERGED**.
+- Commit funcional `c2615dc0e65be6c5ce2b6fc2f66a477a07aefaac`: contenido en
+  `d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca`.
+- Validación post-merge: `main`, `origin/main` y VM alineados con el baseline resultante;
+  build, tests, PostGIS, HTTP, OpenAPI y auditorías de componentes protegidos y alcance:
+  **PASS**.
+- Governance Stops: **RESOLVED / NONE OPEN**.
+- Master Closure: **APPROVED** el 2026-09-06.
+- Siguiente fase: P6 — **NOT STARTED / NOT AUTHORIZED**.

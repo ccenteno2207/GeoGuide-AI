@@ -2,10 +2,11 @@
 
 ## Status
 
-First Operational Pilot. P0, P1, P2, P3 y P4 están cerradas. El baseline oficial
-posterior a P4 es `f14ddc6` (`f14ddc66bc36248e7417583cff5da64c5ff03eba`); el PR #9
-fue integrado y la validación post-merge de P4 terminó correctamente. El privilegio
-elevado actual de `geoguide_app` permanece registrado como deuda de hardening posterior.
+First Operational Pilot. P0–P5 están cerradas. El baseline oficial resultante de P5 es
+`d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca`; el PR funcional #14 fue integrado y la
+validación post-merge de P5 terminó correctamente. P5.1–P5.7 están completados y sus
+23 criterios de Definition of Done están satisfechos. El privilegio elevado actual de
+`geoguide_app` permanece registrado como deuda de hardening posterior.
 
 P4 implementó routing puro sin persistencia: el backend depende de `RoutingProvider`,
 GraphHopper 11 se integra mediante un adaptador sustituible y
@@ -15,12 +16,11 @@ configurables; timeout, indisponibilidad, ausencia de ruta, respuesta inválida 
 del proveedor se normalizan sin filtrar detalles internos. Las pruebas de aceptación y
 la validación real en VM están completadas.
 
-P5 — Route Discovery es la siguiente fase, pero **NO ESTÁ INICIADA** funcionalmente.
-P5.0-A y P5.0-B fueron aceptados; P5.0-C resolvió las contradicciones y P5.0-D congeló
-el `P5 PHASE CONTRACT v1`. La aprobación de fase y la ejecución autónoma funcional
-siguen pendientes de una instrucción explícita. Corredor, candidatos POI, ranking,
-progreso de ruta y `/routes/discover` permanecen sin implementar.
-P6–P12 están planificadas. El roadmap indica progresión, no autorización de ejecución.
+P5 — Route Discovery está **CERRADA**. P5.0-A–P5.0-D y P5.1–P5.7 están cerrados;
+corredor PostGIS, selección de candidatos POI, ranking `DISCOVERY_V1`, progreso de ruta
+y `POST /api/v1/routes/discover` fueron implementados y validados localmente y en VM.
+P6 — Mobile Bootstrap **NO ESTÁ INICIADA NI AUTORIZADA**; P7–P12 permanecen
+planificadas. El roadmap indica progresión, no autorización de ejecución.
 
 ## Product definition
 
@@ -38,7 +38,7 @@ The product covers cultural, historical, archaeological, natural, gastronomic, a
 - **Conversational identity:** CEFI.
 - **Role:** CEFI is GeoGuide AI's voice-oriented conversational copilot for the rutero. It uses shared GeoGuide capabilities to communicate information, context, and recommendations while preserving user control.
 - **Boundary:** CEFI does not replace Routing, Route Discovery, POI Data, or other technical and factual sources.
-- **Status:** Product concept and future experience capability. Implementation is **NOT AUTHORIZED** unless an approved phase contract explicitly includes it. CEFI documentation does not authorize implementation or add CEFI to P5, which remains **NEXT / NOT STARTED**.
+- **Status:** Product concept and future experience capability. Implementation is **NOT AUTHORIZED** unless an approved phase contract explicitly includes it. CEFI remained outside the closed P5 scope and was not implemented.
 
 ## Approved MVP architecture
 

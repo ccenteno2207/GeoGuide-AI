@@ -48,5 +48,6 @@ Pausa también ante ampliación de alcance, frontera de fase, operación destruc
 migración/PBF/bounding box protegido, riesgo de datos o seguridad, dependencia de una
 fase futura, regresión no resoluble o DoD imposible.
 
-Estado vigente: P0–P4 cerradas; P5 — Route Discovery siguiente pero **NO INICIADA**;
-P6–P12 planificadas.
+Estado vigente: P0–P5 cerradas; baseline oficial resultante
+`d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca`. P6 — Mobile Bootstrap **NO INICIADA NI
+AUTORIZADA**; P7–P12 planificadas.

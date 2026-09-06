@@ -13,9 +13,9 @@
   publicar 8080/5432.
 - estructura modular.
 
-Checkpoint actual: P0–P4 están cerradas. P4 fue integrado por el PR #9 mediante
-`f14ddc6` y superó la validación post-merge. P5 — Route Discovery es la siguiente fase,
-pero no está iniciada.
+Checkpoint actual: P0–P5 están cerradas. P5 fue integrado por el PR #14 y superó la
+validación post-merge; su baseline oficial resultante es
+`d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca`. P6 no está iniciada ni autorizada.
 
 ## B02 – Database
 - [x] dependencias JDBC, PostgreSQL y Flyway preparadas.
@@ -59,12 +59,12 @@ fases posteriores. Routing, corredor, discovery y ranking permanecen en B04/B05.
 - [x] pruebas unitarias, de adaptador, contrato HTTP y smoke en VM.
 
 ## B05 – Discovery
-- estado: **NOT STARTED**; este backlog no constituye contrato de alcance P5.
-- corridor.
-- spatial query.
-- ranking.
-- route progress.
-- /routes/discover.
+- estado: **CLOSED**; ejecutado bajo `P5 Phase Contract v1`.
+- [x] corridor.
+- [x] spatial query.
+- [x] ranking `DISCOVERY_V1`.
+- [x] route progress.
+- [x] `/routes/discover`.
 
 ## B06 – Security
 - Spring Security.
