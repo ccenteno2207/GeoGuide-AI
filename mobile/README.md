@@ -1,10 +1,18 @@
 # GeoGuide AI — Mobile
 
-Bootstrap Flutter de GeoGuide AI creado en P6.1.
+Bootstrap Flutter de GeoGuide AI creado en P6.1 y vertical slice P7 en progreso.
 
 Incluye exclusivamente el shell de aplicación, el tema base, la configuración de
-análisis y una prueba de widget. El mapa, la ubicación, los permisos y la integración
-con el backend pertenecen a checkpoints posteriores del contrato P6.
+análisis y una prueba de widget. Incluye mapa, ubicación puntual, selección explícita
+de puntos, rutas, discovery y ficha mínima.
+
+La integración HTTP sólo se activa cuando se suministra una URL HTTPS externa:
+
+```text
+flutter run --dart-define=BACKEND_BASE_URL=https://<dominio-aprobado>
+```
+
+No incluir la URL real del piloto, direcciones privadas ni secretos en código o Git.
 
 ## Validación local
 
