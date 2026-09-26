@@ -19,8 +19,11 @@ la validación real en VM están completadas.
 P5 — Route Discovery está **CERRADA**. P5.0-A–P5.0-D y P5.1–P5.7 están cerrados;
 corredor PostGIS, selección de candidatos POI, ranking `DISCOVERY_V1`, progreso de ruta
 y `POST /api/v1/routes/discover` fueron implementados y validados localmente y en VM.
-P6 — Mobile Bootstrap **NO ESTÁ INICIADA NI AUTORIZADA**; P7–P12 permanecen
-planificadas. El roadmap indica progresión, no autorización de ejecución.
+P6 — Mobile Bootstrap tiene contrato de fase **FROZEN** y aprobación **APPROVED**;
+está autorizada para iniciar mediante una autorización posterior de ejecución, pero su
+implementación funcional **NO ESTÁ INICIADA** y la ejecución autónoma permanece no
+autorizada. P7–P12 permanecen planificadas. El roadmap indica progresión, no
+autorización de ejecución.
 
 ## Product definition
 

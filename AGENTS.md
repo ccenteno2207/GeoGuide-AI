@@ -78,7 +78,7 @@ Current milestone progression:
 - P3 POI Data — CLOSED
 - P4 Routing — CLOSED
 - P5 Route Discovery — CLOSED
-- P6 Mobile Bootstrap — NOT STARTED / NOT AUTHORIZED
+- P6 Mobile Bootstrap — AUTHORIZED TO START / FUNCTIONAL IMPLEMENTATION NOT STARTED
 - P7 First Vertical Slice — PLANNED
 - P8 POI Experience — PLANNED
 - P9 Offline + Driving — PLANNED
@@ -86,6 +86,6 @@ Current milestone progression:
 - P11 Linux Server Deployment — PLANNED
 - P12 Real Road Pilot — PLANNED
 
-The official post-P5 baseline is `d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca` (P0–P5 completed). Verify the effective `main` and `origin/main` before starting any authorized work instead of treating a recorded SHA as permanent. P6 has not started and is not authorized.
+The official post-P5 baseline is `d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca` (P0–P5 completed). P6 has a frozen and approved phase contract at `11a8b002ca0f6b52fd561c63166623ba739bea5e`, but functional implementation has not started and autonomous execution remains unauthorized. Verify the effective `main` and `origin/main` before starting any authorized work instead of treating a recorded SHA as permanent.
 
 Do NOT attempt to build the entire product in a single task.

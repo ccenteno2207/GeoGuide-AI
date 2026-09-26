@@ -23,7 +23,8 @@ LLM, CarPlay ni Android Auto.
 ## Stack de referencia
 - Flutter
 - Dart
-- flutter_map / MapLibre como capa cartográfica, sujeto a ADR final
+- flutter_map 8.3.2 como capa cartográfica inicial, conforme a ADR-019; MapLibre
+  Flutter permanece como alternativa evaluada
 - OpenStreetMap
 - Geolocator o equivalente open source para GPS
 - Riverpod como gestión de estado recomendada
