@@ -89,8 +89,7 @@ regresión no resoluble o DoD imposible.
 - no omitir tests para “avanzar más rápido”.
 
 ## Prioridad actual
-P0–P5 están cerradas. El baseline oficial resultante de P5 es
-`d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca`. P6 — Mobile Bootstrap **NO ESTÁ
-INICIADA NI AUTORIZADA**; P7–P12 están planificadas. Construir el First Operational
-Pilot mediante incrementos y commits pequeños, verificables y estables. No avanzar
-automáticamente al siguiente hito.
+P0–P6 están cerradas. El baseline funcional de P6 es
+`d434a82b57774deddd55713f7006d6783403c8c0`; P6.1–P6.4 están completadas y
+P6-AC-01–P6-AC-09 terminaron en `PASS`. P7 — First Vertical Slice **NO ESTÁ
+INICIADA**; P7–P12 están planificadas. No avanzar automáticamente al siguiente hito.
