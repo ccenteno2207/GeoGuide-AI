@@ -10,7 +10,7 @@ The priority is the First Operational Pilot.
 | P3 | POI Data & Domain | CLOSED |
 | P4 | Routing | CLOSED |
 | P5 | Route Discovery | CLOSED |
-| P6 | Mobile Bootstrap | AUTHORIZED TO START / FUNCTIONAL IMPLEMENTATION NOT STARTED |
+| P6 | Mobile Bootstrap | CLOSED |
 | P7 | First Vertical Slice | PLANNED |
 | P8 | POI Experience | PLANNED |
 | P9 | Offline + Driving | PLANNED |
@@ -24,9 +24,9 @@ P4 cerró el routing puro: `RoutingProvider`, adaptador GraphHopper 11,
 `POST /api/v1/routes/plan`, geometría GeoJSON `LineString`, normalización y pruebas.
 P5 cerró Route Discovery mediante el PR #14, con los checkpoints P5.0-A–P5.7 y los
 23 criterios de Definition of Done completados. Su baseline resultante oficial es
-`d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca` (P0–P5 completados). P6 tiene contrato
-de fase congelado y aprobado, pero no está iniciada funcionalmente ni tiene ejecución
-autónoma autorizada.
+`d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca` (P0–P5 completados). P6 cerró el
+bootstrap Flutter, mapa base e integración de ubicación puntual conforme a su contrato;
+la evidencia canónica es `P6-Validation-Evidence.md`. P7–P12 permanecen planificadas.
 
 Roadmap position defines project progression, not implementation authorization. Every
 major phase requires scope confirmation, freeze and approval before implementation.

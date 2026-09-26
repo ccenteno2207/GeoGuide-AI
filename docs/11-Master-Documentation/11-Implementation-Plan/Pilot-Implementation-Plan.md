@@ -87,12 +87,13 @@
 - Governance Stops: resueltos; ninguno abierto.
 
 ## P6 – Mobile Bootstrap
-- estado: **AUTORIZADA PARA INICIAR / IMPLEMENTACIÓN FUNCIONAL NO INICIADA — 0%**;
+- estado: **CERRADA — 100%**;
 - contrato: [P6 Phase Contract v1](P6-Phase-Contract-v1.md) **FROZEN / APPROVED**;
 - Flutter bootstrap, `flutter_map 8.3.2`, mapa base, ubicación puntual y permisos;
 - `TILE_PROVIDER_GOVERNANCE = PENDING`; la fuente OSM autorizada es sólo para
   desarrollo y validación;
-- ejecución autónoma: **NO AUTORIZADA**.
+- evidencia: [P6 Validation Evidence](P6-Validation-Evidence.md);
+- ejecución autónoma: **FINALIZADA**.
 
 ## P7 – Vertical Slice
 Mobile → API → route → PostGIS → POIs → map.
