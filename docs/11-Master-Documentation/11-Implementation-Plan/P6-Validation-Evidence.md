@@ -68,6 +68,10 @@
 
 - P6.1–P6.4: **CLOSED**.
 - P6 — Mobile Bootstrap: **COMPLETED**.
+- PR #21: **MERGED**.
+- Baseline funcional final de P6:
+  `d434a82b57774deddd55713f7006d6783403c8c0`.
+- P6-AC-01–P6-AC-09: **PASS**.
 - P7 — First Vertical Slice: **NOT STARTED**.
 - Riesgo residual: la ubicación aproximada puede mostrar una desviación compatible con
   su nivel de precisión; la definición de un proveedor productivo de tiles permanece

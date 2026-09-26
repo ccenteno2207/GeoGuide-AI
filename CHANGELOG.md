@@ -40,6 +40,10 @@
   `0`; V001 registrada con checksum `-1627021776` y evidencia P1 preservada.
 
 ### Changed
+- P6 — Mobile Bootstrap fue completada y cerrada formalmente. P6.1–P6.4 fueron
+  integradas mediante los PR #18–#21; P6-AC-01–P6-AC-09 terminaron en `PASS` y el
+  baseline funcional resultante es `d434a82b57774deddd55713f7006d6783403c8c0`.
+  P7 permanece no iniciada.
 - P4 — Routing fue completado y cerrado formalmente. El PR #9 fue integrado mediante
   `f14ddc6` y la validación post-merge en VM terminó correctamente. El cierre incluye
   `RoutingProvider`, el adaptador GraphHopper 11, `POST /api/v1/routes/plan`, geometría
