@@ -1,0 +1,19 @@
+class RoutePoint {
+  const RoutePoint({required this.latitude, required this.longitude});
+
+  final double latitude;
+  final double longitude;
+
+  bool get isValid =>
+      latitude.isFinite &&
+      longitude.isFinite &&
+      latitude >= -90 &&
+      latitude <= 90 &&
+      longitude >= -180 &&
+      longitude <= 180;
+
+  Map<String, Object> toRequestJson() => {
+    'latitude': latitude,
+    'longitude': longitude,
+  };
+}
