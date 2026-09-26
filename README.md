@@ -33,6 +33,7 @@ P0–P5 están completadas y cerradas. El baseline oficial resultante de P5 es
 `d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca`; incluye el dominio y los datos POI, la
 infraestructura local, routing desacoplado mediante `RoutingProvider` y Route Discovery.
 
-P6 — Mobile Bootstrap **no está iniciada ni autorizada**. P7–P12 permanecen planificadas.
+P6 — Mobile Bootstrap está **COMPLETADA**. P7 — First Vertical Slice permanece
+**NO INICIADA**; P8–P12 permanecen planificadas.
 La configuración inicial de PostgreSQL/PostGIS, Redis y MinIO, junto con sus instrucciones
 de operación, se encuentra en [infrastructure/README.md](infrastructure/README.md).
