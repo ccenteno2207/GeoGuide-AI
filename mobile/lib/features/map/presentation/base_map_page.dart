@@ -5,6 +5,8 @@ import 'package:latlong2/latlong.dart';
 import '../../location/application/request_current_location.dart';
 import '../../location/domain/location_repository.dart';
 import '../../discovery/application/discover_route.dart';
+import '../../discovery/domain/discovery_poi.dart';
+import '../../discovery/presentation/poi_detail_sheet.dart';
 import '../../discovery/presentation/route_discovery_controller.dart';
 import '../../route_planning/application/plan_route.dart';
 import '../../route_planning/domain/route_point.dart';
@@ -97,6 +99,13 @@ class _BaseMapPageState extends State<BaseMapPage> {
     }
     if (!mounted) return;
     setState(() {});
+  }
+
+  Future<void> _showPoiDetail(DiscoveryPoi poi) {
+    return showModalBottomSheet<void>(
+      context: context,
+      builder: (_) => PoiDetailSheet(poi: poi),
+    );
   }
 
   @override
@@ -200,10 +209,14 @@ class _BaseMapPageState extends State<BaseMapPage> {
                           ),
                           width: 40,
                           height: 40,
-                          child: const Icon(
-                            Icons.place,
-                            color: Colors.deepOrange,
-                            size: 32,
+                          child: IconButton(
+                            tooltip: 'Ver detalle de ${poi.name}',
+                            onPressed: () => _showPoiDetail(poi),
+                            icon: const Icon(
+                              Icons.place,
+                              color: Colors.deepOrange,
+                              size: 32,
+                            ),
                           ),
                         ),
                       )
