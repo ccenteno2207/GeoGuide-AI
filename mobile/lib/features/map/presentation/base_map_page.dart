@@ -4,6 +4,8 @@ import 'package:latlong2/latlong.dart';
 
 import '../../location/application/request_current_location.dart';
 import '../../location/domain/location_repository.dart';
+import '../../discovery/application/discover_route.dart';
+import '../../discovery/presentation/route_discovery_controller.dart';
 import '../../route_planning/application/plan_route.dart';
 import '../../route_planning/domain/route_point.dart';
 import '../../route_planning/presentation/route_planning_controller.dart';
@@ -13,10 +15,12 @@ class BaseMapPage extends StatefulWidget {
     super.key,
     required this.requestCurrentLocation,
     this.planRoute,
+    this.discoverRoute,
   });
 
   final RequestCurrentLocation requestCurrentLocation;
   final PlanRoute? planRoute;
+  final DiscoverRoute? discoverRoute;
 
   @override
   State<BaseMapPage> createState() => _BaseMapPageState();
@@ -28,6 +32,7 @@ class _BaseMapPageState extends State<BaseMapPage> {
   String _locationStatus = 'Ubicación no solicitada';
   bool _isRequestingLocation = false;
   late final RoutePlanningController _routePlanning;
+  late final RouteDiscoveryController _routeDiscovery;
 
   static const developmentTileUrl =
       'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
@@ -38,6 +43,9 @@ class _BaseMapPageState extends State<BaseMapPage> {
   void initState() {
     super.initState();
     _routePlanning = RoutePlanningController(planRoute: widget.planRoute);
+    _routeDiscovery = RouteDiscoveryController(
+      discoverRoute: widget.discoverRoute,
+    );
   }
 
   Future<void> _requestLocation() async {
@@ -82,6 +90,11 @@ class _BaseMapPageState extends State<BaseMapPage> {
   Future<void> _calculateRoute() async {
     setState(() {});
     await _routePlanning.calculate();
+    final origin = _routePlanning.origin;
+    final destination = _routePlanning.destination;
+    if (_routePlanning.route != null && origin != null && destination != null) {
+      await _routeDiscovery.discover(origin: origin, destination: destination);
+    }
     if (!mounted) return;
     setState(() {});
   }
@@ -176,6 +189,26 @@ class _BaseMapPageState extends State<BaseMapPage> {
                     ),
                   ],
                 ),
+              if (_routeDiscovery.pois.isNotEmpty)
+                MarkerLayer(
+                  markers: _routeDiscovery.pois
+                      .map(
+                        (poi) => Marker(
+                          point: LatLng(
+                            poi.location.latitude,
+                            poi.location.longitude,
+                          ),
+                          width: 40,
+                          height: 40,
+                          child: const Icon(
+                            Icons.place,
+                            color: Colors.deepOrange,
+                            size: 32,
+                          ),
+                        ),
+                      )
+                      .toList(growable: false),
+                ),
               const SimpleAttributionWidget(source: Text(attribution)),
             ],
           ),
@@ -211,7 +244,7 @@ class _BaseMapPageState extends State<BaseMapPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          _routePlanning.status,
+                          _routeDiscovery.status ?? _routePlanning.status,
                           textAlign: TextAlign.center,
                         ),
                         Text(_locationStatus, textAlign: TextAlign.center),
