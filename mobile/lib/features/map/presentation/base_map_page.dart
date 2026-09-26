@@ -4,11 +4,19 @@ import 'package:latlong2/latlong.dart';
 
 import '../../location/application/request_current_location.dart';
 import '../../location/domain/location_repository.dart';
+import '../../route_planning/application/plan_route.dart';
+import '../../route_planning/domain/route_point.dart';
+import '../../route_planning/presentation/route_planning_controller.dart';
 
 class BaseMapPage extends StatefulWidget {
-  const BaseMapPage({super.key, required this.requestCurrentLocation});
+  const BaseMapPage({
+    super.key,
+    required this.requestCurrentLocation,
+    this.planRoute,
+  });
 
   final RequestCurrentLocation requestCurrentLocation;
+  final PlanRoute? planRoute;
 
   @override
   State<BaseMapPage> createState() => _BaseMapPageState();
@@ -19,11 +27,18 @@ class _BaseMapPageState extends State<BaseMapPage> {
   LocationPoint? _currentLocation;
   String _locationStatus = 'Ubicación no solicitada';
   bool _isRequestingLocation = false;
+  late final RoutePlanningController _routePlanning;
 
   static const developmentTileUrl =
       'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
   static const attribution = 'OpenStreetMap contributors';
   static const _initialCenter = LatLng(-12.0464, -77.0428);
+
+  @override
+  void initState() {
+    super.initState();
+    _routePlanning = RoutePlanningController(planRoute: widget.planRoute);
+  }
 
   Future<void> _requestLocation() async {
     setState(() => _isRequestingLocation = true);
@@ -56,6 +71,21 @@ class _BaseMapPageState extends State<BaseMapPage> {
     super.dispose();
   }
 
+  void _selectRoutePoint(TapPosition _, LatLng point) {
+    setState(() {
+      _routePlanning.selectPoint(
+        RoutePoint(latitude: point.latitude, longitude: point.longitude),
+      );
+    });
+  }
+
+  Future<void> _calculateRoute() async {
+    setState(() {});
+    await _routePlanning.calculate();
+    if (!mounted) return;
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,9 +103,10 @@ class _BaseMapPageState extends State<BaseMapPage> {
         children: [
           FlutterMap(
             mapController: _mapController,
-            options: const MapOptions(
+            options: MapOptions(
               initialCenter: _initialCenter,
               initialZoom: 12,
+              onTap: _selectRoutePoint,
             ),
             children: [
               TileLayer(
@@ -98,6 +129,53 @@ class _BaseMapPageState extends State<BaseMapPage> {
                     ),
                   ],
                 ),
+              if (_routePlanning.origin case final origin?)
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: LatLng(origin.latitude, origin.longitude),
+                      width: 44,
+                      height: 44,
+                      child: const Icon(
+                        Icons.trip_origin,
+                        color: Colors.green,
+                        size: 34,
+                      ),
+                    ),
+                  ],
+                ),
+              if (_routePlanning.destination case final destination?)
+                MarkerLayer(
+                  markers: [
+                    Marker(
+                      point: LatLng(
+                        destination.latitude,
+                        destination.longitude,
+                      ),
+                      width: 44,
+                      height: 44,
+                      child: const Icon(
+                        Icons.location_on,
+                        color: Colors.red,
+                        size: 36,
+                      ),
+                    ),
+                  ],
+                ),
+              if (_routePlanning.route case final route?)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: route.geometry
+                          .map(
+                            (point) => LatLng(point.latitude, point.longitude),
+                          )
+                          .toList(growable: false),
+                      color: Theme.of(context).colorScheme.primary,
+                      strokeWidth: 5,
+                    ),
+                  ],
+                ),
               const SimpleAttributionWidget(source: Text(attribution)),
             ],
           ),
@@ -105,11 +183,43 @@ class _BaseMapPageState extends State<BaseMapPage> {
             left: 16,
             right: 16,
             bottom: 24,
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Text(_locationStatus, textAlign: TextAlign.center),
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (_routePlanning.origin != null &&
+                    _routePlanning.destination != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: FilledButton.icon(
+                      onPressed: _routePlanning.canPlan
+                          ? _calculateRoute
+                          : null,
+                      icon: _routePlanning.isCalculating
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.alt_route),
+                      label: const Text('Calcular ruta'),
+                    ),
+                  ),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _routePlanning.status,
+                          textAlign: TextAlign.center,
+                        ),
+                        Text(_locationStatus, textAlign: TextAlign.center),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
