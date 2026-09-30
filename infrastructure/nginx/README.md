@@ -1,8 +1,13 @@
 # Ingress HTTPS del piloto
 
-Nginx es el único ingress autorizado para el piloto. Se conecta a la red Docker
-interna `data` y realiza proxy únicamente a `backend:8080`. PostgreSQL, Redis,
-MinIO, GraphHopper y el backend no publican puertos de host.
+Nginx es el único ingress autorizado para el piloto. Pertenece a dos redes Docker:
+`ingress`, un bridge orientado al exterior (`internal: false`) que permite materializar
+sus puertos de host, y `data`, el bridge interno (`internal: true`) desde el que realiza
+proxy únicamente a `backend:8080`. PostgreSQL, Redis, MinIO, GraphHopper y el backend
+permanecen solamente en `data` y no publican puertos de host.
+
+La red `ingress` no concede acceso directo a servicios internos: Nginx es el único
+componente GeoGuide conectado a ella y el único autorizado a publicar puertos de host.
 
 ## Topología de puertos
 
