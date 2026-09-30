@@ -4,28 +4,55 @@ Nginx es el único ingress autorizado para el piloto. Se conecta a la red Docker
 interna `data` y realiza proxy únicamente a `backend:8080`. PostgreSQL, Redis,
 MinIO, GraphHopper y el backend no publican puertos de host.
 
-## Fase A: preparación HTTP para ACME
+## Topología de puertos
 
-Antes de iniciar Nginx, el operador debe definir externamente:
+Nginx escucha únicamente dentro de la VM en los puertos estándar:
 
 ```text
-GEOGUIDE_API_DOMAIN=api-geoguide.<dominio-controlado-por-el-propietario>
+Nginx :80 / :443
 ```
 
-La plantilla `http.conf.template` publica exclusivamente `80` para responder al
-desafío HTTP-01 de ACME y redirige el resto de tráfico a HTTPS. No debe usarse
-como ingress funcional para Mobile antes de activar TLS.
+La redirección NAT externa asigna los puertos públicos aprobados al listener
+equivalente de la VM. Los puertos NAT no son listeners Docker ni deben sustituir
+los puertos internos de Nginx:
 
-## Fase B: certificado y HTTPS
+```text
+Público TCP 1980 -> VM TCP 80
+Público TCP 5443 -> VM TCP 443
+```
 
-Cuando DNS resuelva y los puertos externos `80` y `443` estén disponibles, el
-operador autorizado puede emitir un certificado confiable con el perfil `tls` de
-Certbot. El email de ACME se suministra fuera del repositorio. Tras la emisión,
-la configuración de Nginx debe pasar de `http.conf.template` a
-`https.conf.template` y publicar `443:443` además de `80:80`.
+El tráfico HTTP se redirige a HTTPS usando el puerto público HTTPS configurado por
+`GEOGUIDE_PUBLIC_HTTPS_PORT` (por defecto `5443`). Android sólo usa HTTPS.
+
+## TLS mediante ACME DNS-01 manual
+
+La topología NAT no permite asumir que el puerto público `80` llegue a GeoGuide;
+por ello HTTP-01 no es una estrategia válida. La emisión inicial debe usar
+DNS-01 manual con Certbot y sin almacenar credenciales DNS en la VM.
+
+El operador inicia Certbot mediante el perfil `tls` y selecciona el desafío DNS.
+Certbot mostrará el valor TXT temporal que debe crear el propietario del dominio:
+
+```text
+_acme-challenge.<dominio-aprobado>  TXT  <valor-entregado-por-certbot>
+```
+
+Después de que el DNS público resuelva el TXT, el operador continúa la emisión.
+El certificado y la clave quedan en el volumen `letsencrypt`, montado como sólo
+lectura por Nginx. El email de ACME se suministra fuera del repositorio.
 
 No se aceptan certificados autofirmados para R4/R5. No guardar certificados,
 claves privadas, dominios reales ni secretos en Git.
+
+## Configuración Mobile
+
+La aplicación recibe su endpoint sólo durante build o ejecución:
+
+```text
+--dart-define=BACKEND_BASE_URL=https://<dominio-aprobado>:5443
+```
+
+No incluir IP pública, IP privada, credenciales ni endpoint real en Dart.
 
 ## Rollback
 

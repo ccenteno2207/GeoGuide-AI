@@ -9,7 +9,7 @@ de puntos, rutas, discovery y ficha mínima.
 La integración HTTP sólo se activa cuando se suministra una URL HTTPS externa:
 
 ```text
-flutter run --dart-define=BACKEND_BASE_URL=https://<dominio-aprobado>
+flutter run --dart-define=BACKEND_BASE_URL=https://<dominio-aprobado>:<puerto-https-aprobado>
 ```
 
 No incluir la URL real del piloto, direcciones privadas ni secretos en código o Git.

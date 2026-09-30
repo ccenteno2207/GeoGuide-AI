@@ -58,12 +58,13 @@ services:
       backend:
         condition: service_healthy
     environment:
-      NGINX_ENVSUBST_FILTER: GEOGUIDE_API_DOMAIN
+      NGINX_ENVSUBST_FILTER: GEOGUIDE_API_DOMAIN|GEOGUIDE_PUBLIC_HTTPS_PORT
+      GEOGUIDE_PUBLIC_HTTPS_PORT: ${GEOGUIDE_PUBLIC_HTTPS_PORT:-5443}
     ports:
       - "80:80"
+      - "443:443"
     volumes:
-      - ./nginx/http.conf.template:/etc/nginx/templates/default.conf.template:ro
-      - certbot_webroot:/var/www/certbot:ro
+      - ./nginx/https.conf.template:/etc/nginx/templates/default.conf.template:ro
       - letsencrypt:/etc/letsencrypt:ro
     networks: [data]
 
@@ -71,7 +72,6 @@ services:
     image: certbot/certbot:v4.0.0
     profiles: [tls]
     volumes:
-      - certbot_webroot:/var/www/certbot
       - letsencrypt:/etc/letsencrypt
 
   redis:
@@ -149,5 +149,4 @@ volumes:
   postgres_data:
   redis_data:
   minio_data:
-  certbot_webroot:
   letsencrypt:

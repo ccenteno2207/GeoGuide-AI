@@ -2,13 +2,8 @@ server {
     listen 80;
     server_name ${GEOGUIDE_API_DOMAIN};
 
-    location ^~ /.well-known/acme-challenge/ {
-        root /var/www/certbot;
-        try_files $uri =404;
-    }
-
     location / {
-        return 308 https://$host$request_uri;
+        return 308 https://$host:${GEOGUIDE_PUBLIC_HTTPS_PORT}$request_uri;
     }
 }
 
