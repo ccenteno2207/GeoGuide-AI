@@ -22,7 +22,10 @@ y `POST /api/v1/routes/discover` fueron implementados y validados localmente y e
 P6 — Mobile Bootstrap está **CERRADA**. El bootstrap Flutter, `flutter_map 8.3.2`,
 mapa base, interacción, permiso de ubicación aproximada y ubicación puntual fueron
 validados en Android; la evidencia está en `P6-Validation-Evidence.md`.
-`TILE_PROVIDER_GOVERNANCE` permanece pendiente. P7–P12 permanecen planificadas.
+`TILE_PROVIDER_GOVERNANCE` permanece pendiente. P7 — First Vertical Slice está en
+progreso: P7.1–P7.4 fueron integrados y P7.5 permanece abierto para validación E2E.
+El objetivo seguro es HTTPS; la incidencia DNS autoritativa externa bloquea TLS y no
+autoriza cerrar P7. P8–P12 permanecen planificadas.
 El roadmap indica progresión, no autorización de ejecución.
 
 ## Product definition
