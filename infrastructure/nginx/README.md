@@ -1,4 +1,4 @@
-# Ingress HTTPS del piloto
+# Ingress HTTP y HTTPS del piloto
 
 Nginx es el único ingress autorizado para el piloto. Pertenece a dos redes Docker:
 `ingress`, un bridge orientado al exterior (`internal: false`) que permite materializar
@@ -29,22 +29,63 @@ Público TCP 5443 -> VM TCP 443
 El tráfico HTTP se redirige a HTTPS usando el puerto público HTTPS configurado por
 `GEOGUIDE_PUBLIC_HTTPS_PORT` (por defecto `5443`). Android sólo usa HTTPS.
 
-## TLS mediante ACME DNS-01 manual
+## Bootstrap HTTP
+
+El compose base publica únicamente `80:80` y usa
+`nginx/http.conf.template`. Así Nginx puede iniciar y hacer proxy hacia el backend
+sin depender de archivos de certificado inexistentes. Este estado sólo sirve para el
+ingress HTTP temporal aprobado; no satisface el gate de conectividad segura.
+
+## TLS mediante ACME DNS-01 automatizado con deSEC
 
 La topología NAT no permite asumir que el puerto público `80` llegue a GeoGuide;
-por ello HTTP-01 no es una estrategia válida. La emisión inicial debe usar
-DNS-01 manual con Certbot y sin almacenar credenciales DNS en la VM.
+por ello HTTP-01 no es una estrategia válida. La emisión y renovación usan DNS-01
+mediante la imagen reproducible `geoguide-ai/certbot-dns-desec:4.0.0-1.3.2` y el
+plugin `certbot-dns-desec 1.3.2`.
 
-El operador inicia Certbot mediante el perfil `tls` y selecciona el desafío DNS.
-Certbot mostrará el valor TXT temporal que debe crear el propietario del dominio:
+El token de deSEC no pertenece al repositorio ni a `.env`. El operador lo guarda fuera
+de Git, por ejemplo en `/etc/geoguide/secrets/desec.ini`, con propietario `root:root`
+y modo `0600`. El archivo contiene el formato requerido por el plugin y se suministra
+al compose sólo como ruta mediante `DESEC_CREDENTIALS_FILE`; el secreto se monta como
+`/run/secrets/desec.ini`, de sólo lectura, exclusivamente en Certbot.
+
+El token futuro debe usar la política de mínimo privilegio de deSEC: denegar por
+defecto y permitir únicamente escritura de RRset `TXT` para el subnombre
+`_acme-challenge` de la zona aprobada. No debe permitir crear/borrar dominios ni
+administrar tokens.
+
+La emisión inicial se realiza después de activar el perfil `tls`, con configuración
+externa y sin copiar el token a la terminal:
 
 ```text
-_acme-challenge.<dominio-aprobado>  TXT  <valor-entregado-por-certbot>
+export DESEC_CREDENTIALS_FILE=/etc/geoguide/secrets/desec.ini
+export GEOGUIDE_API_DOMAIN=<dominio-aprobado>
+docker compose --profile tls run --rm certbot certonly \
+  --authenticator dns-desec \
+  --dns-desec-credentials /run/secrets/desec.ini \
+  -d "$GEOGUIDE_API_DOMAIN"
 ```
 
-Después de que el DNS público resuelva el TXT, el operador continúa la emisión.
 El certificado y la clave quedan en el volumen `letsencrypt`, montado como sólo
-lectura por Nginx. El email de ACME se suministra fuera del repositorio.
+lectura por Nginx. Certbot está sólo en `ingress`, no publica puertos y nunca recibe
+el socket Docker.
+
+## Activación TLS y renovación
+
+Después de emitir el certificado, se activa el override explícito:
+
+```text
+docker compose -f compose.yaml -f compose.tls.yaml up -d nginx
+```
+
+El override publica `443:443`, monta el certificado de forma sólo lectura y cambia
+Nginx a `https.conf.template`; HTTP redirige a HTTPS por el puerto público configurado
+`5443`. Antes de cualquier recarga se ejecuta `nginx -t`.
+
+`scripts/renew-certificates.sh` está diseñado para ejecutarse por el timer systemd
+incluido. Certbot coloca un marcador de deploy sólo tras una renovación efectiva; el
+script entonces valida Nginx y lo recarga. Un fallo de renovación deja intacto el
+certificado actual y no reinicia backend ni servicios de datos.
 
 No se aceptan certificados autofirmados para R4/R5. No guardar certificados,
 claves privadas, dominios reales ni secretos en Git.
@@ -61,6 +102,6 @@ No incluir IP pública, IP privada, credenciales ni endpoint real en Dart.
 
 ## Rollback
 
-Retirar Nginx y sus bindings `80/443`; conservar `data`, volúmenes de servicios y
-contenedores existentes. El volumen de certificados puede preservarse para una
-reanudación controlada.
+Para revertir una activación TLS, retirar sólo el override TLS y recrear Nginx con el
+compose base HTTP. Conservar `data`, `ingress`, el volumen `letsencrypt` y los
+contenedores/volúmenes de aplicación. No usar `docker compose down -v` ni pruning.
