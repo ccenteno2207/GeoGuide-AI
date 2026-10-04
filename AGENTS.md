@@ -79,13 +79,13 @@ Current milestone progression:
 - P4 Routing — CLOSED
 - P5 Route Discovery — CLOSED
 - P6 Mobile Bootstrap — CLOSED / COMPLETED
-- P7 First Vertical Slice — PLANNED
+- P7 First Vertical Slice — IN PROGRESS
 - P8 POI Experience — PLANNED
 - P9 Offline + Driving — PLANNED
 - P10 Quality + Security — PLANNED
 - P11 Linux Server Deployment — PLANNED
 - P12 Real Road Pilot — PLANNED
 
-The official P6 functional baseline is `d434a82b57774deddd55713f7006d6783403c8c0` (P0–P6 completed). P6.1–P6.4 are completed and P6-AC-01–P6-AC-09 passed. P7 remains not started and requires its own scope confirmation, contract freeze and approval. Verify the effective `main` and `origin/main` before starting any authorized work instead of treating a recorded SHA as permanent.
+The official P6 functional baseline is `d434a82b57774deddd55713f7006d6783403c8c0` (P0–P6 completed). P6.1–P6.4 are completed and P6-AC-01–P6-AC-09 passed. P7 is in progress: its frozen contract records P7.0–P7.4 as completed, P7.5 as in progress and P7.6 as not started. Verify the effective `main` and `origin/main` before starting any authorized work instead of treating a recorded SHA as permanent.
 
 Do NOT attempt to build the entire product in a single task.

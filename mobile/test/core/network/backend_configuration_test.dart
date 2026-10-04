@@ -2,16 +2,17 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:geoguide_ai/core/network/backend_configuration.dart';
 
 void main() {
-  test('does not enable backend connectivity without a build-time URL', () {
-    expect(BackendConfiguration.fromEnvironment(), isNull);
-  });
-
-  test('keeps a supplied HTTPS URL as configuration data', () {
-    final configuration = BackendConfiguration(
-      Uri(scheme: 'https', host: 'api.example.test'),
+  test('accepts an externally supplied HTTP pilot endpoint', () {
+    final configuration = BackendConfiguration.tryParse(
+      'http://geoguide.getcom.pe:1980',
     );
 
-    expect(configuration.baseUrl.scheme, 'https');
-    expect(configuration.baseUrl.host, 'api.example.test');
+    expect(configuration?.baseUrl.toString(), 'http://geoguide.getcom.pe:1980');
+  });
+
+  test('rejects an absent or unsupported backend endpoint', () {
+    expect(BackendConfiguration.tryParse(''), isNull);
+    expect(BackendConfiguration.tryParse('geoguide.getcom.pe'), isNull);
+    expect(BackendConfiguration.tryParse('ftp://geoguide.getcom.pe'), isNull);
   });
 }

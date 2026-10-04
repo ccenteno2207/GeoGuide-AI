@@ -1,18 +1,17 @@
 # GeoGuide AI — Mobile
 
-Bootstrap Flutter de GeoGuide AI creado en P6.1 y vertical slice P7 en progreso.
+Bootstrap Flutter de GeoGuide AI creado en P6.1. P7 — First Vertical Slice está en
+progreso: incluye la integración móvil mínima con planificación de ruta, geometría,
+discovery, marcadores y ficha básica de POI.
 
-Incluye exclusivamente el shell de aplicación, el tema base, la configuración de
-análisis y una prueba de widget. Incluye mapa, ubicación puntual, selección explícita
-de puntos, rutas, discovery y ficha mínima.
+La URL de backend se suministra externamente mediante `--dart-define`; no se hardcodea
+en el código fuente. La arquitectura objetivo de P7 usa HTTPS. Mientras persista el
+bloqueo externo de DNS/TLS, se autoriza exclusivamente para E2E funcional controlado
+una URL HTTP temporal mediante el mismo mecanismo. HTTP no satisface el gate de
+conectividad segura ni representa configuración productiva.
 
-La integración HTTP sólo se activa cuando se suministra una URL HTTPS externa:
-
-```text
-flutter run --dart-define=BACKEND_BASE_URL=https://<dominio-aprobado>:<puerto-https-aprobado>
-```
-
-No incluir la URL real del piloto, direcciones privadas ni secretos en código o Git.
+No incluye CEFI, voz, autenticación, tracking continuo, offline avanzado ni
+capacidades de fases posteriores.
 
 ## Validación local
 

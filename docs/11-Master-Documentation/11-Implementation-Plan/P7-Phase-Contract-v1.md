@@ -3,17 +3,19 @@
 ## Estado del contrato
 
 ```text
-PHASE CONTRACT: PROPOSED_PENDING_APPROVAL
-PHASE APPROVAL: PENDING
-AUTONOMOUS EXECUTION: NOT AUTHORIZED
+PHASE CONTRACT: APPROVED_FROZEN
+PHASE APPROVAL: APPROVED
+AUTONOMOUS EXECUTION: AUTHORIZED_WITHIN_FROZEN_CONTRACT
 ```
 
-**Clasificación:** P7 GOVERNANCE PROPOSAL
+**Clasificación:** P7 PHASE CONTRACT
 **Baseline de propuesta:** `1663794f819497cebc9e37f670b03c456057d238`
-**Fecha:** 2026-09-26
+**Fecha de propuesta:** 2026-09-26
+**Fecha de freeze:** 2026-09-30
 
-Este documento delimita una propuesta de contrato. No congela P7, no inicia sus
-checkpoints ni autoriza implementación funcional hasta aprobación humana explícita.
+Este contrato quedó aprobado y congelado tras reconciliar los PR #24–#27 con el
+alcance definido. No altera retroactivamente los criterios de aceptación ni autoriza
+capacidades excluidas.
 
 ## 1. Propósito y escenario verificable
 
@@ -139,12 +141,10 @@ se registran secretos, stack traces, URLs internas ni coordenadas personales pre
 - Flutter/Dart, `flutter_map 8.3.2`, `geolocator 14.0.3` y `latlong2 0.10.1`.
 - OpenAPI/backend P4/P5 existentes.
 
-### HTTP_CLIENT = CONTRACT_DECISION_PENDING_APPROVAL
+### HTTP_CLIENT = APPROVED
 
-Se propone `Dio 5.11.1`, versión estable publicada con restricción Dart
-`>=2.18.0 <4.0.0`, compatible con Dart `3.13.2`. La documentación mobile ya contempla
-`Dio o equivalente` y sus responsabilidades de URL base, timeout, JSON y error mapping;
-esta propuesta no instala la dependencia ni autoriza overrides o upgrades de Flutter/Dart.
+`Dio 5.11.1`, compatible con Dart `3.13.2`, quedó incorporado por P7.1 para URL base,
+timeout, JSON y mapeo de errores. No se utilizan overrides ni upgrades de Flutter/Dart.
 
 ### Gestión de estado
 
@@ -172,12 +172,19 @@ justificada. La URL backend se configura fuera del código fuente y sin secretos
 
 ```text
 P7_RUNTIME_BACKEND_CONNECTIVITY = REQUIRED_BEFORE_E2E_VALIDATION
+SECURE_TARGET = https://geoguide.getcom.pe:5443
+TEMPORARY_FUNCTIONAL_ENDPOINT = http://geoguide.getcom.pe:1980
+HTTP_TEMPORARY_FUNCTIONAL_E2E = AUTHORIZED
+HTTP_SATISFIES_SECURE_GATE = NO
+TLS_STATUS = BLOCKED_BY_AUTHORITATIVE_DNS
 ```
 
-La topología, hostname, IP, tunnel, reverse proxy y mecanismo de exposición no se
-definen aquí. Esta decisión no bloquea la autoría contractual, pero bloquea el gate E2E
-hasta disponer de una conectividad segura y verificable hacia la infraestructura del
-piloto.
+La conectividad segura y verificable hacia la infraestructura del piloto se satisface
+únicamente con el objetivo HTTPS. Mientras el TLS públicamente confiable permanezca
+bloqueado por una inconsistencia DNS autoritativa externa, el endpoint HTTP temporal
+puede emplearse exclusivamente para validación funcional controlada mediante
+`--dart-define`; no es configuración productiva, no sustituye el gate seguro y no
+permite cerrar P7.5 ni P7.
 
 ## 12. Exclusiones congeladas
 
@@ -224,37 +231,43 @@ P7 se considera terminada únicamente cuando:
 
 ### P7.0 — Contract / Entry Gate
 
-- Resolver aprobación contractual, `HTTP_CLIENT`, conectividad backend y rama autorizada.
-- No escribir código hasta que el contrato esté FROZEN / APPROVED y la ejecución esté autorizada.
+- **Estado:** COMPLETED mediante la reconciliación de gobierno y freeze del contrato.
 
 ### P7.1 — Mobile API Integration
 
 - Añadir el cliente HTTP aprobado, configuración no secreta, DTOs, mappers, repositorios,
   casos de uso y error mapping mínimos.
 - Prohibido modificar backend/OpenAPI.
+- **Estado:** COMPLETED — PR #24 merged.
 
 ### P7.2 — Route Planning & Geometry
 
 - Implementar selección por dos toques, solicitud de ruta, validación/mapeo de
   `LineString` y renderizado `flutter_map`.
+- **Estado:** COMPLETED — PR #25 merged.
 
 ### P7.3 — Route Discovery & POIs
 
 - Solicitar discovery, validar resultados, representar 5–20 POIs del escenario y
   marcadores seleccionables.
+- **Estado:** COMPLETED — PR #26 merged.
 
 ### P7.4 — Basic POI Detail
 
 - Implementar la ficha mínima contractual exclusivamente con campos existentes.
+- **Estado:** COMPLETED — PR #27 merged.
 
 ### P7.5 — Physical Device E2E Validation
 
 - Confirmar conectividad backend segura y ejecutar R4/R5 en Android físico, sin exponer
   datos sensibles ni coordenadas precisas en evidencia.
+- **Estado:** IN PROGRESS. HTTP ingress está validado para E2E funcional temporal; el
+  cierre permanece bloqueado hasta validar HTTPS público confiable.
 
 ### P7.6 — Phase Audit & Closure
 
 - Ejecutar gates, auditoría de alcance, PR, validación post-merge y propuesta de cierre.
+- **Estado:** NOT STARTED.
 
 ## 16. Evidence y governance stops
 
@@ -267,17 +280,21 @@ Detener y solicitar decisión antes de implementar si se requiere cambiar contra
 backend, OpenAPI, proveedores, tiles productivos, dependencias no aprobadas, arquitectura
 material, topología no segura o alcance excluido.
 
-## 17. Evaluación de readiness
+## 17. Reconciliación y estado de ejecución
 
-La propuesta es ejecutable sólo después de:
+La auditoría de reconciliación confirmó que P7.1–P7.4 se implementaron dentro del
+alcance de este contrato: integración HTTP externa, selección por dos toques, geometría
+`LineString`, discovery, marcadores y ficha mínima. Los cambios integrados no modifican
+backend, OpenAPI, base de datos, `RoutingProvider` ni GraphHopper.
 
-1. aprobar y congelar este contrato;
-2. aceptar o rechazar la propuesta de `Dio 5.11.1`;
-3. definir conectividad backend segura para el gate E2E;
-4. autorizar explícitamente la ejecución autónoma P7.
+La estrategia TLS es `ACME_DNS01_MANUAL`. El ingress HTTP temporal fue validado, pero
+un único intento ACME falló porque `ns3.hostmar.com` contenía el TXT requerido mientras
+`ns9.hostmar.com` y `ns10.hostmar.com` respondían `NXDOMAIN`. Por ello:
 
 ```text
-P7_CONTRACT_STATUS = PROPOSED_PENDING_APPROVAL
-P7_IMPLEMENTATION_STATUS = NOT_STARTED
-AUTONOMOUS_EXECUTION = NOT AUTHORIZED
+ACME_CONTROLLED_VALIDATION_ATTEMPTS = 1
+ACME_RESULT = FAIL_DUE_TO_AUTHORITATIVE_DNS_INCONSISTENCY
+DNS_PROVIDER_INCIDENT_REQUIRED = YES
+P7.5_MAXIMUM_STATUS_BEFORE_TLS = FUNCTIONAL_E2E_PASS_TLS_PENDING
+P7_IMPLEMENTATION_STATUS = IN_PROGRESS
 ```

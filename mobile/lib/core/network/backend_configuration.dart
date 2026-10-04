@@ -3,14 +3,15 @@ class BackendConfiguration {
 
   final Uri baseUrl;
 
-  static BackendConfiguration? fromEnvironment() {
-    const rawUrl = String.fromEnvironment('BACKEND_BASE_URL');
-    if (rawUrl.isEmpty) return null;
-
-    final baseUrl = Uri.tryParse(rawUrl);
-    if (baseUrl == null || baseUrl.scheme != 'https' || baseUrl.host.isEmpty) {
+  static BackendConfiguration? tryParse(String value) {
+    final baseUrl = Uri.tryParse(value.trim());
+    if (baseUrl == null ||
+        !baseUrl.hasScheme ||
+        !baseUrl.hasAuthority ||
+        (baseUrl.scheme != 'http' && baseUrl.scheme != 'https')) {
       return null;
     }
+
     return BackendConfiguration(baseUrl);
   }
 }
