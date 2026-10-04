@@ -59,6 +59,7 @@ services:
         condition: service_healthy
     environment:
       NGINX_ENVSUBST_FILTER: GEOGUIDE_API_DOMAIN|GEOGUIDE_PUBLIC_HTTPS_PORT
+      GEOGUIDE_API_DOMAIN: geoguide.getcom.pe
       GEOGUIDE_PUBLIC_HTTPS_PORT: ${GEOGUIDE_PUBLIC_HTTPS_PORT:-5443}
     ports:
       - "80:80"
