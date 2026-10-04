@@ -57,7 +57,7 @@ Las fichas mostraron únicamente `name`, `category`, `distanceToRouteMeters`,
 | P7-AC-05 | PASS | Discovery real para la misma pareja de puntos. |
 | P7-AC-06 | PASS | Cinco POIs utilizables y marcadores visibles. |
 | P7-AC-07 | PASS | Ficha básica física con los campos congelados. |
-| P7-AC-08 | NOT_APPLICABLE | Los casos de error se mantienen cubiertos por pruebas; no se forzó una incidencia en el piloto. |
+| P7-AC-08 | PASS | Pruebas de mapeo cubren indisponibilidad, timeout y `NO_ROUTE_FOUND`; mappers validan respuesta no utilizable y la UI presenta el estado vacío controlado. Los mensajes permanecen seguros y no exponen detalles internos. |
 | P7-AC-09 | PASS | Configuración externa, permiso mínimo y sin coordenadas en evidencia. |
 | P7-AC-10 | BLOCKED | El flujo funcional temporal pasó, pero el gate seguro exige HTTPS confiable. |
 | P7-AC-11 | PASS | No se incorporaron cambios excluidos ni se modificó backend/P3–P5. |
