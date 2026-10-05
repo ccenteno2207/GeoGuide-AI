@@ -43,10 +43,11 @@
 - P6 — Mobile Bootstrap fue completada y cerrada formalmente. P6.1–P6.4 fueron
   integradas mediante los PR #18–#21; P6-AC-01–P6-AC-09 terminaron en `PASS` y el
   baseline funcional resultante es `d434a82b57774deddd55713f7006d6783403c8c0`.
-  P7 está en progreso: P7.1–P7.4 fueron integradas mediante los PR #24–#27 y P7.5
-  completó TLS productivo, renovación desacoplada y E2E Android exclusivamente HTTPS.
-  P7.6 permanece no iniciada; el incidente histórico de delegación del parent sigue
-  abierto y HTTP solo redirige a HTTPS, sin ser fallback móvil.
+  P7 — First Vertical Slice cerró formalmente: P7.1–P7.4 fueron integradas mediante
+  los PR #24–#27, P7.5 completó TLS productivo, renovación desacoplada y E2E Android
+  exclusivamente HTTPS, y P7.6 completó la auditoría final. El incidente histórico de
+  delegación del parent sigue abierto como riesgo residual no bloqueante; HTTP solo
+  redirige a HTTPS, sin ser fallback móvil. P8 no ha iniciado.
 - P4 — Routing fue completado y cerrado formalmente. El PR #9 fue integrado mediante
   `f14ddc6` y la validación post-merge en VM terminó correctamente. El cierre incluye
   `RoutingProvider`, el adaptador GraphHopper 11, `POST /api/v1/routes/plan`, geometría

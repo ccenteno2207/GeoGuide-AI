@@ -23,10 +23,10 @@ P6 — Mobile Bootstrap está **CERRADA**. El bootstrap Flutter, `flutter_map 8.
 mapa base, interacción, permiso de ubicación aproximada y ubicación puntual fueron
 validados en Android; la evidencia está en `P6-Validation-Evidence.md`.
 `TILE_PROVIDER_GOVERNANCE` permanece pendiente. P7 — First Vertical Slice está en
-progreso: P7.1–P7.4 fueron integrados y P7.5 completó la validación E2E en Android
-físico exclusivamente mediante HTTPS. TLS productivo y el runtime de renovación están
-operativos; P7.6 permanece no iniciado y P7 no está cerrado. El incidente histórico de
-delegación del parent permanece abierto. P8–P12 permanecen planificadas.
+**CERRADA**: P7.1–P7.5 fueron integrados y P7.6 completó la auditoría y el cierre
+formal. TLS productivo, renovación y E2E Android exclusivamente HTTPS están validados.
+El incidente histórico de delegación del parent permanece abierto como riesgo residual
+no bloqueante. P8 permanece no iniciada; P8–P12 permanecen planificadas.
 El roadmap indica progresión, no autorización de ejecución.
 
 ## Product definition
