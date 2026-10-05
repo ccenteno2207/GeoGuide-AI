@@ -25,3 +25,7 @@ Documentación → Bootstrap técnico → Vertical Slice → Piloto operativo.
 El baseline UX consolidado antes de P8.0 está en
 [GeoGuide AI MVP UX Baseline](11-Implementation-Plan/GeoGuide-AI-MVP-UX-Baseline.md).
 Es una referencia de producto, no contrato P8 ni autorización de implementación.
+
+El contrato congelado de P8.0 — POI Experience está en
+[P8-Phase-Contract-v1](11-Implementation-Plan/P8-Phase-Contract-v1.md). Autoriza una
+ejecución posterior, pero mantiene P8.1 pausado.
