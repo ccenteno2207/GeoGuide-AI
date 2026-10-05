@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### P8.0
+- Contrato documental congelado para POI Experience: alcance Discovery, extensión API
+  controlada para Detail/provenance, filtros con reconsulta backend, Map + List, estados,
+  continuidad y accesibilidad. P8 queda `AUTHORIZED_NOT_STARTED` al 0%; P8.1 permanece
+  pausado. No hubo cambios funcionales, de base de datos, Excel, tiles o CEFI.
+
 ### Added
 - P4 Routing: `RoutingProvider` desacoplado, adaptador GraphHopper 11, configuración
   externa de URL/timeout/perfil y modelo de ruta sin persistencia.
