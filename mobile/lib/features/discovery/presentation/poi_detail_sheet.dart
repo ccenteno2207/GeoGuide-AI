@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../domain/discovery_poi.dart';
+import 'poi_presentation.dart';
 
 class PoiDetailSheet extends StatelessWidget {
   const PoiDetailSheet({super.key, required this.poi});
@@ -10,24 +11,53 @@ class PoiDetailSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
+      child: Semantics(
+        container: true,
+        label: 'Detalle de ${poi.name}',
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(poi.name, style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 12),
-            Text('Categoría: ${poi.category}'),
-            Text(
-              'Distancia a la ruta: ${poi.distanceToRouteMeters.toStringAsFixed(0)} m',
+            const SizedBox(height: 8),
+            Text('Categoría: ${friendlyPoiCategory(poi.category)}'),
+            if (poi.description case final description? when description.trim().isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text(description),
+            ],
+            if (poiDistanceLabel(poi) case final distance?) ...[
+              const SizedBox(height: 12),
+              Text(distance),
+            ],
+            for (final reason in poi.reasonCodes.map(friendlyPoiReason).whereType<String>()) ...[
+              const SizedBox(height: 4),
+              Text(reason),
+            ],
+            if (poi.sourceLabel case final source? when source.trim().isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text('Fuente', style: Theme.of(context).textTheme.labelLarge),
+              Text(source),
+            ],
+            if (poi.attribution case final attribution? when attribution.trim().isNotEmpty)
+              Text(attribution),
+            if (poi.sourceUrl case final sourceUrl? when sourceUrl.trim().isNotEmpty)
+              Semantics(
+                link: true,
+                label: 'URL de la fuente',
+                child: SelectableText(sourceUrl),
+              ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Volver'),
+              ),
             ),
-            Text(
-              'Progreso de ruta: ${(poi.routeProgress * 100).toStringAsFixed(0)}%',
-            ),
-            if (poi.reasonCodes.isNotEmpty)
-              Text('Razones: ${poi.reasonCodes.join(', ')}'),
           ],
+          ),
         ),
       ),
     );

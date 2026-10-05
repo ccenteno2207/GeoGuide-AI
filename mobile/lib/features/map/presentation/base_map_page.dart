@@ -7,6 +7,7 @@ import '../../location/domain/location_repository.dart';
 import '../../discovery/application/discover_route.dart';
 import '../../discovery/domain/discovery_poi.dart';
 import '../../discovery/presentation/poi_preview_sheet.dart';
+import '../../discovery/presentation/poi_detail_sheet.dart';
 import '../../discovery/presentation/route_discovery_controller.dart';
 import '../../route_planning/application/plan_route.dart';
 import '../../route_planning/domain/route_point.dart';
@@ -109,13 +110,17 @@ class _BaseMapPageState extends State<BaseMapPage> {
         poi: poi,
         onViewDetail: () {
           Navigator.of(context).pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('El detalle ampliado estará disponible próximamente.'),
-            ),
-          );
+          _showPoiDetail(poi);
         },
       ),
+    );
+  }
+
+  Future<void> _showPoiDetail(DiscoveryPoi poi) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => PoiDetailSheet(poi: poi),
     );
   }
 
