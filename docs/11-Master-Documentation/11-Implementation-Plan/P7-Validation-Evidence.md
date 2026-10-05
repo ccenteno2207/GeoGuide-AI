@@ -1,4 +1,4 @@
-# P7 — Evidencia de validación P7.5 HTTPS
+# P7 — Evidencia de validación y cierre
 
 ## Línea base y límites
 
@@ -79,16 +79,43 @@ Las fichas mostraron únicamente `name`, `category`, `distanceToRouteMeters`,
 | P7-AC-10 | PASS | Android físico API 36, HTTPS confiable, sin bypass/fallback, route plan y discovery reales. |
 | P7-AC-11 | PASS | No se incorporaron cambios excluidos ni se modificó backend/P3–P5. |
 
-## Estado y riesgo residual
+## P7.6 — Auditoría final y cierre
+
+La auditoría integral verificó los checkpoints P7.0–P7.5, los criterios
+P7-AC-01…P7-AC-11, la conformidad arquitectónica, el alcance mobile, privacidad,
+secret scan, TLS público y redirección HTTP. Todos los resultados son **PASS**.
+
+- `flutter analyze`, `flutter test` (16 pruebas) y `flutter build apk --debug`: PASS.
+- La arquitectura mantiene backend, OpenAPI, P3–P5, `RoutingProvider` y GraphHopper
+  fuera de los cambios P7.
+- El alcance mobile no incorpora capacidades excluidas.
+- El timer de renovación TLS permanece configurado y programado; la ausencia de una
+  ejecución natural observada no es un bloqueo contractual.
+
+```text
+P7_0_STATUS = COMPLETED
+P7_1_STATUS = COMPLETED
+P7_2_STATUS = COMPLETED
+P7_3_STATUS = COMPLETED
+P7_4_STATUS = COMPLETED
+P7_5_STATUS = CLOSED
+P7_6_STATUS = COMPLETED
+P7_CLOSURE_READINESS = READY
+BLOCKING_ITEMS = NONE
+P7_STATUS = CLOSED
+P8_STATUS = NOT STARTED
+```
+
+## Riesgo residual
 
 ```text
 P7_5_TECHNICAL_STATUS = COMPLETE
 P7_5_GOVERNANCE_STATUS = COMPLETE
 P7_5_STATUS = CLOSED
-P7_STATUS = IN_PROGRESS
-P7_6_STATUS = NOT STARTED
-TILE_PROVIDER_GOVERNANCE = PENDING
 PARENT_DELEGATION_INCIDENT = OPEN
+PARENT_DELEGATION_RISK = NON_BLOCKING_RESIDUAL
+TILE_PROVIDER_GOVERNANCE = PENDING
+TILE_PROVIDER_P7_BLOCKING = NO
 ```
 
 El éxito de DNS-01, ACME, TLS y Android HTTPS no cierra el incidente histórico de
