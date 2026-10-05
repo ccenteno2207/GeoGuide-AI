@@ -50,6 +50,10 @@ class RouteDiscoveryResponseMapper {
       distanceToRouteMeters: distance,
       routeProgress: progress,
       reasonCodes: reasonCodes.cast<String>(),
+      description: _optionalString(value['description']),
+      sourceLabel: _optionalString(value['sourceLabel']),
+      sourceUrl: _optionalString(value['sourceUrl']),
+      attribution: _optionalString(value['attribution']),
     );
   }
 
@@ -66,4 +70,6 @@ class RouteDiscoveryResponseMapper {
     if (value is! num || !value.isFinite) return null;
     return value.toDouble();
   }
+
+  String? _optionalString(Object? value) => value is String && value.trim().isNotEmpty ? value.trim() : null;
 }

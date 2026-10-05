@@ -11,6 +11,7 @@ import ai.geoguide.discovery.application.RouteDiscoveryUseCase;
 import ai.geoguide.discovery.domain.DiscoveryReasonCode;
 import ai.geoguide.discovery.domain.RankedRoutePoiCandidate;
 import ai.geoguide.discovery.domain.RoutePoiCandidate;
+import ai.geoguide.discovery.domain.ProvenanceSummary;
 import ai.geoguide.poi.domain.Category;
 import ai.geoguide.poi.domain.GeoPoint;
 import ai.geoguide.poi.domain.PoiId;
@@ -75,6 +76,28 @@ class RouteDiscoveryControllerTests {
                 .andExpect(jsonPath("$.results[0].distanceToRouteMeters").value(25))
                 .andExpect(jsonPath("$.results[0].routeProgress").value(.5))
                 .andExpect(jsonPath("$.results[0].reasonCodes[1]").value("CATEGORY_MATCH"));
+    }
+
+    @Test
+    void addsOptionalDetailAndSafeProvenanceWithoutExposingInternals() throws Exception {
+        RoutePoint origin = new RoutePoint(-12, -77);
+        RoutePoint destination = new RoutePoint(-11, -76);
+        Route route = new Route(origin, destination, 1, 2, new RouteGeometry(List.of(origin, destination)));
+        Category category = new Category(UUID.randomUUID(), "MUSEUM", "Museum", true);
+        RoutePoiCandidate candidate = new RoutePoiCandidate(
+                new PoiId(UUID.fromString("00000000-0000-0000-0000-000000000002")), "Museum", category,
+                new GeoPoint(-11.5, -76.5), true, 25, .5, "A factual description",
+                new ProvenanceSummary("MINCETUR", "https://example.test/source", "Mincetur"));
+        when(useCase.discover(any(), any(), any())).thenReturn(new RouteDiscoveryResult(route,
+                List.of(new RankedRoutePoiCandidate(candidate, 1.0 / 26.0, List.of(DiscoveryReasonCode.NEAR_ROUTE))),
+                "DISCOVERY_V1", Instant.parse("2026-09-05T00:00:00Z")));
+        performValid().andExpect(status().isOk())
+                .andExpect(jsonPath("$.results[0].description").value("A factual description"))
+                .andExpect(jsonPath("$.results[0].sourceLabel").value("MINCETUR"))
+                .andExpect(jsonPath("$.results[0].sourceUrl").value("https://example.test/source"))
+                .andExpect(jsonPath("$.results[0].attribution").value("Mincetur"))
+                .andExpect(jsonPath("$.results[0].retrievedAt").doesNotExist())
+                .andExpect(jsonPath("$.results[0].logicalKey").doesNotExist());
     }
 
     @Test

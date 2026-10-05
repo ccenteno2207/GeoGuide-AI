@@ -12,7 +12,14 @@ public record RoutePoiCandidate(
         GeoPoint location,
         boolean active,
         double distanceToRouteMeters,
-        double routeProgress) {
+        double routeProgress,
+        String description,
+        ProvenanceSummary provenance) {
+
+    public RoutePoiCandidate(PoiId poiId, String name, Category category, GeoPoint location,
+            boolean active, double distanceToRouteMeters, double routeProgress) {
+        this(poiId, name, category, location, active, distanceToRouteMeters, routeProgress, null, null);
+    }
 
     public RoutePoiCandidate {
         Objects.requireNonNull(poiId, "poiId is required");
@@ -28,5 +35,6 @@ public record RoutePoiCandidate(
         if (!Double.isFinite(routeProgress) || routeProgress < 0 || routeProgress > 1) {
             throw new IllegalArgumentException("routeProgress must be between 0 and 1");
         }
+        description = description == null || description.isBlank() ? null : description.trim();
     }
 }

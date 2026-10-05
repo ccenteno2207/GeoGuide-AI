@@ -9,6 +9,10 @@ class DiscoveryPoi {
     required this.distanceToRouteMeters,
     required this.routeProgress,
     required this.reasonCodes,
+    this.description,
+    this.sourceLabel,
+    this.sourceUrl,
+    this.attribution,
   });
 
   final String id;
@@ -18,4 +22,8 @@ class DiscoveryPoi {
   final double distanceToRouteMeters;
   final double routeProgress;
   final List<String> reasonCodes;
+  final String? description;
+  final String? sourceLabel;
+  final String? sourceUrl;
+  final String? attribution;
 }
