@@ -10,5 +10,6 @@ class DiscoverRoute {
   Future<List<DiscoveryPoi>> call({
     required RoutePoint origin,
     required RoutePoint destination,
-  }) => _repository.discover(origin: origin, destination: destination);
+    Set<String> categories = const {},
+  }) => _repository.discover(origin: origin, destination: destination, categories: categories);
 }
