@@ -33,7 +33,11 @@ P0–P5 están completadas y cerradas. El baseline oficial resultante de P5 es
 `d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca`; incluye el dominio y los datos POI, la
 infraestructura local, routing desacoplado mediante `RoutingProvider` y Route Discovery.
 
-P6 — Mobile Bootstrap está **COMPLETADA**. P7 — First Vertical Slice permanece
-**NO INICIADA**; P8–P12 permanecen planificadas.
+P6 — Mobile Bootstrap está **COMPLETADA**. P7 — First Vertical Slice está
+**CERRADA / 100%**: P7.5 cerrada, P7.6 completada y P7-AC-01–P7-AC-11 en PASS.
+El baseline de cierre es `ada26c8881cdefb2d8f0ede679a8ebb3996ab61c` (PR #31);
+la evidencia final está en [P7 Validation Evidence](docs/11-Master-Documentation/11-Implementation-Plan/P7-Validation-Evidence.md).
+P8 — POI Experience permanece **NO INICIADA**, sin contrato; P9–P12 siguen
+planificadas. Este estado no autoriza implementación P8.
 La configuración inicial de PostgreSQL/PostGIS, Redis y MinIO, junto con sus instrucciones
 de operación, se encuentra en [infrastructure/README.md](infrastructure/README.md).

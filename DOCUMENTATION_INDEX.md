@@ -52,6 +52,8 @@
 | P5 frozen scope and execution contract | `docs/11-Master-Documentation/11-Implementation-Plan/P5-Phase-Contract-v1.md` and `P5-Governance-Decisions.md` |
 | P6 frozen scope and execution contract | `docs/11-Master-Documentation/11-Implementation-Plan/P6-Phase-Contract-v1.md` |
 | P6 validation and closure evidence | `docs/11-Master-Documentation/11-Implementation-Plan/P6-Validation-Evidence.md` |
+| P7 final state and closure evidence | `docs/11-Master-Documentation/11-Implementation-Plan/P7-Validation-Evidence.md`, `PROJECT_CONTEXT.md`, `ROADMAP.md`, `CHANGELOG.md` and PR #31 |
+| Post-P7 current state and DNS incident resolution | `docs/11-Master-Documentation/11-Implementation-Plan/Post-P7-Documentation-Reconciliation.md` |
 | P5 validation and master closure evidence | `docs/11-Master-Documentation/11-Implementation-Plan/P5-Validation-Evidence.md` |
 | Current or future phase scope | Approved phase contract when one exists; roadmap placement alone is insufficient |
 | Codex execution method | `AI_DEVELOPMENT_GUIDE.md` and current Codex handoff documents |
@@ -61,9 +63,15 @@
 Archived documents must not be used as current architecture or implementation
 guidance unless explicitly requested.
 
-Current state: P0–P5 are closed. The official post-P5 baseline is
-`d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca`; P6 is closed with validation evidence
-in `P6-Validation-Evidence.md`. P7–P12 are planned. No active instruction may turn
-this progression into automatic scope.
+Current state: P0–P7 are completed and closed. P7 closed at
+`ada26c8881cdefb2d8f0ede679a8ebb3996ab61c` (PR #31), with P7.5 CLOSED,
+P7.6 COMPLETED and P7-AC-01–P7-AC-11 PASS. P8 is NOT STARTED and has no
+phase contract; P9–P12 remain planned. No active instruction may turn this
+progression into automatic scope.
+
+The P7 phase contract is an immutable normative snapshot. Its historical TLS and
+checkpoint statuses are preserved; the later final state is recorded by the P7
+validation evidence and the current-state sources listed above. The post-P7
+reconciliation records subsequent DNS evidence without rewriting that contract.
 
 “AI optional in the core MVP” means route, POI, corridor, ranking, and factual place cards cannot depend on an LLM. It does not negate the strategic voice channel: voice remains an adapter over the same channel-independent GeoGuide use cases used by Flutter and future clients.

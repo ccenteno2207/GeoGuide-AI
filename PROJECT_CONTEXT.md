@@ -22,12 +22,22 @@ y `POST /api/v1/routes/discover` fueron implementados y validados localmente y e
 P6 — Mobile Bootstrap está **CERRADA**. El bootstrap Flutter, `flutter_map 8.3.2`,
 mapa base, interacción, permiso de ubicación aproximada y ubicación puntual fueron
 validados en Android; la evidencia está en `P6-Validation-Evidence.md`.
-`TILE_PROVIDER_GOVERNANCE` permanece pendiente. P7 — First Vertical Slice está en
+`TILE_PROVIDER_GOVERNANCE` permanece pendiente. P7 — First Vertical Slice está
 **CERRADA**: P7.1–P7.5 fueron integrados y P7.6 completó la auditoría y el cierre
 formal. TLS productivo, renovación y E2E Android exclusivamente HTTPS están validados.
-El incidente histórico de delegación del parent permanece abierto como riesgo residual
-no bloqueante. P8 permanece no iniciada; P8–P12 permanecen planificadas.
+El incidente histórico de delegación del parent fue verificado nuevamente el
+5-oct-2026: ambos parent autoritativos devolvieron exactamente `ns1.desec.io` y
+`ns2.desec.org`. Estado actual: `PARENT_DELEGATION_INCIDENT = RESOLVED_WITH_EVIDENCE`,
+`PARENT_DELEGATION_RISK = CLOSED`, `PARENT_DELEGATION_P8_IMPACT = NONE`.
+Los comandos y resultados están en la [reconciliación post-P7](docs/11-Master-Documentation/11-Implementation-Plan/Post-P7-Documentation-Reconciliation.md).
+P8 — POI Experience permanece no iniciada, sin contrato; su fuente de planificación
+es `preview/detail/filter`. P9–P12 permanecen planificadas.
 El roadmap indica progresión, no autorización de ejecución.
+
+El baseline de cierre P7 es `ada26c8881cdefb2d8f0ede679a8ebb3996ab61c` (PR #31).
+El contrato P7 es un snapshot normativo congelado e inmutable: sus estados históricos
+no sustituyen el cierre posterior registrado en `P7-Validation-Evidence.md`, este
+contexto, `ROADMAP.md` y `CHANGELOG.md`.
 
 ## Product definition
 

@@ -16,7 +16,11 @@ Decisiones clave:
 - LLM no requerido para core MVP.
 - Riverpod recomendado.
 - Drift/SQLite baseline.
-- Map library pendiente de spike.
+- Map library: ADR-019 aceptó `flutter_map 8.3.2` para el baseline móvil.
+  `MAP_LIBRARY_DECISION = RESOLVED`; `flutter_map = ACCEPTED`.
+  Esta decisión no selecciona proveedor productivo de tiles:
+  `TILE_PROVIDER_GOVERNANCE = PENDING`; se preservan los límites de desarrollo
+  y validación y el gobierno productivo independiente de ADR-019.
 - Routing engine: ADR-028 adopta GraphHopper 11.0 como implementación inicial de
   `RoutingProvider`, después del benchmark y la revisión visual de 18 geometrías.
   OSRM 26.8.0 MLD queda como alternativa preferida de rendimiento y Valhalla 3.8.2

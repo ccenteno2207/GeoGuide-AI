@@ -40,6 +40,16 @@
   `0`; V001 registrada con checksum `-1627021776` y evidencia P1 preservada.
 
 ### Changed
+- Reconciliación documental post-P7 (5-oct-2026): resúmenes y handoffs reflejan P7
+  CLOSED / 100%, P7.5 CLOSED, P7.6 COMPLETED y P8 NOT STARTED / sin contrato.
+  El contrato P7 congelado permanece inmutable; la evidencia final y el PR #31
+  definen el cierre posterior. ADR-019 confirma `flutter_map 8.3.2` aceptado y
+  `TILE_PROVIDER_GOVERNANCE = PENDING` permanece separado.
+- La verificación no recursiva del 5-oct-2026 contra `ns9.hostmar.com` y
+  `ns10.hostmar.com` confirmó exactamente `ns1.desec.io` y `ns2.desec.org` en ambos.
+  Estado actual: `PARENT_DELEGATION_INCIDENT = RESOLVED_WITH_EVIDENCE`, riesgo
+  `CLOSED`, impacto P8 `NONE`. Se preserva abajo la cronología del incidente abierto
+  al cierre P7. Véase [evidencia post-P7](docs/11-Master-Documentation/11-Implementation-Plan/Post-P7-Documentation-Reconciliation.md).
 - P6 — Mobile Bootstrap fue completada y cerrada formalmente. P6.1–P6.4 fueron
   integradas mediante los PR #18–#21; P6-AC-01–P6-AC-09 terminaron en `PASS` y el
   baseline funcional resultante es `d434a82b57774deddd55713f7006d6783403c8c0`.
