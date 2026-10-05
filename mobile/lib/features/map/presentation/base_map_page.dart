@@ -36,6 +36,7 @@ class _BaseMapPageState extends State<BaseMapPage> {
   LocationPoint? _currentLocation;
   String _locationStatus = 'Ubicación no solicitada';
   bool _isRequestingLocation = false;
+  bool _showDiscoveryList = false;
   late final RoutePlanningController _routePlanning;
   late final RouteDiscoveryController _routeDiscovery;
 
@@ -308,6 +309,15 @@ class _BaseMapPageState extends State<BaseMapPage> {
                       label: Text('Categorías: ${_filterSummary()}'),
                     ),
                   ),
+                if (_routeDiscovery.pois.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: FilledButton.tonalIcon(
+                      onPressed: () => setState(() => _showDiscoveryList = !_showDiscoveryList),
+                      icon: Icon(_showDiscoveryList ? Icons.map : Icons.list),
+                      label: Text(_showDiscoveryList ? 'Ver mapa' : 'Ver lista'),
+                    ),
+                  ),
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(12),
@@ -330,6 +340,31 @@ class _BaseMapPageState extends State<BaseMapPage> {
               ],
             ),
           ),
+          if (_showDiscoveryList && _routeDiscovery.pois.isNotEmpty)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 150,
+              height: 260,
+              child: Card(
+                child: Semantics(
+                  container: true,
+                  label: 'Lista de lugares descubiertos',
+                  child: ListView.builder(
+                    itemCount: _routeDiscovery.pois.length,
+                    itemBuilder: (context, index) {
+                      final poi = _routeDiscovery.pois[index];
+                      return ListTile(
+                        key: ValueKey('discovery-list-${poi.id}'),
+                        title: Text(poi.name),
+                        subtitle: Text(poiDistanceLabel(poi) ?? friendlyPoiCategory(poi.category)),
+                        onTap: () => _showPoiPreview(poi),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
