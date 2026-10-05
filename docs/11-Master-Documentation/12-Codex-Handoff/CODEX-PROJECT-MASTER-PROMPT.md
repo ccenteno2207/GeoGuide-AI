@@ -89,7 +89,10 @@ regresión no resoluble o DoD imposible.
 - no omitir tests para “avanzar más rápido”.
 
 ## Prioridad actual
-P0–P6 están cerradas. El baseline funcional de P6 es
-`d434a82b57774deddd55713f7006d6783403c8c0`; P6.1–P6.4 están completadas y
-P6-AC-01–P6-AC-09 terminaron en `PASS`. P7 — First Vertical Slice **NO ESTÁ
-INICIADA**; P7–P12 están planificadas. No avanzar automáticamente al siguiente hito.
+P0–P7 están completadas y cerradas. El baseline de cierre P7 es
+`ada26c8881cdefb2d8f0ede679a8ebb3996ab61c` (PR #31); P7.5 está CLOSED,
+P7.6 COMPLETED y P7-AC-01–P7-AC-11 en PASS, según `P7-Validation-Evidence.md`
+y las fuentes vigentes de estado. El contrato P7 conserva su snapshot normativo
+congelado y sus estados históricos. P8 — POI Experience permanece NOT STARTED,
+sin contrato; P9–P12 están planificadas. No avanzar automáticamente al siguiente
+hito ni interpretar esta reconciliación como autorización de implementación P8.

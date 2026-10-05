@@ -79,13 +79,15 @@ Current milestone progression:
 - P4 Routing — CLOSED
 - P5 Route Discovery — CLOSED
 - P6 Mobile Bootstrap — CLOSED / COMPLETED
-- P7 First Vertical Slice — IN PROGRESS
-- P8 POI Experience — PLANNED
+- P7 First Vertical Slice — CLOSED / COMPLETED — 100%
+- P8 POI Experience — NOT STARTED
 - P9 Offline + Driving — PLANNED
 - P10 Quality + Security — PLANNED
 - P11 Linux Server Deployment — PLANNED
 - P12 Real Road Pilot — PLANNED
 
-The official P6 functional baseline is `d434a82b57774deddd55713f7006d6783403c8c0` (P0–P6 completed). P6.1–P6.4 are completed and P6-AC-01–P6-AC-09 passed. P7 is in progress: its frozen contract records P7.0–P7.4 as completed, P7.5 as in progress and P7.6 as not started. Verify the effective `main` and `origin/main` before starting any authorized work instead of treating a recorded SHA as permanent.
+P0–P7 are completed. The P7 closure baseline is `ada26c8881cdefb2d8f0ede679a8ebb3996ab61c` (PR #31): P7.5 is CLOSED, P7.6 is COMPLETED and P7-AC-01–P7-AC-11 passed. `P7-Validation-Evidence.md`, `PROJECT_CONTEXT.md`, `ROADMAP.md` and `CHANGELOG.md` record the final state. The frozen P7 contract remains an immutable normative snapshot; its historical execution/TLS statuses do not override the subsequent closure evidence. See [post-P7 reconciliation](docs/11-Master-Documentation/11-Implementation-Plan/Post-P7-Documentation-Reconciliation.md).
+
+P8 remains NOT STARTED, without a phase contract. Its planning source is `preview/detail/filter`; this reconciliation does not authorize implementation. Verify the effective `main` and `origin/main` before authorized work instead of treating a recorded SHA as permanent.
 
 Do NOT attempt to build the entire product in a single task.

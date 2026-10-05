@@ -48,5 +48,11 @@ Pausa también ante ampliación de alcance, frontera de fase, operación destruc
 migración/PBF/bounding box protegido, riesgo de datos o seguridad, dependencia de una
 fase futura, regresión no resoluble o DoD imposible.
 
-Estado vigente: P0–P6 cerradas; P6 — Mobile Bootstrap **COMPLETADA**. P7 — First
-Vertical Slice **NO INICIADA**; P8–P12 planificadas.
+Estado vigente: P0–P7 completadas y cerradas; P7 — First Vertical Slice **CLOSED**,
+P7.5 **CLOSED**, P7.6 **COMPLETED** y P7-AC-01–P7-AC-11 **PASS**.
+Baseline de cierre P7: `ada26c8881cdefb2d8f0ede679a8ebb3996ab61c` (PR #31).
+El estado final está en `P7-Validation-Evidence.md`, `PROJECT_CONTEXT.md`,
+`ROADMAP.md` y `CHANGELOG.md`; los estados del contrato congelado son históricos.
+P8 — POI Experience **NOT STARTED**, sin contrato; P9–P12 planificadas.
+Verificar `origin/main` antes de cualquier trabajo autorizado. Este handoff no
+autoriza P8 ni cambios backend para una fase futura.
