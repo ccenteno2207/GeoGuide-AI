@@ -11,8 +11,43 @@ genérico.
 mi trayecto y cuánto debo desviarme, para decidir si vale la pena visitarlos.”
 
 ## Flujo principal
-Ubicación → origen/destino → ruta → POIs → filtros → preview → detalle → viaje →
-avisos de proximidad.
+Destino → confirmar/elegir origen → ruta → comprender recorrido → descubrir → POIs →
+preview → detalle → regresar al mismo contexto del recorrido.
+
+La experiencia final no se limita a dos toques sobre el mapa. El destino evolucionará
+hacia búsqueda por lugar, búsqueda por dirección y selección en mapa; el origen podrá
+usar Mi ubicación, búsqueda o mapa y siempre será editable. La búsqueda/geocoding es
+importante para el MVP final, pero no está implementada ni se incluye silenciosamente
+en P8; requiere una decisión arquitectónica posterior.
+
+## Baseline UX aprobado por producto
+
+GeoGuide AI no es simplemente un navegador GPS. Su propósito es ayudar al rutero a
+planificar, comprender el trayecto, descubrir lugares relacionados, decidir qué
+conocer y construir progresivamente conocimiento reutilizable en rutas futuras. Las
+preguntas guía son “¿Qué puedo conocer sin desviarme demasiado?” y “¿Qué me falta
+conocer en esta ruta?”. Son orientación de producto, no contratos técnicos.
+
+Principios consolidados: explorar nunca destruye el contexto del viaje; la distancia
+al trazado no es desvío; `routeProgress` no es progreso del conductor; la proximidad
+geométrica no garantiza acceso inmediato; Discovery, Recreation y Travel Service son
+intenciones distintas; mapa y lista/tarjetas deben coexistir conceptualmente; el
+ranking sigue siendo autoritativo en backend; y los servicios comerciales no se tratan
+automáticamente como descubrimiento cultural/turístico. La taxonomía final debe
+auditar y reutilizar P3, sin crear una taxonomía mobile paralela.
+
+## Historia futura y dirección CEFI-ready
+
+La visión futura distingue `NO VISITADO`, `QUIERO CONOCER` y `VISITADO`. Visitado se
+confirma explícitamente, puede revertirse y pertenece conceptualmente a la relación
+usuario ↔ lugar, con identidad estable entre rutas. No se crea persistencia, cuenta ni
+schema en este gate.
+
+`CEFI_READY_ARCHITECTURE = REQUIRED_DIRECTION`. GeoGuide AI sigue siendo el producto y
+CEFI su futuro copiloto/canal conversacional. CEFI no se implementa en P8 ni se
+seleccionan proveedores. Las capacidades futuras deben ser reutilizables por UI y
+CEFI mediante casos de uso compartidos, resultados estructurados, provenance y errores
+interpretables, respetando Clean Architecture y Modular Monolith.
 
 Flujo cercano: ubicación autorizada → POIs cercanos → ficha confiable.
 

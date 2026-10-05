@@ -21,3 +21,7 @@
 
 ## Próxima transición
 Documentación → Bootstrap técnico → Vertical Slice → Piloto operativo.
+
+El baseline UX consolidado antes de P8.0 está en
+[GeoGuide AI MVP UX Baseline](11-Implementation-Plan/GeoGuide-AI-MVP-UX-Baseline.md).
+Es una referencia de producto, no contrato P8 ni autorización de implementación.
