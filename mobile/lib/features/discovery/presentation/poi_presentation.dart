@@ -1,5 +1,10 @@
 import '../domain/discovery_poi.dart';
 
+const discoveryCategoryCodes = <String>[
+  'WATERFALL', 'LAGOON', 'MOUNTAIN', 'FOREST', 'BEACH', 'MUSEUM',
+  'ARCHAEOLOGICAL_SITE', 'MONUMENT', 'HISTORIC_CHURCH', 'VIEWPOINT',
+];
+
 String friendlyPoiCategory(String code) => const {
       'WATERFALL': 'Catarata',
       'LAGOON': 'Laguna',

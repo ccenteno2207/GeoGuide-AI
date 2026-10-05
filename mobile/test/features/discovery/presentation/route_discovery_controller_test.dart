@@ -10,6 +10,7 @@ class FakeRouteDiscoveryRepository implements RouteDiscoveryRepository {
   Future<List<DiscoveryPoi>> discover({
     required RoutePoint origin,
     required RoutePoint destination,
+    Set<String> categories = const {},
   }) async => [
     DiscoveryPoi(
       id: 'poi-1',

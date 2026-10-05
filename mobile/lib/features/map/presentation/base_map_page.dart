@@ -8,6 +8,8 @@ import '../../discovery/application/discover_route.dart';
 import '../../discovery/domain/discovery_poi.dart';
 import '../../discovery/presentation/poi_preview_sheet.dart';
 import '../../discovery/presentation/poi_detail_sheet.dart';
+import '../../discovery/presentation/discovery_filter_sheet.dart';
+import '../../discovery/presentation/poi_presentation.dart';
 import '../../discovery/presentation/route_discovery_controller.dart';
 import '../../route_planning/application/plan_route.dart';
 import '../../route_planning/domain/route_point.dart';
@@ -96,10 +98,41 @@ class _BaseMapPageState extends State<BaseMapPage> {
     final origin = _routePlanning.origin;
     final destination = _routePlanning.destination;
     if (_routePlanning.route != null && origin != null && destination != null) {
-      await _routeDiscovery.discover(origin: origin, destination: destination);
+      await _routeDiscovery.discover(
+        origin: origin,
+        destination: destination,
+        categories: discoveryCategoryCodes.toSet(),
+      );
     }
     if (!mounted) return;
     setState(() {});
+  }
+
+  Future<void> _openFilters() async {
+    final origin = _routePlanning.origin;
+    final destination = _routePlanning.destination;
+    if (origin == null || destination == null || _routePlanning.route == null) return;
+    final categories = await showModalBottomSheet<Set<String>>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => DiscoveryFilterSheet(
+        appliedCategories: _routeDiscovery.appliedCategories,
+      ),
+    );
+    if (!mounted || categories == null) return;
+    await _routeDiscovery.discover(
+      origin: origin,
+      destination: destination,
+      categories: categories,
+    );
+    if (mounted) setState(() {});
+  }
+
+  String _filterSummary() {
+    final applied = _routeDiscovery.appliedCategories;
+    if (applied.length == discoveryCategoryCodes.length) return 'Todas';
+    if (applied.isEmpty) return '0 categorías';
+    return '${applied.length} categorías';
   }
 
   Future<void> _showPoiPreview(DiscoveryPoi poi) {
@@ -266,6 +299,15 @@ class _BaseMapPageState extends State<BaseMapPage> {
                       label: const Text('Calcular ruta'),
                     ),
                   ),
+                if (_routePlanning.route != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: FilledButton.tonalIcon(
+                      onPressed: _routeDiscovery.isDiscovering ? null : _openFilters,
+                      icon: const Icon(Icons.filter_alt),
+                      label: Text('Categorías: ${_filterSummary()}'),
+                    ),
+                  ),
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(12),
@@ -277,6 +319,10 @@ class _BaseMapPageState extends State<BaseMapPage> {
                           textAlign: TextAlign.center,
                         ),
                         Text(_locationStatus, textAlign: TextAlign.center),
+                        if (_routeDiscovery.pois.isEmpty &&
+                            _routeDiscovery.appliedCategories.length != discoveryCategoryCodes.length &&
+                            !_routeDiscovery.isDiscovering)
+                          const Text('No encontramos lugares de estas categorías para esta ruta.'),
                       ],
                     ),
                   ),

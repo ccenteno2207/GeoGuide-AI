@@ -18,6 +18,7 @@ class DioRouteDiscoveryRepository implements RouteDiscoveryRepository {
   Future<List<DiscoveryPoi>> discover({
     required RoutePoint origin,
     required RoutePoint destination,
+    Set<String> categories = const {},
   }) async {
     if (!origin.isValid || !destination.isValid) {
       throw const AppFailure(AppFailureType.validation);
@@ -28,6 +29,7 @@ class DioRouteDiscoveryRepository implements RouteDiscoveryRepository {
       body: {
         'origin': origin.toRequestJson(),
         'destination': destination.toRequestJson(),
+        'categories': categories.toList(growable: false),
       },
     );
     return _mapper.fromJson(json);

@@ -5,5 +5,6 @@ abstract interface class RouteDiscoveryRepository {
   Future<List<DiscoveryPoi>> discover({
     required RoutePoint origin,
     required RoutePoint destination,
+    Set<String> categories = const {},
   });
 }
