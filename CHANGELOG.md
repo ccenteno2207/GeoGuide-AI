@@ -40,6 +40,11 @@
   `0`; V001 registrada con checksum `-1627021776` y evidencia P1 preservada.
 
 ### Changed
+- Consolidación del baseline UX de producto previa a P8.0: se fija la experiencia
+  destino→origen→ruta→descubrimiento→preview→detalle, la continuidad de contexto,
+  las intenciones Discovery/Recreation/Travel Service y la dirección
+  `CEFI_READY_ARCHITECTURE = REQUIRED_DIRECTION`. P8 sigue NOT STARTED; no se
+  implementan búsqueda, historial, CEFI, voz, desvíos ni servicios nuevos.
 - Reconciliación documental post-P7 (5-oct-2026): resúmenes y handoffs reflejan P7
   CLOSED / 100%, P7.5 CLOSED, P7.6 COMPLETED y P8 NOT STARTED / sin contrato.
   El contrato P7 congelado permanece inmutable; la evidencia final y el PR #31
