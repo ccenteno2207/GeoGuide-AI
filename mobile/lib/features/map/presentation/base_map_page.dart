@@ -136,6 +136,18 @@ class _BaseMapPageState extends State<BaseMapPage> {
     return '${applied.length} categorías';
   }
 
+  Future<void> _retryDiscovery() async {
+    final origin = _routePlanning.origin;
+    final destination = _routePlanning.destination;
+    if (origin == null || destination == null) return;
+    await _routeDiscovery.discover(
+      origin: origin,
+      destination: destination,
+      categories: _routeDiscovery.appliedCategories,
+    );
+    if (mounted) setState(() {});
+  }
+
   Future<void> _showPoiPreview(DiscoveryPoi poi) {
     return showModalBottomSheet<void>(
       context: context,
@@ -329,6 +341,24 @@ class _BaseMapPageState extends State<BaseMapPage> {
                           textAlign: TextAlign.center,
                         ),
                         Text(_locationStatus, textAlign: TextAlign.center),
+                        if (_routeDiscovery.isDiscovering)
+                          Semantics(
+                            liveRegion: true,
+                            label: 'Cargando lugares de la ruta',
+                            child: Padding(
+                              padding: EdgeInsets.only(top: 8),
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                        if (_routeDiscovery.hasError)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: OutlinedButton.icon(
+                              onPressed: _routeDiscovery.isDiscovering ? null : _retryDiscovery,
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Reintentar'),
+                            ),
+                          ),
                         if (_routeDiscovery.pois.isEmpty &&
                             _routeDiscovery.appliedCategories.length != discoveryCategoryCodes.length &&
                             !_routeDiscovery.isDiscovering)

@@ -11,6 +11,7 @@ class RouteDiscoveryController {
 
   List<DiscoveryPoi> pois = const [];
   bool isDiscovering = false;
+  bool hasError = false;
   String? status;
   RoutePoint? origin;
   RoutePoint? destination;
@@ -26,6 +27,7 @@ class RouteDiscoveryController {
     if (discoverRoute == null) return;
 
     isDiscovering = true;
+    hasError = false;
     status = 'Buscando lugares en la ruta';
     this.origin = origin;
     this.destination = destination;
@@ -36,6 +38,7 @@ class RouteDiscoveryController {
           ? 'No se encontraron lugares utilizables en la ruta'
           : '${pois.length} lugares visibles en la ruta';
     } on AppFailure catch (failure) {
+      hasError = true;
       status = failure.userMessage;
     } finally {
       isDiscovering = false;
