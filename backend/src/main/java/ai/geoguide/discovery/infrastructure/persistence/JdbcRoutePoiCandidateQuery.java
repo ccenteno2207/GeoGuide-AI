@@ -3,6 +3,7 @@ package ai.geoguide.discovery.infrastructure.persistence;
 import ai.geoguide.discovery.application.port.RoutePoiCandidateQuery;
 import ai.geoguide.discovery.domain.DiscoveryCriteria;
 import ai.geoguide.discovery.domain.RoutePoiCandidate;
+import ai.geoguide.discovery.domain.ProvenanceSummary;
 import ai.geoguide.poi.domain.Category;
 import ai.geoguide.poi.domain.GeoPoint;
 import ai.geoguide.poi.domain.PoiId;
@@ -31,13 +32,21 @@ public class JdbcRoutePoiCandidateQuery implements RoutePoiCandidateQuery {
         String sql = """
                 WITH route AS (SELECT ST_SetSRID(ST_GeomFromGeoJSON(?), 4326) AS geometry)
                 SELECT p.id, p.name, p.active, c.id AS category_id, c.code AS category_code,
-                       c.name AS category_name, c.active AS category_active,
+                       c.name AS category_name, c.active AS category_active, p.description,
+                       prov.source_system, prov.source_url, prov.attribution,
                        ST_Y(p.location) AS latitude, ST_X(p.location) AS longitude,
                        ST_Distance(p.location::geography, route.geometry::geography) AS distance_meters,
                        ST_LineLocatePoint(route.geometry, p.location) AS route_progress
                 FROM geo.point_of_interest p
                 JOIN geo.category c ON c.id = p.category_id
                 CROSS JOIN route
+                LEFT JOIN LATERAL (
+                    SELECT source_system, source_url, attribution
+                    FROM geo.poi_provenance
+                    WHERE poi_id = p.id
+                    ORDER BY source_system, logical_key
+                    LIMIT 1
+                ) prov ON true
                 WHERE p.active = true
                   AND p.location && ST_Expand(route.geometry, ? / 111320.0)
                   AND ST_DWithin(p.location::geography, route.geometry::geography, ?)
@@ -53,7 +62,9 @@ public class JdbcRoutePoiCandidateQuery implements RoutePoiCandidateQuery {
                 new Category(rs.getObject("category_id", UUID.class), rs.getString("category_code"),
                         rs.getString("category_name"), rs.getBoolean("category_active")),
                 new GeoPoint(rs.getDouble("latitude"), rs.getDouble("longitude")), rs.getBoolean("active"),
-                rs.getDouble("distance_meters"), rs.getDouble("route_progress")), parameters.toArray());
+                rs.getDouble("distance_meters"), rs.getDouble("route_progress"), rs.getString("description"),
+                rs.getString("source_system") == null ? null : new ProvenanceSummary(
+                        rs.getString("source_system"), rs.getString("source_url"), rs.getString("attribution"))), parameters.toArray());
     }
 
     private String asGeoJson(RouteGeometry geometry) {
