@@ -51,6 +51,37 @@ services:
       start_period: 30s
     networks: [data]
 
+  nginx:
+    image: nginx:1.28-alpine
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      NGINX_ENVSUBST_FILTER: GEOGUIDE_API_DOMAIN|GEOGUIDE_PUBLIC_HTTPS_PORT
+      GEOGUIDE_API_DOMAIN: geoguide.getcom.pe
+      GEOGUIDE_PUBLIC_HTTPS_PORT: ${GEOGUIDE_PUBLIC_HTTPS_PORT:-5443}
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/http.conf.template:/etc/nginx/templates/default.conf.template:ro
+    networks: [ingress, data]
+
+  certbot:
+    build:
+      context: ./certbot
+    image: geoguide-ai/certbot-dns-desec:4.0.0-1.3.2
+    profiles: [tls]
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+    secrets:
+      - source: desec_credentials
+        target: desec.ini
+        uid: "0"
+        gid: "0"
+        mode: 0400
+    networks: [ingress]
+
   redis:
     image: redis:7.4-alpine
     restart: unless-stopped
@@ -119,6 +150,9 @@ services:
     networks: [data]
 
 networks:
+  ingress:
+    driver: bridge
+    internal: false
   data:
     internal: true
 
@@ -126,3 +160,8 @@ volumes:
   postgres_data:
   redis_data:
   minio_data:
+  letsencrypt:
+
+secrets:
+  desec_credentials:
+    file: ${DESEC_CREDENTIALS_FILE:-/dev/null}

@@ -1,0 +1,10 @@
+[Unit]
+Description=Renew GeoGuide AI TLS certificates and reload Nginx after deployment
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/geoguide-ai/infrastructure
+EnvironmentFile=/etc/geoguide/certbot-renew.env
+ExecStart=/opt/geoguide-ai/infrastructure/scripts/renew-certificates.sh

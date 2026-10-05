@@ -27,8 +27,8 @@ P5 cerró Route Discovery mediante el PR #14, con los checkpoints P5.0-A–P5.7 
 `d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca` (P0–P5 completados). P6 cerró el
 bootstrap Flutter, mapa base e integración de ubicación puntual conforme a su contrato;
 la evidencia canónica es `P6-Validation-Evidence.md`. P7 está en progreso: P7.1–P7.4
-fueron integrados y P7.5 espera completar el gate de conectividad segura. P8–P12
-permanecen planificadas.
+fueron integrados y P7.5 completó el gate de conectividad segura; P7.6 permanece no
+iniciado. P8–P12 permanecen planificadas.
 
 Roadmap position defines project progression, not implementation authorization. Every
 major phase requires scope confirmation, freeze and approval before implementation.
