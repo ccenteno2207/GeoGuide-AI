@@ -6,7 +6,7 @@ import '../../location/application/request_current_location.dart';
 import '../../location/domain/location_repository.dart';
 import '../../discovery/application/discover_route.dart';
 import '../../discovery/domain/discovery_poi.dart';
-import '../../discovery/presentation/poi_detail_sheet.dart';
+import '../../discovery/presentation/poi_preview_sheet.dart';
 import '../../discovery/presentation/route_discovery_controller.dart';
 import '../../route_planning/application/plan_route.dart';
 import '../../route_planning/domain/route_point.dart';
@@ -101,10 +101,21 @@ class _BaseMapPageState extends State<BaseMapPage> {
     setState(() {});
   }
 
-  Future<void> _showPoiDetail(DiscoveryPoi poi) {
+  Future<void> _showPoiPreview(DiscoveryPoi poi) {
     return showModalBottomSheet<void>(
       context: context,
-      builder: (_) => PoiDetailSheet(poi: poi),
+      isScrollControlled: true,
+      builder: (_) => PoiPreviewSheet(
+        poi: poi,
+        onViewDetail: () {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('El detalle ampliado estará disponible próximamente.'),
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -210,8 +221,8 @@ class _BaseMapPageState extends State<BaseMapPage> {
                           width: 40,
                           height: 40,
                           child: IconButton(
-                            tooltip: 'Ver detalle de ${poi.name}',
-                            onPressed: () => _showPoiDetail(poi),
+                          tooltip: 'Vista previa de ${poi.name}',
+                          onPressed: () => _showPoiPreview(poi),
                             icon: const Icon(
                               Icons.place,
                               color: Colors.deepOrange,
