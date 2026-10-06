@@ -20,8 +20,8 @@
 - Entrega 11 – Master Documentation
 
 ## Próxima transición
-P0–P8 completadas y cerradas → P9.0 discovery / definición de contrato.
-P9 no ha iniciado implementación; requiere aprobación humana antes de ejecutar.
+P0–P8 completadas y cerradas → P9.0 AWAITING_FINAL_CONTRACT_APPROVAL.
+P9 no ha iniciado implementación; requiere aprobación humana antes de ejecutar. [Contrato P9 v1](11-Implementation-Plan/P9-Phase-Contract-v1.md), [anexo de caché](11-Implementation-Plan/P9-Local-Cache-Design-v1.md) y [evidencia documental](11-Implementation-Plan/P9.0-Contract-Finalization-Evidence.md): D01–D05 resueltos documentalmente, D06 DEFERRED; contenido READY_FOR_FINAL_HUMAN_REVIEW, sin freeze ni autorización funcional.
 
 El baseline UX consolidado antes de P8.0 está en
 [GeoGuide AI MVP UX Baseline](11-Implementation-Plan/GeoGuide-AI-MVP-UX-Baseline.md).

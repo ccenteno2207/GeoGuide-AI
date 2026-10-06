@@ -39,7 +39,7 @@ COMPLETED; Android físico, ubicación precisa puntual y accesibilidad están en
 La evidencia de cierre registra Testcontainers 6/6, backend 59/59, Flutter 27 tests,
 Flutter analyze y APK HTTPS en PASS; son resultados del cierre P8.
 P0–P8 están completadas. P9 permanece NOT_STARTED_IMPLEMENTATION: P9.0 solo
-realiza discovery / definición de contrato, pendiente de aprobación humana.
+queda AWAITING_FINAL_CONTRACT_APPROVAL. El [contrato P9 v1](docs/11-Master-Documentation/11-Implementation-Plan/P9-Phase-Contract-v1.md) y su anexo contienen D01–D05 resueltos documentalmente; D06 permanece DEFERRED. Contenido listo para revisión final, sin aprobación/freeze ni autorización de P9.1.
 P10–P12 permanecen planificadas.
 El roadmap indica progresión, no autorización de ejecución.
 
