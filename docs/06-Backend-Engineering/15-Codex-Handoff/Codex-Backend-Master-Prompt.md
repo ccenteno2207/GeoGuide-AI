@@ -48,11 +48,16 @@ Pausa también ante ampliación de alcance, frontera de fase, operación destruc
 migración/PBF/bounding box protegido, riesgo de datos o seguridad, dependencia de una
 fase futura, regresión no resoluble o DoD imposible.
 
-Estado vigente: P0–P7 completadas y cerradas; P7 — First Vertical Slice **CLOSED**,
+Estado vigente: P0–P8 completadas y cerradas; P7 — First Vertical Slice **CLOSED**,
 P7.5 **CLOSED**, P7.6 **COMPLETED** y P7-AC-01–P7-AC-11 **PASS**.
 Baseline de cierre P7: `ada26c8881cdefb2d8f0ede679a8ebb3996ab61c` (PR #31).
 El estado final está en `P7-Validation-Evidence.md`, `PROJECT_CONTEXT.md`,
 `ROADMAP.md` y `CHANGELOG.md`; los estados del contrato congelado son históricos.
-P8 — POI Experience **NOT STARTED**, sin contrato; P9–P12 planificadas.
+P8 — POI Experience **CLOSED**, con contrato congelado existente. El cierre
+[P8.7](../../11-Master-Documentation/11-Implementation-Plan/P8.7-Final-Audit-and-Closure.md)
+registra P8.6/P8.7 COMPLETED, Testcontainers 6/6 y backend 59/59 PASS.
+Baseline final P8: `7dfb0293507dcfa1eef90533c4dc9dbdd4d2a229` (PR #43).
+P9 permanece NOT_STARTED_IMPLEMENTATION; P9.0 es discovery / definición de
+contrato pendiente de aprobación humana. P10–P12 siguen planificadas.
 Verificar `origin/main` antes de cualquier trabajo autorizado. Este handoff no
-autoriza P8 ni cambios backend para una fase futura.
+autoriza implementación P9 ni cambios backend para una fase futura.

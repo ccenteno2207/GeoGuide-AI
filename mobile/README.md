@@ -10,7 +10,11 @@ en el código fuente. P7.5 validó en Android físico el endpoint productivo
 redirige a HTTPS y no representa configuración móvil productiva.
 
 No incluye CEFI, voz, autenticación, tracking continuo, offline avanzado ni
-capacidades de fases posteriores. P8 no ha iniciado.
+capacidades de fases posteriores. P8 — POI Experience está cerrada: Preview, Detail,
+filtros, Map/List y continuidad están validados, junto con ubicación precisa puntual
+y accesibilidad en Android físico. Véase [P8.7 cierre](../docs/11-Master-Documentation/11-Implementation-Plan/P8.7-Final-Audit-and-Closure.md),
+baseline `7dfb0293507dcfa1eef90533c4dc9dbdd4d2a229` (PR #43).
+P9 no ha iniciado implementación; su contrato requiere aprobación humana.
 
 ## Validación local
 

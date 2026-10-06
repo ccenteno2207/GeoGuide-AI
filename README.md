@@ -37,7 +37,12 @@ P6 — Mobile Bootstrap está **COMPLETADA**. P7 — First Vertical Slice está
 **CERRADA / 100%**: P7.5 cerrada, P7.6 completada y P7-AC-01–P7-AC-11 en PASS.
 El baseline de cierre es `ada26c8881cdefb2d8f0ede679a8ebb3996ab61c` (PR #31);
 la evidencia final está en [P7 Validation Evidence](docs/11-Master-Documentation/11-Implementation-Plan/P7-Validation-Evidence.md).
-P8 — POI Experience permanece **NO INICIADA**, sin contrato; P9–P12 siguen
-planificadas. Este estado no autoriza implementación P8.
+P8 — POI Experience está **CERRADA / COMPLETADA** en
+`7dfb0293507dcfa1eef90533c4dc9dbdd4d2a229` (PR #43), según
+[P8.7 Final Audit and Closure](docs/11-Master-Documentation/11-Implementation-Plan/P8.7-Final-Audit-and-Closure.md).
+El [contrato P8 congelado](docs/11-Master-Documentation/11-Implementation-Plan/P8-Phase-Contract-v1.md)
+se conserva. P0–P8 están completadas; P9 no ha iniciado implementación.
+P9.0 es discovery / definición de contrato y requiere aprobación humana antes de
+implementar. P10–P12 siguen planificadas.
 La configuración inicial de PostgreSQL/PostGIS, Redis y MinIO, junto con sus instrucciones
 de operación, se encuentra en [infrastructure/README.md](infrastructure/README.md).

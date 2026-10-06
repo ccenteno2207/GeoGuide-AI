@@ -80,14 +80,14 @@ Current milestone progression:
 - P5 Route Discovery — CLOSED
 - P6 Mobile Bootstrap — CLOSED / COMPLETED
 - P7 First Vertical Slice — CLOSED / COMPLETED — 100%
-- P8 POI Experience — NOT STARTED
-- P9 Offline + Driving — PLANNED
+- P8 POI Experience — CLOSED / COMPLETED
+- P9 Offline + Driving — NOT STARTED IMPLEMENTATION
 - P10 Quality + Security — PLANNED
 - P11 Linux Server Deployment — PLANNED
 - P12 Real Road Pilot — PLANNED
 
-P0–P7 are completed. The P7 closure baseline is `ada26c8881cdefb2d8f0ede679a8ebb3996ab61c` (PR #31): P7.5 is CLOSED, P7.6 is COMPLETED and P7-AC-01–P7-AC-11 passed. `P7-Validation-Evidence.md`, `PROJECT_CONTEXT.md`, `ROADMAP.md` and `CHANGELOG.md` record the final state. The frozen P7 contract remains an immutable normative snapshot; its historical execution/TLS statuses do not override the subsequent closure evidence. See [post-P7 reconciliation](docs/11-Master-Documentation/11-Implementation-Plan/Post-P7-Documentation-Reconciliation.md).
+P0–P8 are completed. The P7 closure baseline is `ada26c8881cdefb2d8f0ede679a8ebb3996ab61c` (PR #31): P7.5 is CLOSED, P7.6 is COMPLETED and P7-AC-01–P7-AC-11 passed. `P7-Validation-Evidence.md`, `PROJECT_CONTEXT.md`, `ROADMAP.md` and `CHANGELOG.md` record the final state. The frozen P7 contract remains an immutable normative snapshot; its historical execution/TLS statuses do not override the subsequent closure evidence. See [post-P7 reconciliation](docs/11-Master-Documentation/11-Implementation-Plan/Post-P7-Documentation-Reconciliation.md).
 
-P8 remains NOT STARTED, without a phase contract. Its planning source is `preview/detail/filter`; this reconciliation does not authorize implementation. Verify the effective `main` and `origin/main` before authorized work instead of treating a recorded SHA as permanent.
+P8 is CLOSED at `7dfb0293507dcfa1eef90533c4dc9dbdd4d2a229` (PR #43). The frozen [P8 contract](docs/11-Master-Documentation/11-Implementation-Plan/P8-Phase-Contract-v1.md) is preserved; its opening statuses do not override [P8.7 final audit and closure](docs/11-Master-Documentation/11-Implementation-Plan/P8.7-Final-Audit-and-Closure.md). P8.6 and P8.7 are COMPLETED; physical Android and Docker integration validation passed. P9.0 is discovery / contract definition only: P9 implementation is NOT AUTHORIZED until explicit human contract approval. The P9 roadmap name remains product direction, not frozen scope. Verify the effective `main` and `origin/main` before authorized work instead of treating a recorded SHA as permanent.
 
 Do NOT attempt to build the entire product in a single task.

@@ -89,10 +89,14 @@ regresión no resoluble o DoD imposible.
 - no omitir tests para “avanzar más rápido”.
 
 ## Prioridad actual
-P0–P7 están completadas y cerradas. El baseline de cierre P7 es
+P0–P8 están completadas y cerradas. El baseline de cierre P7 es
 `ada26c8881cdefb2d8f0ede679a8ebb3996ab61c` (PR #31); P7.5 está CLOSED,
 P7.6 COMPLETED y P7-AC-01–P7-AC-11 en PASS, según `P7-Validation-Evidence.md`
 y las fuentes vigentes de estado. El contrato P7 conserva su snapshot normativo
-congelado y sus estados históricos. P8 — POI Experience permanece NOT STARTED,
-sin contrato; P9–P12 están planificadas. No avanzar automáticamente al siguiente
-hito ni interpretar esta reconciliación como autorización de implementación P8.
+congelado y sus estados históricos. P8 — POI Experience está CLOSED en
+`7dfb0293507dcfa1eef90533c4dc9dbdd4d2a229` (PR #43), conforme a
+[P8.7 cierre](../11-Implementation-Plan/P8.7-Final-Audit-and-Closure.md).
+El contrato P8 existe y permanece congelado; P8.6/P8.7 están COMPLETED, con
+Android físico y Docker integration PASS. P9 está NOT_STARTED_IMPLEMENTATION;
+P9.0 es discovery / definición de contrato. P10–P12 están planificadas. No
+avanzar a implementación P9 sin aprobación humana explícita de su contrato.
