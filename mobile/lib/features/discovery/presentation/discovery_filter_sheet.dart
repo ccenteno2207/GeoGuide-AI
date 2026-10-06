@@ -25,10 +25,11 @@ class _DiscoveryFilterSheetState extends State<DiscoveryFilterSheet> {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             Text('Filtrar lugares', style: Theme.of(context).textTheme.titleLarge),
             const SizedBox(height: 8),
             SizedBox(
@@ -52,25 +53,28 @@ class _DiscoveryFilterSheetState extends State<DiscoveryFilterSheet> {
                 ],
               ),
             ),
-            Row(
-              children: [
-                Expanded(child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Cancelar'),
-                )),
-                const SizedBox(width: 8),
-                Expanded(child: OutlinedButton(
-                  onPressed: () => setState(() => _draft = {...discoveryCategoryCodes}),
-                  child: const Text('Restablecer'),
-                )),
-                const SizedBox(width: 8),
-                Expanded(child: FilledButton(
-                  onPressed: () => Navigator.of(context).pop(Set<String>.unmodifiable(_draft)),
-                  child: const Text('Aplicar'),
-                )),
-              ],
+            SizedBox(
+              width: double.infinity,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Cancelar'),
+                  ),
+                  OutlinedButton(
+                    onPressed: () => setState(() => _draft = {...discoveryCategoryCodes}),
+                    child: const Text('Restablecer'),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.of(context).pop(Set<String>.unmodifiable(_draft)),
+                    child: const Text('Aplicar'),
+                  ),
+                ],
+              ),
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );

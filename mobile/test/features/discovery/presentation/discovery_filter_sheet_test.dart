@@ -15,4 +15,25 @@ void main() {
     await tester.tap(find.text('Aplicar'));
     await tester.pumpAndSettle();
   });
+
+  testWidgets('keeps filter actions readable with large text', (tester) async {
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
+        child: const MaterialApp(
+          home: Scaffold(
+            body: DiscoveryFilterSheet(appliedCategories: {...discoveryCategoryCodes}),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Cancelar'), findsOneWidget);
+    expect(find.text('Restablecer'), findsOneWidget);
+    expect(find.text('Aplicar'), findsOneWidget);
+
+    await tester.ensureVisible(find.text('Restablecer'));
+    await tester.tap(find.text('Restablecer'));
+    await tester.pumpAndSettle();
+  });
 }
