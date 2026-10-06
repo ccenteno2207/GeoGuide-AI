@@ -31,7 +31,7 @@ class GeolocatorLocationRepository implements LocationRepository {
     try {
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.low,
+          accuracy: LocationAccuracy.high,
         ),
       );
       return CurrentLocationResult.available(
