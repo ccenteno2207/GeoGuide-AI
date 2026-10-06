@@ -12,8 +12,8 @@ The priority is the First Operational Pilot.
 | P5 | Route Discovery | CLOSED |
 | P6 | Mobile Bootstrap | CLOSED |
 | P7 | First Vertical Slice | CLOSED |
-| P8 | POI Experience | NOT STARTED |
-| P9 | Offline + Driving | PLANNED |
+| P8 | POI Experience | CLOSED |
+| P9 | Offline + Driving | NOT STARTED IMPLEMENTATION |
 | P10 | Quality + Security | PLANNED |
 | P11 | Linux Server Deployment | PLANNED |
 | P12 | Real Road Pilot | PLANNED |
@@ -27,8 +27,14 @@ P5 cerró Route Discovery mediante el PR #14, con los checkpoints P5.0-A–P5.7 
 `d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca` (P0–P5 completados). P6 cerró el
 bootstrap Flutter, mapa base e integración de ubicación puntual conforme a su contrato;
 la evidencia canónica es `P6-Validation-Evidence.md`. P7 — First Vertical Slice
-cerró con P7.1–P7.6 completados, TLS productivo y E2E Android HTTPS PASS. P8 no ha
-iniciado; P8–P12 permanecen planificadas.
+cerró con P7.1–P7.6 completados, TLS productivo y E2E Android HTTPS PASS.
+P8 — POI Experience cerró en `7dfb0293507dcfa1eef90533c4dc9dbdd4d2a229`
+(PR #43), con P8.6/P8.7 COMPLETED, Android físico PASS y Docker integration PASS;
+la fuente autoritativa es [P8.7 Final Audit and Closure](docs/11-Master-Documentation/11-Implementation-Plan/P8.7-Final-Audit-and-Closure.md).
+P0–P8 están completadas. P9.0 realiza discovery / definición de contrato; P9 no
+ha iniciado implementación y requiere aprobación humana. P10–P12 siguen planificadas.
+El nombre Offline + Driving se conserva como dirección de producto; no define
+por sí solo un alcance implementable.
 
 Roadmap position defines project progression, not implementation authorization. Every
 major phase requires scope confirmation, freeze and approval before implementation.

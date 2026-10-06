@@ -53,7 +53,9 @@
 | P6 frozen scope and execution contract | `docs/11-Master-Documentation/11-Implementation-Plan/P6-Phase-Contract-v1.md` |
 | P6 validation and closure evidence | `docs/11-Master-Documentation/11-Implementation-Plan/P6-Validation-Evidence.md` |
 | P7 final state and closure evidence | `docs/11-Master-Documentation/11-Implementation-Plan/P7-Validation-Evidence.md`, `PROJECT_CONTEXT.md`, `ROADMAP.md`, `CHANGELOG.md` and PR #31 |
-| Post-P7 current state and DNS incident resolution | `docs/11-Master-Documentation/11-Implementation-Plan/Post-P7-Documentation-Reconciliation.md` |
+| Historical post-P7 reconciliation and DNS incident resolution | `docs/11-Master-Documentation/11-Implementation-Plan/Post-P7-Documentation-Reconciliation.md` |
+| P8 frozen contract | `docs/11-Master-Documentation/11-Implementation-Plan/P8-Phase-Contract-v1.md` |
+| P8 final state and closure evidence | `docs/11-Master-Documentation/11-Implementation-Plan/P8.7-Final-Audit-and-Closure.md` and PR #43 |
 | P5 validation and master closure evidence | `docs/11-Master-Documentation/11-Implementation-Plan/P5-Validation-Evidence.md` |
 | Current or future phase scope | Approved phase contract when one exists; roadmap placement alone is insufficient |
 | Codex execution method | `AI_DEVELOPMENT_GUIDE.md` and current Codex handoff documents |
@@ -63,10 +65,14 @@
 Archived documents must not be used as current architecture or implementation
 guidance unless explicitly requested.
 
-Current state: P0–P7 are completed and closed. P7 closed at
+Current state: P0–P8 are completed and closed. P7 closed at
 `ada26c8881cdefb2d8f0ede679a8ebb3996ab61c` (PR #31), with P7.5 CLOSED,
-P7.6 COMPLETED and P7-AC-01–P7-AC-11 PASS. P8 is NOT STARTED and has no
-phase contract; P9–P12 remain planned. No active instruction may turn this
+P7.6 COMPLETED and P7-AC-01–P7-AC-11 PASS. P8 closed at
+`7dfb0293507dcfa1eef90533c4dc9dbdd4d2a229` (PR #43): P8.6/P8.7 COMPLETED,
+physical Android PASS and Docker integration PASS, as recorded in P8.7 closure evidence.
+The frozen P8 contract exists and remains unchanged; its opening statuses are historical.
+P9 is NOT_STARTED_IMPLEMENTATION; P9.0 is discovery / contract definition pending
+human approval. P10–P12 remain planned. No active instruction may turn this
 progression into automatic scope.
 
 The P7 phase contract is an immutable normative snapshot. Its historical TLS and

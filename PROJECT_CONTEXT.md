@@ -30,8 +30,17 @@ El incidente histórico de delegación del parent fue verificado nuevamente el
 `ns2.desec.org`. Estado actual: `PARENT_DELEGATION_INCIDENT = RESOLVED_WITH_EVIDENCE`,
 `PARENT_DELEGATION_RISK = CLOSED`, `PARENT_DELEGATION_P8_IMPACT = NONE`.
 Los comandos y resultados están en la [reconciliación post-P7](docs/11-Master-Documentation/11-Implementation-Plan/Post-P7-Documentation-Reconciliation.md).
-P8 — POI Experience permanece no iniciada, sin contrato; su fuente de planificación
-es `preview/detail/filter`. P9–P12 permanecen planificadas.
+P8 — POI Experience está **CERRADA** en
+`7dfb0293507dcfa1eef90533c4dc9dbdd4d2a229` (PR #43), conforme a
+[P8.7 Final Audit and Closure](docs/11-Master-Documentation/11-Implementation-Plan/P8.7-Final-Audit-and-Closure.md).
+El [contrato P8](docs/11-Master-Documentation/11-Implementation-Plan/P8-Phase-Contract-v1.md)
+permanece congelado; sus estados de apertura son históricos. P8.6 y P8.7 están
+COMPLETED; Android físico, ubicación precisa puntual y accesibilidad están en PASS.
+La evidencia de cierre registra Testcontainers 6/6, backend 59/59, Flutter 27 tests,
+Flutter analyze y APK HTTPS en PASS; son resultados del cierre P8.
+P0–P8 están completadas. P9 permanece NOT_STARTED_IMPLEMENTATION: P9.0 solo
+realiza discovery / definición de contrato, pendiente de aprobación humana.
+P10–P12 permanecen planificadas.
 El roadmap indica progresión, no autorización de ejecución.
 
 El baseline de cierre P7 es `ada26c8881cdefb2d8f0ede679a8ebb3996ab61c` (PR #31).
