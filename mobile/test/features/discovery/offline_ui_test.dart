@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geoguide_ai/app/app.dart';
 import 'package:geoguide_ai/app/theme/geoguide_theme.dart';
@@ -131,6 +132,157 @@ void main() {
       await tester.pumpAndSettle();
       expect(app.snapshot!.query.sameAs(fixtures.query()), isTrue);
       expect(find.text('Ver mapa'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+  testWidgets('reduced driving mode is static and exits explicitly', (
+    tester,
+  ) async {
+    final app = OfflineDiscovery(
+      source: fixtures.Source(),
+      store: MemoryStore()..value = fixtures.snapshot(),
+      backendContext: fixtures.query().backendContext,
+      now: () => fixtures.captured,
+    );
+    await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
+    await tester.pumpAndSettle();
+
+    final enter = find.text('Entrar en modo conducción');
+    await tester.ensureVisible(enter);
+    await tester.tap(enter);
+    await tester.pumpAndSettle();
+    expect(find.text('Modo conducción reducido'), findsOneWidget);
+    expect(find.text('Explora solo cuando estés detenido'), findsOneWidget);
+    expect(find.text('Salir de modo conducción'), findsOneWidget);
+    expect(find.text('Ver lista'), findsNothing);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Modo conducción reducido'), findsOneWidget);
+
+    await tester.tap(find.text('Salir de modo conducción'));
+    await tester.pumpAndSettle();
+    expect(find.text('Modo conducción reducido'), findsNothing);
+    expect(find.text('Entrar en modo conducción'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+  testWidgets('Driving entry is unavailable without a coherent snapshot', (
+    tester,
+  ) async {
+    final source = fixtures.Source();
+    final app = OfflineDiscovery(
+      source: source,
+      store: MemoryStore(),
+      backendContext: fixtures.query().backendContext,
+      now: () => fixtures.captured,
+    );
+    await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
+    await tester.pumpAndSettle();
+    expect(find.text('Entrar en modo conducción'), findsNothing);
+    expect(find.text('Modo conducción reducido'), findsNothing);
+    expect(source.calls, 0);
+    await tester.pumpWidget(const SizedBox());
+  });
+  testWidgets(
+    'Driving preserves static state through expiry and supports re-entry',
+    (tester) async {
+      var now = fixtures.captured;
+      final source = fixtures.Source();
+      final app = OfflineDiscovery(
+        source: source,
+        store: MemoryStore()..value = fixtures.snapshot(),
+        backendContext: fixtures.query().backendContext,
+        now: () => now,
+      );
+      await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Entrar en modo conducción'));
+      await tester.pumpAndSettle();
+      expect(find.text('Modo conducción reducido'), findsOneWidget);
+      final callsBeforeExpiry = source.calls;
+
+      now += RouteSnapshot.ttlMs;
+      await app.revalidate();
+      await tester.pumpAndSettle();
+      expect(app.snapshot, isNull);
+      expect(source.calls, callsBeforeExpiry);
+      expect(find.text('Modo conducción reducido'), findsOneWidget);
+
+      await tester.tap(find.text('Salir de modo conducción'));
+      await tester.pumpAndSettle();
+      expect(find.text('Modo conducción reducido'), findsNothing);
+      expect(find.text('Entrar en modo conducción'), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+  testWidgets('Driving exit remains accessible at TextScaler 2.0', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final app = OfflineDiscovery(
+      source: fixtures.Source(),
+      store: MemoryStore()..value = fixtures.snapshot(),
+      backendContext: fixtures.query().backendContext,
+      now: () => fixtures.captured,
+    );
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+        child: GeoGuideApp(offlineDiscovery: app),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final enter = find.text('Entrar en modo conducción');
+    await tester.ensureVisible(enter);
+    await tester.tap(enter);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    final exit = find.text('Salir de modo conducción');
+    expect(exit, findsOneWidget);
+    await tester.ensureVisible(exit);
+    expect(
+      tester.getSize(find.byType(FilledButton).last).height,
+      greaterThanOrEqualTo(48),
+    );
+    final semantics = tester.ensureSemantics();
+    expect(
+      tester.getSemantics(find.byType(FilledButton).last).label,
+      contains('Salir de modo conducción'),
+    );
+    semantics.dispose();
+    await tester.pumpWidget(const SizedBox());
+  });
+  testWidgets(
+    'Driving interaction tree has no alternate controls and map gestures are disabled',
+    (tester) async {
+      final app = OfflineDiscovery(
+        source: fixtures.Source(),
+        store: MemoryStore()..value = fixtures.snapshot(),
+        backendContext: fixtures.query().backendContext,
+        now: () => fixtures.captured,
+      );
+      await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
+      await tester.pumpAndSettle();
+      final enter = find.text('Entrar en modo conducción');
+      await tester.ensureVisible(enter);
+      await tester.tap(enter);
+      await tester.pumpAndSettle();
+
+      final map = tester.widget<FlutterMap>(find.byType(FlutterMap));
+      expect(map.options.interactionOptions.flags, InteractiveFlag.none);
+      expect(find.text('Ver lista'), findsNothing);
+      expect(find.text('Reintentar'), findsNothing);
+      expect(find.text('Usar ubicación actual'), findsNothing);
+      expect(find.text('Ver detalle'), findsNothing);
+      expect(find.text('Ver mapa'), findsNothing);
+
+    final semantics = tester.ensureSemantics();
+    final exit = tester.getSemantics(find.byType(FilledButton).last);
+    expect(exit.label, contains('Salir de modo conducción'));
+    semantics.dispose();
       await tester.pumpWidget(const SizedBox());
     },
   );

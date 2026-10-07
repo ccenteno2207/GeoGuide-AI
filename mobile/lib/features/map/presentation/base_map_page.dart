@@ -43,6 +43,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   String _locationStatus = 'Ubicación no solicitada';
   bool _isRequestingLocation = false;
   bool _showDiscoveryList = false;
+  bool _drivingReduced = false;
   late final RoutePlanningController _routePlanning;
   late final RouteDiscoveryController _routeDiscovery;
 
@@ -82,7 +83,9 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         _routePlanning.destination = snapshot.query.destination;
       }
     });
-    if (snapshot == null && Navigator.of(context).canPop()) {
+    if (!_drivingReduced &&
+        snapshot == null &&
+        Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
     }
   }
@@ -113,6 +116,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _requestLocation() async {
+    if (_drivingReduced) return;
     setState(() => _isRequestingLocation = true);
     final result = await widget.requestCurrentLocation();
     if (!mounted) return;
@@ -146,6 +150,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   void _selectRoutePoint(TapPosition _, LatLng point) {
+    if (_drivingReduced) return;
     if (widget.offlineDiscovery?.busy == true ||
         widget.offlineDiscovery?.saving == true) {
       return;
@@ -160,6 +165,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _calculateRoute() async {
+    if (_drivingReduced) return;
     if (widget.offlineDiscovery case final offline?) {
       final origin = _routePlanning.origin,
           destination = _routePlanning.destination;
@@ -189,6 +195,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _openFilters() async {
+    if (_drivingReduced) return;
     final origin = _routePlanning.origin;
     final destination = _routePlanning.destination;
     if (origin == null || destination == null || _routePlanning.route == null) {
@@ -222,6 +229,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _retryDiscovery() async {
+    if (_drivingReduced) return;
     if (widget.offlineDiscovery case final offline?) {
       await offline.retry();
       return;
@@ -238,6 +246,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _showPoiPreview(DiscoveryPoi poi) async {
+    if (_drivingReduced) return;
     final offline = widget.offlineDiscovery;
     if (offline != null) {
       await offline.revalidate();
@@ -260,6 +269,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _showPoiDetail(DiscoveryPoi poi) async {
+    if (_drivingReduced) return;
     final offline = widget.offlineDiscovery;
     if (offline != null) {
       await offline.revalidate();
@@ -277,6 +287,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    if (_drivingReduced) return _buildDrivingView(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('GeoGuide AI'),
@@ -535,6 +546,13 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                               const Text(
                                 'No encontramos lugares de estas categorías para esta ruta.',
                               ),
+                            if (widget.offlineDiscovery?.snapshot != null &&
+                                !_routeDiscovery.isDiscovering)
+                              FilledButton.icon(
+                                onPressed: _enterDriving,
+                                icon: const Icon(Icons.directions_car),
+                                label: const Text('Entrar en modo conducción'),
+                              ),
                           ],
                         ),
                       ),
@@ -573,6 +591,125 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  void _enterDriving() {
+    if (_drivingReduced ||
+        _routePlanning.route == null ||
+        widget.offlineDiscovery?.snapshot == null ||
+        widget.offlineDiscovery?.busy == true ||
+        widget.offlineDiscovery?.saving == true) {
+      return;
+    }
+    setState(() {
+      _drivingReduced = true;
+      _showDiscoveryList = false;
+    });
+  }
+
+  void _exitDriving() {
+    if (!mounted) return;
+    setState(() => _drivingReduced = false);
+  }
+
+  Widget _buildDrivingView(BuildContext context) {
+    final route = _routePlanning.route;
+    final snapshot = widget.offlineDiscovery?.snapshot;
+    final offline = widget.offlineDiscovery;
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Modo conducción reducido')),
+        body: Stack(
+          children: [
+            if (route != null)
+              FlutterMap(
+                options: const MapOptions(
+                  initialCenter: _initialCenter,
+                  initialZoom: 12,
+                  interactionOptions: InteractionOptions(
+                    flags: InteractiveFlag.none,
+                  ),
+                ),
+                children: [
+                  TileLayer(
+                    urlTemplate: developmentTileUrl,
+                    userAgentPackageName: 'com.geoguideai.geoguide_ai',
+                    maxNativeZoom: 19,
+                  ),
+                  PolylineLayer(
+                    polylines: [
+                      Polyline(
+                        points: route.geometry
+                            .map((p) => LatLng(p.latitude, p.longitude))
+                            .toList(growable: false),
+                        color: Theme.of(context).colorScheme.primary,
+                        strokeWidth: 5,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'Explora solo cuando estés detenido',
+                            textAlign: TextAlign.center,
+                          ),
+                          if (route != null)
+                            Text(
+                              'Ruta estática: ${(route.distanceMeters / 1000).toStringAsFixed(1)} km · ${(route.durationSeconds / 60).round()} min planificados',
+                              textAlign: TextAlign.center,
+                            ),
+                          Text(
+                            offline == null
+                                ? 'Estado no disponible'
+                                : switch (offline.availability) {
+                                    DiscoveryAvailability.online =>
+                                      'Estado: online',
+                                    DiscoveryAvailability.cached =>
+                                      'Estado: copia offline',
+                                    DiscoveryAvailability.unavailable =>
+                                      'Estado: no disponible',
+                                    DiscoveryAvailability.error =>
+                                      'Estado: error de actualización',
+                                  },
+                            textAlign: TextAlign.center,
+                          ),
+                          if (snapshot != null)
+                            Text(
+                              'Origen y destino conservados en contexto de sesión',
+                              textAlign: TextAlign.center,
+                            ),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton.icon(
+                              onPressed: _exitDriving,
+                              icon: const Icon(Icons.exit_to_app),
+                              label: const Text('Salir de modo conducción'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

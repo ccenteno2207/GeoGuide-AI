@@ -59,6 +59,7 @@
 | P5 validation and master closure evidence | `docs/11-Master-Documentation/11-Implementation-Plan/P5-Validation-Evidence.md` |
 | P9 approved contract (human approval after documentary snapshot) | [Contract v1](docs/11-Master-Documentation/11-Implementation-Plan/P9-Phase-Contract-v1.md), [local cache design](docs/11-Master-Documentation/11-Implementation-Plan/P9-Local-Cache-Design-v1.md), [documentary evidence](docs/11-Master-Documentation/11-Implementation-Plan/P9.0-Contract-Finalization-Evidence.md) |
 | P9.1 local cache implementation and validation | [P9.1 evidence](docs/11-Master-Documentation/11-Implementation-Plan/P9.1-Validation-Evidence.md); merged at `80cb217b0c2818a4a13861ba4a6457e21c5b9043`, post-merge validation PASS, closure ready |
+| P9.2 reduced-interaction Driving evidence | [P9.2 evidence](docs/11-Master-Documentation/11-Implementation-Plan/P9.2-Validation-Evidence.md); implementation ready for human review, PR remains open |
 | Current or future phase scope | Approved phase contract when one exists; roadmap placement alone is insufficient |
 | Codex execution method | `AI_DEVELOPMENT_GUIDE.md` and current Codex handoff documents |
 | P3 completion and R3 acceptance | `docs/11-Master-Documentation/11-Implementation-Plan/P3-Definition-of-Done.md` — canonical normative source |
@@ -73,9 +74,9 @@ P7.6 COMPLETED and P7-AC-01–P7-AC-11 PASS. P8 closed at
 `7dfb0293507dcfa1eef90533c4dc9dbdd4d2a229` (PR #43): P8.6/P8.7 COMPLETED,
 physical Android PASS and Docker integration PASS, as recorded in P8.7 closure evidence.
 The frozen P8 contract exists and remains unchanged; its opening statuses are historical.
-P9.0 COMPLETED after explicit human approval and PR #45 merge at `c6f774c7121632c46c412ffc6faca83e715b1d10`. P9.1 is integrated at
-`80cb217b0c2818a4a13861ba4a6457e21c5b9043` with post-merge validation PASS and closure ready;
-P9.2 NOT_STARTED and D06 DEFERRED. P10–P12 remain planned. No automatic phase progression is authorized.
+P9.0 COMPLETED after explicit human approval and PR #45 merge at `c6f774c7121632c46c412ffc6faca83e715b1d10`. P9.1 is closed at documentary merge
+`c659ed9ae4d31cbb58174c180bfcd9762f9d441f` after post-merge validation PASS.
+P9.2 is ready for human review and D06 remains DEFERRED. P10–P12 remain planned.
 
 The P7 phase contract is an immutable normative snapshot. Its historical TLS and
 checkpoint statuses are preserved; the later final state is recorded by the P7
