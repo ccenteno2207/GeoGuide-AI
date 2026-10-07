@@ -145,3 +145,16 @@ The human-approved vulnerability policy is: Critical and High are blocking; Medi
 The approved checkpoints are P10.1 Baseline and Audit, P10.2 Tooling Gate, P10.3 Remediation, P10.4 Regression and Evidence, and P10.5 Closure. P10.2 depends on P10.1; P10.3 requires known findings and approved scanner decisions where applicable; P10.4 requires reconciled remediation; P10.5 requires P10.1–P10.4 and human closure.
 
 This contract is approved and frozen, but implementation remains unauthorized. Scanner selection, versions, licensing, network requirements, local/CI operation, false-positive handling and failure policy remain deferred to the P10.2 human gate. No scanner is installed or configured by this contract-freeze action.
+
+## Canonical declarations
+
+```ini
+DEPENDENCY_SCANNER = DEFERRED_TO_P10_2_HUMAN_GATE
+SECRET_SCANNER = DEFERRED_TO_P10_2_HUMAN_GATE
+P10.1 = BASELINE_AND_AUDIT
+P10.2 = TOOLING_GATE
+P10.3 = REMEDIATION
+P10.4 = REGRESSION_AND_EVIDENCE
+P10.5 = CLOSURE
+GIT_HISTORY_SECRET_SCAN = DECIDE_AT_P10_2_TOOLING_GATE
+```
