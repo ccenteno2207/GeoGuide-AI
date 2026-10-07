@@ -85,3 +85,7 @@ validation evidence and the current-state sources listed above. The post-P7
 reconciliation records subsequent DNS evidence without rewriting that contract.
 
 “AI optional in the core MVP” means route, POI, corridor, ranking, and factual place cards cannot depend on an LLM. It does not negate the strategic voice channel: voice remains an adapter over the same channel-independent GeoGuide use cases used by Flutter and future clients.
+
+## P9 final closure
+
+La evidencia P9.4 registra `P9_4_AUDIT = PASS_WITH_NON_BLOCKING_ITEMS`, `P9_4_HUMAN_CLOSURE = APPROVED`, `P9_4 = CLOSED` y `P9 = CLOSED`. P9.1, P9.2 y P9.3 están cerradas. Los baselines históricos P9.0–P9.3 permanecen preservados; P10 sigue `NOT_STARTED` y `AUTONOMOUS_P10 = NOT_AUTHORIZED`.
