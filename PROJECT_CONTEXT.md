@@ -41,8 +41,10 @@ Flutter analyze y APK HTTPS en PASS; son resultados del cierre P8.
 P0–P8 están completadas. P9.0 COMPLETED: contrato y anexo aprobados por decisión humana e integrados mediante PR #45 en `c6f774c7121632c46c412ffc6faca83e715b1d10`. Los estados pendientes dentro del contrato congelado reflejan su preparación anterior a esa aprobación y se preservan como evidencia histórica.
 P9.1 implementó exclusivamente Offline Data / Local Cache y fue integrado mediante PR #46 en
 `80cb217b0c2818a4a13861ba4a6457e21c5b9043`. Véase [evidencia P9.1](docs/11-Master-Documentation/11-Implementation-Plan/P9.1-Validation-Evidence.md).
-La validación post-merge pasó y P9.1 está READY_FOR_CLOSURE; el cierre formal de P9 completo no se
-declara. P9.2 NOT_STARTED; D06 DEFERRED y dispositivo físico no utilizado.
+La validación post-merge pasó y P9.1 está CLOSED; el cierre formal de P9 completo no se
+declara. P9.2 está READY_FOR_HUMAN_REVIEW en `feature/p9-2-reduced-driving`; véase
+[evidencia P9.2](docs/11-Master-Documentation/11-Implementation-Plan/P9.2-Validation-Evidence.md).
+D06 DEFERRED y dispositivo físico no utilizado.
 P10–P12 permanecen planificadas.
 El roadmap indica progresión, no autorización de ejecución.
 

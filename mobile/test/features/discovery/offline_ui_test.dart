@@ -134,6 +134,35 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     },
   );
+  testWidgets('reduced driving mode is static and exits explicitly', (
+    tester,
+  ) async {
+    final app = OfflineDiscovery(
+      source: fixtures.Source(),
+      store: MemoryStore()..value = fixtures.snapshot(),
+      backendContext: fixtures.query().backendContext,
+      now: () => fixtures.captured,
+    );
+    await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Entrar en modo conducción'));
+    await tester.pumpAndSettle();
+    expect(find.text('Modo conducción reducido'), findsOneWidget);
+    expect(find.text('Explora solo cuando estés detenido'), findsOneWidget);
+    expect(find.text('Salir de modo conducción'), findsOneWidget);
+    expect(find.text('Ver lista'), findsNothing);
+
+    await tester.binding.handlePopRoute();
+    await tester.pumpAndSettle();
+    expect(find.text('Modo conducción reducido'), findsOneWidget);
+
+    await tester.tap(find.text('Salir de modo conducción'));
+    await tester.pumpAndSettle();
+    expect(find.text('Modo conducción reducido'), findsNothing);
+    expect(find.text('Entrar en modo conducción'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
   testWidgets('consent sheet scales 2.0, accessible labels and 48px targets', (
     tester,
   ) async {
