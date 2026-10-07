@@ -4,10 +4,18 @@ import 'package:geoguide_ai/features/discovery/presentation/discovery_filter_she
 import 'package:geoguide_ai/features/discovery/presentation/poi_presentation.dart';
 
 void main() {
-  testWidgets('shows only Discovery categories with multi-select and Apply', (tester) async {
-    await tester.pumpWidget(const MaterialApp(
-      home: Scaffold(body: DiscoveryFilterSheet(appliedCategories: {...discoveryCategoryCodes})),
-    ));
+  testWidgets('shows only Discovery categories with multi-select and Apply', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: Scaffold(
+          body: DiscoveryFilterSheet(
+            appliedCategories: {...discoveryCategoryCodes},
+          ),
+        ),
+      ),
+    );
     expect(find.text('Catarata'), findsOneWidget);
     expect(find.text('Combustible'), findsNothing);
     expect(find.text('Otros'), findsNothing);
@@ -22,7 +30,9 @@ void main() {
         data: const MediaQueryData(textScaler: TextScaler.linear(2.0)),
         child: const MaterialApp(
           home: Scaffold(
-            body: DiscoveryFilterSheet(appliedCategories: {...discoveryCategoryCodes}),
+            body: DiscoveryFilterSheet(
+              appliedCategories: {...discoveryCategoryCodes},
+            ),
           ),
         ),
       ),

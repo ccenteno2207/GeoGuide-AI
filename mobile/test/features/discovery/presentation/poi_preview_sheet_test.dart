@@ -10,14 +10,14 @@ DiscoveryPoi _poi({
   double distance = 320,
   List<String> reasons = const ['NEAR_ROUTE'],
 }) => DiscoveryPoi(
-      id: 'poi-123',
-      name: 'Catarata de prueba',
-      category: category,
-      location: const RoutePoint(latitude: -12, longitude: -77),
-      distanceToRouteMeters: distance,
-      routeProgress: .4,
-      reasonCodes: reasons,
-    );
+  id: 'poi-123',
+  name: 'Catarata de prueba',
+  category: category,
+  location: const RoutePoint(latitude: -12, longitude: -77),
+  distanceToRouteMeters: distance,
+  routeProgress: .4,
+  reasonCodes: reasons,
+);
 
 void main() {
   Future<void> pumpPreview(WidgetTester tester, DiscoveryPoi poi) async {
@@ -30,7 +30,9 @@ void main() {
     );
   }
 
-  testWidgets('renders approved preview fields and friendly mappings', (tester) async {
+  testWidgets('renders approved preview fields and friendly mappings', (
+    tester,
+  ) async {
     await pumpPreview(tester, _poi());
     expect(find.text('Catarata de prueba'), findsOneWidget);
     expect(find.text('Categoría: Catarata'), findsOneWidget);
@@ -45,7 +47,9 @@ void main() {
     expect(find.text('CATEGORY_MATCH'), findsNothing);
   });
 
-  testWidgets('hides unknown reasons and never renders forbidden fields', (tester) async {
+  testWidgets('hides unknown reasons and never renders forbidden fields', (
+    tester,
+  ) async {
     await pumpPreview(tester, _poi(reasons: ['UNSUPPORTED_REASON']));
     expect(find.text('UNSUPPORTED_REASON'), findsNothing);
     expect(find.textContaining('40%'), findsNothing);

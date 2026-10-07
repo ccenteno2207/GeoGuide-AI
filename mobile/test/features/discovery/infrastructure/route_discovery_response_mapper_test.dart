@@ -28,11 +28,16 @@ void main() {
     final pois = mapper.fromJson({
       'results': [
         {
-          'id': 'poi-1', 'name': 'Museum', 'category': 'MUSEUM',
+          'id': 'poi-1',
+          'name': 'Museum',
+          'category': 'MUSEUM',
           'location': {'latitude': 10.0, 'longitude': 20.0},
-          'distanceToRouteMeters': 50, 'routeProgress': 0.25,
-          'reasonCodes': ['NEAR_ROUTE'], 'description': 'Facts',
-          'sourceLabel': 'MINCETUR', 'sourceUrl': 'https://example.test',
+          'distanceToRouteMeters': 50,
+          'routeProgress': 0.25,
+          'reasonCodes': ['NEAR_ROUTE'],
+          'description': 'Facts',
+          'sourceLabel': 'MINCETUR',
+          'sourceUrl': 'https://example.test',
           'attribution': 'Mincetur',
         },
       ],
@@ -47,9 +52,12 @@ void main() {
     final pois = mapper.fromJson({
       'results': [
         {
-          'id': 'poi-1', 'name': 'Museum', 'category': 'MUSEUM',
+          'id': 'poi-1',
+          'name': 'Museum',
+          'category': 'MUSEUM',
           'location': {'latitude': 10.0, 'longitude': 20.0},
-          'distanceToRouteMeters': 50, 'routeProgress': 0.25,
+          'distanceToRouteMeters': 50,
+          'routeProgress': 0.25,
           'reasonCodes': ['NEAR_ROUTE'],
         },
       ],

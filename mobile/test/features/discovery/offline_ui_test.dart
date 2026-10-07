@@ -279,10 +279,10 @@ void main() {
       expect(find.text('Ver detalle'), findsNothing);
       expect(find.text('Ver mapa'), findsNothing);
 
-    final semantics = tester.ensureSemantics();
-    final exit = tester.getSemantics(find.byType(FilledButton).last);
-    expect(exit.label, contains('Salir de modo conducción'));
-    semantics.dispose();
+      final semantics = tester.ensureSemantics();
+      final exit = tester.getSemantics(find.byType(FilledButton).last);
+      expect(exit.label, contains('Salir de modo conducción'));
+      semantics.dispose();
       await tester.pumpWidget(const SizedBox());
     },
   );
