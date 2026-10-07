@@ -38,3 +38,7 @@ por sí solo un alcance implementable.
 
 Roadmap position defines project progression, not implementation authorization. Every
 major phase requires scope confirmation, freeze and approval before implementation.
+
+## P9 — cierre final
+
+P9 queda cerrado tras la reconciliación documental y el gate humano final. P9.1, P9.2, P9.3 y P9.4 están cerradas. P10 permanece planificada y no iniciada.

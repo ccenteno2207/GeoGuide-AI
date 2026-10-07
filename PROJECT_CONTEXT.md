@@ -103,3 +103,38 @@ advanced generated itineraries, CarPlay/Android Auto integrations, and real-time
 is scoped by domain: accepted ADRs govern architecture, approved phase contracts govern
 authorized phase scope, `PROJECT_CONTEXT.md` records current state, and `ROADMAP.md`
 defines progression without authorizing implementation.
+
+## P9 final closure — documentary reconciliation
+
+El cierre humano final de P9.3 y P9.4 fue aprobado. La evidencia consolidada establece:
+
+```ini
+P9_1 = CLOSED
+P9_2 = CLOSED
+P9_3 = CLOSED
+P9_4_AUDIT = PASS_WITH_NON_BLOCKING_ITEMS
+P9_4_HUMAN_CLOSURE = APPROVED
+P9_4 = CLOSED
+P9 = CLOSED
+P9_IMPLEMENTATION = COMPLETED
+P10 = NOT_STARTED
+AUTONOMOUS_P10 = NOT_AUTHORIZED
+```
+
+P9.3 conserva `P9_3_28_NO_BACKUP = LIMITED_BY_NON_INVASIVE_VALIDATION`, la observación `TALKBACK_MIXED_LANGUAGE_OBSERVATION = NON_BLOCKING` y la deuda `TECH_DEBT_P9_1_001 = LOW / OPEN_NON_BLOCKING`. No existen criterios FAIL o BLOCKED.
+
+Baselines históricos preservados:
+
+```ini
+P9_CONTRACT_BASELINE = c6f774c7121632c46c412ffc6faca83e715b1d10
+P9_1_FINAL_CLOSURE_BASELINE = c659ed9ae4d31cbb58174c180bfcd9762f9d441f
+P9_2_APPROVED_HEAD = 6be2ed059aede2a8a369a3128507c00c9f7b134e
+P9_2_MERGE_COMMIT = 756c0f33cabb1558c22d353ecaf6793194b93dd6
+P9_2_FINAL_BASELINE = 756c0f33cabb1558c22d353ecaf6793194b93dd6
+P9_3_INITIAL_EVIDENCE_BASELINE = 0f05515a83130b6ee89cca1a0bbeb5928e141bad
+P9_3_FINAL_EVIDENCE_COMMIT = eeb154aba054b347eea9f350f9b8aedbe00b16d5
+P9_IMPLEMENTATION_BASELINE = 756c0f33cabb1558c22d353ecaf6793194b93dd6
+P9_PHYSICAL_VALIDATION_BASELINE = eeb154aba054b347eea9f350f9b8aedbe00b16d5
+```
+
+El cierre documental no inicia P10 ni modifica contratos, código, dependencias, infraestructura o dispositivo físico.
