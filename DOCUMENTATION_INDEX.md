@@ -105,3 +105,5 @@ La evidencia P9.4 registra `P9_4_AUDIT = PASS_WITH_NON_BLOCKING_ITEMS`, `P9_4_HU
 | P11 closure evidence | [P11 closure](docs/11-Master-Documentation/11-Implementation-Plan/P11-Closure-Evidence.md); development closure with Production Readiness backup gate blocked |
 | P12.0 discovery evidence | [P12.0 evidence](docs/11-Master-Documentation/11-Implementation-Plan/P12.0-Discovery-and-Product-Gap-Evidence.md); current capability gap, dependencies and scope decisions required |
 | P12 phase contract | [P12 contract](docs/11-Master-Documentation/11-Implementation-Plan/P12-Phase-Contract-v1.md); frozen scope for controlled Real Road Pilot preparation |
+| P12.2–P12.4 preparation evidence | [P12 preparation](docs/11-Master-Documentation/11-Implementation-Plan/P12.2-P12.4-Preparation-Evidence.md); route coverage PASS, device gate pending |
+
