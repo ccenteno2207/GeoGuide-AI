@@ -103,4 +103,5 @@ La evidencia P9.4 registra `P9_4_AUDIT = PASS_WITH_NON_BLOCKING_ITEMS`, `P9_4_HU
 | P11.4 backup capacity and deferral | [P11.4 evidence](docs/11-Master-Documentation/11-Implementation-Plan/P11.4-Backup-Capacity-and-Deferral-Evidence.md); read-only capacity, Redis classification and approved Production Readiness deferral |
 | P11.2–P11.6 operational evidence | [P11 operational evidence](docs/11-Master-Documentation/11-Implementation-Plan/P11.2-P11.6-Operational-Validation-Evidence.md); HTTPS, Compose, health, observability and deferred backup disposition |
 | P11 closure evidence | [P11 closure](docs/11-Master-Documentation/11-Implementation-Plan/P11-Closure-Evidence.md); development closure with Production Readiness backup gate blocked |
+| P12.0 discovery evidence | [P12.0 evidence](docs/11-Master-Documentation/11-Implementation-Plan/P12.0-Discovery-and-Product-Gap-Evidence.md); current capability gap, dependencies and scope decisions required |
 
