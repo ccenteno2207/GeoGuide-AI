@@ -89,3 +89,5 @@ reconciliation records subsequent DNS evidence without rewriting that contract.
 ## P9 final closure
 
 La evidencia P9.4 registra `P9_4_AUDIT = PASS_WITH_NON_BLOCKING_ITEMS`, `P9_4_HUMAN_CLOSURE = APPROVED`, `P9_4 = CLOSED` y `P9 = CLOSED`. P9.1, P9.2 y P9.3 están cerradas. Los baselines históricos P9.0–P9.3 permanecen preservados; P10 sigue `NOT_STARTED` y `AUTONOMOUS_P10 = NOT_AUTHORIZED`.
+
+| P10.2 tooling gate evidence | [P10.2 evidence](docs/11-Master-Documentation/11-Implementation-Plan/P10.2-Tooling-Gate-Evidence.md); OSV-Scanner 2.6.0 and Gitleaks 8.30.0 approved, Java SAST deferred |
