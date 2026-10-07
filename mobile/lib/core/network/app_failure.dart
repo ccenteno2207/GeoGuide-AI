@@ -5,6 +5,7 @@ enum AppFailureType {
   noRouteFound,
   validation,
   server,
+  security,
 }
 
 class AppFailure implements Exception {
@@ -20,5 +21,7 @@ class AppFailure implements Exception {
       'No hay una ruta disponible para estos puntos',
     AppFailureType.validation => 'Los puntos seleccionados no son válidos',
     AppFailureType.server => 'No se pudo completar la solicitud',
+    AppFailureType.security =>
+      'No se pudo verificar una conexión autorizada y segura',
   };
 }

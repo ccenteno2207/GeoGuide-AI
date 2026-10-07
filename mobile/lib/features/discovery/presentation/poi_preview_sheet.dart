@@ -4,11 +4,7 @@ import '../domain/discovery_poi.dart';
 import 'poi_presentation.dart';
 
 class PoiPreviewSheet extends StatelessWidget {
-  const PoiPreviewSheet({
-    super.key,
-    required this.poi,
-    this.onViewDetail,
-  });
+  const PoiPreviewSheet({super.key, required this.poi, this.onViewDetail});
 
   final DiscoveryPoi poi;
   final VoidCallback? onViewDetail;

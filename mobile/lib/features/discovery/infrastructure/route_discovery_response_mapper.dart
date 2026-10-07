@@ -71,5 +71,6 @@ class RouteDiscoveryResponseMapper {
     return value.toDouble();
   }
 
-  String? _optionalString(Object? value) => value is String && value.trim().isNotEmpty ? value.trim() : null;
+  String? _optionalString(Object? value) =>
+      value is String && value.trim().isNotEmpty ? value.trim() : null;
 }

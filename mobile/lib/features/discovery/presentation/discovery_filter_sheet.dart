@@ -30,49 +30,55 @@ class _DiscoveryFilterSheetState extends State<DiscoveryFilterSheet> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-            Text('Filtrar lugares', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: 360,
-              child: ListView(
-                children: [
-                  for (final code in discoveryCategoryCodes)
-                    CheckboxListTile(
-                      value: _draft.contains(code),
-                      title: Text(friendlyPoiCategory(code)),
-                      onChanged: (selected) => setState(() {
-                        if (selected == true) {
-                          _draft.add(code);
-                        } else {
-                          _draft.remove(code);
-                        }
-                      }),
-                      controlAffinity: ListTileControlAffinity.leading,
-                      contentPadding: EdgeInsets.zero,
+              Text(
+                'Filtrar lugares',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 360,
+                child: ListView(
+                  children: [
+                    for (final code in discoveryCategoryCodes)
+                      CheckboxListTile(
+                        value: _draft.contains(code),
+                        title: Text(friendlyPoiCategory(code)),
+                        onChanged: (selected) => setState(() {
+                          if (selected == true) {
+                            _draft.add(code);
+                          } else {
+                            _draft.remove(code);
+                          }
+                        }),
+                        controlAffinity: ListTileControlAffinity.leading,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: double.infinity,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Cancelar'),
                     ),
-                ],
+                    OutlinedButton(
+                      onPressed: () =>
+                          setState(() => _draft = {...discoveryCategoryCodes}),
+                      child: const Text('Restablecer'),
+                    ),
+                    FilledButton(
+                      onPressed: () =>
+                          Navigator.of(context)
+                              .pop(Set<String>.unmodifiable(_draft)),
+                      child: const Text('Aplicar'),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            SizedBox(
-              width: double.infinity,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Cancelar'),
-                  ),
-                  OutlinedButton(
-                    onPressed: () => setState(() => _draft = {...discoveryCategoryCodes}),
-                    child: const Text('Restablecer'),
-                  ),
-                  FilledButton(
-                    onPressed: () => Navigator.of(context).pop(Set<String>.unmodifiable(_draft)),
-                    child: const Text('Aplicar'),
-                  ),
-                ],
-              ),
-            ),
             ],
           ),
         ),

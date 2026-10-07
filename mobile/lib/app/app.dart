@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../features/discovery/application/offline_discovery.dart';
+import '../features/discovery/infrastructure/dio_snapshot_source.dart';
+import '../features/discovery/infrastructure/offline/snapshot_codec.dart';
+import '../features/discovery/infrastructure/offline/sqlite_snapshot_store.dart';
+
 import '../core/network/backend_configuration.dart';
 import '../core/network/geoguide_http_client.dart';
 import '../features/discovery/infrastructure/dio_route_discovery_repository.dart';
@@ -19,15 +24,36 @@ class GeoGuideApp extends StatelessWidget {
     PlanRoute? planRoute,
     DiscoverRoute? discoverRoute,
     String? backendBaseUrl,
+    OfflineDiscovery? offlineDiscovery,
   }) : _requestCurrentLocation = RequestCurrentLocation(
          locationRepository ?? GeolocatorLocationRepository(),
        ),
        planRoute = planRoute ?? _createPlanRoute(backendBaseUrl),
-       discoverRoute = discoverRoute ?? _createDiscoverRoute(backendBaseUrl);
+       discoverRoute = discoverRoute ?? _createDiscoverRoute(backendBaseUrl),
+       offlineDiscovery =
+           offlineDiscovery ??
+           (discoverRoute == null ? _createOffline(backendBaseUrl) : null);
 
   final RequestCurrentLocation _requestCurrentLocation;
   final PlanRoute? planRoute;
   final DiscoverRoute? discoverRoute;
+  final OfflineDiscovery? offlineDiscovery;
+  static OfflineDiscovery? _createOffline(String? value) {
+    final config = _backendConfiguration(value);
+    if (config == null) return null;
+    try {
+      return OfflineDiscovery(
+        planRoute: _createPlanRoute(value),
+        source: DioSnapshotSource(GeoGuideHttpClient(configuration: config)),
+        store: SqliteSnapshotStore(
+          directory: SqliteSnapshotStore.androidDirectory,
+        ),
+        backendContext: SnapshotCodec.backendContext(config.baseUrl),
+      );
+    } catch (_) {
+      return null;
+    }
+  }
 
   static const _backendBaseUrl = String.fromEnvironment('BACKEND_BASE_URL');
 
@@ -65,6 +91,7 @@ class GeoGuideApp extends StatelessWidget {
         requestCurrentLocation: _requestCurrentLocation,
         planRoute: planRoute,
         discoverRoute: discoverRoute,
+        offlineDiscovery: offlineDiscovery,
       ),
     );
   }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 
 import 'app_failure.dart';
@@ -36,6 +38,13 @@ class GeoGuideHttpClient {
 }
 
 AppFailure mapDioException(DioException error) {
+  if (error.type == DioExceptionType.badCertificate ||
+      error.error is HandshakeException ||
+      error.error is TlsException ||
+      error.response?.statusCode == 401 ||
+      error.response?.statusCode == 403) {
+    return const AppFailure(AppFailureType.security);
+  }
   if (error.type == DioExceptionType.connectionTimeout ||
       error.type == DioExceptionType.sendTimeout ||
       error.type == DioExceptionType.receiveTimeout) {

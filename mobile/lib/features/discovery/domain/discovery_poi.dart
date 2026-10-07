@@ -1,5 +1,18 @@
 import '../../route_planning/domain/route_point.dart';
 
+const discoveryCategoryCodes = <String>[
+  'WATERFALL',
+  'LAGOON',
+  'MOUNTAIN',
+  'FOREST',
+  'BEACH',
+  'MUSEUM',
+  'ARCHAEOLOGICAL_SITE',
+  'MONUMENT',
+  'HISTORIC_CHURCH',
+  'VIEWPOINT',
+];
+
 class DiscoveryPoi {
   const DiscoveryPoi({
     required this.id,
