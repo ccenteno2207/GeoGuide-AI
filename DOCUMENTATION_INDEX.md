@@ -99,4 +99,5 @@ La evidencia P9.4 registra `P9_4_AUDIT = PASS_WITH_NON_BLOCKING_ITEMS`, `P9_4_HU
 | P10.5 closure audit evidence | [P10.5 evidence](docs/11-Master-Documentation/11-Implementation-Plan/P10.5-Closure-Audit-Evidence.md); audit PASS, ready for human closure |
 
 | P11 contract proposal ||
+| P11.1 baseline evidence | [P11.1 evidence](docs/11-Master-Documentation/11-Implementation-Plan/P11.1-Baseline-and-Discovery-Evidence.md); VM, service, exposure and public HTTPS baseline |
 
