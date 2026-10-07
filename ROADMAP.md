@@ -15,8 +15,8 @@ The priority is the First Operational Pilot.
 | P8 | POI Experience | CLOSED |
 | P9 | Offline + Driving | NOT STARTED IMPLEMENTATION |
 | P10 | Quality + Security | PLANNED |
-| P11 | Linux Server Deployment | PLANNED |
-| P12 | Real Road Pilot | PLANNED |
+| P11 | Linux Server Deployment | CLOSED_WITH_OPEN_PRODUCTION_READINESS_DEBT |
+| P12 | Real Road Pilot | DISCOVERY_SCOPE_GATE_REQUIRED |
 
 AI does not block the core MVP. Kubernetes, microservices, and mandatory public cloud remain out of scope.
 
@@ -42,3 +42,4 @@ major phase requires scope confirmation, freeze and approval before implementati
 ## P9 — cierre final
 
 P9 queda cerrado tras la reconciliación documental y el gate humano final. P9.1, P9.2, P9.3 y P9.4 están cerradas. P10 permanece planificada y no iniciada.
+
