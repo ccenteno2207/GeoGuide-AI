@@ -3,6 +3,8 @@
 **STATUS = APPROVED_FROZEN**
 **P11_IMPLEMENTATION = AUTHORIZED_WITHIN_FROZEN_CONTRACT**
 **P11_CONTRACT_FROZEN = YES**
+**P11-BACKUP-01 = APPROVED_DEFERRED**
+**PRODUCTION_READINESS_BACKUP_GATE = BLOCKED**
 **P10_FINAL_BASELINE = 932cdc5369cb1abde4f2181eee2e2b072f04f4c5**
 
 ## 1. Purpose and authority
@@ -60,7 +62,7 @@ Restore se ejecuta únicamente sobre target aislado, preservando los volúmenes 
 - **P11.1 — DEPLOYMENT_BASELINE_AND_GAP_ANALYSIS:** baseline reproducible, exposición clasificada y rollback documentado.
 - **P11.2 — HTTPS_TLS_AND_REVERSE_PROXY:** DNS, TCP/443, handshake, cadena, SAN, fechas, hostname, HTTPS y redirect HTTP PASS.
 - **P11.3 — DEPLOYMENT_REPRODUCIBILITY_AND_SERVICE_HARDENING:** Compose reproducible, redes/volúmenes preservados, restart/health checks y mínimo cambio PASS.
-- **P11.4 — BACKUP_AND_RESTORE_VALIDATION:** backups 3-2-1 verificables y restore aislado medido con RPO/RTO.
+- **P11.4 — BACKUP_AND_RESTORE_VALIDATION:** design and capacity PASS; operational 3-2-1, off-host copy and isolated restore are approved deferrals until Production/Pilot Readiness.
 - **P11.5 — OPERATIONAL_OBSERVABILITY:** señales mínimas y procedimientos documentados.
 - **P11.6 — END_TO_END_DEPLOYMENT_VALIDATION:** smoke, regresión, exposición, persistencia, recuperación y documentación PASS.
 - **P11.7 — CLOSURE:** evidencias, baselines, findings y rollback cerrados.
@@ -93,4 +95,9 @@ P11_DEPLOYMENT_TARGET = EXISTING_GEOGUIDE_INTEGRATION_VM
 P11_IMPLEMENTATION = NOT_STARTED
 P12 = NOT_STARTED
 ```
+
+## 10.1 Approved backup amendment
+
+The original 3-2-1 and restore requirement remains normative. Under amendment P11-BACKUP-01, its operational execution is deferred during development because no off-host target is configured. This is a MEDIUM open debt that does not block P11 development but blocks Production Readiness. See [P11.4 evidence](P11.4-Backup-Capacity-and-Deferral-Evidence.md).
+
 

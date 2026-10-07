@@ -100,4 +100,5 @@ La evidencia P9.4 registra `P9_4_AUDIT = PASS_WITH_NON_BLOCKING_ITEMS`, `P9_4_HU
 
 | P11 contract proposal ||
 | P11.1 baseline evidence | [P11.1 evidence](docs/11-Master-Documentation/11-Implementation-Plan/P11.1-Baseline-and-Discovery-Evidence.md); VM, service, exposure and public HTTPS baseline |
+| P11.4 backup capacity and deferral | [P11.4 evidence](docs/11-Master-Documentation/11-Implementation-Plan/P11.4-Backup-Capacity-and-Deferral-Evidence.md); read-only capacity, Redis classification and approved Production Readiness deferral |
 
