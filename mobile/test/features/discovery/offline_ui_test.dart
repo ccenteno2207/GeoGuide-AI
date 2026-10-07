@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geoguide_ai/app/app.dart';
 import 'package:geoguide_ai/app/theme/geoguide_theme.dart';
@@ -254,6 +255,37 @@ void main() {
     semantics.dispose();
     await tester.pumpWidget(const SizedBox());
   });
+  testWidgets(
+    'Driving interaction tree has no alternate controls and map gestures are disabled',
+    (tester) async {
+      final app = OfflineDiscovery(
+        source: fixtures.Source(),
+        store: MemoryStore()..value = fixtures.snapshot(),
+        backendContext: fixtures.query().backendContext,
+        now: () => fixtures.captured,
+      );
+      await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
+      await tester.pumpAndSettle();
+      final enter = find.text('Entrar en modo conducción');
+      await tester.ensureVisible(enter);
+      await tester.tap(enter);
+      await tester.pumpAndSettle();
+
+      final map = tester.widget<FlutterMap>(find.byType(FlutterMap));
+      expect(map.options.interactionOptions.flags, InteractiveFlag.none);
+      expect(find.text('Ver lista'), findsNothing);
+      expect(find.text('Reintentar'), findsNothing);
+      expect(find.text('Usar ubicación actual'), findsNothing);
+      expect(find.text('Ver detalle'), findsNothing);
+      expect(find.text('Ver mapa'), findsNothing);
+
+    final semantics = tester.ensureSemantics();
+    final exit = tester.getSemantics(find.byType(FilledButton).last);
+    expect(exit.label, contains('Salir de modo conducción'));
+    semantics.dispose();
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
   testWidgets('consent sheet scales 2.0, accessible labels and 48px targets', (
     tester,
   ) async {
