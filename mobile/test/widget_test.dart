@@ -48,25 +48,27 @@ void main() {
     expect(find.text('Permiso de ubicación denegado'), findsOneWidget);
   });
 
-  testWidgets('renders the returned current location marker without changing route state',
-      (tester) async {
-    await tester.pumpWidget(
-      GeoGuideApp(
-        locationRepository: FakeLocationRepository(
-          const CurrentLocationResult.available(
-            LocationPoint(latitude: -12.05, longitude: -77.04),
+  testWidgets(
+    'renders the returned current location marker without changing route state',
+    (tester) async {
+      await tester.pumpWidget(
+        GeoGuideApp(
+          locationRepository: FakeLocationRepository(
+            const CurrentLocationResult.available(
+              LocationPoint(latitude: -12.05, longitude: -77.04),
+            ),
           ),
         ),
-      ),
-    );
+      );
 
-    await tester.tap(find.byTooltip('Usar ubicación actual'));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Usar ubicación actual'));
+      await tester.pumpAndSettle();
 
-    expect(find.text('Ubicación actual visible'), findsOneWidget);
-    expect(find.byIcon(Icons.my_location), findsNWidgets(2));
-    expect(find.text('Selecciona el origen en el mapa'), findsOneWidget);
-  });
+      expect(find.text('Ubicación actual visible'), findsOneWidget);
+      expect(find.byIcon(Icons.my_location), findsNWidgets(2));
+      expect(find.text('Selecciona el origen en el mapa'), findsOneWidget);
+    },
+  );
 
   testWidgets('represents unavailable location service', (tester) async {
     await tester.pumpWidget(
