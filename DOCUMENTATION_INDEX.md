@@ -95,3 +95,5 @@ La evidencia P9.4 registra `P9_4_AUDIT = PASS_WITH_NON_BLOCKING_ITEMS`, `P9_4_HU
 | P10.3 remediation and security scan evidence | [P10.3 evidence](docs/11-Master-Documentation/11-Implementation-Plan/P10.3-Remediation-and-Security-Scan-Evidence.md); OSV/Gitleaks scans, format remediation, validation results |
 
 | P10.4 regression and evidence | [P10.4 evidence](docs/11-Master-Documentation/11-Implementation-Plan/P10.4-Regression-and-Evidence.md); Docker/Testcontainers 6/6 real, security regression PASS |
+
+| P10.5 closure audit evidence | [P10.5 evidence](docs/11-Master-Documentation/11-Implementation-Plan/P10.5-Closure-Audit-Evidence.md); audit PASS, ready for human closure |
