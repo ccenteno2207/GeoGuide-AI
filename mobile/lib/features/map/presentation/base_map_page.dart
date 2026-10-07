@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../discovery/application/offline_discovery.dart';
+import '../../discovery/domain/route_snapshot.dart';
+import '../../discovery/presentation/offline_cache_sheet.dart';
+
 import '../../location/application/request_current_location.dart';
 import '../../location/domain/location_repository.dart';
 import '../../discovery/application/discover_route.dart';
@@ -21,17 +25,19 @@ class BaseMapPage extends StatefulWidget {
     required this.requestCurrentLocation,
     this.planRoute,
     this.discoverRoute,
+    this.offlineDiscovery,
   });
 
   final RequestCurrentLocation requestCurrentLocation;
   final PlanRoute? planRoute;
   final DiscoverRoute? discoverRoute;
+  final OfflineDiscovery? offlineDiscovery;
 
   @override
   State<BaseMapPage> createState() => _BaseMapPageState();
 }
 
-class _BaseMapPageState extends State<BaseMapPage> {
+class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   final MapController _mapController = MapController();
   LocationPoint? _currentLocation;
   String _locationStatus = 'Ubicación no solicitada';
@@ -51,6 +57,58 @@ class _BaseMapPageState extends State<BaseMapPage> {
     _routePlanning = RoutePlanningController(planRoute: widget.planRoute);
     _routeDiscovery = RouteDiscoveryController(
       discoverRoute: widget.discoverRoute,
+    );
+    WidgetsBinding.instance.addObserver(this);
+    widget.offlineDiscovery?.onChanged = _offlineChanged;
+    widget.offlineDiscovery?.initialize();
+  }
+
+  void _offlineChanged() {
+    if (!mounted) return;
+    final offline = widget.offlineDiscovery!;
+    final snapshot = offline.snapshot;
+    setState(() {
+      _routeDiscovery.pois = snapshot?.pois ?? const [];
+      _routeDiscovery.status = offline.message;
+      _routeDiscovery.isDiscovering = offline.busy;
+      _routeDiscovery.hasError =
+          offline.availability != DiscoveryAvailability.online;
+      _routePlanning.route = snapshot?.route;
+      if (snapshot != null) {
+        _routeDiscovery.origin = snapshot.query.origin;
+        _routeDiscovery.destination = snapshot.query.destination;
+        _routeDiscovery.appliedCategories = snapshot.query.categories.toSet();
+        _routePlanning.origin = snapshot.query.origin;
+        _routePlanning.destination = snapshot.query.destination;
+      }
+    });
+    if (snapshot == null && Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      widget.offlineDiscovery?.revalidate();
+    }
+  }
+
+  Future<void> _discoverOffline(
+    RoutePoint origin,
+    RoutePoint destination,
+    Set<String> categories, {
+    bool planFirst = false,
+  }) async {
+    final offline = widget.offlineDiscovery!;
+    await offline.discover(
+      DiscoveryQuery(
+        backendContext: offline.backendContext,
+        origin: origin,
+        destination: destination,
+        categories: categories,
+      ),
+      planFirst: planFirst,
     );
   }
 
@@ -81,12 +139,20 @@ class _BaseMapPageState extends State<BaseMapPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    widget.offlineDiscovery?.dispose();
     _mapController.dispose();
     super.dispose();
   }
 
   void _selectRoutePoint(TapPosition _, LatLng point) {
+    if (widget.offlineDiscovery?.busy == true ||
+        widget.offlineDiscovery?.saving == true) {
+      return;
+    }
+    widget.offlineDiscovery?.invalidatePending();
     setState(() {
+      if (widget.offlineDiscovery != null) _routeDiscovery.pois = const [];
       _routePlanning.selectPoint(
         RoutePoint(latitude: point.latitude, longitude: point.longitude),
       );
@@ -94,6 +160,19 @@ class _BaseMapPageState extends State<BaseMapPage> {
   }
 
   Future<void> _calculateRoute() async {
+    if (widget.offlineDiscovery case final offline?) {
+      final origin = _routePlanning.origin,
+          destination = _routePlanning.destination;
+      if (origin != null && destination != null && !offline.busy) {
+        await _discoverOffline(
+          origin,
+          destination,
+          discoveryCategoryCodes.toSet(),
+          planFirst: true,
+        );
+      }
+      return;
+    }
     setState(() {});
     await _routePlanning.calculate();
     final origin = _routePlanning.origin;
@@ -112,7 +191,9 @@ class _BaseMapPageState extends State<BaseMapPage> {
   Future<void> _openFilters() async {
     final origin = _routePlanning.origin;
     final destination = _routePlanning.destination;
-    if (origin == null || destination == null || _routePlanning.route == null) return;
+    if (origin == null || destination == null || _routePlanning.route == null) {
+      return;
+    }
     final categories = await showModalBottomSheet<Set<String>>(
       context: context,
       isScrollControlled: true,
@@ -121,6 +202,10 @@ class _BaseMapPageState extends State<BaseMapPage> {
       ),
     );
     if (!mounted || categories == null) return;
+    if (widget.offlineDiscovery != null) {
+      await _discoverOffline(origin, destination, categories);
+      return;
+    }
     await _routeDiscovery.discover(
       origin: origin,
       destination: destination,
@@ -137,6 +222,10 @@ class _BaseMapPageState extends State<BaseMapPage> {
   }
 
   Future<void> _retryDiscovery() async {
+    if (widget.offlineDiscovery case final offline?) {
+      await offline.retry();
+      return;
+    }
     final origin = _routePlanning.origin;
     final destination = _routePlanning.destination;
     if (origin == null || destination == null) return;
@@ -148,7 +237,15 @@ class _BaseMapPageState extends State<BaseMapPage> {
     if (mounted) setState(() {});
   }
 
-  Future<void> _showPoiPreview(DiscoveryPoi poi) {
+  Future<void> _showPoiPreview(DiscoveryPoi poi) async {
+    final offline = widget.offlineDiscovery;
+    if (offline != null) {
+      await offline.revalidate();
+      if (!mounted ||
+          !(offline.snapshot?.pois.any((p) => identical(p, poi)) ?? false)) {
+        return;
+      }
+    }
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -162,7 +259,15 @@ class _BaseMapPageState extends State<BaseMapPage> {
     );
   }
 
-  Future<void> _showPoiDetail(DiscoveryPoi poi) {
+  Future<void> _showPoiDetail(DiscoveryPoi poi) async {
+    final offline = widget.offlineDiscovery;
+    if (offline != null) {
+      await offline.revalidate();
+      if (!mounted ||
+          !(offline.snapshot?.pois.any((p) => identical(p, poi)) ?? false)) {
+        return;
+      }
+    }
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -176,6 +281,16 @@ class _BaseMapPageState extends State<BaseMapPage> {
       appBar: AppBar(
         title: const Text('GeoGuide AI'),
         actions: [
+          if (widget.offlineDiscovery case final offline?)
+            IconButton(
+              tooltip: 'Gestionar copia offline',
+              icon: const Icon(Icons.offline_pin),
+              onPressed: () => showModalBottomSheet<void>(
+                context: context,
+                isScrollControlled: true,
+                builder: (_) => OfflineCacheSheet(controller: offline),
+              ),
+            ),
           IconButton(
             tooltip: 'Usar ubicación actual',
             onPressed: _isRequestingLocation ? null : _requestLocation,
@@ -269,11 +384,11 @@ class _BaseMapPageState extends State<BaseMapPage> {
                             poi.location.latitude,
                             poi.location.longitude,
                           ),
-                          width: 40,
-                          height: 40,
+                          width: 48,
+                          height: 48,
                           child: IconButton(
-                          tooltip: 'Vista previa de ${poi.name}',
-                          onPressed: () => _showPoiPreview(poi),
+                            tooltip: 'Vista previa de ${poi.name}',
+                            onPressed: () => _showPoiPreview(poi),
                             icon: const Icon(
                               Icons.place,
                               color: Colors.deepOrange,
@@ -284,90 +399,149 @@ class _BaseMapPageState extends State<BaseMapPage> {
                       )
                       .toList(growable: false),
                 ),
-              const SimpleAttributionWidget(source: Text(attribution)),
+              Align(
+                alignment: Alignment.topRight,
+                child: ColoredBox(
+                  color: Theme.of(context).colorScheme.surface,
+                  child: const Padding(
+                    padding: EdgeInsets.all(4),
+                    child: Wrap(
+                      children: [Text('flutter_map | © '), Text(attribution)],
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
           Positioned(
             left: 16,
             right: 16,
             bottom: 24,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (_routePlanning.origin != null &&
-                    _routePlanning.destination != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: FilledButton.icon(
-                      onPressed: _routePlanning.canPlan
-                          ? _calculateRoute
-                          : null,
-                      icon: _routePlanning.isCalculating
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.alt_route),
-                      label: const Text('Calcular ruta'),
-                    ),
-                  ),
-                if (_routePlanning.route != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: FilledButton.tonalIcon(
-                      onPressed: _routeDiscovery.isDiscovering ? null : _openFilters,
-                      icon: const Icon(Icons.filter_alt),
-                      label: Text('Categorías: ${_filterSummary()}'),
-                    ),
-                  ),
-                if (_routeDiscovery.pois.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: FilledButton.tonalIcon(
-                      onPressed: () => setState(() => _showDiscoveryList = !_showDiscoveryList),
-                      icon: Icon(_showDiscoveryList ? Icons.map : Icons.list),
-                      label: Text(_showDiscoveryList ? 'Ver mapa' : 'Ver lista'),
-                    ),
-                  ),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _routeDiscovery.status ?? _routePlanning.status,
-                          textAlign: TextAlign.center,
+            top: 80,
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (_routePlanning.origin != null &&
+                        _routePlanning.destination != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: FilledButton.icon(
+                          onPressed:
+                              _routePlanning.canPlan &&
+                                  !_routeDiscovery.isDiscovering
+                              ? _calculateRoute
+                              : null,
+                          icon: _routePlanning.isCalculating
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.alt_route),
+                          label: const Text('Calcular ruta'),
                         ),
-                        Text(_locationStatus, textAlign: TextAlign.center),
-                        if (_routeDiscovery.isDiscovering)
-                          Semantics(
-                            liveRegion: true,
-                            label: 'Cargando lugares de la ruta',
-                            child: Padding(
-                              padding: EdgeInsets.only(top: 8),
-                              child: CircularProgressIndicator(),
-                            ),
+                      ),
+                    if (_routePlanning.route != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: FilledButton.tonalIcon(
+                          onPressed: _routeDiscovery.isDiscovering
+                              ? null
+                              : _openFilters,
+                          icon: const Icon(Icons.filter_alt),
+                          label: Text('Categorías: ${_filterSummary()}'),
+                        ),
+                      ),
+                    if (_routeDiscovery.pois.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: FilledButton.tonalIcon(
+                          onPressed: () => setState(
+                            () => _showDiscoveryList = !_showDiscoveryList,
                           ),
-                        if (_routeDiscovery.hasError)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: OutlinedButton.icon(
-                              onPressed: _routeDiscovery.isDiscovering ? null : _retryDiscovery,
-                              icon: const Icon(Icons.refresh),
-                              label: const Text('Reintentar'),
-                            ),
+                          icon: Icon(
+                            _showDiscoveryList ? Icons.map : Icons.list,
                           ),
-                        if (_routeDiscovery.pois.isEmpty &&
-                            _routeDiscovery.appliedCategories.length != discoveryCategoryCodes.length &&
-                            !_routeDiscovery.isDiscovering)
-                          const Text('No encontramos lugares de estas categorías para esta ruta.'),
-                      ],
+                          label: Text(
+                            _showDiscoveryList ? 'Ver mapa' : 'Ver lista',
+                          ),
+                        ),
+                      ),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _routeDiscovery.status ?? _routePlanning.status,
+                              textAlign: TextAlign.center,
+                            ),
+                            Text(_locationStatus, textAlign: TextAlign.center),
+                            if (widget.offlineDiscovery
+                                case final offline?) ...[
+                              if (offline.snapshot case final snapshot?)
+                                Text(
+                                  'Ruta: ${(snapshot.route.distanceMeters / 1000).toStringAsFixed(1)} km · ${(snapshot.route.durationSeconds / 60).round()} min planificados\n'
+                                  'Origen: ${snapshot.query.origin.latitude.toStringAsFixed(4)}, ${snapshot.query.origin.longitude.toStringAsFixed(4)}\n'
+                                  'Destino: ${snapshot.query.destination.latitude.toStringAsFixed(4)}, ${snapshot.query.destination.longitude.toStringAsFixed(4)}\n'
+                                  'Corredor: ${snapshot.query.corridorMeters} m · hasta ${snapshot.query.limit} lugares',
+                                  textAlign: TextAlign.center,
+                                ),
+                              Semantics(
+                                liveRegion: true,
+                                child: Text(switch (offline.availability) {
+                                  DiscoveryAvailability.online => 'Online',
+                                  DiscoveryAvailability.cached =>
+                                    'Copia offline · vigencia máxima 24 horas',
+                                  DiscoveryAvailability.unavailable =>
+                                    'No disponible',
+                                  DiscoveryAvailability.error =>
+                                    'Error de actualización',
+                                }),
+                              ),
+                              if (offline.cacheMessage case final message?)
+                                Text(message, textAlign: TextAlign.center),
+                            ],
+                            if (_routeDiscovery.isDiscovering)
+                              Semantics(
+                                liveRegion: true,
+                                label: 'Cargando lugares de la ruta',
+                                child: Padding(
+                                  padding: EdgeInsets.only(top: 8),
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ),
+                            if (_routeDiscovery.hasError)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8),
+                                child: OutlinedButton.icon(
+                                  onPressed: _routeDiscovery.isDiscovering
+                                      ? null
+                                      : _retryDiscovery,
+                                  icon: const Icon(Icons.refresh),
+                                  label: const Text('Reintentar'),
+                                ),
+                              ),
+                            if (_routeDiscovery.pois.isEmpty &&
+                                _routeDiscovery.appliedCategories.length !=
+                                    discoveryCategoryCodes.length &&
+                                !_routeDiscovery.isDiscovering)
+                              const Text(
+                                'No encontramos lugares de estas categorías para esta ruta.',
+                              ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
           if (_showDiscoveryList && _routeDiscovery.pois.isNotEmpty)
@@ -387,7 +561,10 @@ class _BaseMapPageState extends State<BaseMapPage> {
                       return ListTile(
                         key: ValueKey('discovery-list-${poi.id}'),
                         title: Text(poi.name),
-                        subtitle: Text(poiDistanceLabel(poi) ?? friendlyPoiCategory(poi.category)),
+                        subtitle: Text(
+                          poiDistanceLabel(poi) ??
+                              friendlyPoiCategory(poi.category),
+                        ),
                         onTap: () => _showPoiPreview(poi),
                       );
                     },

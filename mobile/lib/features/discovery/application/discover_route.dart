@@ -11,5 +11,9 @@ class DiscoverRoute {
     required RoutePoint origin,
     required RoutePoint destination,
     Set<String> categories = const {},
-  }) => _repository.discover(origin: origin, destination: destination, categories: categories);
+  }) => _repository.discover(
+    origin: origin,
+    destination: destination,
+    categories: categories,
+  );
 }

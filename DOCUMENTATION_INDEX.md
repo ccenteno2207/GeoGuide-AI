@@ -57,7 +57,8 @@
 | P8 frozen contract | `docs/11-Master-Documentation/11-Implementation-Plan/P8-Phase-Contract-v1.md` |
 | P8 final state and closure evidence | `docs/11-Master-Documentation/11-Implementation-Plan/P8.7-Final-Audit-and-Closure.md` and PR #43 |
 | P5 validation and master closure evidence | `docs/11-Master-Documentation/11-Implementation-Plan/P5-Validation-Evidence.md` |
-| P9 contract awaiting final human approval | [Contract v1](docs/11-Master-Documentation/11-Implementation-Plan/P9-Phase-Contract-v1.md), [local cache design](docs/11-Master-Documentation/11-Implementation-Plan/P9-Local-Cache-Design-v1.md), [documentary evidence](docs/11-Master-Documentation/11-Implementation-Plan/P9.0-Contract-Finalization-Evidence.md) |
+| P9 approved contract (human approval after documentary snapshot) | [Contract v1](docs/11-Master-Documentation/11-Implementation-Plan/P9-Phase-Contract-v1.md), [local cache design](docs/11-Master-Documentation/11-Implementation-Plan/P9-Local-Cache-Design-v1.md), [documentary evidence](docs/11-Master-Documentation/11-Implementation-Plan/P9.0-Contract-Finalization-Evidence.md) |
+| P9.1 local cache implementation and validation | [P9.1 evidence](docs/11-Master-Documentation/11-Implementation-Plan/P9.1-Validation-Evidence.md); feature branch pending review/integration |
 | Current or future phase scope | Approved phase contract when one exists; roadmap placement alone is insufficient |
 | Codex execution method | `AI_DEVELOPMENT_GUIDE.md` and current Codex handoff documents |
 | P3 completion and R3 acceptance | `docs/11-Master-Documentation/11-Implementation-Plan/P3-Definition-of-Done.md` — canonical normative source |
@@ -72,8 +73,7 @@ P7.6 COMPLETED and P7-AC-01–P7-AC-11 PASS. P8 closed at
 `7dfb0293507dcfa1eef90533c4dc9dbdd4d2a229` (PR #43): P8.6/P8.7 COMPLETED,
 physical Android PASS and Docker integration PASS, as recorded in P8.7 closure evidence.
 The frozen P8 contract exists and remains unchanged; its opening statuses are historical.
-P9 is NOT_STARTED_IMPLEMENTATION; P9.0 is AWAITING_FINAL_CONTRACT_APPROVAL. Contract v1 is READY_FOR_FINAL_HUMAN_REVIEW; D01–D05 are resolved documentally, D06 is DEFERRED. P9.1 is NOT_STARTED and implementation is NOT_AUTHORIZED. P10–P12 remain planned. No active instruction may turn this
-progression into automatic scope.
+P9.0 COMPLETED after explicit human approval and PR #45 merge at `c6f774c7121632c46c412ffc6faca83e715b1d10`. P9.1 is implemented on its feature branch pending human review/integration; P9.2 NOT_STARTED and D06 DEFERRED. P10–P12 remain planned. No automatic phase progression is authorized.
 
 The P7 phase contract is an immutable normative snapshot. Its historical TLS and
 checkpoint statuses are preserved; the later final state is recorded by the P7

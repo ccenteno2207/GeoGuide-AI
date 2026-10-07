@@ -17,46 +17,53 @@ class PoiDetailSheet extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
           child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(poi.name, style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 8),
-            Text('Categoría: ${friendlyPoiCategory(poi.category)}'),
-            if (poi.description case final description? when description.trim().isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Text(description),
-            ],
-            if (poiDistanceLabel(poi) case final distance?) ...[
-              const SizedBox(height: 12),
-              Text(distance),
-            ],
-            for (final reason in poi.reasonCodes.map(friendlyPoiReason).whereType<String>()) ...[
-              const SizedBox(height: 4),
-              Text(reason),
-            ],
-            if (poi.sourceLabel case final source? when source.trim().isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Text('Fuente', style: Theme.of(context).textTheme.labelLarge),
-              Text(source),
-            ],
-            if (poi.attribution case final attribution? when attribution.trim().isNotEmpty)
-              Text(attribution),
-            if (poi.sourceUrl case final sourceUrl? when sourceUrl.trim().isNotEmpty)
-              Semantics(
-                link: true,
-                label: 'URL de la fuente',
-                child: SelectableText(sourceUrl),
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(poi.name, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 8),
+              Text('Categoría: ${friendlyPoiCategory(poi.category)}'),
+              if (poi.description case final description?
+                  when description.trim().isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(description),
+              ],
+              if (poiDistanceLabel(poi) case final distance?) ...[
+                const SizedBox(height: 12),
+                Text(distance),
+              ],
+              for (final reason
+                  in poi.reasonCodes
+                      .map(friendlyPoiReason)
+                      .whereType<String>()) ...[
+                const SizedBox(height: 4),
+                Text(reason),
+              ],
+              if (poi.sourceLabel case final source?
+                  when source.trim().isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text('Fuente', style: Theme.of(context).textTheme.labelLarge),
+                Text(source),
+              ],
+              if (poi.attribution case final attribution?
+                  when attribution.trim().isNotEmpty)
+                Text(attribution),
+              if (poi.sourceUrl case final sourceUrl?
+                  when sourceUrl.trim().isNotEmpty)
+                Semantics(
+                  link: true,
+                  label: 'URL de la fuente',
+                  child: SelectableText(sourceUrl),
+                ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Volver'),
+                ),
               ),
-            const SizedBox(height: 20),
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Volver'),
-              ),
-            ),
-          ],
+            ],
           ),
         ),
       ),

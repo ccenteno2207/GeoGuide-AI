@@ -1,11 +1,9 @@
 import '../domain/discovery_poi.dart';
 
-const discoveryCategoryCodes = <String>[
-  'WATERFALL', 'LAGOON', 'MOUNTAIN', 'FOREST', 'BEACH', 'MUSEUM',
-  'ARCHAEOLOGICAL_SITE', 'MONUMENT', 'HISTORIC_CHURCH', 'VIEWPOINT',
-];
+export '../domain/discovery_poi.dart' show discoveryCategoryCodes;
 
-String friendlyPoiCategory(String code) => const {
+String friendlyPoiCategory(String code) =>
+    const {
       'WATERFALL': 'Catarata',
       'LAGOON': 'Laguna',
       'MOUNTAIN': 'Montaña',
@@ -16,12 +14,13 @@ String friendlyPoiCategory(String code) => const {
       'MONUMENT': 'Monumento',
       'HISTORIC_CHURCH': 'Iglesia histórica',
       'VIEWPOINT': 'Mirador',
-    }[code] ?? code;
+    }[code] ??
+    code;
 
 String? friendlyPoiReason(String code) => const {
-      'NEAR_ROUTE': 'Cerca del trazado',
-      'CATEGORY_MATCH': 'Coincide con la categoría seleccionada',
-    }[code];
+  'NEAR_ROUTE': 'Cerca del trazado',
+  'CATEGORY_MATCH': 'Coincide con la categoría seleccionada',
+}[code];
 
 String? poiDistanceLabel(DiscoveryPoi poi) {
   final distance = poi.distanceToRouteMeters;

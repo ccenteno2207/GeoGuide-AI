@@ -38,8 +38,8 @@ permanece congelado; sus estados de apertura son históricos. P8.6 y P8.7 están
 COMPLETED; Android físico, ubicación precisa puntual y accesibilidad están en PASS.
 La evidencia de cierre registra Testcontainers 6/6, backend 59/59, Flutter 27 tests,
 Flutter analyze y APK HTTPS en PASS; son resultados del cierre P8.
-P0–P8 están completadas. P9 permanece NOT_STARTED_IMPLEMENTATION: P9.0 solo
-queda AWAITING_FINAL_CONTRACT_APPROVAL. El [contrato P9 v1](docs/11-Master-Documentation/11-Implementation-Plan/P9-Phase-Contract-v1.md) y su anexo contienen D01–D05 resueltos documentalmente; D06 permanece DEFERRED. Contenido listo para revisión final, sin aprobación/freeze ni autorización de P9.1.
+P0–P8 están completadas. P9.0 COMPLETED: contrato y anexo aprobados por decisión humana e integrados mediante PR #45 en `c6f774c7121632c46c412ffc6faca83e715b1d10`. Los estados pendientes dentro del contrato congelado reflejan su preparación anterior a esa aprobación y se preservan como evidencia histórica.
+P9.1 implementa exclusivamente Offline Data / Local Cache en la rama `feature/p9-1-offline-cache`, pendiente de revisión e integración. Véase [evidencia P9.1](docs/11-Master-Documentation/11-Implementation-Plan/P9.1-Validation-Evidence.md). No se declara P9.1 integrado en main ni P9 cerrado. P9.2 NOT_STARTED; D06 DEFERRED y dispositivo físico no utilizado.
 P10–P12 permanecen planificadas.
 El roadmap indica progresión, no autorización de ejecución.
 
