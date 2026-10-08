@@ -1,7 +1,7 @@
 # GPS Follow Mode Contract Proposal v0.1
 
-STATUS = PROPOSED
-GPS_CONTRACT = PROPOSED_ONLY
+STATUS = APPROVED_FROZEN
+GPS_CONTRACT = APPROVED_FROZEN
 P12_CONTRACT = UNCHANGED
 BASELINE = 7f6ee6045cc42d5d6a0275c8e1d4f33b27267df3
 
@@ -18,7 +18,7 @@ Activation and deactivation are explicit. Manual map interaction pauses camera f
 - `BaseMapPage` and `MapController` remain presentation integration points.
 - A controller/application service owns follow state, lifecycle pause/resume, permission outcomes and sample filtering.
 - Presentation owns marker/camera rendering and user controls; it does not own platform permission or persistence logic.
-- Existing Driving UI remains a reduced-interaction mode. Follow Mode must be unavailable or frozen during active Driving unless an approved safety review explicitly permits a passive display.
+- Existing Driving UI remains a reduced-interaction mode. Follow Mode must be unavailable or frozen during active Driving Follow Mode may continue as a passive display when activated before Driving; no controls are presented in active Driving.
 
 Proposed state machine: INACTIVE, REQUESTING_PERMISSION, ACTIVE, CAMERA_PAUSED_BY_USER, PAUSED_LIFECYCLE, SIGNAL_DEGRADED and STOPPED.
 
@@ -75,12 +75,5 @@ Depends on the existing Flutter map/location stack, Android physical device, P12
 3. Confirmation of Driving UI behavior while Follow Mode is active.
 4. Confirmation of any battery/accuracy evidence thresholds after technical measurement.
 
-Until approved:
+Frozen governance state:`r`n`r`n```ini`r`nGPS_CONTRACT = APPROVED_FROZEN`r`nGPS_IMPLEMENTATION = AUTHORIZED_WITHIN_FROZEN_CONTRACT`r`nP12_CONTRACT = UNCHANGED`r`nP12_3 = DEVICE_STATIONARY_VALIDATION_PENDING`r`nP12_5 = FIELD_EXECUTION_NOT_AUTHORIZED`r`n```
 
-```ini
-GPS_CONTRACT = PROPOSED_ONLY
-GPS_IMPLEMENTATION = NOT_AUTHORIZED
-P12_CONTRACT = UNCHANGED
-P12_3 = DEVICE_STATIONARY_VALIDATION_PENDING
-P12_5 = FIELD_EXECUTION_NOT_AUTHORIZED
-```
