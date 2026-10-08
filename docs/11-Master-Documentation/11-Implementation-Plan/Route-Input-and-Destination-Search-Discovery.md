@@ -21,7 +21,7 @@ DESTINATION = SEARCHED_PLACE_OR_POI
 MAP_SELECTION_FALLBACK = REQUIRED
 WAYPOINTS = OUT_OF_SCOPE
 DRIVING_CHANGES = NONE
-CONTRACT_STATUS = PROPOSED_NOT_APPROVED
+CONTRACT_STATUS = DESIGN_APPROVED_OPERATIONAL_GATES_PENDING
 ```
 
 Valid examples include Canta, Plaza de Armas de Canta, Ica, Huacachina, Nazca and Paracas. Street names with house numbers, such as Avenida Perú 2469, are rejected as out of scope.
@@ -93,20 +93,20 @@ Represent empty, timeout, rate-limited, unauthorized, provider-unavailable and m
 - Approve operational resources and data refresh/licence policy.
 - Place/POI scope and postal exclusion are already approved.
 - Waypoints are already out of scope.
-- Approve retention and privacy treatment for submitted query text.
+- Privacy and retention design are human-approved; operational verification remains required.
 
-Until these decisions are resolved, this proposal remains `PROPOSED_ONLY` and no implementation is authorized.
+The design is HUMAN_APPROVED. Provider and operational decisions remain pending as specified in sections J/K; implementation and operational freeze are not authorized.
 
 ## J. Remediación contractual para aprobación humana
 
-Esta sección precisa y reemplaza las alternativas abiertas de arquitectura, privacidad y AC anteriores. Las decisiones funcionales de PLACES_AND_POIS_ONLY ya están aprobadas; proveedor, frontera API, recursos y políticas siguientes son PROPUESTAS pendientes. No constituye aprobación, congelamiento ni autorización de implementación.
+Esta sección precisa y reemplaza las alternativas abiertas de arquitectura, privacidad y AC anteriores. Las decisiones funcionales de PLACES_AND_POIS_ONLY ya están aprobadas; arquitectura, frontera API, combinación de fuentes y privacidad están aprobadas como diseño. Proveedor y recursos operativos siguen pendientes; no se autoriza implementación ni congelamiento operativo.
 
 ```ini
-CONTRACT_STATUS = PROPOSED_NOT_APPROVED
+CONTRACT_STATUS = DESIGN_APPROVED_OPERATIONAL_GATES_PENDING
 PREFERRED_CANDIDATE = PHOTON_SELF_HOSTED
 PROVIDER_SELECTED = NO
 INFRA_DEPLOYMENT = NOT_AUTHORIZED
-PR_71_MERGE = BLOCKED_PENDING_HUMAN_APPROVAL
+PR_71_DOCUMENTARY_MERGE = HUMAN_AUTHORIZED
 IMPLEMENTATION = NOT_AUTHORIZED
 ```
 
@@ -122,7 +122,7 @@ GPS asigna origen mediante acción explícita y no invoca geocodificación ni se
 
 ### Frontera HTTP propuesta, sin implementación
 
-`POST /api/v1/places/search` sería una capacidad nueva, sujeta a aprobación de API y ADR aplicable. No modifica los contratos de routes/plan ni routes/discover.
+`POST /api/v1/places/search` sería una capacidad nueva, aprobada como diseño contractual, con ADR aplicable pendiente antes de construcción. No modifica los contratos de routes/plan ni routes/discover.
 
 Entrada: query (texto Unicode normalizado, no vacío), sourceMode (CURATED_ONLY por defecto o EXTERNAL_EXPLICIT), requestId opaco generado por cliente. País fijo PE, sin coordenadas GPS, dirección postal, waypoint ni identidad personal. No se expone URL configurable por el usuario.
 
@@ -136,11 +136,11 @@ Cliente usa generaciones locales; solo la generación vigente puede actualizar e
 
 No hay rechazo indiscriminado de dígitos: un nombre de POI puede contener números. La política combina aviso de alcance y allow-list de tipos del proveedor; direcciones/calles/números postales no se devuelven como candidatos. Queries ambiguas se resuelven con resultados tipados o mensaje de alcance, sin afirmar que un patrón textual identifica siempre una dirección.
 
-### Privacidad y retención propuestas — HUMAN_APPROVAL_REQUIRED
+### Privacidad y retención — HUMAN_APPROVED_DESIGN
 
 Sin historial persistente, sin caché compartida inicial y sin coordenadas GPS implícitas hacia buscadores. Query y candidatos viven en memoria durante procesamiento y sesión editable; se liberan al finalizar/cancelar la consulta o cerrar la sesión, sin prometer borrado criptográfico de memoria administrada.
 
-Aplicación, proxy y servicio autoalojado deben excluir cuerpos/query/coordenadas de access logs, traces, métricas, crash reports y diagnósticos. Usar POST evita texto en URL, pero no sustituye la configuración de logging. Solo registrar código de resultado, duración y contador agregado sin requestId persistente ni identidad de dispositivo. Retención propuesta de métricas técnicas agregadas: siete días con acceso de operador limitado. No incluirlas en backups de consultas ni persistir payloads. Un proveedor ajeno no es elegible si no permite verificar esta política.
+Aplicación, proxy y servicio autoalojado deben excluir cuerpos/query/coordenadas de access logs, traces, métricas, crash reports y diagnósticos. Usar POST evita texto en URL, pero no sustituye la configuración de logging. Solo registrar código de resultado, duración y contador agregado sin requestId persistente ni identidad de dispositivo. Retención máxima aprobada de métricas técnicas agregadas: siete días con acceso de operador limitado, sin identificadores personales ni posibilidad práctica de reconstruir consultas individuales. No incluirlas en backups de consultas ni persistir payloads. Un proveedor ajeno no es elegible si no permite verificar esta política.
 
 El snapshot de ruta existente conserva sus puntos bajo el contrato offline y consentimiento existentes; “sin historial de búsqueda” no significa que ese snapshot no tenga coordenadas. No ampliar su retención ni capturar datos adicionales. Validar minimización en todos los componentes antes de declarar PASS de privacidad.
 
@@ -184,6 +184,23 @@ Rollback funcional futuro: deshabilitar búsqueda y conservar selección manual,
 
 ### Decisiones humanas pendientes y riesgos residuales
 
-Aprobar: puerto/frontera API nueva y ADR; combinación catálogo/ampliación; proveedor y versión tras evaluación; recursos/cuota/presupuesto/propietario operativo; límites propuestos; privacidad y retención siete días de métricas agregadas; corpus y criterios de cobertura. Alcance postal, waypoints y Driving ya están resueltos y no requieren nueva aprobación.
+Aprobados como diseño: orquestación Spring Boot, puerto SearchPlaces, frontera POST /api/v1/places/search con entradas/salidas/errores/validaciones, combinación catálogo primero y ampliación explícita, identidades separadas y privacidad/retención máxima de siete días. Pendientes: ADR aplicable antes de construcción, proveedor y versión tras evaluación, recursos/cuota/presupuesto/propietario operativo, límites operativos propuestos y corpus/criterios de cobertura. Alcance postal, waypoints y Driving ya están resueltos y no requieren nueva aprobación.
 
-Riesgos: cobertura incompleta, POIs homónimos, licencias de datasets, fuga por logs de infraestructura, falta de extracto compatible, carga del índice y lugares fuera del grafo GraphHopper. No hay cobertura peruana ni coste demostrado todavía. El mínimo es implementable después de resolver estos gates; esta propuesta no autoriza API, servicios ni despliegues.
+Riesgos: cobertura incompleta, POIs homónimos, licencias de datasets, fuga por logs de infraestructura, falta de extracto compatible, carga del índice y lugares fuera del grafo GraphHopper. No hay cobertura peruana ni coste demostrado todavía. El mínimo es implementable después de resolver estos gates; esta aprobación de diseño no autoriza implementación de API, servicios ni despliegues.
+
+## K. Aprobación humana de diseño y cierre documental
+
+El propietario aprobó el diseño funcional y arquitectónico, la frontera API contractual y la política de privacidad. No existe todavía el endpoint propuesto ni se han implementado controller, servicio o adaptador. Photon sigue siendo candidato y no proveedor seleccionado. La aprobación documental no aprueba infraestructura ni presupuesto.
+
+```ini
+ROUTE_INPUT_DESIGN = APPROVED
+ROUTE_INPUT_PROVIDER = NOT_SELECTED
+ROUTE_INPUT_IMPLEMENTATION = NOT_AUTHORIZED
+ROUTE_INPUT_INFRASTRUCTURE = NOT_AUTHORIZED
+RI_AC_EXECUTION = NOT_STARTED
+CONTRACT_OPERATIONAL_FREEZE = NOT_AUTHORIZED
+P12_CONTRACT = UNCHANGED
+P12_5 = NOT_AUTHORIZED
+```
+
+RI-AC-01 a RI-AC-13 están definidos y NOT_EXECUTED. Para iniciar construcción se requiere resolver evaluación/selección de proveedor, cobertura Perú, dimensionamiento, costes, licencias, operación, cuotas y ADR aplicable; obtener autorización explícita de construcción y despliegue y completar congelamiento operativo mediante gobierno. La verificabilidad de privacidad debe demostrarse antes de producción. Este checkpoint autoriza únicamente integrar el documento mediante PR #71 y detenerse.
