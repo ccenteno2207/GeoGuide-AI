@@ -45,7 +45,7 @@ La validación post-merge pasó y P9.1 está CLOSED; el cierre formal de P9 comp
 declara. P9.2 está CLOSED en `756c0f33cabb1558c22d353ecaf6793194b93dd6`; véase
 [evidencia P9.2](docs/11-Master-Documentation/11-Implementation-Plan/P9.2-Validation-Evidence.md).
 D06 DEFERRED, dispositivo físico no utilizado y TalkBack físico no ejecutado.
-P10 está cerrada; P11 está cerrada con la deuda P11-BACKUP-01 abierta que bloquea Production Readiness; P12.0 discovery está en curso y P12 permanece sin implementación autorizada.
+P10 está cerrada; P11 está cerrada con la deuda P11-BACKUP-01 abierta que bloquea Production Readiness; P12 tiene contrato congelado, P12.2 PASS, P12.3 CLOSED_PASS_STATIONARY y P12.4 PREPARED_FOR_HUMAN_READINESS_REVIEW. P12.5 permanece NOT_AUTHORIZED; no hay validación dinámica de carretera.
 El roadmap indica progresión, no autorización de ejecución.
 
 El baseline de cierre P7 es `ada26c8881cdefb2d8f0ede679a8ebb3996ab61c` (PR #31).
@@ -138,4 +138,3 @@ P9_PHYSICAL_VALIDATION_BASELINE = eeb154aba054b347eea9f350f9b8aedbe00b16d5
 ```
 
 El cierre documental no inicia P10 ni modifica contratos, código, dependencias, infraestructura o dispositivo físico.
-
