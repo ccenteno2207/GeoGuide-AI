@@ -148,20 +148,43 @@ Each provider run must persist a reviewable, non-personal scoring record contain
 | Top-1 correct | Preferred candidate is ranked first. | 0 for that query. |
 | Top-3 correct | Preferred candidate occurs in positions 1–3. | 0 for that query. |
 | Top-5 correct | Preferred candidate occurs in positions 1–5. | 0 for that query. |
-| Recall@10 | At least one geographically acceptable candidate occurs in positions 1–10. | 0 for that query. |
+| Hit@10 | At least one geographically acceptable candidate occurs in positions 1–10. | 0 for that query. |
 | MRR@10 | Reciprocal rank of the first geographically acceptable candidate within positions 1–10. | 0 for that query. |
 
-For a corpus of `N` queries, Top-k and Recall@10 are the mean of their
-per-query binary values. `MRR@10 = (Σ reciprocal-rank_i) / N`. A candidate is
+For a corpus of `N` queries, Top-k and Hit@10 are the mean of their
+per-query binary values. `MRR@10 = (Σ reciprocal-rank_i) / N`. `Hit@10` is intentionally distinct from recall: it only records whether at least one acceptable candidate appears in the first ten results. `Recall@10` is reserved for a future evaluation with a complete reference set of relevant results. A candidate is
 **preferred** only when the corpus predefines the exact intended place. A
 homonymous query with no safely preferred identity is scored for acceptable
-recall and presentation quality, but must not be treated as a correct automatic
+candidate recovery and presentation quality, but must not be treated as a correct automatic
 selection.
 
 The scoring sheet must record `NOT_EXECUTED`, result position, or
 `NO_RESULT` honestly. No metric in this document has been executed.
 
-### 8.2 Peru geographic-bias comparison
+### 8.2 Two ranking levels
+
+```ini
+PROVIDER_RANKING = DESIGNED_NOT_EXECUTED
+GEOGUIDE_COMBINED_RANKING = NOT_EXECUTED
+```
+
+**PROVIDER_RANKING** evaluates the external engine in isolation. It uses the
+pinned corpus, provider release, data extract and configuration described in
+this document. Its candidate identities, types, context and positions are the
+basis for Top-1/3/5, Hit@10 and MRR@10. Passing this evaluation would establish
+only the quality of that external engine under that fixed evaluation setup.
+
+**GEOGUIDE_COMBINED_RANKING** is a separate, future evaluation of the curated
+GeoGuide AI catalogue together with the explicit external expansion inside the
+future `SearchPlaces` capability. It must assess source precedence, separate
+identities, duplicate presentation, attribution, confirmation and the final
+ordering delivered to the user. It remains `NOT_EXECUTED` until an approved
+implementation exists.
+
+Approval of `PROVIDER_RANKING` does **not** approve
+`GEOGUIDE_COMBINED_RANKING`, the `SearchPlaces` implementation, provider
+selection, or any production operation.
+### 8.3 Peru geographic-bias comparison
 
 The same pinned corpus and provider release must be run under two explicitly
 recorded configurations:
@@ -193,7 +216,7 @@ unverified hand-entered coordinates. Before any lab run, the test protocol must
 pin their source and geometry/coordinate reference, version it with the corpus,
 and record any tolerance. This prevents a shifting evaluation target.
 
-### 8.3 Tourism corpus
+### 8.4 Tourism corpus
 
 | Query | Expected category | Required assessment |
 |---|---|---|
@@ -206,7 +229,7 @@ and record any tolerance. This prevents a shifting evaluation target.
 | Laguna 69 | Natural attraction | Numeric-name handling, type and Ancash context. |
 | Marcahuasi | Natural/tourism place | Variants, locality/region context and confirmation candidate quality. |
 
-For each query, the later lab record must capture Top-1/3/5, Recall@10,
+For each query, the later lab record must capture Top-1/3/5, Hit@10,
 MRR@10, returned coordinates validated against the pinned reference, place type,
 administrative context, spelling variants, duplicate identities and whether the
 candidate card gives enough information for an explicit human confirmation.
