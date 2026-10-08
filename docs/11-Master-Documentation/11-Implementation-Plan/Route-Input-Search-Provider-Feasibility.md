@@ -127,3 +127,149 @@ The following require a human gate before any installation, import, deployment o
 5. Select a provider only after the controlled evaluation records coverage, capacity, security and recovery evidence.
 
 Until those decisions exist, the Route Input design remains approved but its provider, infrastructure, contract freeze and implementation remain pending.
+
+## 8. Addendum — search-quality and geographic-bias evaluation design
+
+```ini
+SEARCH_QUALITY_EVALUATION = DESIGNED_NOT_EXECUTED
+GEOGRAPHIC_BIAS_EVALUATION = DESIGNED_NOT_EXECUTED
+TOURISM_CORPUS_EVALUATION = DESIGNED_NOT_EXECUTED
+TCO_MODEL = ESTIMATION_FRAMEWORK_ONLY
+LAB_EXECUTION = NOT_AUTHORIZED
+PROVIDER_SELECTED = NO
+```
+
+### 8.1 Ranking metrics and scoring record
+
+Each provider run must persist a reviewable, non-personal scoring record containing the query identifier, provider/release/data-extract identifiers, configuration identifier, ordered candidate identities, administrative context, place type, result position, timestamp and evaluator decision. It must not store a device location, a user query history or precise coordinates in operational logs.
+
+| Metric | Definition | Rule when no acceptable candidate appears |
+|---|---|---|
+| Top-1 correct | Preferred candidate is ranked first. | 0 for that query. |
+| Top-3 correct | Preferred candidate occurs in positions 1–3. | 0 for that query. |
+| Top-5 correct | Preferred candidate occurs in positions 1–5. | 0 for that query. |
+| Recall@10 | At least one geographically acceptable candidate occurs in positions 1–10. | 0 for that query. |
+| MRR@10 | Reciprocal rank of the first geographically acceptable candidate within positions 1–10. | 0 for that query. |
+
+For a corpus of `N` queries, Top-k and Recall@10 are the mean of their
+per-query binary values. `MRR@10 = (Σ reciprocal-rank_i) / N`. A candidate is
+**preferred** only when the corpus predefines the exact intended place. A
+homonymous query with no safely preferred identity is scored for acceptable
+recall and presentation quality, but must not be treated as a correct automatic
+selection.
+
+The scoring sheet must record `NOT_EXECUTED`, result position, or
+`NO_RESULT` honestly. No metric in this document has been executed.
+
+### 8.2 Peru geographic-bias comparison
+
+The same pinned corpus and provider release must be run under two explicitly
+recorded configurations:
+
+| Configuration | Purpose | Constraint |
+|---|---|---|
+| A — no Peru bias | Establish the provider's default global ranking. | Do not silently add country, bounding-box or proximity controls. |
+| B — Peru preference | Measure whether a provider's documented, non-exclusive ranking preference improves Peru relevance. | A preference is not a global exclusion of foreign candidates. |
+
+Provider controls differ and must be logged, not normalized by assumption:
+Photon documents location bias and bounding-box filtering; Nominatim supports
+parameters including country/bounding restrictions with policy constraints; and
+Pelias configuration depends on the enabled services. A strict bounding box or
+country filter is a different experiment from a soft preference. Each provider
+must therefore report the exact request/configuration and whether it is
+`BIAS`, `BBOX_FILTER`, `COUNTRY_FILTER`, or `UNSUPPORTED`.
+
+| Query | Preferred reference / expected area | Geographically acceptable result set | Homonym rule |
+|---|---|---|---|
+| Santa Rosa | Santa Rosa de Quives, Canta, Lima, Peru | Santa Rosa de Quives and other clearly labelled Peruvian Santa Rosa candidates | Do not auto-select a different Santa Rosa. |
+| San Juan | No single preferred result from the bare query | Clearly labelled Peruvian San Juan candidates, including San Juan de Lurigancho and San Juan de Miraflores | Bare query is ambiguous; confirmation is mandatory. |
+| Victoria | La Victoria, Lima, Peru | La Victoria, Lima; other explicitly contextualized Peruvian candidates | Do not treat foreign Victoria as equivalent. |
+| Independencia | Independencia, Lima, Peru | Independencia, Lima; other explicitly contextualized Peruvian candidates | Context must distinguish the intended district. |
+| Canta | Canta, Lima, Peru | Canta, Lima candidates | Foreign near matches are not an automatic match. |
+| Obrajillo | Obrajillo, Canta, Lima, Peru | Obrajillo in the Canta corridor | Absence is reported; no synthetic fallback. |
+
+Administrative areas are intentional evaluation references, rather than
+unverified hand-entered coordinates. Before any lab run, the test protocol must
+pin their source and geometry/coordinate reference, version it with the corpus,
+and record any tolerance. This prevents a shifting evaluation target.
+
+### 8.3 Tourism corpus
+
+| Query | Expected category | Required assessment |
+|---|---|---|
+| Huacachina | Oasis / tourism place | Correct Ica context, variants, duplicate candidates and confirmation quality. |
+| Paracas | Locality / tourism place | Region context, homonyms and geographic relevance. |
+| Chan Chan | Archaeological attraction | Place type, locality/region context and duplicate handling. |
+| Kuélap | Archaeological attraction | Accent/variant handling and administrative context. |
+| Machu Picchu | Archaeological/tourism place | Ranking, variants and disambiguation from locality/related entities. |
+| Sacsayhuamán | Archaeological attraction | Accent/variant handling, type and Cusco context. |
+| Laguna 69 | Natural attraction | Numeric-name handling, type and Ancash context. |
+| Marcahuasi | Natural/tourism place | Variants, locality/region context and confirmation candidate quality. |
+
+For each query, the later lab record must capture Top-1/3/5, Recall@10,
+MRR@10, returned coordinates validated against the pinned reference, place type,
+administrative context, spelling variants, duplicate identities and whether the
+candidate card gives enough information for an explicit human confirmation.
+None of these tourism cases has been executed in a controlled provider lab.
+
+## 9. Acceptance design and proposed thresholds
+
+The following are **hypotheses for human approval**, not requirements and not
+results. They establish a measurable future gate without inventing measured
+performance or capacity values.
+
+| Area | Proposed method and evidence | Proposed initial PASS hypothesis |
+|---|---|---|
+| Ranking quality | Execute the pinned corpus; retain ordered, attributed candidate identities and scoring sheet. | Threshold to be approved after corpus review; no numeric pass mark is proposed yet. |
+| Tourism quality | Execute the tourism corpus with type/context/variant review. | Every selected candidate is confirmable and contextually distinct; numeric recall threshold pending approval. |
+| Peru bias improvement | Compare A/B on the same corpus and report delta by metric and query. | Bias must not reduce the preferred Peru candidate's rank without an explicit reason; numeric aggregate delta pending approval. |
+| Homonyms | Human review of candidate cards, identities and confirmation flow. | No bare homonym becomes a `RoutePoint` without explicit confirmation. |
+| Spanish localisation | Record request language capability, result labels and fallback behavior. | Provider configuration and UI presentation must be understandable in Spanish; exact test cases pending approval. |
+| Performance | Isolated, rate-controlled lab measurement with fixed hardware/data/release. | No threshold proposed without environment data. |
+| Resources | Import/update/recovery measurements on isolated capacity. | No capacity threshold proposed before measurements. |
+| Privacy | Inspect query, proxy and provider logs plus retention/deletion configuration. | No persistent query/GPS history; aggregate metrics limited to seven days. |
+| Recovery | Execute documented rebuild/update/rollback drill. | Successful, evidenced recovery criterion to be approved with RTO/RPO context. |
+| TCO | Complete the 12/36-month model with actual quotes and measured labour. | A selected alternative must stay within an approved budget and owned operating model. |
+
+## 10. TCO estimation framework
+
+This is a cost-model structure, not a quote. Currency, unit prices, instance
+sizes, labour rates, data volumes and growth factors are intentionally blank
+until an authorized, isolated evaluation produces inputs.
+
+| Cost component | 12-month formula | 36-month formula | Evidence classification |
+|---|---|---|---|
+| Compute: CPU/RAM | monthly compute rate × 12 | monthly compute rate × 36 | Assumption until provider-specific measurements/quotes exist. |
+| Disk and growth | initial storage + growth + update/rollback headroom, priced monthly | same model over 36 months | Measurement and quote required. |
+| Initial import | engineering hours + temporary capacity | initial cost only | Measurement required. |
+| OSM/index updates | update frequency × labour + temporary capacity | same model over 36 months | Assumption until cadence is approved. |
+| Backup/recovery | retained backup capacity + drill labour | same model over 36 months | Estimate; restore evidence required. |
+| Monitoring/security | monitoring, alerting, certificates, patching and abuse controls | same model over 36 months | Estimate; exact tools/ownership pending. |
+| Administration | operational hours × approved labour rate | same model over 36 months | Estimate; owner and rate pending. |
+| Engineering integration | one-time implementation/test/documentation labour | one-time plus maintenance/change labour | Estimate; implementation not authorized. |
+| Licence/attribution | compliance review and any applicable commercial/support cost | renewal/review cost | Licence fact plus unpriced estimate. |
+| Contingency | approved percentage or risk reserve applied to identified costs | same model over 36 months | Human decision required. |
+
+`TCO_12 = Σ(one-time costs) + Σ(monthly recurring costs × 12) + contingency`.
+`TCO_36 = Σ(one-time costs) + Σ(monthly recurring costs × 36) + contingency`.
+The formula applies identically to Photon, Nominatim and Pelias, while their
+measured infrastructure and operational inputs may differ. No price,
+capacity, import duration, recovery time or TCO total is stated or implied.
+
+## 11. Addendum decision state
+
+```ini
+PHOTON = PREFERRED_FOR_ISOLATED_POC
+NOMINATIM = TECHNICAL_COMPARATOR
+PELIAS = DEFERRED_COMPARATOR_NOT_REJECTED
+PROVIDER_SELECTED = NO
+LAB_EXECUTION = NOT_AUTHORIZED
+IMPLEMENTATION = NOT_AUTHORIZED
+INFRA_DEPLOYMENT = NOT_AUTHORIZED
+PR_72_MERGE = PENDING_HUMAN_REVIEW
+```
+
+A human review must approve the corpus references, scoring interpretation,
+threshold hypotheses, isolated-lab budget and environment before executing a
+provider laboratory. It must separately select a provider after comparative
+results exist. This addendum does not authorize either action.
