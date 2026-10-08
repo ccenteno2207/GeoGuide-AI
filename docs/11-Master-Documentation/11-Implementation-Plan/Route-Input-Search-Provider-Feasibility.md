@@ -184,6 +184,7 @@ implementation exists.
 Approval of `PROVIDER_RANKING` does **not** approve
 `GEOGUIDE_COMBINED_RANKING`, the `SearchPlaces` implementation, provider
 selection, or any production operation.
+
 ### 8.3 Peru geographic-bias comparison
 
 The same pinned corpus and provider release must be run under two explicitly
