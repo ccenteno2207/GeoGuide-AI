@@ -8,8 +8,9 @@ feasibility documentation and does not select a provider or authorize a lab.
 
 ```ini
 DOCUMENT_DATE = 2026-10-08
-REPOSITORY_BASELINE = 41f18b2c3efd443dd91daeb0c85417c9663134dd
+REPOSITORY_BASELINE = e706fd9b2abf69167d1b0cf149471c579780c27e
 PR_72 = MERGED
+PR_74 = MERGED
 PROVIDER_FEASIBILITY_DOCUMENTATION = APPROVED
 PHOTON = PREFERRED_FOR_ISOLATED_POC
 PROVIDER_SELECTED = NO
@@ -77,9 +78,10 @@ isolated lab environment.
 | Topic | Candidate / documented fact | Status |
 |---|---|---|
 | Photon release | `1.3.0`, Git tag `4c28c7c132694d72673a2475ddab854bd32dac71` | Candidate, not installed. |
-| Java | Java 21 minimum requirement in Photon upstream release notes | Official requirement. |
+| Java | Java 21+ is required by current Photon upstream documentation. | Official upstream requirement; compatibility remains a preflight check. |
 | Index mode | Embedded is Photon’s documented default for small/medium deployments; external OpenSearch 3.x is documented for scalable/distributed configurations. | Official capability; mode not selected. |
-| OSM source | Geofabrik Peru `peru-latest.osm.pbf` | Candidate source only; not downloaded. |
+| OSM provenance source | Geofabrik Peru `peru-latest.osm.pbf` | Candidate source only; not downloaded and **not** a direct Photon import input. |
+| Photon import input | Nominatim database or Photon JSON dump file. | Official Photon import paths; neither is selected, built or downloaded. |
 | Dataset version/checksum | Must pin timestamp, URL, checksum and licence immediately before an authorized import. | Not measured / not pinned. |
 | Source file scale | Geofabrik published a current Peru PBF size of 244 MB at research time. | Source fact, not an index-size estimate. |
 | Data licence | OSM data is under ODbL; attribution and any derived-database obligations require review before use beyond a lab. | Legal review pending. |
@@ -93,6 +95,23 @@ Official sources: [Photon releases](https://github.com/komoot/photon/releases),
 Photon’s planet-scale reference must not be extrapolated to Peru. The isolated
 lab exists precisely to measure Peru import size, peak CPU/RAM, query resource
 usage, update/recovery behavior and coverage.
+
+### 3.1 Recommended initial mode and ingestion constraint
+
+The recommended initial mode for an approved isolated PoC is **embedded
+Photon**, retaining its private `photon_data` directory on the dedicated lab
+volume and listening only on loopback or a private network. This is the
+upstream default for small and medium installations. External OpenSearch is
+not selected for the initial PoC; it is a later decision only if isolated
+measurements show a scalability or distribution need.
+
+Photon documents imports from a Nominatim database or a Photon JSON dump, not
+directly from an OSM PBF. Therefore the Geofabrik Peru PBF may establish
+dataset provenance but must not be presented as an executable Photon input. A
+future execution gate must first verify a compatible Peru Photon dump. If none
+is available, introducing a Nominatim-to-Photon preparation pipeline is a new
+dependency and requires a separate human decision; it is outside this lab
+contract and remains unexecuted.
 
 ## 4. Candidate isolation design
 
@@ -113,6 +132,13 @@ data. The planned default listener is private/loopback; public exposure is
 forbidden. Destruction requires removal of the dedicated lab VM/volume only,
 not a shared system resource.
 
+Before any approved run, the preflight record must attest: VM and volume
+identity; private/loopback binding; absence of GeoGuide credentials and routes;
+Photon/JDK version; selected legal dataset input with timestamp and checksum;
+resource caps including Java heap; redacted log path and seven-day expiry; and
+the suspension, deletion and recovery evidence locations. A failed preflight
+is a stop condition, not an invitation to alter a shared environment.
+
 ## 5. Resource budget — hypotheses awaiting approval and measurement
 
 | Dimension | Minimum candidate | Recommended candidate | Maximum laboratory cap | Evidence status |
@@ -127,6 +153,14 @@ not a shared system resource.
 The sizing has no measured basis yet. It is deliberately a bounded proposal for
 an isolated first import, not a production recommendation. It must be refined
 from actual measurements before any recurring update or operating commitment.
+
+The vCPU/RAM/storage rows are **VM allocation hypotheses**, not Photon process
+limits. An approved run must record the Java heap cap separately, reserve OS
+headroom to prevent swapping, and account for Photon data, import input,
+temporary files and bounded logs within the dedicated lab volume. Recovery
+evidence storage is a distinct retention decision and is not assumed to fit
+inside the import-space estimate. The upstream planet-scale guidance does not
+validate these Peru hypotheses.
 
 ### 5.1 Suspension conditions
 
@@ -221,6 +255,7 @@ TCO_36 = NOT_CALCULATED
 | LAB-05 | Licence/attribution and derived-data interpretation require review. | Approve attribution/compliance handling for the chosen dataset/use. |
 | LAB-06 | Update, recovery and deletion procedures are untested. | Approve the later exercise scope and evidence-retention/deletion plan. |
 | LAB-07 | Existing integration VM is in use. | Confirm it remains excluded from Photon lab execution. |
+| LAB-08 | A Peru OSM PBF is provenance material, not a direct Photon import input. | Verify a compatible Photon dump or separately approve any Nominatim preparation pipeline. |
 
 ## 10. Recommendation
 
@@ -229,6 +264,10 @@ RECOMMENDED_LAB_ENVIRONMENT = NEW_ISOLATED_NON_PRODUCTION_VM
 LAPTOP_LAB = REJECTED_FOR_CURRENT_CAPACITY
 INTEGRATION_VM_LAB = REJECTED_SHARED_RESOURCE
 CANDIDATE_PHOTON_RELEASE = 1.3.0
+RECOMMENDED_INITIAL_MODE = EMBEDDED_PRIVATE_LOOPBACK
+EXTERNAL_OPENSEARCH = NOT_SELECTED
+DIRECT_OSM_PBF_IMPORT = NOT_SUPPORTED_BY_PHOTON_DOCUMENTATION
+PHOTON_IMPORT_INPUT = COMPATIBLE_JSON_DUMP_OR_NOMINATIM_DATABASE_REQUIRED
 LAB_CONTRACT = PROPOSED_NOT_APPROVED
 LAB_EXECUTION = NOT_AUTHORIZED
 PROVIDER_SELECTION = NOT_AUTHORIZED
