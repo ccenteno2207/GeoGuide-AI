@@ -108,3 +108,4 @@ La evidencia P9.4 registra `P9_4_AUDIT = PASS_WITH_NON_BLOCKING_ITEMS`, `P9_4_HU
 | P12.2–P12.4 preparation evidence | [P12 preparation](docs/11-Master-Documentation/11-Implementation-Plan/P12.2-P12.4-Preparation-Evidence.md); route coverage PASS, device gate pending |
 | P12 multi-corridor discovery | [Multi-corridor evidence](docs/11-Master-Documentation/11-Implementation-Plan/P12-Multi-Corridor-Technical-Discovery.md); four candidate corridors, route/POI coverage and limitations |
 | GPS Follow + Community POI discovery | [Proposal](docs/11-Master-Documentation/11-Implementation-Plan/GPS-Follow-and-Community-POI-Discovery.md); separate future capability discovery, Yaso candidate and governance gate |
+| GPS Follow Mode contract proposal | [GPS proposal](docs/11-Master-Documentation/11-Implementation-Plan/GPS-Follow-Mode-Contract-Proposal.md); proposed-only contract, ACs, privacy and P12 gates |
