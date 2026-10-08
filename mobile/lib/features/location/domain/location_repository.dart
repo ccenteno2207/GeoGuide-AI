@@ -5,6 +5,24 @@ class LocationPoint {
   final double longitude;
 }
 
+class LocationSample {
+  const LocationSample({
+    required this.position,
+    required this.timestamp,
+    required this.accuracyMeters,
+  });
+
+  final LocationPoint position;
+  final DateTime timestamp;
+  final double accuracyMeters;
+
+  bool get isUsable =>
+      position.latitude.isFinite &&
+      position.longitude.isFinite &&
+      accuracyMeters.isFinite &&
+      accuracyMeters >= 0;
+}
+
 enum LocationAvailability {
   available,
   serviceDisabled,
@@ -27,6 +45,11 @@ class CurrentLocationResult {
   final LocationPoint? position;
 }
 
-abstract interface class LocationRepository {
+abstract class LocationRepository {
   Future<CurrentLocationResult> requestCurrentLocation();
+}
+
+abstract interface class LocationStreamSource {
+  /// Foreground-only stream of location samples.
+  Stream<LocationSample> watchLocation();
 }

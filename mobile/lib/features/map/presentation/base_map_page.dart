@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -44,6 +46,11 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   bool _isRequestingLocation = false;
   bool _showDiscoveryList = false;
   bool _drivingReduced = false;
+  bool _followLocation = false;
+  bool _followCamera = false;
+  bool _followPausedByLifecycle = false;
+  DateTime? _lastLocationTimestamp;
+  StreamSubscription<LocationSample>? _locationSubscription;
   late final RoutePlanningController _routePlanning;
   late final RouteDiscoveryController _routeDiscovery;
 
@@ -92,8 +99,19 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      _locationSubscription?.cancel();
+      _locationSubscription = null;
+      if (_followLocation) _followPausedByLifecycle = true;
+    }
     if (state == AppLifecycleState.resumed) {
       widget.offlineDiscovery?.revalidate();
+      if (_followLocation && _followPausedByLifecycle) {
+        _followPausedByLifecycle = false;
+        _subscribeToLocation();
+      }
     }
   }
 
@@ -141,8 +159,89 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _toggleFollowLocation() async {
+    if (_drivingReduced) return;
+    if (_followLocation) {
+      await _stopFollowLocation();
+      return;
+    }
+    setState(() => _isRequestingLocation = true);
+    final result = await widget.requestCurrentLocation();
+    if (!mounted) return;
+    setState(() {
+      _isRequestingLocation = false;
+      _currentLocation = result.position;
+      _locationStatus = result.availability == LocationAvailability.available
+          ? 'Seguimiento de ubicación activo'
+          : 'Seguimiento no disponible';
+    });
+    if (result.position == null) return;
+    _followLocation = true;
+    _followCamera = true;
+    _lastLocationTimestamp = null;
+    _mapController.move(
+      LatLng(result.position!.latitude, result.position!.longitude),
+      15,
+    );
+    _subscribeToLocation();
+  }
+
+  void _subscribeToLocation() {
+    _locationSubscription?.cancel();
+    _locationSubscription = widget.requestCurrentLocation.watch().listen(
+      _onLocationSample,
+      onError: (_) {
+        if (mounted)
+          setState(() => _locationStatus = 'Señal de ubicación degradada');
+      },
+    );
+  }
+
+  void _onLocationSample(LocationSample sample) {
+    if (!mounted || !_followLocation || !sample.isUsable) {
+      if (mounted && _followLocation) {
+        setState(() => _locationStatus = 'Señal de ubicación degradada');
+      }
+      return;
+    }
+    if (_lastLocationTimestamp != null &&
+        sample.timestamp.isBefore(_lastLocationTimestamp!))
+      return;
+    _lastLocationTimestamp = sample.timestamp;
+    setState(() {
+      _currentLocation = sample.position;
+      _locationStatus = 'Seguimiento de ubicación activo';
+    });
+    if (_followCamera && !_drivingReduced) {
+      _mapController.move(
+        LatLng(sample.position.latitude, sample.position.longitude),
+        _mapController.camera.zoom,
+      );
+    }
+  }
+
+  Future<void> _stopFollowLocation() async {
+    await _locationSubscription?.cancel();
+    _locationSubscription = null;
+    if (!mounted) return;
+    setState(() {
+      _followLocation = false;
+      _followCamera = false;
+      _followPausedByLifecycle = false;
+      _locationStatus = 'Seguimiento de ubicación detenido';
+    });
+  }
+
+  void _resumeFollowCamera() {
+    if (!_followLocation || _currentLocation == null || _drivingReduced) return;
+    setState(() => _followCamera = true);
+    final location = _currentLocation!;
+    _mapController.move(LatLng(location.latitude, location.longitude), 15);
+  }
+
   @override
   void dispose() {
+    _locationSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     widget.offlineDiscovery?.dispose();
     _mapController.dispose();
@@ -307,6 +406,19 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
             onPressed: _isRequestingLocation ? null : _requestLocation,
             icon: const Icon(Icons.my_location),
           ),
+          if (_followLocation && !_followCamera)
+            IconButton(
+              tooltip: 'Reanudar seguimiento de cámara',
+              icon: const Icon(Icons.center_focus_strong),
+              onPressed: _resumeFollowCamera,
+            ),
+          IconButton(
+            tooltip: _followLocation
+                ? 'Detener seguimiento de ubicación'
+                : 'Activar seguimiento de ubicación',
+            icon: Icon(_followLocation ? Icons.gps_fixed : Icons.gps_not_fixed),
+            onPressed: _isRequestingLocation ? null : _toggleFollowLocation,
+          ),
         ],
       ),
       body: Stack(
@@ -317,6 +429,11 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
               initialCenter: _initialCenter,
               initialZoom: 12,
               onTap: _selectRoutePoint,
+              onPositionChanged: (_, hasGesture) {
+                if (hasGesture && _followCamera) {
+                  setState(() => _followCamera = false);
+                }
+              },
             ),
             children: [
               TileLayer(
@@ -639,6 +756,21 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                     userAgentPackageName: 'com.geoguideai.geoguide_ai',
                     maxNativeZoom: 19,
                   ),
+                  if (_currentLocation case final location?)
+                    MarkerLayer(
+                      markers: [
+                        Marker(
+                          point: LatLng(location.latitude, location.longitude),
+                          width: 48,
+                          height: 48,
+                          child: const Icon(
+                            Icons.my_location,
+                            color: Colors.blue,
+                            size: 36,
+                          ),
+                        ),
+                      ],
+                    ),
                   PolylineLayer(
                     polylines: [
                       Polyline(

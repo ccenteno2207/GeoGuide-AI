@@ -6,4 +6,8 @@ class RequestCurrentLocation {
   final LocationRepository _repository;
 
   Future<CurrentLocationResult> call() => _repository.requestCurrentLocation();
+
+  Stream<LocationSample> watch() => _repository is LocationStreamSource
+      ? (_repository as LocationStreamSource).watchLocation()
+      : const Stream<LocationSample>.empty();
 }
