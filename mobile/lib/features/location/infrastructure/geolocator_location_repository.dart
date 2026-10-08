@@ -2,7 +2,25 @@ import 'package:geolocator/geolocator.dart';
 
 import '../domain/location_repository.dart';
 
-class GeolocatorLocationRepository implements LocationRepository {
+class GeolocatorLocationRepository
+    implements LocationRepository, LocationStreamSource {
+  @override
+  Stream<LocationSample> watchLocation() =>
+      Geolocator.getPositionStream(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      ).map(
+        (position) => LocationSample(
+          position: LocationPoint(
+            latitude: position.latitude,
+            longitude: position.longitude,
+          ),
+          timestamp: position.timestamp,
+          accuracyMeters: position.accuracy,
+        ),
+      );
+
   @override
   Future<CurrentLocationResult> requestCurrentLocation() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
