@@ -11,6 +11,21 @@ P12_FIELD_EXECUTION = NOT_AUTHORIZED
 
 This is an independent proposal. It does not add search or geocoding to P12, GPS Follow Mode, or the frozen Driving contract.
 
+## Product scope decision
+
+```ini
+SEARCH_SCOPE = PLACES_AND_POIS_ONLY
+POSTAL_ADDRESS_SEARCH = OUT_OF_SCOPE
+ORIGIN = CURRENT_GPS_OR_SEARCHED_PLACE_OR_POI
+DESTINATION = SEARCHED_PLACE_OR_POI
+MAP_SELECTION_FALLBACK = REQUIRED
+WAYPOINTS = OUT_OF_SCOPE
+DRIVING_CHANGES = NONE
+CONTRACT_STATUS = PROPOSED_NOT_APPROVED
+```
+
+Valid examples include Canta, Plaza de Armas de Canta, Ica, Huacachina, Nazca and Paracas. Street names with house numbers, such as Avenida Perú 2469, are rejected as out of scope.
+
 ## A. Current architecture
 
 The Flutter map currently accepts two map taps through `RoutePlanningController.selectPoint`. The first tap becomes origin, the second destination; a third selection starts a new pair. `PlanRoute` sends the pair to the existing route-planning port. `OfflineDiscovery` then composes the same query with Route Discovery and stores the existing one-snapshot cache. There is no text input, autocomplete, geocoding, reverse geocoding or waypoint model. The backend route API accepts only origin and destination.
@@ -19,18 +34,19 @@ The Flutter map currently accepts two map taps through `RoutePlanningController.
 
 Add a route-input surface outside Driving with two editable fields:
 
-1. **Origen**: actions `Usar mi ubicación`, `Buscar lugar` and `Elegir en el mapa`.
-2. **Destino**: actions `Buscar lugar` and `Elegir en el mapa`.
+1. **Origen**: actions `Usar mi ubicación`, `Buscar lugar o POI` and `Elegir en el mapa`.
+2. **Destino**: actions `Buscar lugar o POI` and `Elegir en el mapa`.
 
-Each search result must show a name, locality/context and provider attribution. The user confirms one result before it becomes a coordinate. Ambiguous or empty results remain unresolved and cannot be sent to routing. A map preview shows both confirmed points before `Planificar ruta`. Driving receives only the resulting route snapshot and exposes no search controls.
+Each result must represent a locality, geographic place, tourism attraction or POI, and show name, locality/region context and provider attribution. Curated GeoGuide AI catalog results take priority when a matching stable POI exists. The user confirms one result before it becomes a coordinate. Ambiguous or empty results remain unresolved and cannot be sent to routing. A map preview shows both confirmed points before `Planificar ruta`. Driving receives only the resulting route snapshot and exposes no search controls.
 
 ## C. Geocoding alternatives
 
 | Alternative | Fit | Cost/privacy/licence | Disposition |
 |---|---|---|---|
-| Self-hosted Nominatim | OSM search, address and POI lookup; requires import and operations | Software/data open; operational compute is ours; public instance has strict usage policy and is unsuitable as an embedded high-volume dependency | Candidate if infrastructure and usage budget are approved |
-| Self-hosted Photon | OSM geocoder with Apache-2.0 software and Elasticsearch | No per-request vendor fee; requires JVM/Elasticsearch/data operations; public demo is rate-limited | Candidate for a bounded OSM-first service |
-| Self-hosted Pelias | Modular OSM/open-data geocoder with provider composition | No per-request vendor fee; highest operational/data complexity; Elasticsearch and source governance required | Candidate only if address quality justifies the cost |
+| Curated GeoGuide catalog first | Stable known POIs and tourism places already used by Route Discovery | Best provenance and privacy; coverage is finite and requires governance | Required first source |
+| Self-hosted Nominatim | OSM localities, named places and POIs; postal-address mode is excluded | Open data/software; operational compute is ours; public instance has strict usage policy | Candidate for locality/place fallback |
+| Self-hosted Photon | OSM place/POI search with Apache-2.0 software and Elasticsearch | No per-request vendor fee; requires JVM/Elasticsearch/data operations | Candidate for bounded place search |
+| Self-hosted Pelias | Modular OSM/open-data place search with provider composition | No per-request vendor fee; highest operational/data complexity | Candidate only if place coverage justifies it |
 | Hosted commercial geocoder | Usually strong coverage and SLA | Provider account, quotas, terms, possible recurring cost and location-data transfer | Not authorized; requires human product/security/cost decision |
 
 The public Nominatim endpoint must not be treated as an unbounded production dependency: its policy requires attribution, a valid identifying User-Agent, caching and rate discipline. Photon and Pelias are technically self-hostable, but their operational resources and data refresh strategy must be approved first.
@@ -44,7 +60,7 @@ The public Nominatim endpoint must not be treated as an unbounded production dep
 
 ## E. Proposed functional contract
 
-The capability accepts a user query and optional map bias, returns zero or more attributed candidates, requires explicit candidate confirmation, and converts only a confirmed candidate to `RoutePoint`. It must support manual map selection without search. It must not persist search history, upload personal history, or infer a route from an unconfirmed ambiguous result. A future waypoint list is a separate extension and is not included here.
+The capability accepts a place/POI query and optional map bias, returns zero or more attributed candidates, requires explicit candidate confirmation, and converts only a confirmed candidate to `RoutePoint`. Current GPS is allowed only as the origin. It must support manual map selection without search. It must reject postal-address patterns and must not persist search history, upload personal history, or infer a route from an unconfirmed ambiguous result. A future waypoint list is a separate extension and is not included here.
 
 ## F. Errors and ambiguity
 
@@ -75,7 +91,7 @@ Represent empty, timeout, rate-limited, unauthorized, provider-unavailable and m
 
 - Select self-hosted Nominatim, Photon, Pelias or a separately approved hosted provider.
 - Approve operational resources and data refresh/licence policy.
-- Decide whether address search quality is required or POI/place search is sufficient.
+- Confirm that place/POI search is sufficient and postal-address search remains excluded.
 - Decide whether route waypoints are a later capability.
 - Approve retention and privacy treatment for submitted query text.
 
