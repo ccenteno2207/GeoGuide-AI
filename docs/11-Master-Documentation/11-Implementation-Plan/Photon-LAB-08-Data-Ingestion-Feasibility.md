@@ -44,9 +44,13 @@ Photon 1.3.0 documents two import paths:
 It does **not** document direct import of an `.osm.pbf` file. A Peru PBF can be
 the provenance source for a preparation path, but it is not itself an executable
 Photon input. Photon also documents `dump-nominatim-db` for producing a JSON
-dump from a Nominatim database and `-country-codes` as an import restriction.
-Whether a given dump, country restriction and Photon 1.3.0 produce a sufficiently
-complete Peru index remains a lab hypothesis until measured.
+dump from a Nominatim database. For an import from either a database or file,
+`-country-codes` restricts the imported records to a comma-separated list of
+two-letter country codes. This is a documented import-filter capability, not a
+claim that a `PE` import is complete, POI-preserving, correctly ranked or within
+a given resource envelope. Whether a given dump, its country-code data and
+Photon 1.3.0 produce a sufficiently complete Peru index remains a lab hypothesis
+until measured.
 
 | Item | Documentary finding | Classification | Consequence |
 |---|---|---|---|
@@ -148,9 +152,11 @@ not been measured against the fixed corpus.
 - **Photon query environment:** Requires an isolated import/runtime host, input
   handling, temporary decompression space, index creation and a private query
   process.
-- **Peru fit:** A country restriction could reduce scope, but must first prove
-  country-code coverage, POI retention and corpus results. Do not assume that
-  all desired Peru POIs carry the expected country code.
+- **Peru fit:** `-country-codes PE` is documented to restrict imported records
+  by two-letter country code. It could reduce scope, but it does not establish
+  country-code completeness, POI retention, ranking quality or resource use.
+  The corpus must test those outcomes; do not assume that every desired Peru
+  POI carries the expected country code.
 - **Recovery/update:** A controlled reimport from the same pinned dump is a
   candidate recovery path. It has not been exercised.
 - **Status:** `IMPORT = NOT_AUTHORIZED`; no JSON dump was downloaded or tested.
@@ -167,7 +173,9 @@ not been measured against the fixed corpus.
 | Import duration | `NOT_MEASURED`. | `NOT_MEASURED`. | `NOT_MEASURED`. |
 | Update path | Artifact replacement/recreation candidate; cadence not selected. | Potential Nominatim maintenance path; unmeasured. | Reimport candidate; incremental update not established. |
 | Reproducibility | Pin upstream artifact, checksum, version and configuration. | Pin PBF, Nominatim/Photon versions, import configuration and every intermediate. | Pin dump, Photon version, import options and output configuration. |
-| Primary risk | Regional scope and artifact/runtime capacity. | Operational complexity and unmeasured data pipeline. | Import capacity and unmeasured effect of any country restriction. |
+| Spanish labels and variants | Ready artifact language configuration and included translations are unknown until pinned and inspected. | Depends on Nominatim source data plus Photon `-languages`; both configuration and outputs must be measured. | Photon `-languages` can be fixed at authorized import, but source tags/translations and actual returned variants remain unmeasured. |
+| Evidence needed for Spanish decision | Pinned artifact metadata, request-language configuration and corpus outputs in Spanish/variants. | Pinned source/configuration, Photon import options and corpus outputs in Spanish/variants. | Pinned dump, explicit `-languages` configuration and corpus outputs in Spanish/variants. |
+| Primary risk | Regional scope, unknown language configuration and artifact/runtime capacity. | Operational complexity and unmeasured data pipeline. | Import capacity, language/configuration variation and unmeasured effect of any country restriction. |
 | Discovery disposition | **Preferred conditional first PoC candidate.** | Contingency only if a Peru-specific index is materially required. | Secondary controlled experiment if a regional ready DB is unsuitable. |
 
 ## 6. Resource, maintenance and recovery separation
@@ -205,6 +213,14 @@ SPANISH_LOCALISATION = NOT_MEASURED
 HOMONYM_HANDLING = NOT_MEASURED
 POSTAL_ADDRESS_SCOPE = OUT_OF_SCOPE
 ```
+
+Photon imports local names and only the translations selected by `-languages`.
+Photon 1.3.0 defaults to English, German, French and Italian translations where
+available; Spanish must therefore be explicitly included in a future authorized
+import configuration. Ready database artifacts may have been built with a
+configuration different from a JSON import controlled by GeoGuide. In every
+path, Spanish labels, spelling variants and fallback behavior depend on the
+source data and must be measured through the fixed corpus.
 
 The selection of a regional artifact does not establish quality. The corpus and
 metrics assess a standalone external provider only; they do not validate the
