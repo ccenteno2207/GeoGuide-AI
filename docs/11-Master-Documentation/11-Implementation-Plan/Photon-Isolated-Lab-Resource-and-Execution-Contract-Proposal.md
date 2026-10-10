@@ -255,7 +255,7 @@ TCO_36 = NOT_CALCULATED
 | LAB-05 | Licence/attribution and derived-data interpretation require review. | Approve attribution/compliance handling for the chosen dataset/use. |
 | LAB-06 | Update, recovery and deletion procedures are untested. | Approve the later exercise scope and evidence-retention/deletion plan. |
 | LAB-07 | Existing integration VM is in use. | Confirm it remains excluded from Photon lab execution. |
-| LAB-08 | A Peru OSM PBF is provenance material, not a direct Photon import input. | Verify a compatible Photon dump or separately approve any Nominatim preparation pipeline. |
+| LAB-08 | A Peru OSM PBF is provenance material, not a direct Photon import input. | See [LAB-08 data-ingestion feasibility](Photon-LAB-08-Data-Ingestion-Feasibility.md) for documentary alternatives; verify a compatible Photon dump or separately approve any Nominatim preparation pipeline. |
 
 ## 10. Recommendation
 
