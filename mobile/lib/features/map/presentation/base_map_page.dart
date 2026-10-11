@@ -115,8 +115,48 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   Future<void> _refreshRouteSession() async {
     try {
       await _routeSession.refresh();
+      if (mounted) setState(() {});
     } on Exception {
       /* Unsupported platform or test environment. */
+    }
+  }
+
+  Future<void> _toggleVoiceConsent() async {
+    if (_drivingReduced || _b1Busy) return;
+    final enabling = !_routeSession.voiceEnabled;
+    if (enabling) {
+      final accepted = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Avisos de voz CEFI'),
+          content: const Text(
+            'Avisos breves de lugares cercanos durante el recorrido GPS. Voz local, sin micrófono ni grabación. Pueden reducir temporalmente otro audio. Si no hay voz española local o foco de audio, se omite el aviso. Puedes desactivarlos aquí fuera de Driving o detener el recorrido.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Activar avisos'),
+            ),
+          ],
+        ),
+      );
+      if (accepted != true || !mounted || _drivingReduced) return;
+    }
+    try {
+      await _routeSession.setVoiceConsent(enabling);
+      if (mounted) setState(() {});
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo cambiar el consentimiento de voz'),
+          ),
+        );
+      }
     }
   }
 
@@ -145,7 +185,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       builder: (context) => AlertDialog(
         title: const Text('Iniciar recorrido GPS'),
         content: const Text(
-          'La ubicación continuará con la app en segundo plano o pantalla bloqueada hasta detener el recorrido. Sin historial ni envío continuo. Se mostrará una notificación con Detener. Sin voz ni navegación giro a giro.',
+          'La ubicación continuará con la app en segundo plano o pantalla bloqueada hasta detener el recorrido. Sin historial ni envío continuo. Se mostrará una notificación con Detener. Sin navegación giro a giro. Los avisos de voz requieren consentimiento separado.',
         ),
         actions: [
           TextButton(
@@ -548,6 +588,15 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       appBar: AppBar(
         title: const Text('GeoGuide AI'),
         actions: [
+          IconButton(
+            tooltip: _routeSession.voiceEnabled
+                ? 'Desactivar avisos de voz CEFI'
+                : 'Activar avisos de voz CEFI',
+            icon: Icon(
+              _routeSession.voiceEnabled ? Icons.volume_up : Icons.volume_off,
+            ),
+            onPressed: _b1Busy ? null : _toggleVoiceConsent,
+          ),
           if (widget.offlineDiscovery?.snapshot != null || _b1Owned)
             IconButton(
               onPressed: _b1Busy ? null : _toggleRouteSession,

@@ -115,6 +115,16 @@ class CEFIAlertDeliveryCoordinator {
     );
   }
 
+  // Consent changes cancel outstanding work without replay or resetting consumed POIs.
+  void cancelOutstanding() {
+    _deadline?.cancel();
+    _deadline = null;
+    if (_flight case final e?) _cancel(e, AlertDeliveryState.cancelled);
+    if (_pending case final e?) _finish(e, AlertDeliveryState.cancelled);
+    _flight = _pending = null;
+    _generation = ++_nextGeneration;
+  }
+
   void stop() {
     _revision = null;
     _deadline?.cancel();
@@ -248,13 +258,7 @@ class CEFIAlertDeliveryCoordinator {
                 ack.eventId == e.eventId &&
                 ack.generation == e.generation &&
                 ack.snapshotRevision == e.snapshotRevision;
-            final state =
-                valid &&
-                    [
-                      AlertDeliveryState.delivered,
-                      AlertDeliveryState.failed,
-                      AlertDeliveryState.suppressed,
-                    ].contains(ack.state)
+            final state = valid && ack.state != AlertDeliveryState.accepted
                 ? ack.state
                 : AlertDeliveryState.failed;
             _finish(e, state);

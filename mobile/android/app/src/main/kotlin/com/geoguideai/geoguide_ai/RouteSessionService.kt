@@ -17,6 +17,7 @@ internal object RouteSessionBridge {
  var snapshot: ByteArray? = null
  var pending: MethodChannel.Result? = null
  var ui: MethodChannel? = null
+ var voiceConsent = false
  var interrupted = false
  fun state(active: Boolean, failed: Boolean = false) { interrupted = failed; ui?.invokeMethod("state", mapOf("active" to active, "interrupted" to failed)) }
 }
@@ -29,6 +30,7 @@ class RouteSessionService : Service(), LocationListener {
  private var preciseProducer = false
  private var ended = false
  private var ready = false
+ private var voice: RouteVoiceAdapter? = null
  val isReady: Boolean get() = ready && !ended
  private val deadline = Runnable { if (!ready) terminate("START_FAILED") }
  private val audit = object : Runnable {
@@ -65,6 +67,7 @@ class RouteSessionService : Service(), LocationListener {
    val notification = builder.setSmallIcon(android.R.drawable.ic_menu_mylocation).setContentTitle("GeoGuide AI — recorrido activo")
     .setContentText("Ubicación activa. Detén la sesión al finalizar.").setOngoing(true).setContentIntent(open).addAction(android.R.drawable.ic_delete, "Detener", stop).build()
    if (Build.VERSION.SDK_INT >= 29) startForeground(41, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION) else startForeground(41, notification)
+   voice = RouteVoiceAdapter(this, handler).also { it.consent(RouteSessionBridge.voiceConsent) }
    val flutter = FlutterEngine(this)
    engine = flutter
    val channel = MethodChannel(flutter.dartExecutor.binaryMessenger, "geoguide/route_worker")
@@ -73,6 +76,8 @@ class RouteSessionService : Service(), LocationListener {
     if (ended) { result.error("STOPPED", "Session stopped", null); return@setMethodCallHandler }
     try {
      when (call.method) {
+      "voiceDeliver" -> { voice?.deliver(call.arguments as Map<*, *>, result) ?: result.error("VOICE_UNAVAILABLE", "Voice unavailable", null) }
+      "voiceCancel" -> { if (voice?.cancel(call.arguments as String) != false) result.success(null) else result.error("CANCEL_FAILED", "Voice cancellation unconfirmed", null) }
       "snapshot" -> result.success(RouteSessionBridge.snapshot)
       "begin" -> { begin(); result.success(null) }
       "end" -> { endLocation(); result.success(null); if (ready) handler.post { terminate(null) } }
@@ -115,9 +120,16 @@ class RouteSessionService : Service(), LocationListener {
  override fun onProviderEnabled(provider: String) {}
  @Deprecated("Legacy Android callback") override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
  override fun onTaskRemoved(rootIntent: Intent?) { terminate(null) }
+ fun voiceConsent(enabled: Boolean) {
+  voice?.consent(enabled)
+  worker?.invokeMethod("voiceConsent", enabled)
+ }
  fun terminate(code: String?) {
   if (ended) return
   ended = true
+  RouteSessionBridge.voiceConsent = false
+  try { voice?.close() } catch (_: Exception) { /* Fail closed; engine is destroyed below. */ }
+  voice = null
   handler.removeCallbacksAndMessages(null)
   try { endLocation() } catch (_: Exception) { listening = false; preciseProducer = false }
   RouteSessionBridge.snapshot = null

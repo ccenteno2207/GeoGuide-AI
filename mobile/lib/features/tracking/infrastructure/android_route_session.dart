@@ -13,12 +13,21 @@ class AndroidRouteSession implements RouteSessionClient {
   static const channel = MethodChannel('geoguide/route_session');
   @override
   bool active = false;
+  @override
+  bool voiceEnabled = false;
+  @override
+  Future<void> setVoiceConsent(bool enabled) async {
+    voiceEnabled =
+        await channel.invokeMethod<bool>('voiceConsent', enabled) == true;
+  }
+
   void Function(LocationSample)? onSample;
   void Function(RouteSessionStatus)? onState;
   RouteSessionStatus _status = RouteSessionStatus.stopped;
   void _update(Object? value) {
     final data = value is Map ? value : null;
     active = data == null ? value == true : data['active'] == true;
+    if (!active) voiceEnabled = false;
     _status = active && data?['starting'] == true
         ? RouteSessionStatus.starting
         : active
@@ -68,6 +77,7 @@ class AndroidRouteSession implements RouteSessionClient {
   @override
   Future<void> refresh() async {
     _update(await channel.invokeMethod<Object?>('active'));
+    voiceEnabled = await channel.invokeMethod<bool>('voiceState') == true;
   }
 
   static LocationSample decodeSample(Map<Object?, Object?> m) => LocationSample(

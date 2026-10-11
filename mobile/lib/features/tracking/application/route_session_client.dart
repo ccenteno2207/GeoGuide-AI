@@ -5,6 +5,8 @@ enum RouteSessionStatus { stopped, starting, active, interrupted }
 
 abstract interface class RouteSessionClient {
   bool get active;
+  bool get voiceEnabled;
+  Future<void> setVoiceConsent(bool enabled);
   set onSample(void Function(LocationSample)? value);
   set onState(void Function(RouteSessionStatus)? value);
   Future<void> requestPermissions();

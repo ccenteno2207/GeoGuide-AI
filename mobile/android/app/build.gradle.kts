@@ -54,3 +54,12 @@ tasks.register<JavaExec>("b1PolicyChecks") {
         tasks.named("compileDebugKotlin").map { it.outputs.files })
     mainClass.set("com.geoguideai.geoguide_ai.B1PolicyChecks")
 }
+
+// Executes the actual dependency-free voice controller with observable output doubles.
+tasks.register<JavaExec>("c2VoiceChecks") {
+    dependsOn("compileDebugUnitTestKotlin")
+    classpath = files(tasks.named("compileDebugUnitTestKotlin").map { it.outputs.files },
+        tasks.named("compileDebugKotlin").map { it.outputs.files },
+        tasks.named("compileDebugUnitTestKotlin").map { (it as org.jetbrains.kotlin.gradle.tasks.KotlinCompile).libraries.filter { file -> file.name.startsWith("kotlin-stdlib") } })
+    mainClass.set("com.geoguideai.geoguide_ai.C2VoiceChecks")
+}

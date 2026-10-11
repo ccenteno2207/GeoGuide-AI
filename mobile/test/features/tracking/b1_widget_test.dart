@@ -19,6 +19,13 @@ class FakeSession implements RouteSessionClient {
   @override
   bool active = false;
   @override
+  bool voiceEnabled = false;
+  @override
+  Future<void> setVoiceConsent(bool enabled) async {
+    voiceEnabled = enabled;
+  }
+
+  @override
   void Function(LocationSample)? onSample;
   @override
   void Function(RouteSessionStatus)? onState;
@@ -46,6 +53,7 @@ class FakeSession implements RouteSessionClient {
   @override
   Future<void> stop() async {
     active = false;
+    voiceEnabled = false;
     onState?.call(RouteSessionStatus.stopped);
   }
 }
@@ -92,6 +100,24 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      expect(session.voiceEnabled, isFalse);
+      await tester.tap(find.byTooltip('Activar avisos de voz CEFI'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancelar'));
+      await tester.pumpAndSettle();
+      expect(session.voiceEnabled, isFalse);
+      if (!denied) {
+        await tester.tap(find.byTooltip('Activar avisos de voz CEFI'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Activar avisos'));
+        await tester.pumpAndSettle();
+        expect(session.voiceEnabled, isTrue);
+        expect(session.starts, 0);
+        expect(session.permissions, 0);
+        await tester.tap(find.byTooltip('Desactivar avisos de voz CEFI'));
+        await tester.pumpAndSettle();
+        expect(session.voiceEnabled, isFalse);
+      }
       await tester.tap(find.byTooltip('Activar seguimiento de ubicación'));
       await tester.pumpAndSettle();
       expect(source.controller.hasListener, isTrue);

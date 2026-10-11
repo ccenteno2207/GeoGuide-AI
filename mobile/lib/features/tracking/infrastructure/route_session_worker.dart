@@ -9,6 +9,7 @@ import '../application/active_route_coordinator.dart';
 import '../application/tracking_session_manager.dart';
 import '../application/poi_proximity_evaluator.dart';
 import 'android_route_session.dart';
+import 'android_cefi_voice.dart';
 
 class NativeLocationPort implements TrackingServicePort {
   final MethodChannel channel;
@@ -48,7 +49,7 @@ Future<void> runRouteSessionWorker() async {
         maxSpeedAccuracy: 3,
       ),
     ),
-    SilentAlertSink(),
+    AndroidCEFIAlertDelivery(channel),
   );
   Timer? expiry;
   var finished = false;
@@ -76,6 +77,7 @@ Future<void> runRouteSessionWorker() async {
         ),
       );
     }
+    if (call.method == 'voiceConsent') coordinator.delivery.cancelOutstanding();
     if (call.method == 'stop') await finish();
   });
   try {

@@ -42,6 +42,16 @@ class MainActivity : FlutterActivity() {
                     else startRoute(bytes, result)
                 }
                 "stop" -> { RouteSessionBridge.service?.terminate(null); RouteSessionBridge.snapshot = null; RouteSessionBridge.interrupted = false; result.success(null) }
+                "voiceConsent" -> {
+                    if (!visible) result.error("ACTIVITY_UNAVAILABLE", "Visible Activity required", null)
+                    else {
+                        val enabled = call.arguments == true
+                        RouteSessionBridge.voiceConsent = enabled
+                        RouteSessionBridge.service?.voiceConsent(enabled)
+                        result.success(enabled)
+                    }
+                }
+                "voiceState" -> result.success(RouteSessionBridge.voiceConsent)
                 "active" -> result.success(mapOf("active" to (RouteSessionBridge.service != null || RouteSessionBridge.pending != null), "interrupted" to RouteSessionBridge.interrupted, "starting" to (RouteSessionBridge.pending != null)))
                 "permissions" -> {
                     if (!visible || permissionResult != null) result.error("ACTIVITY_UNAVAILABLE", "Visible Activity required", null)
