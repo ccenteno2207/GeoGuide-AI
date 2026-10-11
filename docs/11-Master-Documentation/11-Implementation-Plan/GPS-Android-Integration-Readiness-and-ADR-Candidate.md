@@ -70,3 +70,7 @@ Tests de handshake/timeout/stop ordenado, exclusividad/late callbacks, snapshot 
 Aprobar específicamente: (1) ADR Kotlin/engine-service y paquete B1; (2) adiciones FOREGROUND_SERVICE/FOREGROUND_SERVICE_LOCATION y POST_NOTIFICATIONS con gate visible; (3) consentimiento/stop y validación estacionaria. Proximidad productiva requiere parámetros y política de entrega aparte; TTS, continuo, cámara Driving y campo mantienen gates independientes. No se necesita decidir LLM, proveedor externo o backend para B1.
 
 P12, Photon, Excel, contratos congelados y permisos actuales permanecen intactos. Sin push/PR/merge.
+
+## Seguimiento de integración
+
+PR #76 integrado en `8a2e6cad14f2ae88111c0ba17dd89241894a5ee6`. Este ADR continúa candidato y la arquitectura autorizada para B1 sigue provisional. Véase [gobierno post-merge](GPS-CEFI-Post-Merge-Governance-Evidence.md); los estados de preparación anteriores se preservan como historia.
