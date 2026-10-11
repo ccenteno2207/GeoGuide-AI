@@ -106,3 +106,34 @@ Esta sección actualiza el estado de retest, sin sustituir los resultados histó
 - git diff --check: PASS. Dependencias/lockfile/manifest/servicio Android/backend/infra/contratos: sin cambios del hotfix. Sin push, PR ni merge.
 - Estado actual: READY_FOR_B1_STARTUP_RETEST. PHYSICAL_STARTUP_RETEST=NOT_EXECUTED. No se instaló el APK corregido.
 - Gate: nueva confirmación humana antes de actualización no destructiva en HONOR. El PASS automatizado de inicialización no revoca el fallo observado del APK anterior ni demuestra arranque físico. Persisten pendientes lifecycle, notificación, stop/limpieza y batería HONOR. P12.5 sigue NOT_AUTHORIZED.
+
+## Retest estacionario supervisado — 2026-10-10
+
+APK autorizado e instalado mediante actualización adb install -r: 4FC746347E29F4DD31354A0859E98418DB146118463EFB859C145329F3C262FB. Dispositivo HONOR LLY-NX3/API 36. Resultado instalación Success; sin desinstalación, borrado ni cambios de permisos ADB.
+
+| Caso | Resultado | Evidencia y límite |
+| --- | --- | --- |
+| Arranque físico corregido | PASS | Usuario confirma y aporta captura de interfaz principal/mapa; no se extrapola al funcionamiento completo |
+| Ruta elegible | PASS | UI observada: ruta 97.7 km, 104 min planificados, cinco lugares; sin copiar coordenadas a esta evidencia |
+| Inicio explícito y consentimiento | PASS | Usuario pulsó inicio y aceptó diálogo; capturas del flujo |
+| Permisos | PASS | Aceptación manual de notificaciones; dumpsys package confirma POST_NOTIFICATIONS y ubicación coarse/fine concedidos |
+| Indicador persistente | PASS | Usuario transcribe notificación recorrido activo con Detener; ADB confirma registro id41, foreground location, acción única, sin sonido/vibración |
+| Cambio a otras apps y retorno | PASS | Usuario confirma icono Stop conservado; ADB confirma servicio foreground posterior. Ventana exacta no medida |
+| Bloqueo 30 s/desbloqueo | PASS | Usuario confirma duración, retorno y UI operativa; ADB confirma servicio foreground posterior. No hubo sondeo continuo durante bloqueo |
+| Stop desde notificación | PASS | Usuario/captura: Recorrido detenido, icono inicio restaurado; ADB servicio/notificación ausentes y evento de eliminación del registro nativo |
+| Repetición de Stop notificación | PASS | Usuario repite sesión de aproximadamente dos minutos sin pulsar otros controles después; ADB sin solicitudes actuales del paquete |
+| Stop desde app | PASS | Usuario confirma inicio, botón Stop y Recorrido detenido; ADB posterior: servicio=false, notificación id41=false, líneas de solicitudes activas del paquete=0 |
+
+La inspección de ubicación se procesó en memoria y solo se comunicaron estados/registro técnico sanitizado, sin guardar coordenadas, historial de posiciones ni logs crudos. No se crearon capturas propias. Las capturas aportadas por el usuario son evidencia humana, no mediciones automáticas.
+
+Incidencias/observaciones:
+- Fallo de splash del APK previo preservado; corregido por hotfix y retest físico de arranque PASS.
+- Botones normales de ubicación aparentan estar disponibles pero sus handlers no actúan mientras B1 posee el productor: bloqueo deliberado de exclusividad con comunicación UX insuficiente. No corregido en esta validación.
+- Una solicitud foreground normal posterior al primer Stop fue investigada; el usuario confirmó que pulsó el botón normal de ubicación. No se atribuye a reactivación B1. Repetición sin pulsaciones posteriores y Stop desde app dejan cero solicitudes activas del paquete.
+- UI mostró Señal de ubicación degradada. Sesión y ruta permanecieron operativas; no demuestra calidad GPS, precisión, recuperación ni desplazamiento dinámico.
+
+Veredicto del alcance ejecutado: B1_STATIONARY_PASS. No implica cierre funcional global, aprobación del contrato v0.2 o certificación de background bajo todas las condiciones Android/HONOR.
+
+Pendientes no ejecutados: revocación manual, terminación del proceso/reinicio, ahorro de batería/Doze prolongado, batería cuantificada, señal degradada inducida y movimiento dinámico. No se declara PASS de estos casos. El protocolo actual no requirió revocación. No se ejecutó conducción ni pruebas P12.5.
+
+Estado final técnico del teléfono: B1 detenido, servicio y notificación ausentes, sin solicitudes activas de ubicación atribuibles al paquete en la inspección posterior. Sin modificaciones de código/manifest/infra durante retest; sin push/PR/merge. Siguiente gate: revisión de evidencia y autorización independiente de cualquier validación adicional; P12.5 NOT_AUTHORIZED, P11-BACKUP-01 OPEN_DEFERRED.
