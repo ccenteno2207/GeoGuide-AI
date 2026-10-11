@@ -85,3 +85,24 @@ Cadencia LocationManager 5 s/5 m, auditoría 3 s, timeout de handshake 10 s y po
 Backend/API/DB/infra, P12, Photon, Excel, documentación externa, contratos congelados y dependencias permanentes: sin cambios B1. No Continuous Tracking, TTS, cámara pasiva Driving, nuevas capacidades de navegación ni pruebas dinámicas.
 
 Siguiente gate mínimo: confirmación humana de instalación y validación estacionaria supervisada del artefacto identificado. No declarar B1 validado físicamente hasta observar resultados reales.
+
+## Incidente físico y hotfix de arranque — 2026-10-10
+
+Esta sección actualiza el estado de retest, sin sustituir los resultados históricos anteriores.
+
+- APK original F02FD852C0FF61469FB2CEE1E586B6E74DE2D180840D9BB9394543B6FC0A3EC3: instalado mediante adb install -r, Success; sin desinstalación ni borrado. HONOR LLY-NX3/API 36 confirmado.
+- Confirmación humana y captura: la app permanece en splash. B1_STATIONARY_FAIL en lanzamiento; resto de matriz estacionaria BLOCKED.
+- Inspección read-only: proceso presente, ningún RouteSessionService activo. Log disponible mostraba espera del primer frame; no conservaba la excepción de arranque. No se adjudica esa excepción a un log físico inexistente.
+- Causa de código confirmada por reproducción en flutter_tester nuevo: main construía GeoGuideApp antes de runApp; AndroidRouteSession.instance registraba MethodChannel sin binding. La prueba falló con la assertion de platform_channel.dart:589 y traza AndroidRouteSession -> GeoGuideApp -> main.
+- Corrección funcional exacta: añadir WidgetsFlutterBinding.ensureInitialized() antes de runApp(GeoGuideApp()) en mobile/lib/main.dart. No cambia el entrypoint del worker, servicio, permisos ni lógica GPS.
+- Regresión: mobile/test/b1_startup_test.dart comprueba que BindingBase.debugBindingType() sea null antes de invocar main real. No inicializa TestWidgetsFlutterBinding; falla si el harness ha inicializado un binding. Después invoca main, reemplaza la raíz por SizedBox y verifica WidgetsFlutterBinding. Detecta construcción de canales antes del binding; no acredita render nativo o funcionamiento físico. Fallo intermedio del harness por path_provider ausente al dejar montado el mapa se resolvió aislando el alcance del test; no se modificó el producto para ese fallo de entorno.
+- Commit hotfix: 1d1d591702231a6ca81c9ddd9e1e6687b11de8c5 (main + test).
+- Format: PASS, 60 archivos, cero cambios finales.
+- Analyze: PASS, No issues found.
+- Suite completa: 94/94 PASS, 0 fail, 0 skip. Regresión aislada final: 1/1 PASS.
+- APK debug HTTPS: PASS, https://geoguide.getcom.pe:5443, build después de la corrección.
+- Nuevo APK: mobile/build/app/outputs/flutter-apk/app-debug.apk.
+- Nuevo SHA-256: 4FC746347E29F4DD31354A0859E98418DB146118463EFB859C145329F3C262FB.
+- git diff --check: PASS. Dependencias/lockfile/manifest/servicio Android/backend/infra/contratos: sin cambios del hotfix. Sin push, PR ni merge.
+- Estado actual: READY_FOR_B1_STARTUP_RETEST. PHYSICAL_STARTUP_RETEST=NOT_EXECUTED. No se instaló el APK corregido.
+- Gate: nueva confirmación humana antes de actualización no destructiva en HONOR. El PASS automatizado de inicialización no revoca el fallo observado del APK anterior ni demuestra arranque físico. Persisten pendientes lifecycle, notificación, stop/limpieza y batería HONOR. P12.5 sigue NOT_AUTHORIZED.
