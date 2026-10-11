@@ -50,7 +50,7 @@ class FakeService implements TrackingServicePort {
 
 void main() {
   test(
-    'invalid different snapshot does not erase current session deduplication',
+    'invalid different snapshot does not mutate valid candidate context',
     () {
       final p = POIProximityEvaluator(
         ProximityConfig(
@@ -89,14 +89,16 @@ void main() {
       );
       final later = now.add(const Duration(seconds: 1));
       expect(
-        p.evaluate(
-          snapshot: current,
-          sample: sample(time: later),
-          now: later,
-          chosenIds: chosen,
-          categories: {},
-        ),
-        isNull,
+        p
+            .evaluate(
+              snapshot: current,
+              sample: sample(time: later),
+              now: later,
+              chosenIds: chosen,
+              categories: {},
+            )
+            ?.poiId,
+        current.pois.first.id,
       );
     },
   );
@@ -165,12 +167,12 @@ void main() {
               categories: {},
             )
             ?.poiId,
-        second['id'],
+        first['id'],
       );
     },
   );
 
-  test('chosen candidates beat suggested candidates and cooldown does not lose pending POIs', () {
+  test('detection preserves chosen priority without consuming candidates', () {
     final data = fixtures.envelope();
     final first = Map<String, Object?>.from(
       (data['results'] as List).first as Map,
@@ -204,9 +206,9 @@ void main() {
       categories: {'MUSEUM'},
     );
     expect(check(0)?.poiId, second['id']);
-    expect(check(1), isNull);
-    expect(check(5)?.poiId, first['id']);
-    expect(check(6), isNull);
+    expect(check(1)?.poiId, second['id']);
+    expect(check(5)?.poiId, second['id']);
+    expect(check(6)?.poiId, second['id']);
   });
   test(
     'session switches await stop before start and discard previous callback',
@@ -446,54 +448,53 @@ void main() {
       expect(f.starts, 1);
     },
   );
-  test(
-    'proximity chooses selected POI deduplicates and rejects expired snapshot',
-    () {
-      final p = POIProximityEvaluator(
-        ProximityConfig(
-          enterMeters: 1000,
-          exitMeters: 1200,
-          maxAccuracyMeters: 30,
-          maxAge: const Duration(seconds: 10),
-          cooldown: const Duration(seconds: 5),
-          maxBearingDifference: 45,
-          maxSpeedAccuracy: 3,
-        ),
-      );
-      final snapshot = fixtures.snapshot();
-      final id = snapshot.pois.first.id;
-      final alert = p.evaluate(
+  test('detection reoffers selected POI until delivery and rejects expired snapshot', () {
+    final p = POIProximityEvaluator(
+      ProximityConfig(
+        enterMeters: 1000,
+        exitMeters: 1200,
+        maxAccuracyMeters: 30,
+        maxAge: const Duration(seconds: 10),
+        cooldown: const Duration(seconds: 5),
+        maxBearingDifference: 45,
+        maxSpeedAccuracy: 3,
+      ),
+    );
+    final snapshot = fixtures.snapshot();
+    final id = snapshot.pois.first.id;
+    final alert = p.evaluate(
+      snapshot: snapshot,
+      sample: sample(),
+      now: now,
+      chosenIds: {id},
+      categories: {},
+    );
+    expect(alert?.poiId, id);
+    expect(alert?.chosen, isTrue);
+    expect(
+      p
+          .evaluate(
+            snapshot: fixtures.snapshot(),
+            sample: sample(time: now.add(const Duration(seconds: 6))),
+            now: now.add(const Duration(seconds: 6)),
+            chosenIds: {id},
+            categories: {},
+          )
+          ?.poiId,
+      id,
+    );
+    p.reset();
+    expect(
+      p.evaluate(
         snapshot: snapshot,
-        sample: sample(),
-        now: now,
+        sample: sample(time: now.add(const Duration(days: 1))),
+        now: now.add(const Duration(days: 1)),
         chosenIds: {id},
         categories: {},
-      );
-      expect(alert?.poiId, id);
-      expect(alert?.chosen, isTrue);
-      expect(
-        p.evaluate(
-          snapshot: fixtures.snapshot(),
-          sample: sample(time: now.add(const Duration(seconds: 6))),
-          now: now.add(const Duration(seconds: 6)),
-          chosenIds: {id},
-          categories: {},
-        ),
-        isNull,
-      );
-      p.reset();
-      expect(
-        p.evaluate(
-          snapshot: snapshot,
-          sample: sample(time: now.add(const Duration(days: 1))),
-          now: now.add(const Duration(days: 1)),
-          chosenIds: {id},
-          categories: {},
-        ),
-        isNull,
-      );
-    },
-  );
+      ),
+      isNull,
+    );
+  });
   test('proximity rejects degraded and suggested POIs without course', () {
     final p = POIProximityEvaluator(
       ProximityConfig(

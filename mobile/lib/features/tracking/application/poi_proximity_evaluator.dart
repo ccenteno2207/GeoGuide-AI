@@ -42,18 +42,16 @@ class PoiAlert {
 class POIProximityEvaluator {
   POIProximityEvaluator(this.config);
   final ProximityConfig config;
-  final Set<String> _inside = {}, _announced = {};
+  final Set<String> _inside = {};
   RouteSnapshot? _snapshot;
-  DateTime? _lastSample, _lastAlert;
+  DateTime? _lastSample;
   void reset() {
     _inside.clear();
-    _announced.clear();
     _snapshot = null;
     _lastSample = null;
-    _lastAlert = null;
   }
 
-  PoiAlert? evaluate({
+  List<PoiAlert> evaluateCandidates({
     required RouteSnapshot snapshot,
     required LocationSample sample,
     required DateTime now,
@@ -69,7 +67,7 @@ class POIProximityEvaluator {
             snapshot.query.sameAs(_snapshot!.query) &&
             _lastSample != null &&
             !sample.timestamp.isAfter(_lastSample!))) {
-      return null;
+      return const [];
     }
     if (_snapshot == null || !snapshot.query.sameAs(_snapshot!.query)) {
       reset();
@@ -106,7 +104,6 @@ class POIProximityEvaluator {
         continue;
       }
       _inside.add(poi.id);
-      if (_announced.contains(poi.id)) continue;
       if (!chosen) {
         final h = sample.headingDegrees,
             q = sample.headingAccuracyDegrees,
@@ -151,9 +148,8 @@ class POIProximityEvaluator {
         distance: distance,
       ));
     }
-    if (candidates.isEmpty ||
-        (_lastAlert != null && now.difference(_lastAlert!) < config.cooldown)) {
-      return null;
+    if (candidates.isEmpty) {
+      return const [];
     }
     candidates.sort((a, b) {
       final p = (a.chosen ? 0 : 1).compareTo(b.chosen ? 0 : 1);
@@ -161,9 +157,25 @@ class POIProximityEvaluator {
       final d = a.distance.compareTo(b.distance);
       return d != 0 ? d : a.id.compareTo(b.id);
     });
-    final s = candidates.first;
-    _announced.add(s.id);
-    _lastAlert = now;
-    return PoiAlert(s.id, s.name, s.chosen);
+    return candidates
+        .map((s) => PoiAlert(s.id, s.name, s.chosen))
+        .toList(growable: false);
+  }
+
+  PoiAlert? evaluate({
+    required RouteSnapshot snapshot,
+    required LocationSample sample,
+    required DateTime now,
+    required Set<String> chosenIds,
+    required Set<String> categories,
+  }) {
+    final values = evaluateCandidates(
+      snapshot: snapshot,
+      sample: sample,
+      now: now,
+      chosenIds: chosenIds,
+      categories: categories,
+    );
+    return values.isEmpty ? null : values.first;
   }
 }
