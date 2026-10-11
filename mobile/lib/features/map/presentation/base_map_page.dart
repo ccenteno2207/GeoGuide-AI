@@ -1,6 +1,12 @@
+import '../../tracking/application/route_session_client.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+
+import '../../tracking/presentation/voice_diagnostic.dart';
+
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -9,6 +15,7 @@ import '../../discovery/domain/route_snapshot.dart';
 import '../../discovery/presentation/offline_cache_sheet.dart';
 
 import '../../location/application/request_current_location.dart';
+import '../../location/application/gps_camera_policy.dart';
 import '../../location/domain/location_repository.dart';
 import '../../discovery/application/discover_route.dart';
 import '../../discovery/domain/discovery_poi.dart';
@@ -25,12 +32,14 @@ class BaseMapPage extends StatefulWidget {
   const BaseMapPage({
     super.key,
     required this.requestCurrentLocation,
+    required this.routeSession,
     this.planRoute,
     this.discoverRoute,
     this.offlineDiscovery,
   });
 
   final RequestCurrentLocation requestCurrentLocation;
+  final RouteSessionClient routeSession;
   final PlanRoute? planRoute;
   final DiscoverRoute? discoverRoute;
   final OfflineDiscovery? offlineDiscovery;
@@ -41,11 +50,23 @@ class BaseMapPage extends StatefulWidget {
 
 class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   final MapController _mapController = MapController();
+  final GPSCameraPolicy _cameraPolicy = GPSCameraPolicy();
   LocationPoint? _currentLocation;
   String _locationStatus = 'Ubicación no solicitada';
   bool _isRequestingLocation = false;
   bool _showDiscoveryList = false;
   bool _drivingReduced = false;
+  bool _b1Owned = false;
+  bool _b1Busy = false;
+  RouteSessionStatus? _b1Status;
+  String get _b1StatusText => switch (_b1Status) {
+    RouteSessionStatus.starting => 'Recorrido GPS: iniciando',
+    RouteSessionStatus.active => 'Recorrido GPS: activo',
+    RouteSessionStatus.interrupted =>
+      'Recorrido GPS: interrumpido; revisa ubicación y notificaciones',
+    _ => 'Recorrido detenido',
+  };
+  RouteSessionClient get _routeSession => widget.routeSession;
   bool _followLocation = false;
   bool _followCamera = false;
   bool _followPausedByLifecycle = false;
@@ -62,6 +83,30 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    _routeSession.onSample = _onLocationSample;
+    _routeSession.onState = (status) {
+      final active = status == RouteSessionStatus.active;
+      if (!mounted) return;
+      setState(() {
+        if (_b1Owned ||
+            active ||
+            status == RouteSessionStatus.starting ||
+            status == RouteSessionStatus.interrupted) {
+          _b1Status = status;
+          _b1Owned = active || status == RouteSessionStatus.starting;
+          _followLocation = active;
+          if (!active) {
+            if (status != RouteSessionStatus.starting) _followCamera = false;
+            _locationStatus = status == RouteSessionStatus.interrupted
+                ? 'Ubicación no disponible; recorrido interrumpido'
+                : status == RouteSessionStatus.starting
+                ? 'Esperando inicio del recorrido GPS'
+                : 'Recorrido detenido';
+          }
+        }
+      });
+    };
+    _refreshRouteSession();
     _routePlanning = RoutePlanningController(planRoute: widget.planRoute);
     _routeDiscovery = RouteDiscoveryController(
       discoverRoute: widget.discoverRoute,
@@ -69,6 +114,130 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     widget.offlineDiscovery?.onChanged = _offlineChanged;
     widget.offlineDiscovery?.initialize();
+  }
+
+  Future<void> _refreshRouteSession() async {
+    try {
+      await _routeSession.refresh();
+      if (mounted) setState(() {});
+    } on Exception {
+      /* Unsupported platform or test environment. */
+    }
+  }
+
+  Future<void> _toggleVoiceConsent() async {
+    if (_drivingReduced || _b1Busy) return;
+    final enabling = !_routeSession.voiceEnabled;
+    if (enabling) {
+      final accepted = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Avisos de voz CEFI'),
+          content: const Text(
+            'Avisos breves de lugares cercanos durante el recorrido GPS. Voz local, sin micrófono ni grabación. Pueden reducir temporalmente otro audio. Si no hay voz española local o foco de audio, se omite el aviso. Puedes desactivarlos aquí fuera de Driving o detener el recorrido.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Cancelar'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('Activar avisos'),
+            ),
+          ],
+        ),
+      );
+      if (accepted != true || !mounted || _drivingReduced) return;
+    }
+    try {
+      await _routeSession.setVoiceConsent(enabling);
+      if (mounted) setState(() {});
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No se pudo cambiar el consentimiento de voz'),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleRouteSession() async {
+    if (_b1Busy || _drivingReduced || _isRequestingLocation) return;
+    if (_b1Owned) {
+      try {
+        await _routeSession.stop();
+      } catch (_) {
+        if (mounted) {
+          setState(
+            () => _locationStatus =
+                'No se confirmó la detención; usa Detener en la notificación',
+          );
+        }
+      }
+      return;
+    }
+    final snapshot = widget.offlineDiscovery?.snapshot;
+    if (snapshot == null ||
+        !snapshot.eligible(DateTime.now().millisecondsSinceEpoch)) {
+      return;
+    }
+    final consent = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Iniciar recorrido GPS'),
+        content: const Text(
+          'La ubicación continuará con la app en segundo plano o pantalla bloqueada hasta detener el recorrido. Sin historial ni envío continuo. Se mostrará una notificación con Detener. Sin navegación giro a giro. Los avisos de voz requieren consentimiento separado.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Iniciar recorrido'),
+          ),
+        ],
+      ),
+    );
+    if (consent != true || !mounted) return;
+    setState(() {
+      _b1Busy = true;
+      _b1Status = RouteSessionStatus.starting;
+    });
+    try {
+      await _routeSession.requestPermissions();
+      if (!mounted) return;
+      await _stopFollowLocation(); // Await cancellation before native producer starts.
+      _followLocation = true;
+      _followCamera = true;
+      _followPausedByLifecycle = false;
+      _lastLocationTimestamp = null;
+      _cameraPolicy.reset();
+      await _routeSession.start(snapshot);
+      if (mounted) {
+        setState(() {
+          _b1Owned = true;
+          _b1Status = RouteSessionStatus.active;
+          _locationStatus = 'Esperando una muestra de ubicación válida';
+        });
+      }
+    } catch (_) {
+      await _stopFollowLocation();
+      _followLocation = false;
+      _followCamera = false;
+      if (mounted) {
+        setState(() {
+          _b1Status = RouteSessionStatus.interrupted;
+          _locationStatus = 'No se pudo iniciar el recorrido: revisa ubicación y notificaciones';
+        });
+      }
+    } finally {
+      if (mounted) setState(() => _b1Busy = false);
+    }
   }
 
   void _offlineChanged() {
@@ -107,10 +276,11 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       if (_followLocation) _followPausedByLifecycle = true;
     }
     if (state == AppLifecycleState.resumed) {
+      _refreshRouteSession();
       widget.offlineDiscovery?.revalidate();
       if (_followLocation && _followPausedByLifecycle) {
         _followPausedByLifecycle = false;
-        _subscribeToLocation();
+        if (!_b1Owned && !_b1Busy) _subscribeToLocation();
       }
     }
   }
@@ -121,6 +291,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     Set<String> categories, {
     bool planFirst = false,
   }) async {
+    if (_b1Owned || _b1Busy) return;
     final offline = widget.offlineDiscovery!;
     await offline.discover(
       DiscoveryQuery(
@@ -134,6 +305,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _requestLocation() async {
+    if (_b1Owned || _b1Busy) return;
     if (_drivingReduced) return;
     setState(() => _isRequestingLocation = true);
     final result = await widget.requestCurrentLocation();
@@ -160,7 +332,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _toggleFollowLocation() async {
-    if (_drivingReduced) return;
+    if (_drivingReduced || _b1Owned || _b1Busy) return;
     if (_followLocation) {
       await _stopFollowLocation();
       return;
@@ -179,6 +351,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     _followLocation = true;
     _followCamera = true;
     _lastLocationTimestamp = null;
+    _cameraPolicy.reset();
     _mapController.move(
       LatLng(result.position!.latitude, result.position!.longitude),
       15,
@@ -191,32 +364,57 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     _locationSubscription = widget.requestCurrentLocation.watch().listen(
       _onLocationSample,
       onError: (_) {
-        if (mounted)
-          setState(() => _locationStatus = 'Señal de ubicación degradada');
+        if (mounted) {
+          setState(
+            () => _locationStatus = 'Ubicación no disponible temporalmente',
+          );
+        }
       },
     );
   }
 
   void _onLocationSample(LocationSample sample) {
-    if (!mounted || !_followLocation || !sample.isUsable) {
-      if (mounted && _followLocation) {
-        setState(() => _locationStatus = 'Señal de ubicación degradada');
-      }
+    final now = DateTime.now();
+    if (!mounted || !_followLocation || _followPausedByLifecycle) return;
+    if (!sample.isUsable || sample.timestamp.isAfter(now)) {
+      setState(
+        () => _locationStatus =
+            'Muestra de ubicación no válida; esperando actualización',
+      );
+      return;
+    }
+    if (now.difference(sample.timestamp) > _cameraPolicy.config.maxAge) {
+      setState(
+        () => _locationStatus =
+            'Ubicación desactualizada; esperando actualización',
+      );
       return;
     }
     if (_lastLocationTimestamp != null &&
-        sample.timestamp.isBefore(_lastLocationTimestamp!))
+        sample.timestamp.isBefore(_lastLocationTimestamp!)) {
       return;
+    }
     _lastLocationTimestamp = sample.timestamp;
     setState(() {
       _currentLocation = sample.position;
-      _locationStatus = 'Seguimiento de ubicación activo';
+      _locationStatus = sample.accuracyMeters > _cameraPolicy.config.maxAccuracy
+          ? 'Precisión de ubicación reducida'
+          : 'Seguimiento de ubicación activo';
     });
     if (_followCamera && !_drivingReduced) {
-      _mapController.move(
-        LatLng(sample.position.latitude, sample.position.longitude),
-        _mapController.camera.zoom,
+      final target = _cameraPolicy.evaluate(
+        sample,
+        now: now,
+        currentZoom: _mapController.camera.zoom,
+        currentRotation: _mapController.camera.rotation,
       );
+      if (target != null) {
+        _mapController.move(
+          LatLng(target.position.latitude, target.position.longitude),
+          target.zoom,
+        );
+        _mapController.rotate(target.rotation);
+      }
     }
   }
 
@@ -241,6 +439,8 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _routeSession.onSample = null;
+    _routeSession.onState = null;
     _locationSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     widget.offlineDiscovery?.dispose();
@@ -249,7 +449,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   void _selectRoutePoint(TapPosition _, LatLng point) {
-    if (_drivingReduced) return;
+    if (_drivingReduced || _b1Owned || _b1Busy) return;
     if (widget.offlineDiscovery?.busy == true ||
         widget.offlineDiscovery?.saving == true) {
       return;
@@ -264,6 +464,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _calculateRoute() async {
+    if (_b1Owned || _b1Busy) return;
     if (_drivingReduced) return;
     if (widget.offlineDiscovery case final offline?) {
       final origin = _routePlanning.origin,
@@ -391,6 +592,33 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       appBar: AppBar(
         title: const Text('GeoGuide AI'),
         actions: [
+          if (VoiceDiagnosticAction.available(
+            debug: kDebugMode,
+            driving: _drivingReduced,
+          ))
+            VoiceDiagnosticAction(
+              consent: _routeSession.voiceEnabled,
+              routeBusy: _b1Owned || _b1Busy || _routeSession.active,
+            ),
+          IconButton(
+            tooltip: _routeSession.voiceEnabled
+                ? 'Desactivar avisos de voz CEFI'
+                : 'Activar avisos de voz CEFI',
+            icon: Icon(
+              _routeSession.voiceEnabled ? Icons.volume_up : Icons.volume_off,
+            ),
+            onPressed: _b1Busy ? null : _toggleVoiceConsent,
+          ),
+          if (widget.offlineDiscovery?.snapshot != null || _b1Owned)
+            IconButton(
+              onPressed: (_b1Busy || _isRequestingLocation)
+                  ? null
+                  : _toggleRouteSession,
+              tooltip: _b1Owned
+                  ? 'Detener recorrido GPS'
+                  : 'Iniciar recorrido GPS',
+              icon: Icon(_b1Owned ? Icons.stop_circle : Icons.route),
+            ),
           if (widget.offlineDiscovery case final offline?)
             IconButton(
               tooltip: 'Gestionar copia offline',
@@ -402,8 +630,12 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
               ),
             ),
           IconButton(
-            tooltip: 'Usar ubicación actual',
-            onPressed: _isRequestingLocation ? null : _requestLocation,
+            tooltip: (_b1Owned || _b1Busy)
+                ? 'Ubicación puntual no disponible durante el recorrido GPS'
+                : 'Usar ubicación actual',
+            onPressed: (_isRequestingLocation || _b1Owned || _b1Busy)
+                ? null
+                : _requestLocation,
             icon: const Icon(Icons.my_location),
           ),
           if (_followLocation && !_followCamera)
@@ -413,11 +645,15 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
               onPressed: _resumeFollowCamera,
             ),
           IconButton(
-            tooltip: _followLocation
+            tooltip: (_b1Owned || _b1Busy)
+                ? 'Seguimiento normal no disponible: el recorrido GPS controla la ubicación'
+                : _followLocation
                 ? 'Detener seguimiento de ubicación'
                 : 'Activar seguimiento de ubicación',
             icon: Icon(_followLocation ? Icons.gps_fixed : Icons.gps_not_fixed),
-            onPressed: _isRequestingLocation ? null : _toggleFollowLocation,
+            onPressed: (_isRequestingLocation || _b1Owned || _b1Busy)
+                ? null
+                : _toggleFollowLocation,
           ),
         ],
       ),
@@ -610,6 +846,13 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                               _routeDiscovery.status ?? _routePlanning.status,
                               textAlign: TextAlign.center,
                             ),
+                            if (_b1Status != null)
+                              Text(_b1StatusText, textAlign: TextAlign.center),
+                            if (_b1Owned || _b1Busy)
+                              const Text(
+                                'Ubicación controlada por el recorrido GPS; controles normales no disponibles',
+                                textAlign: TextAlign.center,
+                              ),
                             Text(_locationStatus, textAlign: TextAlign.center),
                             if (widget.offlineDiscovery
                                 case final offline?) ...[
@@ -683,26 +926,49 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
             Positioned(
               left: 16,
               right: 16,
-              bottom: 150,
-              height: 260,
-              child: Card(
-                child: Semantics(
-                  container: true,
-                  label: 'Lista de lugares descubiertos',
-                  child: ListView.builder(
-                    itemCount: _routeDiscovery.pois.length,
-                    itemBuilder: (context, index) {
-                      final poi = _routeDiscovery.pois[index];
-                      return ListTile(
-                        key: ValueKey('discovery-list-${poi.id}'),
-                        title: Text(poi.name),
-                        subtitle: Text(
-                          poiDistanceLabel(poi) ??
-                              friendlyPoiCategory(poi.category),
-                        ),
-                        onTap: () => _showPoiPreview(poi),
-                      );
-                    },
+              top: 16,
+              bottom: 16,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 320),
+                  child: Card(
+                    key: const ValueKey('discovery-list-panel'),
+                    child: Semantics(
+                      container: true,
+                      label: 'Lista de lugares descubiertos',
+                      child: Column(
+                        children: [
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton.icon(
+                              key: const ValueKey('close-discovery-list'),
+                              onPressed: () =>
+                                  setState(() => _showDiscoveryList = false),
+                              icon: const Icon(Icons.close),
+                              label: const Text('Cerrar lista y ver mapa'),
+                            ),
+                          ),
+                          Expanded(
+                            child: ListView.builder(
+                              itemCount: _routeDiscovery.pois.length,
+                              itemBuilder: (context, index) {
+                                final poi = _routeDiscovery.pois[index];
+                                return ListTile(
+                                  key: ValueKey('discovery-list-${poi.id}'),
+                                  title: Text(poi.name),
+                                  subtitle: Text(
+                                    poiDistanceLabel(poi) ??
+                                        friendlyPoiCategory(poi.category),
+                                  ),
+                                  onTap: () => _showPoiPreview(poi),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),

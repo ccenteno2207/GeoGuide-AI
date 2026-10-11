@@ -10,15 +10,23 @@ class LocationSample {
     required this.position,
     required this.timestamp,
     required this.accuracyMeters,
+    this.headingDegrees,
+    this.headingAccuracyDegrees,
+    this.speedMetersPerSecond,
+    this.speedAccuracyMetersPerSecond,
   });
 
   final LocationPoint position;
   final DateTime timestamp;
   final double accuracyMeters;
+  final double? headingDegrees, headingAccuracyDegrees;
+  final double? speedMetersPerSecond, speedAccuracyMetersPerSecond;
 
   bool get isUsable =>
       position.latitude.isFinite &&
       position.longitude.isFinite &&
+      position.latitude.abs() <= 90 &&
+      position.longitude.abs() <= 180 &&
       accuracyMeters.isFinite &&
       accuracyMeters >= 0;
 }

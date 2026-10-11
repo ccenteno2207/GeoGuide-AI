@@ -5,15 +5,16 @@ allprojects {
     }
 }
 
-val newBuildDir: Directory =
-    rootProject.layout.buildDirectory
-        .dir("../../build")
-        .get()
-rootProject.layout.buildDirectory.value(newBuildDir)
+// Resolve an existing parent before appending build (which may not exist after
+// flutter clean). Flutter depfiles and explicit outputs must use the same path
+// when the workspace is opened through a Windows junction.
+val newBuildDir = rootProject.layout.projectDirectory.asFile.toPath()
+    .toRealPath().parent.resolve("build").toFile()
+rootProject.layout.buildDirectory.set(newBuildDir)
 
 subprojects {
-    val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
-    project.layout.buildDirectory.value(newSubprojectBuildDir)
+    val newSubprojectBuildDir = newBuildDir.resolve(project.name)
+    project.layout.buildDirectory.set(newSubprojectBuildDir)
 }
 subprojects {
     project.evaluationDependsOn(":app")

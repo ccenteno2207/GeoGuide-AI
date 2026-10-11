@@ -18,6 +18,10 @@ class GeolocatorLocationRepository
           ),
           timestamp: position.timestamp,
           accuracyMeters: position.accuracy,
+          headingDegrees: position.heading,
+          headingAccuracyDegrees: position.headingAccuracy,
+          speedMetersPerSecond: position.speed,
+          speedAccuracyMetersPerSecond: position.speedAccuracy,
         ),
       );
 

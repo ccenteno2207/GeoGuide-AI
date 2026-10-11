@@ -1,3 +1,6 @@
+import '../features/tracking/application/route_session_client.dart';
+import '../features/tracking/infrastructure/android_route_session.dart';
+
 import 'package:flutter/material.dart';
 
 import '../features/discovery/application/offline_discovery.dart';
@@ -21,11 +24,13 @@ class GeoGuideApp extends StatelessWidget {
   GeoGuideApp({
     super.key,
     LocationRepository? locationRepository,
+    RouteSessionClient? routeSession,
     PlanRoute? planRoute,
     DiscoverRoute? discoverRoute,
     String? backendBaseUrl,
     OfflineDiscovery? offlineDiscovery,
-  }) : _requestCurrentLocation = RequestCurrentLocation(
+  }) : routeSession = routeSession ?? AndroidRouteSession.instance,
+       _requestCurrentLocation = RequestCurrentLocation(
          locationRepository ?? GeolocatorLocationRepository(),
        ),
        planRoute = planRoute ?? _createPlanRoute(backendBaseUrl),
@@ -35,6 +40,7 @@ class GeoGuideApp extends StatelessWidget {
            (discoverRoute == null ? _createOffline(backendBaseUrl) : null);
 
   final RequestCurrentLocation _requestCurrentLocation;
+  final RouteSessionClient routeSession;
   final PlanRoute? planRoute;
   final DiscoverRoute? discoverRoute;
   final OfflineDiscovery? offlineDiscovery;
@@ -88,6 +94,7 @@ class GeoGuideApp extends StatelessWidget {
       title: 'GeoGuide AI',
       theme: GeoGuideTheme.light(),
       home: BaseMapPage(
+        routeSession: routeSession,
         requestCurrentLocation: _requestCurrentLocation,
         planRoute: planRoute,
         discoverRoute: discoverRoute,
