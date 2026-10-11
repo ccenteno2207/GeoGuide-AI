@@ -58,6 +58,12 @@ class FakeSession implements RouteSessionClient {
   }
 }
 
+class PendingLocation extends gps.StreamRepository {
+  final pending = Completer<CurrentLocationResult>();
+  @override
+  Future<CurrentLocationResult> requestCurrentLocation() => pending.future;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   // The real map requests its native cache directory on lifecycle resume.
@@ -71,6 +77,61 @@ void main() {
           throw MissingPluginException();
         },
       );
+  testWidgets('route start waits for pending normal location request', (
+    tester,
+  ) async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final snapshot = const SnapshotCodec().fromEnvelope(
+      fixtures.envelope(),
+      fixtures.query(),
+      now,
+    );
+    final offline = OfflineDiscovery(
+      source: fixtures.Source(),
+      store: stores.MemoryStore()..value = snapshot,
+      backendContext: snapshot.query.backendContext,
+      now: () => now,
+    );
+    final source = PendingLocation();
+    final session = FakeSession();
+    await tester.pumpWidget(
+      GeoGuideApp(
+        locationRepository: source,
+        offlineDiscovery: offline,
+        routeSession: session,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Activar seguimiento de ubicación'));
+    await tester.pump();
+    final button = find.byWidgetPredicate(
+      (w) => w is IconButton && w.tooltip == 'Iniciar recorrido GPS',
+    );
+    expect(tester.widget<IconButton>(button).onPressed, isNull);
+    expect(session.starts, 0);
+    expect(session.permissions, 0);
+    source.pending.complete(
+      const CurrentLocationResult.available(
+        LocationPoint(latitude: -12, longitude: -77),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.widget<IconButton>(button).onPressed, isNotNull);
+    expect(source.controller.hasListener, isTrue);
+    session.beforeStart = () => expect(source.controller.hasListener, isFalse);
+    await tester.tap(button);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Iniciar recorrido'));
+    await tester.pumpAndSettle();
+    await tester.runAsync(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+    });
+    await tester.pumpAndSettle();
+    expect(session.starts, 1);
+    expect(source.controller.hasListener, isFalse);
+    await tester.pumpWidget(const SizedBox());
+    await source.controller.close();
+  });
   for (final denied in [false, true]) {
     testWidgets('explicit B1 consent and producer cleanup denied=$denied', (
       tester,

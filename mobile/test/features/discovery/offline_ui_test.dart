@@ -157,6 +157,7 @@ void main() {
     expect(find.text('Ver lista'), findsNothing);
 
     expect(find.byKey(const ValueKey('close-discovery-list')), findsNothing);
+    expect(find.byTooltip('Probar voz CEFI (debug)'), findsNothing);
 
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();

@@ -165,7 +165,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _toggleRouteSession() async {
-    if (_b1Busy || _drivingReduced) return;
+    if (_b1Busy || _drivingReduced || _isRequestingLocation) return;
     if (_b1Owned) {
       try {
         await _routeSession.stop();
@@ -611,7 +611,9 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
           ),
           if (widget.offlineDiscovery?.snapshot != null || _b1Owned)
             IconButton(
-              onPressed: _b1Busy ? null : _toggleRouteSession,
+              onPressed: (_b1Busy || _isRequestingLocation)
+                  ? null
+                  : _toggleRouteSession,
               tooltip: _b1Owned
                   ? 'Detener recorrido GPS'
                   : 'Iniciar recorrido GPS',
