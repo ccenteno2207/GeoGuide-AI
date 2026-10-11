@@ -17,7 +17,8 @@ internal object RouteSessionBridge {
  var snapshot: ByteArray? = null
  var pending: MethodChannel.Result? = null
  var ui: MethodChannel? = null
- fun state(active: Boolean) { ui?.invokeMethod("state", active) }
+ var interrupted = false
+ fun state(active: Boolean, failed: Boolean = false) { interrupted = failed; ui?.invokeMethod("state", mapOf("active" to active, "interrupted" to failed)) }
 }
 class RouteSessionService : Service(), LocationListener {
  private val handler = Handler(Looper.getMainLooper())
@@ -121,7 +122,7 @@ class RouteSessionService : Service(), LocationListener {
   try { endLocation() } catch (_: Exception) { listening = false; preciseProducer = false }
   RouteSessionBridge.snapshot = null
   RouteSessionBridge.pending?.error(code ?: "STOPPED", "Session stopped", null); RouteSessionBridge.pending = null
-  RouteSessionBridge.state(false)
+  RouteSessionBridge.state(false, code != null)
   RouteSessionBridge.service = null
   worker?.setMethodCallHandler(null); worker = null
   val old = engine; engine = null

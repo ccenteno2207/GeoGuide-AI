@@ -1,6 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geoguide_ai/features/tracking/application/active_route_coordinator.dart';
+import 'package:geoguide_ai/features/tracking/application/route_session_client.dart';
 import 'package:geoguide_ai/features/tracking/application/poi_proximity_evaluator.dart';
 import 'package:geoguide_ai/features/tracking/application/tracking_session_manager.dart';
 import 'package:geoguide_ai/features/tracking/infrastructure/android_route_session.dart';
@@ -132,4 +133,35 @@ void main() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(AndroidRouteSession.channel, null);
   });
+  test(
+    'native status separates interruption from voluntary stop across refresh',
+    () async {
+      final client = AndroidRouteSession();
+      final states = <RouteSessionStatus>[];
+      client.onState = states.add;
+      Object reply = {'active': true, 'interrupted': false};
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(
+            AndroidRouteSession.channel,
+            (call) async => call.method == 'active' ? reply : null,
+          );
+      await client.start(fixtures.snapshot());
+      expect(states, [RouteSessionStatus.starting, RouteSessionStatus.active]);
+      reply = {'active': true, 'starting': true, 'interrupted': false};
+      await client.refresh();
+      expect(client.active, isTrue);
+      expect(states.last, RouteSessionStatus.starting);
+      reply = {'active': false, 'interrupted': true};
+      await client.refresh();
+      expect(client.active, isFalse);
+      expect(states.last, RouteSessionStatus.interrupted);
+      await client.stop();
+      expect(states.last, RouteSessionStatus.stopped);
+      reply = {'active': false, 'interrupted': false};
+      await client.refresh();
+      expect(states.last, RouteSessionStatus.stopped);
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(AndroidRouteSession.channel, null);
+    },
+  );
 }

@@ -14,7 +14,21 @@ class AndroidRouteSession implements RouteSessionClient {
   @override
   bool active = false;
   void Function(LocationSample)? onSample;
-  void Function(bool)? onState;
+  void Function(RouteSessionStatus)? onState;
+  RouteSessionStatus _status = RouteSessionStatus.stopped;
+  void _update(Object? value) {
+    final data = value is Map ? value : null;
+    active = data == null ? value == true : data['active'] == true;
+    _status = active && data?['starting'] == true
+        ? RouteSessionStatus.starting
+        : active
+        ? RouteSessionStatus.active
+        : data?['interrupted'] == true
+        ? RouteSessionStatus.interrupted
+        : RouteSessionStatus.stopped;
+    onState?.call(_status);
+  }
+
   AndroidRouteSession() {
     channel.setMethodCallHandler((call) async {
       if (call.method == 'sample') {
@@ -23,8 +37,7 @@ class AndroidRouteSession implements RouteSessionClient {
         );
       }
       if (call.method == 'state') {
-        active = call.arguments == true;
-        onState?.call(active);
+        _update(call.arguments);
       }
     });
   }
@@ -36,22 +49,25 @@ class AndroidRouteSession implements RouteSessionClient {
   @override
   Future<void> start(RouteSnapshot snapshot) async {
     final bytes = const SnapshotCodec().encode(snapshot);
-    await channel.invokeMethod<void>('start', bytes);
-    active = true;
-    onState?.call(true);
+    onState?.call(RouteSessionStatus.starting);
+    try {
+      await channel.invokeMethod<void>('start', bytes);
+      _update(true);
+    } catch (_) {
+      _update({'active': false, 'interrupted': true});
+      rethrow;
+    }
   }
 
   @override
   Future<void> stop() async {
     await channel.invokeMethod<void>('stop');
-    active = false;
-    onState?.call(false);
+    _update(false);
   }
 
   @override
   Future<void> refresh() async {
-    active = await channel.invokeMethod<bool>('active') ?? false;
-    onState?.call(active);
+    _update(await channel.invokeMethod<Object?>('active'));
   }
 
   static LocationSample decodeSample(Map<Object?, Object?> m) => LocationSample(

@@ -18,6 +18,7 @@ class MainActivity : FlutterActivity() {
     }
     private fun startRoute(bytes: ByteArray, result: MethodChannel.Result) {
         if (!B1Policy.canStart(visible, RouteSessionBridge.service != null || RouteSessionBridge.pending != null || permissionResult != null, bytes.size)) { result.error("SESSION_UNAVAILABLE", "Session unavailable", null); return }
+        RouteSessionBridge.interrupted = false
         RouteSessionBridge.snapshot = bytes; RouteSessionBridge.pending = result
         try {
             val intent = android.content.Intent(this, RouteSessionService::class.java)
@@ -40,8 +41,8 @@ class MainActivity : FlutterActivity() {
                     if (bytes == null || bytes.size > 5242880) result.error("ROUTE_INVALID", "Route unavailable", null)
                     else startRoute(bytes, result)
                 }
-                "stop" -> { RouteSessionBridge.service?.terminate(null); RouteSessionBridge.snapshot = null; result.success(null) }
-                "active" -> result.success(RouteSessionBridge.service != null || RouteSessionBridge.pending != null)
+                "stop" -> { RouteSessionBridge.service?.terminate(null); RouteSessionBridge.snapshot = null; RouteSessionBridge.interrupted = false; result.success(null) }
+                "active" -> result.success(mapOf("active" to (RouteSessionBridge.service != null || RouteSessionBridge.pending != null), "interrupted" to RouteSessionBridge.interrupted, "starting" to (RouteSessionBridge.pending != null)))
                 "permissions" -> {
                     if (!visible || permissionResult != null) result.error("ACTIVITY_UNAVAILABLE", "Visible Activity required", null)
                     else {

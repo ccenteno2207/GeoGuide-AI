@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,8 +21,9 @@ class FakeSession implements RouteSessionClient {
   @override
   void Function(LocationSample)? onSample;
   @override
-  void Function(bool)? onState;
+  void Function(RouteSessionStatus)? onState;
   bool denied = false;
+  Completer<void>? permissionGate;
   int starts = 0, permissions = 0;
   void Function()? beforeStart;
   @override
@@ -27,6 +31,7 @@ class FakeSession implements RouteSessionClient {
   @override
   Future<void> requestPermissions() async {
     permissions++;
+    await permissionGate?.future;
     if (denied) throw PlatformException(code: 'DENIED');
   }
 
@@ -35,17 +40,29 @@ class FakeSession implements RouteSessionClient {
     beforeStart?.call();
     starts++;
     active = true;
-    onState?.call(true);
+    onState?.call(RouteSessionStatus.active);
   }
 
   @override
   Future<void> stop() async {
     active = false;
-    onState?.call(false);
+    onState?.call(RouteSessionStatus.stopped);
   }
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  // The real map requests its native cache directory on lifecycle resume.
+  // Supply only this platform capability; B1 state/producer assertions remain real.
+  final cache = Directory.systemTemp.createTempSync('geoguide-b11-widget-');
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(
+        const MethodChannel('plugins.flutter.io/path_provider'),
+        (call) async {
+          if (call.method == 'getApplicationCacheDirectory') return cache.path;
+          throw MissingPluginException();
+        },
+      );
   for (final denied in [false, true]) {
     testWidgets('explicit B1 consent and producer cleanup denied=$denied', (
       tester,
@@ -64,6 +81,7 @@ void main() {
       );
       final source = gps.StreamRepository();
       final session = FakeSession()..denied = denied;
+      if (!denied) session.permissionGate = Completer<void>();
       session.beforeStart = () =>
           expect(source.controller.hasListener, isFalse);
       await tester.pumpWidget(
@@ -83,6 +101,21 @@ void main() {
       expect(session.permissions, 0);
       await tester.tap(find.text('Iniciar recorrido'));
       await tester.pumpAndSettle();
+      if (!denied) {
+        expect(find.text('Recorrido GPS: iniciando'), findsOneWidget);
+        expect(session.starts, 0);
+        expect(
+          tester
+              .widget<IconButton>(
+                find.byWidgetPredicate(
+                  (w) => w is IconButton && w.tooltip == 'Ubicación puntual no disponible durante el recorrido GPS',
+                ),
+              )
+              .onPressed,
+          isNull,
+        );
+        session.permissionGate!.complete();
+      }
       await tester.runAsync(() async {
         await Future<void>.delayed(const Duration(milliseconds: 10));
       });
@@ -91,9 +124,71 @@ void main() {
       expect(source.controller.hasListener, isFalse);
       expect(session.starts, denied ? 0 : 1);
       if (!denied) {
+        expect(find.text('Recorrido GPS: activo'), findsOneWidget);
+        for (final tooltip in [
+          'Ubicación puntual no disponible durante el recorrido GPS',
+          'Seguimiento normal no disponible: el recorrido GPS controla la ubicación',
+        ]) {
+          expect(
+            tester
+                .widget<IconButton>(
+                  find.byWidgetPredicate(
+                    (w) => w is IconButton && w.tooltip == tooltip,
+                  ),
+                )
+                .onPressed,
+            isNull,
+          );
+        }
+        expect(source.controller.hasListener, isFalse);
+        void emit(DateTime time, double accuracy) => session.onSample!(
+          LocationSample(
+            position: const LocationPoint(latitude: -12, longitude: -77),
+            timestamp: time,
+            accuracyMeters: accuracy,
+          ),
+        );
+        emit(DateTime.now(), 100);
+        await tester.pump();
+        expect(find.text('Precisión de ubicación reducida'), findsOneWidget);
+        tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+        emit(DateTime.now().subtract(const Duration(hours: 1)), 2);
+        await tester.pump();
+        expect(find.text('Precisión de ubicación reducida'), findsOneWidget);
+        tester.binding.handleAppLifecycleStateChanged(
+          AppLifecycleState.resumed,
+        );
+        emit(DateTime.now().subtract(const Duration(hours: 1)), 2);
+        await tester.pump();
+        expect(
+          find.text('Ubicación desactualizada; esperando actualización'),
+          findsOneWidget,
+        );
+        emit(DateTime.now(), 2);
+        await tester.pump();
+        expect(find.text('Seguimiento de ubicación activo'), findsOneWidget);
+        expect(find.text('Recorrido GPS: activo'), findsOneWidget);
         await tester.tap(find.byTooltip('Detener recorrido GPS'));
         await tester.pumpAndSettle();
         expect(session.active, isFalse);
+        expect(find.text('Recorrido detenido'), findsWidgets);
+        expect(
+          tester
+              .widget<IconButton>(
+                find.byWidgetPredicate(
+                  (w) =>
+                      w is IconButton && w.tooltip == 'Usar ubicación actual',
+                ),
+              )
+              .onPressed,
+          isNotNull,
+        );
+        session.onState?.call(RouteSessionStatus.interrupted);
+        await tester.pump();
+        expect(
+          find.textContaining('Recorrido GPS: interrumpido'),
+          findsOneWidget,
+        );
       } else {
         expect(find.textContaining('No se pudo iniciar'), findsOneWidget);
       }

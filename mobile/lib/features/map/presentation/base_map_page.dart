@@ -54,6 +54,14 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   bool _drivingReduced = false;
   bool _b1Owned = false;
   bool _b1Busy = false;
+  RouteSessionStatus? _b1Status;
+  String get _b1StatusText => switch (_b1Status) {
+    RouteSessionStatus.starting => 'Recorrido GPS: iniciando',
+    RouteSessionStatus.active => 'Recorrido GPS: activo',
+    RouteSessionStatus.interrupted =>
+      'Recorrido GPS: interrumpido; revisa ubicación y notificaciones',
+    _ => 'Recorrido detenido',
+  };
   RouteSessionClient get _routeSession => widget.routeSession;
   bool _followLocation = false;
   bool _followCamera = false;
@@ -72,15 +80,24 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     _routeSession.onSample = _onLocationSample;
-    _routeSession.onState = (active) {
+    _routeSession.onState = (status) {
+      final active = status == RouteSessionStatus.active;
       if (!mounted) return;
       setState(() {
-        if (_b1Owned || active) {
-          _b1Owned = active;
+        if (_b1Owned ||
+            active ||
+            status == RouteSessionStatus.starting ||
+            status == RouteSessionStatus.interrupted) {
+          _b1Status = status;
+          _b1Owned = active || status == RouteSessionStatus.starting;
           _followLocation = active;
           if (!active) {
-            _followCamera = false;
-            _locationStatus = 'Recorrido detenido';
+            if (status != RouteSessionStatus.starting) _followCamera = false;
+            _locationStatus = status == RouteSessionStatus.interrupted
+                ? 'Ubicación no disponible; recorrido interrumpido'
+                : status == RouteSessionStatus.starting
+                ? 'Esperando inicio del recorrido GPS'
+                : 'Recorrido detenido';
           }
         }
       });
@@ -106,7 +123,16 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   Future<void> _toggleRouteSession() async {
     if (_b1Busy || _drivingReduced) return;
     if (_b1Owned) {
-      await _routeSession.stop();
+      try {
+        await _routeSession.stop();
+      } catch (_) {
+        if (mounted) {
+          setState(
+            () => _locationStatus =
+                'No se confirmó la detención; usa Detener en la notificación',
+          );
+        }
+      }
       return;
     }
     final snapshot = widget.offlineDiscovery?.snapshot;
@@ -134,7 +160,10 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       ),
     );
     if (consent != true || !mounted) return;
-    setState(() => _b1Busy = true);
+    setState(() {
+      _b1Busy = true;
+      _b1Status = RouteSessionStatus.starting;
+    });
     try {
       await _routeSession.requestPermissions();
       if (!mounted) return;
@@ -148,7 +177,8 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       if (mounted) {
         setState(() {
           _b1Owned = true;
-          _locationStatus = 'Recorrido GPS activo';
+          _b1Status = RouteSessionStatus.active;
+          _locationStatus = 'Esperando una muestra de ubicación válida';
         });
       }
     } catch (_) {
@@ -156,9 +186,10 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       _followLocation = false;
       _followCamera = false;
       if (mounted) {
-        setState(
-          () => _locationStatus = 'No se pudo iniciar el recorrido: revisa ubicación y notificaciones',
-        );
+        setState(() {
+          _b1Status = RouteSessionStatus.interrupted;
+          _locationStatus = 'No se pudo iniciar el recorrido: revisa ubicación y notificaciones';
+        });
       }
     } finally {
       if (mounted) setState(() => _b1Busy = false);
@@ -290,7 +321,9 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       _onLocationSample,
       onError: (_) {
         if (mounted) {
-          setState(() => _locationStatus = 'Señal de ubicación degradada');
+          setState(
+            () => _locationStatus = 'Ubicación no disponible temporalmente',
+          );
         }
       },
     );
@@ -298,15 +331,19 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
 
   void _onLocationSample(LocationSample sample) {
     final now = DateTime.now();
-    if (!mounted ||
-        !_followLocation ||
-        _followPausedByLifecycle ||
-        !sample.isUsable ||
-        sample.timestamp.isAfter(now) ||
-        now.difference(sample.timestamp) > _cameraPolicy.config.maxAge) {
-      if (mounted && _followLocation) {
-        setState(() => _locationStatus = 'Señal de ubicación degradada');
-      }
+    if (!mounted || !_followLocation || _followPausedByLifecycle) return;
+    if (!sample.isUsable || sample.timestamp.isAfter(now)) {
+      setState(
+        () => _locationStatus =
+            'Muestra de ubicación no válida; esperando actualización',
+      );
+      return;
+    }
+    if (now.difference(sample.timestamp) > _cameraPolicy.config.maxAge) {
+      setState(
+        () => _locationStatus =
+            'Ubicación desactualizada; esperando actualización',
+      );
       return;
     }
     if (_lastLocationTimestamp != null &&
@@ -316,7 +353,9 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     _lastLocationTimestamp = sample.timestamp;
     setState(() {
       _currentLocation = sample.position;
-      _locationStatus = 'Seguimiento de ubicación activo';
+      _locationStatus = sample.accuracyMeters > _cameraPolicy.config.maxAccuracy
+          ? 'Precisión de ubicación reducida'
+          : 'Seguimiento de ubicación activo';
     });
     if (_followCamera && !_drivingReduced) {
       final target = _cameraPolicy.evaluate(
@@ -528,8 +567,12 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
               ),
             ),
           IconButton(
-            tooltip: 'Usar ubicación actual',
-            onPressed: _isRequestingLocation ? null : _requestLocation,
+            tooltip: (_b1Owned || _b1Busy)
+                ? 'Ubicación puntual no disponible durante el recorrido GPS'
+                : 'Usar ubicación actual',
+            onPressed: (_isRequestingLocation || _b1Owned || _b1Busy)
+                ? null
+                : _requestLocation,
             icon: const Icon(Icons.my_location),
           ),
           if (_followLocation && !_followCamera)
@@ -539,11 +582,15 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
               onPressed: _resumeFollowCamera,
             ),
           IconButton(
-            tooltip: _followLocation
+            tooltip: (_b1Owned || _b1Busy)
+                ? 'Seguimiento normal no disponible: el recorrido GPS controla la ubicación'
+                : _followLocation
                 ? 'Detener seguimiento de ubicación'
                 : 'Activar seguimiento de ubicación',
             icon: Icon(_followLocation ? Icons.gps_fixed : Icons.gps_not_fixed),
-            onPressed: _isRequestingLocation ? null : _toggleFollowLocation,
+            onPressed: (_isRequestingLocation || _b1Owned || _b1Busy)
+                ? null
+                : _toggleFollowLocation,
           ),
         ],
       ),
@@ -736,6 +783,13 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                               _routeDiscovery.status ?? _routePlanning.status,
                               textAlign: TextAlign.center,
                             ),
+                            if (_b1Status != null)
+                              Text(_b1StatusText, textAlign: TextAlign.center),
+                            if (_b1Owned || _b1Busy)
+                              const Text(
+                                'Ubicación controlada por el recorrido GPS; controles normales no disponibles',
+                                textAlign: TextAlign.center,
+                              ),
                             Text(_locationStatus, textAlign: TextAlign.center),
                             if (widget.offlineDiscovery
                                 case final offline?) ...[
