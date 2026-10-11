@@ -137,3 +137,7 @@ Veredicto del alcance ejecutado: B1_STATIONARY_PASS. No implica cierre funcional
 Pendientes no ejecutados: revocación manual, terminación del proceso/reinicio, ahorro de batería/Doze prolongado, batería cuantificada, señal degradada inducida y movimiento dinámico. No se declara PASS de estos casos. El protocolo actual no requirió revocación. No se ejecutó conducción ni pruebas P12.5.
 
 Estado final técnico del teléfono: B1 detenido, servicio y notificación ausentes, sin solicitudes activas de ubicación atribuibles al paquete en la inspección posterior. Sin modificaciones de código/manifest/infra durante retest; sin push/PR/merge. Siguiente gate: revisión de evidencia y autorización independiente de cualquier validación adicional; P12.5 NOT_AUTHORIZED, P11-BACKUP-01 OPEN_DEFERRED.
+
+## Continuidad B1.1
+
+El hardening UX y la auditoría del sink silencioso se registran en [B1.1 — UX y CEFI Alert Readiness](B1.1-UX-Hardening-and-CEFI-Alert-Readiness.md). Commit funcional dcb2b35684158fc5b76e78f128fdd6f30699be46; 95/95 tests y 50 controles JVM PASS. El nuevo APK no se instaló. El PASS estacionario B1 anterior se conserva como evidencia histórica de su artefacto; la UX B1.1 necesita retest separado. No se habilita salida audible, no se congela contrato CEFI ni se autoriza P12.5.
