@@ -9,6 +9,7 @@ import '../../discovery/domain/route_snapshot.dart';
 import '../../discovery/presentation/offline_cache_sheet.dart';
 
 import '../../location/application/request_current_location.dart';
+import '../../location/application/gps_camera_policy.dart';
 import '../../location/domain/location_repository.dart';
 import '../../discovery/application/discover_route.dart';
 import '../../discovery/domain/discovery_poi.dart';
@@ -41,6 +42,7 @@ class BaseMapPage extends StatefulWidget {
 
 class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   final MapController _mapController = MapController();
+  final GPSCameraPolicy _cameraPolicy = GPSCameraPolicy();
   LocationPoint? _currentLocation;
   String _locationStatus = 'Ubicación no solicitada';
   bool _isRequestingLocation = false;
@@ -179,6 +181,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     _followLocation = true;
     _followCamera = true;
     _lastLocationTimestamp = null;
+    _cameraPolicy.reset();
     _mapController.move(
       LatLng(result.position!.latitude, result.position!.longitude),
       15,
@@ -191,8 +194,9 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     _locationSubscription = widget.requestCurrentLocation.watch().listen(
       _onLocationSample,
       onError: (_) {
-        if (mounted)
+        if (mounted) {
           setState(() => _locationStatus = 'Señal de ubicación degradada');
+        }
       },
     );
   }
@@ -205,18 +209,28 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       return;
     }
     if (_lastLocationTimestamp != null &&
-        sample.timestamp.isBefore(_lastLocationTimestamp!))
+        sample.timestamp.isBefore(_lastLocationTimestamp!)) {
       return;
+    }
     _lastLocationTimestamp = sample.timestamp;
     setState(() {
       _currentLocation = sample.position;
       _locationStatus = 'Seguimiento de ubicación activo';
     });
     if (_followCamera && !_drivingReduced) {
-      _mapController.move(
-        LatLng(sample.position.latitude, sample.position.longitude),
-        _mapController.camera.zoom,
+      final target = _cameraPolicy.evaluate(
+        sample,
+        now: DateTime.now(),
+        currentZoom: _mapController.camera.zoom,
+        currentRotation: _mapController.camera.rotation,
       );
+      if (target != null) {
+        _mapController.move(
+          LatLng(target.position.latitude, target.position.longitude),
+          target.zoom,
+        );
+        _mapController.rotate(target.rotation);
+      }
     }
   }
 
