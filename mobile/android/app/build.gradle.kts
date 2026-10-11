@@ -1,7 +1,40 @@
+import java.util.zip.ZipFile
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+}
+
+// Validate the delivered APK, not only pubspec or intermediate build outputs.
+// A stale/incomplete Flutter bundle must never count as a successful build.
+val verifyDebugMaterialIcons = tasks.register("verifyDebugMaterialIcons") {
+    dependsOn("packageDebug")
+    doLast {
+        val apk = layout.buildDirectory.file("outputs/apk/debug/app-debug.apk").get().asFile
+        ZipFile(apk).use { archive ->
+            val prefix = "assets/flutter_assets/"
+            val font = archive.getEntry("${prefix}fonts/MaterialIcons-Regular.otf")
+                ?: error("APK is missing MaterialIcons; run flutter clean and rebuild")
+            val signature = archive.getInputStream(font).use { it.readNBytes(4) }
+            check(signature.contentEquals(byteArrayOf(0x4f, 0x54, 0x54, 0x4f))) {
+                "APK contains an invalid MaterialIcons OpenType font"
+            }
+            val manifest = archive.getEntry("${prefix}FontManifest.json")
+                ?: error("APK is missing FontManifest.json")
+            val text = archive.getInputStream(manifest).bufferedReader(Charsets.UTF_8).use { it.readText() }
+            check(text.contains("MaterialIcons") && text.contains("fonts/MaterialIcons-Regular.otf")) {
+                "APK font manifest does not declare MaterialIcons"
+            }
+            check(archive.getEntry("${prefix}AssetManifest.bin") != null) {
+                "APK is missing AssetManifest.bin"
+            }
+            logger.lifecycle("MaterialIcons APK packaging verification PASS (${font.size} bytes)")
+        }
+    }
+}
+tasks.matching { it.name == "assembleDebug" }.configureEach {
+    finalizedBy(verifyDebugMaterialIcons)
 }
 
 android {
@@ -44,7 +77,9 @@ kotlin {
 }
 
 flutter {
-    source = "../.."
+    // Windows junction aliases must not produce two textual paths for the same
+    // Flutter output: stale-output cleanup can otherwise delete fresh assets.
+    source = file("../..").toPath().toRealPath().toString()
 }
 
 // Dependency-free JVM checks for the same policy used by Activity and Service.
