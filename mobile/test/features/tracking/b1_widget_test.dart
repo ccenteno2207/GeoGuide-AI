@@ -132,8 +132,13 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     await source.controller.close();
   });
-  for (final denied in [false, true]) {
-    testWidgets('explicit B1 consent and producer cleanup denied=$denied', (
+  for (final (denied, stopFromNotification) in [
+    (false, false),
+    (true, false),
+    (false, true),
+    (true, true),
+  ]) {
+    testWidgets('B1 denied=$denied notification=$stopFromNotification', (
       tester,
     ) async {
       final now = DateTime.now().millisecondsSinceEpoch;
@@ -228,6 +233,12 @@ void main() {
           );
         }
         expect(source.controller.hasListener, isFalse);
+        session.onState?.call(RouteSessionStatus.starting);
+        await tester.pump();
+        expect(find.text('Recorrido GPS: iniciando'), findsOneWidget);
+        expect(find.text('Esperando inicio del recorrido GPS'), findsOneWidget);
+        session.onState?.call(RouteSessionStatus.active);
+        await tester.pump();
         void emit(DateTime time, double accuracy) => session.onSample!(
           LocationSample(
             position: const LocationPoint(latitude: -12, longitude: -77),
@@ -256,10 +267,21 @@ void main() {
         await tester.pump();
         expect(find.text('Seguimiento de ubicación activo'), findsOneWidget);
         expect(find.text('Recorrido GPS: activo'), findsOneWidget);
-        await tester.tap(find.byTooltip('Detener recorrido GPS'));
+        await tester.pump(const Duration(seconds: 11));
+        expect(
+          find.text('Sin actualización reciente de ubicación'),
+          findsOneWidget,
+        );
+        expect(find.text('Recorrido GPS: activo'), findsOneWidget);
+        if (stopFromNotification) {
+          await session.stop();
+        } else {
+          await tester.tap(find.byTooltip('Detener recorrido GPS'));
+        }
         await tester.pumpAndSettle();
         expect(session.active, isFalse);
-        expect(find.text('Recorrido detenido'), findsWidgets);
+        expect(find.text('Recorrido detenido'), findsOneWidget);
+        expect(session.voiceEnabled, isFalse);
         expect(
           tester
               .widget<IconButton>(
@@ -275,6 +297,10 @@ void main() {
         await tester.pump();
         expect(
           find.textContaining('Recorrido GPS: interrumpido'),
+          findsOneWidget,
+        );
+        expect(
+          find.text('Ubicación no disponible; recorrido interrumpido'),
           findsOneWidget,
         );
       } else {
