@@ -111,3 +111,10 @@ La evidencia P9.4 registra `P9_4_AUDIT = PASS_WITH_NON_BLOCKING_ITEMS`, `P9_4_HU
 | GPS Follow + Community POI discovery | [Proposal](docs/11-Master-Documentation/11-Implementation-Plan/GPS-Follow-and-Community-POI-Discovery.md); separate future capability discovery, Yaso candidate and governance gate |
 | GPS Follow Mode contract proposal | [GPS proposal](docs/11-Master-Documentation/11-Implementation-Plan/GPS-Follow-Mode-Contract-Proposal.md); proposed-only contract, ACs, privacy and P12 gates |
 | Photon LAB-08 ingestion feasibility | [Data-ingestion discovery](docs/11-Master-Documentation/11-Implementation-Plan/Photon-LAB-08-Data-Ingestion-Feasibility.md); documentary alternatives and cross-reference from the [isolated-lab proposal](docs/11-Master-Documentation/11-Implementation-Plan/Photon-Isolated-Lab-Resource-and-Execution-Contract-Proposal.md), LAB-08 remains open and execution is not authorized |
+
+## GPS + CEFI — integración vigente
+
+PR #76 integrado en `8a2e6cad14f2ae88111c0ba17dd89241894a5ee6`; implementación y pruebas automatizadas diferenciadas de evidencia estacionaria histórica y capacidades pendientes. P12.5 NOT_AUTHORIZED.
+
+- [Gobierno y validación post-merge](docs/11-Master-Documentation/11-Implementation-Plan/GPS-CEFI-Post-Merge-Governance-Evidence.md).
+- [Arquitectura Android y ADR candidato provisional](docs/11-Master-Documentation/11-Implementation-Plan/GPS-Android-Integration-Readiness-and-ADR-Candidate.md).
