@@ -63,7 +63,7 @@ Artefacto local: `mobile/build/app/outputs/flutter-apk/app-debug.apk` (ignorado 
 
 SHA-256: `1B6C082BBBBF7B516CA732B86AA411F0AB6ADF17F5A5175D82621E297CA3D85F`.
 
-Build completado con warnings no fatales de SDK XML, acceso nativo Java y source/target 8 de dependencias Android. No se cambiaron SDK, Java, Gradle ni configuraci�n para silenciarlos.
+Build completado con warnings no fatales de SDK XML, acceso nativo Java y source/target 8 de dependencias Android. No se cambiaron SDK, Java, Gradle ni configuración para silenciarlos.
 
 ## Inventario de archivos
 
@@ -71,6 +71,26 @@ A: `mobile/lib/features/location/domain/location_repository.dart`, `mobile/lib/f
 
 B/C: `mobile/lib/features/tracking/application/tracking_session_manager.dart`, `mobile/lib/features/tracking/application/poi_proximity_evaluator.dart`, `mobile/test/features/tracking/accelerated_core_test.dart`.
 
-Evidencia: este documento. Borrador contractual: un �nico archivo no versionado en la rama documental existente. Total implementaci�n: nueve archivos (cinco A, tres B/C, uno evidencia).
+Evidencia: este documento. Borrador contractual: un único archivo no versionado en la rama documental existente. Total implementación: nueve archivos (cinco A, tres B/C, uno evidencia).
 
-Self-review: detectado y corregido el caso de idempotencia mientras hay transici�n en cola; deduplicaci�n preservada al reconstruir snapshot de la misma consulta; calidad de velocidad exigida en sugeridos. Tests adicionales demuestran estos casos y la hist�resis espacial de candidatos pendientes. Baseline remoto verificado nuevamente sin avance concurrente. Revisi�n humana pendiente; no se atribuye PASS Android a los fakes.
+Self-review: detectado y corregido el caso de idempotencia mientras hay transición en cola; deduplicación preservada al reconstruir snapshot de la misma consulta; calidad de velocidad exigida en sugeridos. Tests adicionales demuestran estos casos y la histéresis espacial de candidatos pendientes. Baseline remoto verificado nuevamente sin avance concurrente. Revisión humana pendiente; no se atribuye PASS Android a los fakes.
+
+## Revisión Accelerated Core y readiness Android — 2026-10-10
+
+Autorización humana posterior: auditar A/B/C, corregir menores/UTF-8, validar y preparar integración/ADR candidato. Sin nuevos permisos, FGS/TTS/continuo/Driving/campo/push/PR/merge. Baseline remoto reconfirmado e19e17212c48ecf1b9604c512cac4f5b9fb64686, sin delta.
+
+Correcciones locales: snapshot inválido de otra consulta ya no borra deduplicación antes de su rechazo; estado/modo del manager de solo lectura; callbacks durante pausa y muestras futuras/antiguas no avanzan watermark del mapa. Widget extendido verifica muestra futura seguida de válida y lifecycle pausa/retorno. Nuevo unitario reproduce reset indebido. Commit: `37af1153db0ff5eafc4a26d02b5538ee5a78ef90`.
+
+Reconciliación: 70 baseline + 14 anteriores = 84; 13 era conteo intermedio previo al test de histéresis. Esta revisión añade un unitario y extiende el widget, total **85 PASS / 0 FAIL / 0 SKIP**. Format lib/test: 53 archivos / 0 cambios. Analyze: No issues found. Diff check: PASS. Build APK HTTPS: PASS, assembleDebug 35.8 s; endpoint https://geoguide.getcom.pe:5443. Sin instalación ni conectividad/privacidad física probadas.
+
+APK de esta revisión: `mobile/build/app/outputs/flutter-apk/app-debug.apk`; SHA-256 `AD52795F5E83771B528E1BDD578A8C322E9A4E9EA608720CF5072E105E3E4983`. El hash previo arriba es evidencia histórica del build anterior, no este artefacto.
+
+Incidencias intermedias de edición/validación: getters renombrados accidentalmente, codificación en fuente/widget y fixture con corredor no permitido, corregidos antes de las verificaciones finales. Un intento de build desde raíz falló sin pubspec; se repitió desde mobile. No se presentan esas ejecuciones fallidas como PASS. No queda fallo sin resolver. Se conserva como límite la ausencia de ensayo Android real de B/C.
+
+UTF-8: documentos nuevos tenían bytes CP1252 mezclados con UTF-8; normalizados conservando acentos y contenido. Decode UTF-8 estricto y ausencia de replacement/mojibake PASS en evidencia, readiness y borrador de rama documental. No se alteran fuentes históricas ni contratos congelados.
+
+[Diseño mínimo y ADR candidato](GPS-Android-Integration-Readiness-and-ADR-Candidate.md): propietario único service-engine, Kotlin nativo recomendado frente a plugin mantenido; permisos/consentimientos por API y wiring/teardown propuestos. ADR PROPOSED; no se instala nada. Proximidad productiva precisa parámetros y política de entrega/ack; TTS/continuo/Driving/campo siguen gates independientes.
+
+Archivos de este checkpoint: cinco fuentes/tests del commit de correcciones, esta evidencia y un readiness nuevo en rama funcional. En rama documental previa únicamente normalización UTF-8 del borrador v0.2, aún no versionado. Sin ramas adicionales, backend/API/DB/infra/dependencias/manifest/Excel ni modificaciones P12/Photon. Sin progreso P12 atribuido.
+
+VERDICT = READY_FOR_ANDROID_INTEGRATION_GATE
