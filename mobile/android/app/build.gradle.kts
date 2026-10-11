@@ -46,3 +46,11 @@ kotlin {
 flutter {
     source = "../.."
 }
+
+// Dependency-free JVM checks for the same policy used by Activity and Service.
+tasks.register<JavaExec>("b1PolicyChecks") {
+    dependsOn("compileDebugUnitTestJavaWithJavac")
+    classpath = files(tasks.named("compileDebugUnitTestJavaWithJavac").map { it.outputs.files },
+        tasks.named("compileDebugKotlin").map { it.outputs.files })
+    mainClass.set("com.geoguideai.geoguide_ai.B1PolicyChecks")
+}

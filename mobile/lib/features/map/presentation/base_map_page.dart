@@ -1,3 +1,5 @@
+import '../../tracking/application/route_session_client.dart';
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -26,12 +28,14 @@ class BaseMapPage extends StatefulWidget {
   const BaseMapPage({
     super.key,
     required this.requestCurrentLocation,
+    required this.routeSession,
     this.planRoute,
     this.discoverRoute,
     this.offlineDiscovery,
   });
 
   final RequestCurrentLocation requestCurrentLocation;
+  final RouteSessionClient routeSession;
   final PlanRoute? planRoute;
   final DiscoverRoute? discoverRoute;
   final OfflineDiscovery? offlineDiscovery;
@@ -48,6 +52,9 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   bool _isRequestingLocation = false;
   bool _showDiscoveryList = false;
   bool _drivingReduced = false;
+  bool _b1Owned = false;
+  bool _b1Busy = false;
+  RouteSessionClient get _routeSession => widget.routeSession;
   bool _followLocation = false;
   bool _followCamera = false;
   bool _followPausedByLifecycle = false;
@@ -64,6 +71,21 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    _routeSession.onSample = _onLocationSample;
+    _routeSession.onState = (active) {
+      if (!mounted) return;
+      setState(() {
+        if (_b1Owned || active) {
+          _b1Owned = active;
+          _followLocation = active;
+          if (!active) {
+            _followCamera = false;
+            _locationStatus = 'Recorrido detenido';
+          }
+        }
+      });
+    };
+    _refreshRouteSession();
     _routePlanning = RoutePlanningController(planRoute: widget.planRoute);
     _routeDiscovery = RouteDiscoveryController(
       discoverRoute: widget.discoverRoute,
@@ -71,6 +93,76 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     widget.offlineDiscovery?.onChanged = _offlineChanged;
     widget.offlineDiscovery?.initialize();
+  }
+
+  Future<void> _refreshRouteSession() async {
+    try {
+      await _routeSession.refresh();
+    } on Exception {
+      /* Unsupported platform or test environment. */
+    }
+  }
+
+  Future<void> _toggleRouteSession() async {
+    if (_b1Busy || _drivingReduced) return;
+    if (_b1Owned) {
+      await _routeSession.stop();
+      return;
+    }
+    final snapshot = widget.offlineDiscovery?.snapshot;
+    if (snapshot == null ||
+        !snapshot.eligible(DateTime.now().millisecondsSinceEpoch)) {
+      return;
+    }
+    final consent = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Iniciar recorrido GPS'),
+        content: const Text(
+          'La ubicación continuará con la app en segundo plano o pantalla bloqueada hasta detener el recorrido. Sin historial ni envío continuo. Se mostrará una notificación con Detener. Sin voz ni navegación giro a giro.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Iniciar recorrido'),
+          ),
+        ],
+      ),
+    );
+    if (consent != true || !mounted) return;
+    setState(() => _b1Busy = true);
+    try {
+      await _routeSession.requestPermissions();
+      if (!mounted) return;
+      await _stopFollowLocation(); // Await cancellation before native producer starts.
+      _followLocation = true;
+      _followCamera = true;
+      _followPausedByLifecycle = false;
+      _lastLocationTimestamp = null;
+      _cameraPolicy.reset();
+      await _routeSession.start(snapshot);
+      if (mounted) {
+        setState(() {
+          _b1Owned = true;
+          _locationStatus = 'Recorrido GPS activo';
+        });
+      }
+    } catch (_) {
+      await _stopFollowLocation();
+      _followLocation = false;
+      _followCamera = false;
+      if (mounted) {
+        setState(
+          () => _locationStatus = 'No se pudo iniciar el recorrido: revisa ubicación y notificaciones',
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _b1Busy = false);
+    }
   }
 
   void _offlineChanged() {
@@ -109,10 +201,11 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       if (_followLocation) _followPausedByLifecycle = true;
     }
     if (state == AppLifecycleState.resumed) {
+      _refreshRouteSession();
       widget.offlineDiscovery?.revalidate();
       if (_followLocation && _followPausedByLifecycle) {
         _followPausedByLifecycle = false;
-        _subscribeToLocation();
+        if (!_b1Owned && !_b1Busy) _subscribeToLocation();
       }
     }
   }
@@ -123,6 +216,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     Set<String> categories, {
     bool planFirst = false,
   }) async {
+    if (_b1Owned || _b1Busy) return;
     final offline = widget.offlineDiscovery!;
     await offline.discover(
       DiscoveryQuery(
@@ -136,6 +230,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _requestLocation() async {
+    if (_b1Owned || _b1Busy) return;
     if (_drivingReduced) return;
     setState(() => _isRequestingLocation = true);
     final result = await widget.requestCurrentLocation();
@@ -162,7 +257,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _toggleFollowLocation() async {
-    if (_drivingReduced) return;
+    if (_drivingReduced || _b1Owned || _b1Busy) return;
     if (_followLocation) {
       await _stopFollowLocation();
       return;
@@ -261,6 +356,8 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _routeSession.onSample = null;
+    _routeSession.onState = null;
     _locationSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     widget.offlineDiscovery?.dispose();
@@ -269,7 +366,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   void _selectRoutePoint(TapPosition _, LatLng point) {
-    if (_drivingReduced) return;
+    if (_drivingReduced || _b1Owned || _b1Busy) return;
     if (widget.offlineDiscovery?.busy == true ||
         widget.offlineDiscovery?.saving == true) {
       return;
@@ -284,6 +381,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _calculateRoute() async {
+    if (_b1Owned || _b1Busy) return;
     if (_drivingReduced) return;
     if (widget.offlineDiscovery case final offline?) {
       final origin = _routePlanning.origin,
@@ -411,6 +509,14 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       appBar: AppBar(
         title: const Text('GeoGuide AI'),
         actions: [
+          if (widget.offlineDiscovery?.snapshot != null || _b1Owned)
+            IconButton(
+              onPressed: _b1Busy ? null : _toggleRouteSession,
+              tooltip: _b1Owned
+                  ? 'Detener recorrido GPS'
+                  : 'Iniciar recorrido GPS',
+              icon: Icon(_b1Owned ? Icons.stop_circle : Icons.route),
+            ),
           if (widget.offlineDiscovery case final offline?)
             IconButton(
               tooltip: 'Gestionar copia offline',
