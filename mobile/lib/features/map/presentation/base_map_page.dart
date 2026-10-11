@@ -912,26 +912,49 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
             Positioned(
               left: 16,
               right: 16,
-              bottom: 150,
-              height: 260,
-              child: Card(
-                child: Semantics(
-                  container: true,
-                  label: 'Lista de lugares descubiertos',
-                  child: ListView.builder(
-                    itemCount: _routeDiscovery.pois.length,
-                    itemBuilder: (context, index) {
-                      final poi = _routeDiscovery.pois[index];
-                      return ListTile(
-                        key: ValueKey('discovery-list-${poi.id}'),
-                        title: Text(poi.name),
-                        subtitle: Text(
-                          poiDistanceLabel(poi) ??
-                              friendlyPoiCategory(poi.category),
-                        ),
-                        onTap: () => _showPoiPreview(poi),
-                      );
-                    },
+              top: 16,
+              bottom: 16,
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 320),
+                  child: Card(
+                    key: const ValueKey('discovery-list-panel'),
+                    child: Semantics(
+                      container: true,
+                      label: 'Lista de lugares descubiertos',
+                      child: Column(
+                        children: [
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton.icon(
+                              key: const ValueKey('close-discovery-list'),
+                              onPressed: () =>
+                                  setState(() => _showDiscoveryList = false),
+                              icon: const Icon(Icons.close),
+                              label: const Text('Cerrar lista y ver mapa'),
+                            ),
+                          ),
+                          Expanded(
+                            child: ListView.builder(
+                              itemCount: _routeDiscovery.pois.length,
+                              itemBuilder: (context, index) {
+                                final poi = _routeDiscovery.pois[index];
+                                return ListTile(
+                                  key: ValueKey('discovery-list-${poi.id}'),
+                                  title: Text(poi.name),
+                                  subtitle: Text(
+                                    poiDistanceLabel(poi) ??
+                                        friendlyPoiCategory(poi.category),
+                                  ),
+                                  onTap: () => _showPoiPreview(poi),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
