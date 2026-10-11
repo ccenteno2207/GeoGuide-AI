@@ -1,4 +1,7 @@
+import 'package:flutter/services.dart';
+
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -18,11 +21,28 @@ class StreamRepository implements LocationRepository, LocationStreamSource {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  final cache = Directory.systemTemp.createTempSync(
+    'geoguide-camera-regression-',
+  );
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(
+        const MethodChannel('plugins.flutter.io/path_provider'),
+        (call) async => cache.path,
+      );
+  // These foreground tests explicitly model a resolved, inactive native owner.
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(
+        const MethodChannel('geoguide/route_session'),
+        (call) async => false,
+      );
+
   testWidgets(
     'camera course zoom gesture pause and explicit resume use real map controller',
     (tester) async {
       final source = StreamRepository();
       await tester.pumpWidget(GeoGuideApp(locationRepository: source));
+      await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Activar seguimiento de ubicación'));
       await tester.pumpAndSettle();
       MapController camera() =>
@@ -69,8 +89,14 @@ void main() {
       await tester.pump();
       expect(camera().camera.center, backgroundCenter);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
-      await tester.pump();
+      await tester.pumpAndSettle();
+      await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 10)),
+      );
+      await tester.pumpAndSettle();
+      expect(source.controller.hasListener, isTrue);
       emit(-77.005);
+      await tester.pump();
       await tester.pump();
       expect(camera().camera.center.longitude, closeTo(-77.005, .000001));
       await tester.tap(find.byTooltip('Detener seguimiento de ubicación'));

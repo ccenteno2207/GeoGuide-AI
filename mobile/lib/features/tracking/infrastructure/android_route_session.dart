@@ -11,14 +11,17 @@ import '../../location/domain/location_repository.dart';
 class AndroidRouteSession implements RouteSessionClient {
   static final instance = AndroidRouteSession();
   static const channel = MethodChannel('geoguide/route_session');
+  int _revision = 0;
   @override
   bool active = false;
   @override
   bool voiceEnabled = false;
   @override
   Future<void> setVoiceConsent(bool enabled) async {
-    voiceEnabled =
-        await channel.invokeMethod<bool>('voiceConsent', enabled) == true;
+    final revision = ++_revision;
+    if (!enabled) voiceEnabled = false;
+    final result = await channel.invokeMethod<bool>('voiceConsent', enabled);
+    if (revision == _revision) voiceEnabled = result == true;
   }
 
   void Function(LocationSample)? onSample;
@@ -46,6 +49,7 @@ class AndroidRouteSession implements RouteSessionClient {
         );
       }
       if (call.method == 'state') {
+        ++_revision;
         _update(call.arguments);
       }
     });
@@ -57,27 +61,37 @@ class AndroidRouteSession implements RouteSessionClient {
 
   @override
   Future<void> start(RouteSnapshot snapshot) async {
+    final revision = ++_revision;
     final bytes = const SnapshotCodec().encode(snapshot);
     onState?.call(RouteSessionStatus.starting);
     try {
       await channel.invokeMethod<void>('start', bytes);
-      _update(true);
+      if (revision == _revision) _update(true);
     } catch (_) {
-      _update({'active': false, 'interrupted': true});
+      if (revision == _revision) {
+        _update({'active': false, 'interrupted': true});
+      }
       rethrow;
     }
   }
 
   @override
   Future<void> stop() async {
+    final revision = ++_revision;
+    voiceEnabled = false;
     await channel.invokeMethod<void>('stop');
-    _update(false);
+    if (revision == _revision) _update(false);
   }
 
   @override
   Future<void> refresh() async {
-    _update(await channel.invokeMethod<Object?>('active'));
-    voiceEnabled = await channel.invokeMethod<bool>('voiceState') == true;
+    final revision = ++_revision;
+    final state = await channel.invokeMethod<Object?>('active');
+    if (revision != _revision) throw StateError('Superseded ownership check');
+    final consent = await channel.invokeMethod<bool>('voiceState') == true;
+    if (revision != _revision) throw StateError('Superseded ownership check');
+    _update(state);
+    voiceEnabled = consent;
   }
 
   static LocationSample decodeSample(Map<Object?, Object?> m) => LocationSample(

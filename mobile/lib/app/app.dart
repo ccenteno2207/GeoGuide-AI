@@ -29,6 +29,7 @@ class GeoGuideApp extends StatelessWidget {
     DiscoverRoute? discoverRoute,
     String? backendBaseUrl,
     OfflineDiscovery? offlineDiscovery,
+    this.locationClock,
   }) : routeSession = routeSession ?? AndroidRouteSession.instance,
        _requestCurrentLocation = RequestCurrentLocation(
          locationRepository ?? GeolocatorLocationRepository(),
@@ -44,6 +45,7 @@ class GeoGuideApp extends StatelessWidget {
   final PlanRoute? planRoute;
   final DiscoverRoute? discoverRoute;
   final OfflineDiscovery? offlineDiscovery;
+  final DateTime Function()? locationClock;
   static OfflineDiscovery? _createOffline(String? value) {
     final config = _backendConfiguration(value);
     if (config == null) return null;
@@ -99,6 +101,7 @@ class GeoGuideApp extends StatelessWidget {
         planRoute: planRoute,
         discoverRoute: discoverRoute,
         offlineDiscovery: offlineDiscovery,
+        locationClock: locationClock,
       ),
     );
   }

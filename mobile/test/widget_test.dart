@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -14,6 +15,14 @@ class FakeLocationRepository implements LocationRepository {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  // These foreground tests explicitly model a resolved, inactive native owner.
+  TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+      .setMockMethodCallHandler(
+        const MethodChannel('geoguide/route_session'),
+        (call) async => false,
+      );
+
   testWidgets('renders the GeoGuide AI base map shell', (tester) async {
     await tester.pumpWidget(
       GeoGuideApp(
@@ -42,6 +51,7 @@ void main() {
       ),
     );
 
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Usar ubicación actual'));
     await tester.pump();
 
@@ -61,6 +71,7 @@ void main() {
         ),
       );
 
+      await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Usar ubicación actual'));
       await tester.pumpAndSettle();
 
@@ -81,6 +92,7 @@ void main() {
       ),
     );
 
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Usar ubicación actual'));
     await tester.pump();
 
@@ -100,6 +112,7 @@ void main() {
       ),
     );
 
+    await tester.pumpAndSettle();
     await tester.tap(find.byTooltip('Usar ubicación actual'));
     await tester.pump();
 

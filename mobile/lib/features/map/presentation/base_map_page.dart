@@ -36,6 +36,7 @@ class BaseMapPage extends StatefulWidget {
     this.planRoute,
     this.discoverRoute,
     this.offlineDiscovery,
+    this.locationClock,
   });
 
   final RequestCurrentLocation requestCurrentLocation;
@@ -43,6 +44,7 @@ class BaseMapPage extends StatefulWidget {
   final PlanRoute? planRoute;
   final DiscoverRoute? discoverRoute;
   final OfflineDiscovery? offlineDiscovery;
+  final DateTime Function()? locationClock;
 
   @override
   State<BaseMapPage> createState() => _BaseMapPageState();
@@ -54,6 +56,44 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   LocationPoint? _currentLocation;
   String _locationStatus = 'Ubicación no solicitada';
   bool _isRequestingLocation = false;
+  bool _ownershipPending = true;
+  int _refreshRevision = 0, _normalRevision = 0;
+  Timer? _freshnessTimer;
+  Future<void> _normalCancellation = Future.value();
+  DateTime _now() => widget.locationClock?.call() ?? DateTime.now();
+  void _cancelFreshness() {
+    _freshnessTimer?.cancel();
+    _freshnessTimer = null;
+  }
+
+  Future<void> _detachNormal() {
+    ++_normalRevision;
+    _cancelFreshness();
+    final old = _locationSubscription;
+    _locationSubscription = null;
+    _normalCancellation = _normalCancellation.then((_) async {
+      await old?.cancel();
+    });
+    return _normalCancellation;
+  }
+
+  void _armFreshness(DateTime timestamp) {
+    _cancelFreshness();
+    final remaining =
+        _cameraPolicy.config.maxAge - _now().difference(timestamp);
+    _freshnessTimer = Timer(
+      remaining.isNegative ? Duration.zero : remaining,
+      () {
+        _freshnessTimer = null;
+        if (mounted && _followLocation && !_followPausedByLifecycle) {
+          setState(
+            () => _locationStatus = 'Sin actualización reciente de ubicación',
+          );
+        }
+      },
+    );
+  }
+
   bool _showDiscoveryList = false;
   bool _drivingReduced = false;
   bool _b1Owned = false;
@@ -87,6 +127,31 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     _routeSession.onState = (status) {
       final active = status == RouteSessionStatus.active;
       if (!mounted) return;
+      final stoppedOwnedSession =
+          _b1Owned && !active && status != RouteSessionStatus.starting;
+      if (stoppedOwnedSession) ++_refreshRevision;
+      final stateRevision = _refreshRevision;
+      if (active || status == RouteSessionStatus.starting) {
+        _ownershipPending = true;
+        unawaited(
+          _detachNormal().then((_) {
+            if (mounted && _b1Owned && stateRevision == _refreshRevision) {
+              setState(() {
+                _ownershipPending = false;
+                _followPausedByLifecycle = false;
+              });
+              if (_followLocation) {
+                _armFreshness(_lastLocationTimestamp ?? _now());
+              }
+            }
+          }),
+        );
+      } else if (_b1Owned) {
+        _cancelFreshness();
+      }
+      if (stoppedOwnedSession) {
+        _ownershipPending = false;
+      }
       setState(() {
         if (_b1Owned ||
             active ||
@@ -117,11 +182,30 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _refreshRouteSession() async {
+    final revision = ++_refreshRevision;
+    setState(() => _ownershipPending = true);
+    final resumeNormal = _followLocation && !_b1Owned;
     try {
+      await _detachNormal();
       await _routeSession.refresh();
-      if (mounted) setState(() {});
-    } on Exception {
-      /* Unsupported platform or test environment. */
+      if (!mounted || revision != _refreshRevision) return;
+      await _normalCancellation;
+      if (!mounted || revision != _refreshRevision) return;
+      setState(() {
+        _ownershipPending = false;
+        _followPausedByLifecycle = false;
+      });
+      if (resumeNormal && !_b1Owned && !_b1Busy) {
+        _followLocation = true;
+        _subscribeToLocation();
+      }
+    } catch (_) {
+      if (mounted && revision == _refreshRevision) {
+        setState(
+          () => _locationStatus =
+              'Estado GPS sin confirmar; vuelve a la app para comprobarlo',
+        );
+      }
     }
   }
 
@@ -165,7 +249,12 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _toggleRouteSession() async {
-    if (_b1Busy || _drivingReduced || _isRequestingLocation) return;
+    if (_ownershipPending ||
+        _b1Busy ||
+        _drivingReduced ||
+        _isRequestingLocation) {
+      return;
+    }
     if (_b1Owned) {
       try {
         await _routeSession.stop();
@@ -203,7 +292,8 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         ],
       ),
     );
-    if (consent != true || !mounted) return;
+    if (consent != true || !mounted || _ownershipPending) return;
+    ++_refreshRevision;
     setState(() {
       _b1Busy = true;
       _b1Status = RouteSessionStatus.starting;
@@ -218,7 +308,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       _lastLocationTimestamp = null;
       _cameraPolicy.reset();
       await _routeSession.start(snapshot);
-      if (mounted) {
+      if (mounted && _routeSession.active) {
         setState(() {
           _b1Owned = true;
           _b1Status = RouteSessionStatus.active;
@@ -271,17 +361,14 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive ||
         state == AppLifecycleState.detached) {
-      _locationSubscription?.cancel();
-      _locationSubscription = null;
+      ++_refreshRevision;
+      _ownershipPending = true;
+      unawaited(_detachNormal());
       if (_followLocation) _followPausedByLifecycle = true;
     }
     if (state == AppLifecycleState.resumed) {
       _refreshRouteSession();
       widget.offlineDiscovery?.revalidate();
-      if (_followLocation && _followPausedByLifecycle) {
-        _followPausedByLifecycle = false;
-        if (!_b1Owned && !_b1Busy) _subscribeToLocation();
-      }
     }
   }
 
@@ -305,11 +392,19 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _requestLocation() async {
-    if (_b1Owned || _b1Busy) return;
+    if (_ownershipPending || _b1Owned || _b1Busy) return;
     if (_drivingReduced) return;
     setState(() => _isRequestingLocation = true);
+    final revision = ++_normalRevision;
     final result = await widget.requestCurrentLocation();
     if (!mounted) return;
+    if (revision != _normalRevision ||
+        _ownershipPending ||
+        _b1Owned ||
+        _b1Busy) {
+      setState(() => _isRequestingLocation = false);
+      return;
+    }
 
     setState(() {
       _isRequestingLocation = false;
@@ -332,14 +427,22 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _toggleFollowLocation() async {
-    if (_drivingReduced || _b1Owned || _b1Busy) return;
+    if (_ownershipPending || _drivingReduced || _b1Owned || _b1Busy) return;
     if (_followLocation) {
       await _stopFollowLocation();
       return;
     }
     setState(() => _isRequestingLocation = true);
+    final revision = ++_normalRevision;
     final result = await widget.requestCurrentLocation();
     if (!mounted) return;
+    if (revision != _normalRevision ||
+        _ownershipPending ||
+        _b1Owned ||
+        _b1Busy) {
+      setState(() => _isRequestingLocation = false);
+      return;
+    }
     setState(() {
       _isRequestingLocation = false;
       _currentLocation = result.position;
@@ -360,11 +463,25 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   void _subscribeToLocation() {
-    _locationSubscription?.cancel();
+    if (_ownershipPending ||
+        _b1Owned ||
+        _b1Busy ||
+        _locationSubscription != null) {
+      return;
+    }
+    final revision = ++_normalRevision;
+    _armFreshness(_lastLocationTimestamp ?? _now());
     _locationSubscription = widget.requestCurrentLocation.watch().listen(
-      _onLocationSample,
+      (sample) {
+        if (revision == _normalRevision && !_ownershipPending && !_b1Owned) {
+          _onLocationSample(sample);
+        }
+      },
       onError: (_) {
-        if (mounted) {
+        if (mounted &&
+            revision == _normalRevision &&
+            !_ownershipPending &&
+            !_b1Owned) {
           setState(
             () => _locationStatus = 'Ubicación no disponible temporalmente',
           );
@@ -374,7 +491,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   void _onLocationSample(LocationSample sample) {
-    final now = DateTime.now();
+    final now = _now();
     if (!mounted || !_followLocation || _followPausedByLifecycle) return;
     if (!sample.isUsable || sample.timestamp.isAfter(now)) {
       setState(
@@ -391,10 +508,11 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       return;
     }
     if (_lastLocationTimestamp != null &&
-        sample.timestamp.isBefore(_lastLocationTimestamp!)) {
+        !sample.timestamp.isAfter(_lastLocationTimestamp!)) {
       return;
     }
     _lastLocationTimestamp = sample.timestamp;
+    _armFreshness(sample.timestamp);
     setState(() {
       _currentLocation = sample.position;
       _locationStatus = sample.accuracyMeters > _cameraPolicy.config.maxAccuracy
@@ -419,8 +537,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _stopFollowLocation() async {
-    await _locationSubscription?.cancel();
-    _locationSubscription = null;
+    await _detachNormal();
     if (!mounted) return;
     setState(() {
       _followLocation = false;
@@ -431,7 +548,14 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   void _resumeFollowCamera() {
-    if (!_followLocation || _currentLocation == null || _drivingReduced) return;
+    if (!_followLocation ||
+        _currentLocation == null ||
+        _drivingReduced ||
+        _lastLocationTimestamp == null ||
+        _now().difference(_lastLocationTimestamp!) >=
+            _cameraPolicy.config.maxAge) {
+      return;
+    }
     setState(() => _followCamera = true);
     final location = _currentLocation!;
     _mapController.move(LatLng(location.latitude, location.longitude), 15);
@@ -439,9 +563,11 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    ++_refreshRevision;
+    _cancelFreshness();
+    unawaited(_detachNormal());
     _routeSession.onSample = null;
     _routeSession.onState = null;
-    _locationSubscription?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     widget.offlineDiscovery?.dispose();
     _mapController.dispose();
@@ -449,7 +575,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   void _selectRoutePoint(TapPosition _, LatLng point) {
-    if (_drivingReduced || _b1Owned || _b1Busy) return;
+    if (_ownershipPending || _drivingReduced || _b1Owned || _b1Busy) return;
     if (widget.offlineDiscovery?.busy == true ||
         widget.offlineDiscovery?.saving == true) {
       return;
@@ -464,7 +590,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _calculateRoute() async {
-    if (_b1Owned || _b1Busy) return;
+    if (_ownershipPending || _b1Owned || _b1Busy) return;
     if (_drivingReduced) return;
     if (widget.offlineDiscovery case final offline?) {
       final origin = _routePlanning.origin,
@@ -611,7 +737,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
           ),
           if (widget.offlineDiscovery?.snapshot != null || _b1Owned)
             IconButton(
-              onPressed: (_b1Busy || _isRequestingLocation)
+              onPressed: (_ownershipPending || _b1Busy || _isRequestingLocation)
                   ? null
                   : _toggleRouteSession,
               tooltip: _b1Owned
@@ -633,7 +759,11 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
             tooltip: (_b1Owned || _b1Busy)
                 ? 'Ubicación puntual no disponible durante el recorrido GPS'
                 : 'Usar ubicación actual',
-            onPressed: (_isRequestingLocation || _b1Owned || _b1Busy)
+            onPressed:
+                (_ownershipPending ||
+                    _isRequestingLocation ||
+                    _b1Owned ||
+                    _b1Busy)
                 ? null
                 : _requestLocation,
             icon: const Icon(Icons.my_location),
@@ -651,7 +781,11 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                 ? 'Detener seguimiento de ubicación'
                 : 'Activar seguimiento de ubicación',
             icon: Icon(_followLocation ? Icons.gps_fixed : Icons.gps_not_fixed),
-            onPressed: (_isRequestingLocation || _b1Owned || _b1Busy)
+            onPressed:
+                (_ownershipPending ||
+                    _isRequestingLocation ||
+                    _b1Owned ||
+                    _b1Busy)
                 ? null
                 : _toggleFollowLocation,
           ),
