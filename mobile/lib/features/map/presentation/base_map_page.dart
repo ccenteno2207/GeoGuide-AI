@@ -987,7 +987,12 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                 'Ubicación controlada por el recorrido GPS; controles normales no disponibles',
                                 textAlign: TextAlign.center,
                               ),
-                            Text(_locationStatus, textAlign: TextAlign.center),
+                            if (_b1Status == null ||
+                                _locationStatus != _b1StatusText)
+                              Text(
+                                _locationStatus,
+                                textAlign: TextAlign.center,
+                              ),
                             if (widget.offlineDiscovery
                                 case final offline?) ...[
                               if (offline.snapshot case final snapshot?)
