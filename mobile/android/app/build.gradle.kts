@@ -98,3 +98,11 @@ tasks.register<JavaExec>("c2VoiceChecks") {
         tasks.named("compileDebugUnitTestKotlin").map { (it as org.jetbrains.kotlin.gradle.tasks.KotlinCompile).libraries.filter { file -> file.name.startsWith("kotlin-stdlib") } })
     mainClass.set("com.geoguideai.geoguide_ai.C2VoiceChecks")
 }
+
+tasks.register<JavaExec>("c21DiagnosticChecks") {
+    dependsOn("compileDebugUnitTestKotlin")
+    classpath = files(tasks.named("compileDebugUnitTestKotlin").map { it.outputs.files },
+        tasks.named("compileDebugKotlin").map { it.outputs.files },
+        tasks.named("compileDebugUnitTestKotlin").map { (it as org.jetbrains.kotlin.gradle.tasks.KotlinCompile).libraries.filter { file -> file.name.startsWith("kotlin-stdlib") } })
+    mainClass.set("com.geoguideai.geoguide_ai.C21DiagnosticChecks")
+}

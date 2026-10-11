@@ -6,18 +6,21 @@ import io.flutter.plugin.common.MethodChannel
 import java.io.File
 
 class MainActivity : FlutterActivity() {
+    private val diagnostic by lazy { VoiceDiagnosticAdapter(this, android.os.Handler(android.os.Looper.getMainLooper())) }
+    private val diagnosticDebug get() = applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
     private var visible = false
     private var permissionResult: MethodChannel.Result? = null
     private var routeChannel: MethodChannel? = null
     override fun onResume() { super.onResume(); visible = true; RouteSessionBridge.ui = routeChannel }
-    override fun onPause() { visible = false; super.onPause() }
+    override fun onPause() { visible = false; diagnostic.cancel(); super.onPause() }
     override fun onDestroy() {
         if (RouteSessionBridge.ui === routeChannel) RouteSessionBridge.ui = null
         permissionResult?.error("CANCELLED", "Activity unavailable", null); permissionResult = null
+        diagnostic.cancel()
         super.onDestroy()
     }
     private fun startRoute(bytes: ByteArray, result: MethodChannel.Result) {
-        if (!B1Policy.canStart(visible, RouteSessionBridge.service != null || RouteSessionBridge.pending != null || permissionResult != null, bytes.size)) { result.error("SESSION_UNAVAILABLE", "Session unavailable", null); return }
+        if (!B1Policy.canStart(visible, RouteSessionBridge.service != null || RouteSessionBridge.pending != null || permissionResult != null || diagnostic.busy, bytes.size)) { result.error("SESSION_UNAVAILABLE", "Session unavailable", null); return }
         RouteSessionBridge.interrupted = false
         RouteSessionBridge.snapshot = bytes; RouteSessionBridge.pending = result
         try {
@@ -32,6 +35,18 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "geoguide/voice_diagnostic").setMethodCallHandler { call, result ->
+            if (!diagnosticDebug) result.notImplemented()
+            else when (call.method) {
+                "start" -> {
+                    val routeBusy = RouteSessionBridge.service != null || RouteSessionBridge.pending != null || permissionResult != null
+                    if (!VoiceDiagnosticController.allowed(diagnosticDebug, visible, RouteSessionBridge.voiceConsent, routeBusy, diagnostic.busy)) result.success("UNAVAILABLE")
+                    else diagnostic.start(result)
+                }
+                "stop" -> { diagnostic.cancel(); result.success(null) }
+                else -> result.notImplemented()
+            }
+        }
         routeChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "geoguide/route_session")
         RouteSessionBridge.ui = routeChannel
         routeChannel?.setMethodCallHandler { call, result ->
@@ -46,6 +61,7 @@ class MainActivity : FlutterActivity() {
                     if (!visible) result.error("ACTIVITY_UNAVAILABLE", "Visible Activity required", null)
                     else {
                         val enabled = call.arguments == true
+                        if (!enabled) diagnostic.cancel()
                         RouteSessionBridge.voiceConsent = enabled
                         RouteSessionBridge.service?.voiceConsent(enabled)
                         result.success(enabled)

@@ -3,6 +3,10 @@ import '../../tracking/application/route_session_client.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+
+import '../../tracking/presentation/voice_diagnostic.dart';
+
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -588,6 +592,14 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       appBar: AppBar(
         title: const Text('GeoGuide AI'),
         actions: [
+          if (VoiceDiagnosticAction.available(
+            debug: kDebugMode,
+            driving: _drivingReduced,
+          ))
+            VoiceDiagnosticAction(
+              consent: _routeSession.voiceEnabled,
+              routeBusy: _b1Owned || _b1Busy || _routeSession.active,
+            ),
           IconButton(
             tooltip: _routeSession.voiceEnabled
                 ? 'Desactivar avisos de voz CEFI'

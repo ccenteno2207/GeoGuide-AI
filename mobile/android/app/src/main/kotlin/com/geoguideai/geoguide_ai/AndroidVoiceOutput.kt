@@ -14,6 +14,8 @@ internal class AndroidVoiceOutput(context: Context, private val handler: Handler
  private val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
  private val attributes = AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE).setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build()
  private var tts: TextToSpeech? = null
+ var initialization = "INITIALIZING"
+  private set
  private var ready = false
  private var closed = false
  private var focusRequest: AudioFocusRequest? = null
@@ -26,12 +28,13 @@ internal class AndroidVoiceOutput(context: Context, private val handler: Handler
   tts = TextToSpeech(context.applicationContext) { status -> handler.post {
    if (closed) return@post
    val engine = tts ?: return@post
-   if (status != TextToSpeech.SUCCESS) return@post
+   if (status != TextToSpeech.SUCCESS) { initialization = "ERROR"; return@post }
    try {
     val voice = engine.voices?.filter { it.locale.language == "es" && !it.isNetworkConnectionRequired && !it.features.orEmpty().contains(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED) }
      ?.sortedWith(compareBy({ if (it.locale.country == "PE") 0 else 1 }, { it.name }))?.firstOrNull()
-    if (voice == null || engine.setVoice(voice) != TextToSpeech.SUCCESS) return@post
-    if (engine.setAudioAttributes(attributes) != TextToSpeech.SUCCESS) return@post
+    if (voice == null) { initialization = "NO_SPANISH_VOICE"; return@post }
+    if (engine.setVoice(voice) != TextToSpeech.SUCCESS) { initialization = "ERROR"; return@post }
+    if (engine.setAudioAttributes(attributes) != TextToSpeech.SUCCESS) { initialization = "ERROR"; return@post }
     engine.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
      override fun onStart(id: String?) {}
      override fun onDone(id: String?) { handler.post { val item = utterance; if (!closed && item != null && item.first == id) { utterance = null; completed(item.second) } } }
@@ -40,8 +43,8 @@ internal class AndroidVoiceOutput(context: Context, private val handler: Handler
      override fun onStop(id: String?, interrupted: Boolean) { error(id) }
      private fun error(id: String?) { handler.post { val item = utterance; if (!closed && item != null && item.first == id) { utterance = null; failed(item.second) } } }
     })
-    ready = true
-   } catch (_: Exception) { ready = false }
+    ready = true; initialization = "READY"
+   } catch (_: Exception) { ready = false; initialization = "ERROR" }
   } }
  }
  override fun available() = ready && !closed
