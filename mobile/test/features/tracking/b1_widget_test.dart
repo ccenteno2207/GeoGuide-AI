@@ -245,6 +245,7 @@ void main() {
         tester.binding.handleAppLifecycleStateChanged(
           AppLifecycleState.resumed,
         );
+        await tester.pumpAndSettle();
         emit(DateTime.now().subtract(const Duration(hours: 1)), 2);
         await tester.pump();
         expect(
