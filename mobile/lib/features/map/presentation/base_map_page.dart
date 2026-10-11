@@ -202,7 +202,13 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   void _onLocationSample(LocationSample sample) {
-    if (!mounted || !_followLocation || !sample.isUsable) {
+    final now = DateTime.now();
+    if (!mounted ||
+        !_followLocation ||
+        _followPausedByLifecycle ||
+        !sample.isUsable ||
+        sample.timestamp.isAfter(now) ||
+        now.difference(sample.timestamp) > _cameraPolicy.config.maxAge) {
       if (mounted && _followLocation) {
         setState(() => _locationStatus = 'Señal de ubicación degradada');
       }
@@ -220,7 +226,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     if (_followCamera && !_drivingReduced) {
       final target = _cameraPolicy.evaluate(
         sample,
-        now: DateTime.now(),
+        now: now,
         currentZoom: _mapController.camera.zoom,
         currentRotation: _mapController.camera.rotation,
       );

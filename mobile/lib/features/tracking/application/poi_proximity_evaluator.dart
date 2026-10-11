@@ -60,17 +60,20 @@ class POIProximityEvaluator {
     required Set<String> chosenIds,
     required Set<String> categories,
   }) {
-    if (_snapshot == null || !snapshot.query.sameAs(_snapshot!.query)) {
-      reset();
-      _snapshot = snapshot;
-    }
     if (!snapshot.eligible(now.millisecondsSinceEpoch) ||
         !sample.isUsable ||
         sample.accuracyMeters > config.maxAccuracyMeters ||
         sample.timestamp.isAfter(now) ||
         now.difference(sample.timestamp) > config.maxAge ||
-        (_lastSample != null && !sample.timestamp.isAfter(_lastSample!))) {
+        (_snapshot != null &&
+            snapshot.query.sameAs(_snapshot!.query) &&
+            _lastSample != null &&
+            !sample.timestamp.isAfter(_lastSample!))) {
       return null;
+    }
+    if (_snapshot == null || !snapshot.query.sameAs(_snapshot!.query)) {
+      reset();
+      _snapshot = snapshot;
     }
     _lastSample = sample.timestamp;
     final candidates =

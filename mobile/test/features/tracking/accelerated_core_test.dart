@@ -50,6 +50,58 @@ class FakeService implements TrackingServicePort {
 
 void main() {
   test(
+    'invalid different snapshot does not erase current session deduplication',
+    () {
+      final p = POIProximityEvaluator(
+        ProximityConfig(
+          enterMeters: 1000,
+          exitMeters: 1200,
+          maxAccuracyMeters: 30,
+          maxAge: const Duration(seconds: 10),
+          cooldown: Duration.zero,
+          maxBearingDifference: 45,
+          maxSpeedAccuracy: 3,
+        ),
+      );
+      final current = fixtures.snapshot();
+      final chosen = {current.pois.first.id};
+      expect(
+        p.evaluate(
+          snapshot: current,
+          sample: sample(),
+          now: now,
+          chosenIds: chosen,
+          categories: {},
+        ),
+        isNotNull,
+      );
+      final future = fixtures.snapshot(q: fixtures.query(corridor: 1000));
+      final before = now.subtract(const Duration(seconds: 1));
+      expect(
+        p.evaluate(
+          snapshot: future,
+          sample: sample(time: before),
+          now: before,
+          chosenIds: chosen,
+          categories: {},
+        ),
+        isNull,
+      );
+      final later = now.add(const Duration(seconds: 1));
+      expect(
+        p.evaluate(
+          snapshot: current,
+          sample: sample(time: later),
+          now: later,
+          chosenIds: chosen,
+          categories: {},
+        ),
+        isNull,
+      );
+    },
+  );
+
+  test(
     'proximity hysteresis retains a pending candidate in the boundary band',
     () {
       final data = fixtures.envelope();

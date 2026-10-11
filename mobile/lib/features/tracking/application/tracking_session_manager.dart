@@ -12,8 +12,10 @@ abstract interface class TrackingServicePort {
 class TrackingSessionManager {
   TrackingSessionManager(this.service);
   final TrackingServicePort service;
-  TrackingState state = TrackingState.off;
-  TrackingMode? mode;
+  TrackingState _state = TrackingState.off;
+  TrackingState get state => _state;
+  TrackingMode? _mode;
+  TrackingMode? get mode => _mode;
   int _generation = 0;
   int? _activeGeneration;
   Future<void> _queue = Future.value();
@@ -38,8 +40,8 @@ class TrackingSessionManager {
       return Future.error(StateError('Session gate not satisfied'));
     }
     // Repeated active start must not invalidate its own callback generation.
-    if (state == TrackingState.active &&
-        mode == requested &&
+    if (_state == TrackingState.active &&
+        _mode == requested &&
         _activeGeneration == _generation) {
       return Future.value();
     }
@@ -47,33 +49,33 @@ class TrackingSessionManager {
     return _serial(() async {
       if (generation != _generation || _closed) return;
       try {
-        state = TrackingState.stopping;
+        _state = TrackingState.stopping;
         await service.stop();
-        mode = null;
+        _mode = null;
         if (generation != _generation || _closed) {
-          state = TrackingState.off;
+          _state = TrackingState.off;
           return;
         }
-        state = TrackingState.starting;
+        _state = TrackingState.starting;
         await service.start(requested, (sample) {
           if (!_closed &&
               generation == _generation &&
-              state == TrackingState.active &&
+              _state == TrackingState.active &&
               sample.isUsable) {
             onSample(sample);
           }
         });
         if (generation != _generation || _closed) {
           await service.stop();
-          state = TrackingState.off;
+          _state = TrackingState.off;
           return;
         }
         _activeGeneration = generation;
-        mode = requested;
-        state = TrackingState.active;
+        _mode = requested;
+        _state = TrackingState.active;
       } catch (_) {
-        mode = null;
-        state = TrackingState.interrupted;
+        _mode = null;
+        _state = TrackingState.interrupted;
         try {
           await service.stop();
         } catch (_) {}
@@ -85,16 +87,16 @@ class TrackingSessionManager {
   Future<void> stop() {
     ++_generation;
     return _serial(() async {
-      if (state == TrackingState.off) return;
-      state = TrackingState.stopping;
+      if (_state == TrackingState.off) return;
+      _state = TrackingState.stopping;
       try {
         await service.stop();
-        state = TrackingState.off;
+        _state = TrackingState.off;
       } catch (_) {
-        state = TrackingState.interrupted;
+        _state = TrackingState.interrupted;
         rethrow;
       } finally {
-        mode = null;
+        _mode = null;
       }
     });
   }

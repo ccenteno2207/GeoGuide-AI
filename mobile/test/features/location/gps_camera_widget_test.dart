@@ -27,17 +27,21 @@ void main() {
       await tester.pumpAndSettle();
       MapController camera() =>
           tester.widget<FlutterMap>(find.byType(FlutterMap)).mapController!;
-      void emit(double longitude) => source.controller.add(
-        LocationSample(
-          position: LocationPoint(latitude: -12, longitude: longitude),
-          timestamp: DateTime.now(),
-          accuracyMeters: 2,
-          headingDegrees: 90,
-          headingAccuracyDegrees: 2,
-          speedMetersPerSecond: 20,
-          speedAccuracyMetersPerSecond: 1,
-        ),
-      );
+      void emit(double longitude, {DateTime? timestamp}) =>
+          source.controller.add(
+            LocationSample(
+              position: LocationPoint(latitude: -12, longitude: longitude),
+              timestamp: timestamp ?? DateTime.now(),
+              accuracyMeters: 2,
+              headingDegrees: 90,
+              headingAccuracyDegrees: 2,
+              speedMetersPerSecond: 20,
+              speedAccuracyMetersPerSecond: 1,
+            ),
+          );
+      emit(-78, timestamp: DateTime.now().add(const Duration(hours: 1)));
+      await tester.pump();
+      expect(camera().camera.center.longitude, closeTo(-77, .000001));
       emit(-77.001);
       await tester.pump();
       expect(camera().camera.rotation, closeTo(337.5, .001));
@@ -58,6 +62,17 @@ void main() {
       await tester.pump();
       expect(camera().camera.center.longitude, closeTo(-77.003, .000001));
       expect(find.byTooltip('Reanudar seguimiento de cámara'), findsNothing);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      await tester.pump();
+      final backgroundCenter = camera().camera.center;
+      emit(-77.004);
+      await tester.pump();
+      expect(camera().camera.center, backgroundCenter);
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      emit(-77.005);
+      await tester.pump();
+      expect(camera().camera.center.longitude, closeTo(-77.005, .000001));
       await tester.tap(find.byTooltip('Detener seguimiento de ubicación'));
       await tester.pump();
       final stopped = camera().camera.center;
