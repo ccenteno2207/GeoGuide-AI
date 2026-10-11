@@ -162,3 +162,36 @@ confirmada en Android físico ni a CEFI_VOICE_STATIONARY_PASS.
 No se repite como pendiente lo ya probado en B1; tampoco se extrapola esa evidencia
 al nuevo APK. Sin instalación del hotfix en esta actividad. P12.5 NOT_AUTHORIZED;
 P11-BACKUP-01 OPEN_DEFERRED. El fallo visual no autoriza cerrar C2 físico.
+
+## Retest físico posterior autorizado — 2026-10-11
+
+Esta sección registra la actividad posterior; no altera los resultados históricos
+de preparación anteriores. Entrada: 1abf414081490f4d5b3a818a7ee5ea49fb08953e.
+
+- ADB: HONOR LLY-NX3/API 36; sesión, notificación y registros actuales de ubicación
+  ausentes antes de instalar. Permisos existentes concedidos, sin modificación.
+- adb install -r: Success. Hash del base.apk instalado coincide con el APK final
+  09D9E0471F1123757F5BA75ED039685B0B0290761B252523C459C9F92D261A89.
+- Arranque: Activity COLD, Status ok; interfaz disponible. Voz desactivada según
+  etiqueta técnica inicial. Inicialmente sin snapshot disponible; no se atribuye
+  esto a borrado de datos. No se ejecutó borrado ni reinstalación destructiva.
+- Confirmación humana y capturas: todos los iconos recuperados; mapa/textos visibles.
+  Ruta real seleccionada manualmente: 97.7 km y 104 min planificados, cinco POIs.
+  Origen/destino/POIs, categorías/lista visibles; fichas abren y cierran.
+- Consentimiento: el usuario confirma activación/desactivación por cambio de icono.
+  Cancelar el diálogo queda NOT_VALIDATED: se aclaró que Cancelar significa rechazar
+  la activación en el diálogo Avisos de voz CEFI, no revocar una activación previa.
+- Incidencia UX: el usuario no encuentra salida de la lista. El código contiene
+  Ver mapa como toggle, pero la lista es un Positioned bottom:150/height:260 añadido
+  al final del Stack, sin cierre propio. La captura muestra el panel sobre los
+  controles normales: oculta el acceso al toggle. El mecanismo ya existe en el
+  baseline remoto e19e17212c48ecf1b9604c512cac4f5b9fb64686; no fue añadido por el hotfix.
+- Se detiene el retest ante esta incidencia; no se cambia código. Sesión breve,
+  Home/retorno y limpieza posterior del nuevo APK: NOT_VALIDATED en este retest.
+  Entrega audible: NOT_VALIDATED; no se observó candidato genuinamente elegible ni
+  se ejecutó sesión para determinar BLOCKED_NO_ELIGIBLE_POI. No se fuerza PASS.
+
+Resultado visual: PASS. Resultado integral: STOP_AND_REPORT por bloqueo UX de
+salida de lista, con pruebas parciales conservadas. Propuesta mínima pendiente de
+autorización: cierre explícito dentro del panel y regresión de acceso a Ver mapa,
+sin cambios de GPS, voz, Driving o contratos. Sin push, PR, merge ni carretera.
