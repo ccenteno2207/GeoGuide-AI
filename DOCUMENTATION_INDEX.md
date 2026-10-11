@@ -117,4 +117,5 @@ La evidencia P9.4 registra `P9_4_AUDIT = PASS_WITH_NON_BLOCKING_ITEMS`, `P9_4_HU
 PR #76 integrado en `8a2e6cad14f2ae88111c0ba17dd89241894a5ee6`; implementación y pruebas automatizadas diferenciadas de evidencia estacionaria histórica y capacidades pendientes. P12.5 NOT_AUTHORIZED.
 
 - [Gobierno y validación post-merge](docs/11-Master-Documentation/11-Implementation-Plan/GPS-CEFI-Post-Merge-Governance-Evidence.md).
+- [R01: remediación de frescura y lifecycle GPS; evidencia y gate V01 pendiente](docs/11-Master-Documentation/11-Implementation-Plan/R01-GPS-Lifecycle-Remediation-Evidence.md).
 - [Arquitectura Android y ADR candidato provisional](docs/11-Master-Documentation/11-Implementation-Plan/GPS-Android-Integration-Readiness-and-ADR-Candidate.md).
