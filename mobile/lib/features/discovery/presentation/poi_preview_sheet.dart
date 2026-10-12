@@ -4,10 +4,16 @@ import '../domain/discovery_poi.dart';
 import 'poi_presentation.dart';
 
 class PoiPreviewSheet extends StatelessWidget {
-  const PoiPreviewSheet({super.key, required this.poi, this.onViewDetail});
+  const PoiPreviewSheet({
+    super.key,
+    required this.poi,
+    this.onViewDetail,
+    this.selectionControl,
+  });
 
   final DiscoveryPoi poi;
   final VoidCallback? onViewDetail;
+  final Widget? selectionControl;
 
   @override
   Widget build(BuildContext context) {
@@ -39,6 +45,7 @@ class PoiPreviewSheet extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(reason),
               ],
+              ?selectionControl,
               const SizedBox(height: 20),
               Row(
                 children: [

@@ -63,10 +63,11 @@ RouteSnapshot snapshot({
   DiscoveryQuery? q,
   String description = 'fixture',
   bool empty = false,
+  int capturedAtUtcMs = captured,
 }) => const SnapshotCodec().fromEnvelope(
   envelope(description: description, empty: empty),
   q ?? query(),
-  captured,
+  capturedAtUtcMs,
 );
 
 class Source implements DiscoverySnapshotSource {

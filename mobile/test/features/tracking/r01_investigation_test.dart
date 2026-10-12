@@ -228,7 +228,9 @@ void main() {
       throw MissingPluginException();
     });
     final session = AndroidRouteSession();
-    final pending = session.start(fixtures.snapshot());
+    final pending = session.start(
+      fixtures.snapshot(capturedAtUtcMs: DateTime.now().millisecondsSinceEpoch),
+    );
     await requested.future;
     await session.stop();
     reply.complete();

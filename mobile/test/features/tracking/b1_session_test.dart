@@ -126,7 +126,11 @@ void main() {
           throw PlatformException(code: 'START_DENIED');
         });
     await expectLater(
-      client.start(fixtures.snapshot()),
+      client.start(
+        fixtures.snapshot(
+          capturedAtUtcMs: DateTime.now().millisecondsSinceEpoch,
+        ),
+      ),
       throwsA(isA<PlatformException>()),
     );
     expect(client.active, isFalse);
@@ -145,7 +149,11 @@ void main() {
             AndroidRouteSession.channel,
             (call) async => call.method == 'active' ? reply : null,
           );
-      await client.start(fixtures.snapshot());
+      await client.start(
+        fixtures.snapshot(
+          capturedAtUtcMs: DateTime.now().millisecondsSinceEpoch,
+        ),
+      );
       expect(states, [RouteSessionStatus.starting, RouteSessionStatus.active]);
       reply = {'active': true, 'starting': true, 'interrupted': false};
       await client.refresh();

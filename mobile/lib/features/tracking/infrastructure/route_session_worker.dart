@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 
-import '../../discovery/infrastructure/offline/snapshot_codec.dart';
+import 'selected_poi_session_codec.dart';
 import '../../location/domain/location_repository.dart';
 import '../application/active_route_coordinator.dart';
 import '../application/tracking_session_manager.dart';
@@ -32,9 +32,12 @@ class NativeLocationPort implements TrackingServicePort {
   }
 }
 
-Future<void> runRouteSessionWorker() async {
+Future<void> runRouteSessionWorker({
+  MethodChannel channel = const MethodChannel('geoguide/route_worker'),
+  DateTime Function()? clock,
+}) async {
   WidgetsFlutterBinding.ensureInitialized();
-  const channel = MethodChannel('geoguide/route_worker');
+  final now = clock ?? DateTime.now;
   final port = NativeLocationPort(channel);
   final coordinator = ActiveRouteCoordinator(
     TrackingSessionManager(port),
@@ -50,6 +53,7 @@ Future<void> runRouteSessionWorker() async {
       ),
     ),
     AndroidCEFIAlertDelivery(channel),
+    clock: now,
   );
   Timer? expiry;
   var finished = false;
@@ -83,9 +87,14 @@ Future<void> runRouteSessionWorker() async {
   try {
     final bytes = await channel.invokeMethod<Uint8List>('snapshot');
     if (bytes == null) throw StateError('Route unavailable');
-    final snapshot = const SnapshotCodec().decode(bytes);
+    final context = const SelectedPoiSessionCodec().decode(
+      bytes,
+      now().millisecondsSinceEpoch,
+    );
+    final snapshot = context.snapshot;
     await coordinator.start(
       snapshot,
+      chosenIds: context.chosenIds,
       consent: true,
       prerequisites: true,
       onSample: (sample) {
@@ -110,8 +119,7 @@ Future<void> runRouteSessionWorker() async {
     await channel.invokeMethod<void>('ready');
     expiry = Timer(
       Duration(
-        milliseconds:
-            snapshot.expiresAtUtcMs - DateTime.now().millisecondsSinceEpoch,
+        milliseconds: snapshot.expiresAtUtcMs - now().millisecondsSinceEpoch,
       ),
       () {
         unawaited(finish());
