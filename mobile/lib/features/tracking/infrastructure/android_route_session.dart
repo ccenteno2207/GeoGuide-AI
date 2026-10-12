@@ -5,7 +5,8 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 
 import '../../discovery/domain/route_snapshot.dart';
-import '../../discovery/infrastructure/offline/snapshot_codec.dart';
+import '../application/selected_poi_session.dart';
+import 'selected_poi_session_codec.dart';
 import '../../location/domain/location_repository.dart';
 
 class AndroidRouteSession implements RouteSessionClient {
@@ -60,9 +61,16 @@ class AndroidRouteSession implements RouteSessionClient {
   }
 
   @override
-  Future<void> start(RouteSnapshot snapshot) async {
+  Future<void> start(
+    RouteSnapshot snapshot, {
+    Set<String> chosenIds = const {},
+  }) async {
     final revision = ++_revision;
-    final bytes = const SnapshotCodec().encode(snapshot);
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final bytes = const SelectedPoiSessionCodec().encode(
+      SelectedPoiSession(snapshot, chosenIds, now),
+      now,
+    );
     onState?.call(RouteSessionStatus.starting);
     try {
       await channel.invokeMethod<void>('start', bytes);

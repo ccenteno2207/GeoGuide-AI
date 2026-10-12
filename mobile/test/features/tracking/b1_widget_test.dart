@@ -32,6 +32,7 @@ class FakeSession implements RouteSessionClient {
   bool denied = false;
   Completer<void>? permissionGate;
   int starts = 0, permissions = 0;
+  Set<String> lastChosen = const {};
   void Function()? beforeStart;
   @override
   Future<void> refresh() async {}
@@ -43,7 +44,11 @@ class FakeSession implements RouteSessionClient {
   }
 
   @override
-  Future<void> start(RouteSnapshot snapshot) async {
+  Future<void> start(
+    RouteSnapshot snapshot, {
+    Set<String> chosenIds = const {},
+  }) async {
+    lastChosen = Set.unmodifiable(chosenIds);
     beforeStart?.call();
     starts++;
     active = true;

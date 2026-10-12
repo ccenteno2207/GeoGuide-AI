@@ -1,3 +1,4 @@
+import '../../tracking/application/selected_poi_session.dart';
 import '../../tracking/application/route_session_client.dart';
 
 import 'dart:async';
@@ -96,6 +97,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
 
   bool _showDiscoveryList = false;
   bool _drivingReduced = false;
+  final _poiSelection = SelectedPoiDraft();
   bool _b1Owned = false;
   bool _b1Busy = false;
   RouteSessionStatus? _b1Status;
@@ -150,6 +152,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         _cancelFreshness();
       }
       if (stoppedOwnedSession) {
+        _poiSelection.clear();
         _ownershipPending = false;
       }
       setState(() {
@@ -248,6 +251,10 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     }
   }
 
+  bool get _discoveryChanging =>
+      widget.offlineDiscovery?.busy == true ||
+      widget.offlineDiscovery?.saving == true;
+
   Future<void> _toggleRouteSession() async {
     if (_ownershipPending ||
         _b1Busy ||
@@ -268,6 +275,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       }
       return;
     }
+    if (_discoveryChanging) return;
     final snapshot = widget.offlineDiscovery?.snapshot;
     if (snapshot == null ||
         !snapshot.eligible(DateTime.now().millisecondsSinceEpoch)) {
@@ -292,7 +300,18 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         ],
       ),
     );
-    if (consent != true || !mounted || _ownershipPending) return;
+    if (consent != true ||
+        !mounted ||
+        _ownershipPending ||
+        _discoveryChanging ||
+        !identical(widget.offlineDiscovery?.snapshot, snapshot) ||
+        !snapshot.eligible(_now().millisecondsSinceEpoch)) {
+      return;
+    }
+    final selectedContext = _poiSelection.freeze(
+      snapshot,
+      _now().millisecondsSinceEpoch,
+    );
     ++_refreshRevision;
     setState(() {
       _b1Busy = true;
@@ -307,7 +326,11 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       _followPausedByLifecycle = false;
       _lastLocationTimestamp = null;
       _cameraPolicy.reset();
-      await _routeSession.start(snapshot);
+      if (!identical(widget.offlineDiscovery?.snapshot, snapshot) ||
+          !snapshot.eligible(_now().millisecondsSinceEpoch)) {
+        throw StateError('Route changed before start');
+      }
+      await _routeSession.start(snapshot, chosenIds: selectedContext.chosenIds);
       if (mounted && _routeSession.active) {
         setState(() {
           _b1Owned = true;
@@ -316,6 +339,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         });
       }
     } catch (_) {
+      _poiSelection.clear();
       await _stopFollowLocation();
       _followLocation = false;
       _followCamera = false;
@@ -334,6 +358,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     if (!mounted) return;
     final offline = widget.offlineDiscovery!;
     final snapshot = offline.snapshot;
+    _poiSelection.bind(snapshot, _now().millisecondsSinceEpoch);
     setState(() {
       _routeDiscovery.pois = snapshot?.pois ?? const [];
       _routeDiscovery.status = offline.message;
@@ -621,7 +646,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _openFilters() async {
-    if (_drivingReduced) return;
+    if (_drivingReduced || _ownershipPending || _b1Owned || _b1Busy) return;
     final origin = _routePlanning.origin;
     final destination = _routePlanning.destination;
     if (origin == null || destination == null || _routePlanning.route == null) {
@@ -634,7 +659,13 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         appliedCategories: _routeDiscovery.appliedCategories,
       ),
     );
-    if (!mounted || categories == null) return;
+    if (!mounted ||
+        categories == null ||
+        _ownershipPending ||
+        _b1Owned ||
+        _b1Busy) {
+      return;
+    }
     if (widget.offlineDiscovery != null) {
       await _discoverOffline(origin, destination, categories);
       return;
@@ -655,7 +686,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _retryDiscovery() async {
-    if (_drivingReduced) return;
+    if (_drivingReduced || _ownershipPending || _b1Owned || _b1Busy) return;
     if (widget.offlineDiscovery case final offline?) {
       await offline.retry();
       return;
@@ -670,6 +701,54 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     );
     if (mounted) setState(() {});
   }
+
+  Widget _poiSelectionControl(DiscoveryPoi poi) => StatefulBuilder(
+    builder: (context, refresh) {
+      final snapshot = widget.offlineDiscovery?.snapshot;
+      _poiSelection.bind(snapshot, _now().millisecondsSinceEpoch);
+      final editable =
+          !_ownershipPending &&
+          !_b1Owned &&
+          !_b1Busy &&
+          snapshot?.eligible(_now().millisecondsSinceEpoch) == true &&
+          snapshot!.pois.any((p) => p.id == poi.id);
+      final chosen = _poiSelection.ids.contains(poi.id);
+      final unknownSelection = _b1Owned && !_poiSelection.frozen;
+      return Semantics(
+        selected: unknownSelection ? null : chosen,
+        child: TextButton.icon(
+          onPressed: editable
+              ? () {
+                  _poiSelection.bind(
+                    widget.offlineDiscovery?.snapshot,
+                    _now().millisecondsSinceEpoch,
+                  );
+                  if (_poiSelection.frozen ||
+                      _b1Owned ||
+                      _b1Busy ||
+                      _ownershipPending) {
+                    return;
+                  }
+                  try {
+                    _poiSelection.toggle(poi.id, _now().millisecondsSinceEpoch);
+                    refresh(() {});
+                  } on StateError {
+                    refresh(() {});
+                  }
+                }
+              : null,
+          icon: Icon(chosen ? Icons.check_circle : Icons.add_circle_outline),
+          label: Text(
+            unknownSelection
+                ? 'Selección fijada al iniciar el recorrido'
+                : chosen
+                ? 'Quitar de este recorrido'
+                : 'Elegir para este recorrido',
+          ),
+        ),
+      );
+    },
+  );
 
   Future<void> _showPoiPreview(DiscoveryPoi poi) async {
     if (_drivingReduced) return;
@@ -686,6 +765,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       isScrollControlled: true,
       builder: (_) => PoiPreviewSheet(
         poi: poi,
+        selectionControl: _poiSelectionControl(poi),
         onViewDetail: () {
           Navigator.of(context).pop();
           _showPoiDetail(poi);
@@ -737,7 +817,11 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
           ),
           if (widget.offlineDiscovery?.snapshot != null || _b1Owned)
             IconButton(
-              onPressed: (_ownershipPending || _b1Busy || _isRequestingLocation)
+              onPressed:
+                  (_ownershipPending ||
+                      _b1Busy ||
+                      _isRequestingLocation ||
+                      (!_b1Owned && _discoveryChanging))
                   ? null
                   : _toggleRouteSession,
               tooltip: _b1Owned
@@ -749,11 +833,13 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
             IconButton(
               tooltip: 'Gestionar copia offline',
               icon: const Icon(Icons.offline_pin),
-              onPressed: () => showModalBottomSheet<void>(
-                context: context,
-                isScrollControlled: true,
-                builder: (_) => OfflineCacheSheet(controller: offline),
-              ),
+              onPressed: _ownershipPending || _b1Owned || _b1Busy
+                  ? null
+                  : () => showModalBottomSheet<void>(
+                      context: context,
+                      isScrollControlled: true,
+                      builder: (_) => OfflineCacheSheet(controller: offline),
+                    ),
             ),
           IconButton(
             tooltip: (_b1Owned || _b1Busy)
@@ -948,7 +1034,12 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 8),
                         child: FilledButton.tonalIcon(
-                          onPressed: _routeDiscovery.isDiscovering
+                          key: const ValueKey('route-category-filter'),
+                          onPressed:
+                              _routeDiscovery.isDiscovering ||
+                                  _b1Owned ||
+                                  _b1Busy ||
+                                  _ownershipPending
                               ? null
                               : _openFilters,
                           icon: const Icon(Icons.filter_alt),

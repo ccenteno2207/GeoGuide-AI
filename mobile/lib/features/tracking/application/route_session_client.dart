@@ -10,7 +10,10 @@ abstract interface class RouteSessionClient {
   set onSample(void Function(LocationSample)? value);
   set onState(void Function(RouteSessionStatus)? value);
   Future<void> requestPermissions();
-  Future<void> start(RouteSnapshot snapshot);
+  Future<void> start(
+    RouteSnapshot snapshot, {
+    Set<String> chosenIds = const {},
+  });
   Future<void> stop();
   Future<void> refresh();
 }
