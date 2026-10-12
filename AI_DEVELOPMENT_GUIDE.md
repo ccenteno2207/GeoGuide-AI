@@ -53,6 +53,11 @@ Partir de `main` limpio y sincronizado, crear la rama autorizada, trabajar media
 checkpoints pequeños, ejecutar las validaciones relevantes de `AGENTS.md`, mantener
 contratos y documentación alineados y producir commits cohesivos.
 
+Crear nuevos worktrees auxiliares de GeoGuide AI únicamente dentro de
+`D:\Codex\worktrees\GeoGuide-AI`, conforme a la
+[política de directorios de AGENTS.md](AGENTS.md#ubicación-de-worktrees-auxiliares-de-codex).
+Esta regla no exige trasladar worktrees históricos.
+
 Distinguir validación local/unitaria, validación de integración y evidencia VM. Cuando
 el contrato exija integración real, los mocks no son evidencia suficiente. No ejecutar
 operaciones destructivas en VM, modificar datos protegidos ni asumir infraestructura
