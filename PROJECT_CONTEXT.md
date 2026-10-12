@@ -158,7 +158,7 @@ IMPLEMENTED_AND_AUTOMATED_PASS: cámara GPS del mapa normal, sesión Active Rout
 
 PHYSICALLY_VALIDATED_STATIONARY: evidencia histórica HONOR LLY-NX3/API 36 de inicio/Home/bloqueo/Stop, iconos, cierre de lista y diagnóstico de voz fijo con finalización/cancelación/revocación. Corresponde a APK anteriores. La corrección final de exclusividad no tiene retest físico.
 
-NOT_VALIDATED: proximidad POI audible real (ensayos previos BLOCKED_NO_ELIGIBLE_POI), convivencia con navegación/llamadas/música, liberación física independiente de audio focus, seguimiento prolongado, Doze, batería, revocación Android real, proceso/reinicio y conducción. DEFERRED: continuo sin ruta, cámara pasiva Driving y conexión de POIs elegidos al worker. No se extrapola PASS del diagnóstico a proximidad.
+NOT_VALIDATED: proximidad POI audible real (ensayos previos BLOCKED_NO_ELIGIBLE_POI), convivencia con navegación/llamadas/música, liberación física independiente de audio focus, seguimiento prolongado, Doze, batería, revocación Android real, proceso/reinicio y conducción. DEFERRED: continuo sin ruta y cámara pasiva Driving. I01 implementa la conexión de POIs explícitamente elegidos al worker, con validación automatizada PASS y validación física NOT_EXECUTED; véase [evidencia I01](docs/11-Master-Documentation/11-Implementation-Plan/I01-Selected-POI-Session-Integration-Evidence.md). No se extrapola PASS del diagnóstico a proximidad.
 
 P12 permanece IN_PROGRESS al 45%; global matemático 98.35%, visual 98.4%. P12.4 pendiente de revisión humana; P12.5 NOT_AUTHORIZED. P11-BACKUP-01 sigue bloqueando Production Readiness. Este merge no acredita entregables P12 ni autoriza distribución, conducción o pruebas físicas. Photon y LAB-08 sin cambios.
 
