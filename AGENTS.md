@@ -20,6 +20,24 @@ Documentation is in Spanish where practical; code is in English. Use OpenAPI for
 
 Roadmap placement does not authorize implementation. Future architecture does not automatically belong to the current phase. Proposal does not equal approval. Before implementing a major phase: audit documentation -> identify contradictions -> define and freeze scope -> obtain approval -> implement -> validate -> integrate -> validate post-merge -> formally close. A merged PR does not by itself close a phase.
 
+### Ubicación de worktrees auxiliares de Codex
+
+La ubicación obligatoria para nuevos worktrees auxiliares de GeoGuide AI es
+`D:\Codex\worktrees\GeoGuide-AI`. No crear nuevos worktrees auxiliares directamente
+en `D:\Proyectos\Desarrollo\Ruteo`.
+
+| Recurso | Ubicación oficial |
+| --- | --- |
+| Repositorio principal | `D:\Proyectos\Desarrollo\Ruteo\GeoGuide-AI` |
+| Documentación externa | `D:\Proyectos\Desarrollo\Ruteo\Documentacion Ruteo` |
+| Almacenamiento centralizado de Codex | `D:\Codex` |
+| Junction existente | `C:\Users\CC_Laptop\Documents\Codex` → `D:\Codex` |
+| Nuevos worktrees auxiliares | `D:\Codex\worktrees\GeoGuide-AI` |
+
+Esta política no obliga a trasladar worktrees históricos ni autoriza moverlos,
+eliminarlos o limpiarlos. Preservar archivos locales no rastreados y stashes existentes.
+El repositorio principal y la documentación externa permanecen en sus ubicaciones actuales.
+
 For every implementation task:
 
 1. Inspect the repository and task-relevant documentation.
