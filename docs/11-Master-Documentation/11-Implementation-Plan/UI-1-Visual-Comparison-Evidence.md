@@ -5,7 +5,7 @@
 | Propiedad | Valor |
 |---|---|
 | Antes | Baseline `f4637e64ad08688ab0188528f0a588076501f6b9`, checkout detached de comparación |
-| Después | Rama `feature/ui1-design-system-exploration-shell`, cambio sin integrar |
+| Después | Candidato `78ff94a7e1e14ec5ce1a135a5e29b23db49539c9`, integrado por PR #83 en `e443c0aa10987e04367dd15a1df259438426c3bc` |
 | Renderer | Flutter Widget Test renderer, Flutter 3.47.2 / Dart 3.13.2 |
 | Viewport | 360 × 800 logical px, DPR 1.0, portrait, text scale 1.0 |
 | Estado | Inicio de exploración; sin ruta, sin modal, ubicación no solicitada y sin sesión GPS |
