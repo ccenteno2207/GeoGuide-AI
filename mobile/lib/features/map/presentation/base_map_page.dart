@@ -2,6 +2,7 @@ import '../../tracking/application/selected_poi_session.dart';
 import '../../tracking/application/route_session_client.dart';
 
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -28,6 +29,7 @@ import '../../discovery/presentation/route_discovery_controller.dart';
 import '../../route_planning/application/plan_route.dart';
 import '../../route_planning/domain/route_point.dart';
 import '../../route_planning/presentation/route_planning_controller.dart';
+import '../../../app/theme/geoguide_theme.dart';
 
 class BaseMapPage extends StatefulWidget {
   const BaseMapPage({
@@ -794,88 +796,115 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     if (_drivingReduced) return _buildDrivingView(context);
+    return Theme(
+      data: GeoGuideTheme.explorationShell(),
+      child: Builder(builder: _buildExploration),
+    );
+  }
+
+  Widget _buildExploration(BuildContext context) {
+    final actions = <Widget>[
+      if (VoiceDiagnosticAction.available(
+        debug: kDebugMode,
+        driving: _drivingReduced,
+      ))
+        VoiceDiagnosticAction(
+          consent: _routeSession.voiceEnabled,
+          routeBusy: _b1Owned || _b1Busy || _routeSession.active,
+        ),
+      IconButton(
+        tooltip: _routeSession.voiceEnabled
+            ? 'Desactivar avisos de voz CEFI'
+            : 'Activar avisos de voz CEFI',
+        icon: Icon(
+          _routeSession.voiceEnabled ? Icons.volume_up : Icons.volume_off,
+        ),
+        onPressed: _b1Busy ? null : _toggleVoiceConsent,
+      ),
+      if (widget.offlineDiscovery?.snapshot != null || _b1Owned)
+        IconButton(
+          onPressed:
+              (_ownershipPending ||
+                  _b1Busy ||
+                  _isRequestingLocation ||
+                  (!_b1Owned && _discoveryChanging))
+              ? null
+              : _toggleRouteSession,
+          tooltip: _b1Owned ? 'Detener recorrido GPS' : 'Iniciar recorrido GPS',
+          icon: Icon(_b1Owned ? Icons.stop_circle : Icons.route),
+        ),
+      if (widget.offlineDiscovery case final offline?)
+        IconButton(
+          tooltip: 'Gestionar copia offline',
+          icon: const Icon(Icons.offline_pin),
+          onPressed: _ownershipPending || _b1Owned || _b1Busy
+              ? null
+              : () => showModalBottomSheet<void>(
+                  context: this.context,
+                  isScrollControlled: true,
+                  builder: (_) => OfflineCacheSheet(controller: offline),
+                ),
+        ),
+      IconButton(
+        tooltip: (_b1Owned || _b1Busy)
+            ? 'Ubicación puntual no disponible durante el recorrido GPS'
+            : 'Usar ubicación actual',
+        onPressed:
+            (_ownershipPending || _isRequestingLocation || _b1Owned || _b1Busy)
+            ? null
+            : _requestLocation,
+        icon: const Icon(Icons.my_location),
+      ),
+      if (_followLocation && !_followCamera)
+        IconButton(
+          tooltip: 'Reanudar seguimiento de cámara',
+          icon: const Icon(Icons.center_focus_strong),
+          onPressed: _resumeFollowCamera,
+        ),
+      IconButton(
+        tooltip: (_b1Owned || _b1Busy)
+            ? 'Seguimiento normal no disponible: el recorrido GPS controla la ubicación'
+            : _followLocation
+            ? 'Detener seguimiento de ubicación'
+            : 'Activar seguimiento de ubicación',
+        icon: Icon(_followLocation ? Icons.gps_fixed : Icons.gps_not_fixed),
+        onPressed:
+            (_ownershipPending || _isRequestingLocation || _b1Owned || _b1Busy)
+            ? null
+            : _toggleFollowLocation,
+      ),
+    ];
+    final columns = ((MediaQuery.sizeOf(context).width - 32) / 48)
+        .floor()
+        .clamp(1, actions.length);
+    final actionRows = (actions.length / columns).ceil();
+    final actionBarHeight = actionRows * 48.0;
+    final toolbarHeight = math.max(
+      64.0,
+      MediaQuery.textScalerOf(context).scale(30) + 20,
+    );
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('GeoGuide AI'),
-        actions: [
-          if (VoiceDiagnosticAction.available(
-            debug: kDebugMode,
-            driving: _drivingReduced,
-          ))
-            VoiceDiagnosticAction(
-              consent: _routeSession.voiceEnabled,
-              routeBusy: _b1Owned || _b1Busy || _routeSession.active,
+        toolbarHeight: toolbarHeight,
+        title: const Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('GeoGuide AI'),
+            Text(
+              'Exploración',
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
             ),
-          IconButton(
-            tooltip: _routeSession.voiceEnabled
-                ? 'Desactivar avisos de voz CEFI'
-                : 'Activar avisos de voz CEFI',
-            icon: Icon(
-              _routeSession.voiceEnabled ? Icons.volume_up : Icons.volume_off,
-            ),
-            onPressed: _b1Busy ? null : _toggleVoiceConsent,
+          ],
+        ),
+        bottom: PreferredSize(
+          preferredSize: Size.fromHeight(actionBarHeight),
+          child: SizedBox(
+            height: actionBarHeight,
+            child: Wrap(alignment: WrapAlignment.end, children: actions),
           ),
-          if (widget.offlineDiscovery?.snapshot != null || _b1Owned)
-            IconButton(
-              onPressed:
-                  (_ownershipPending ||
-                      _b1Busy ||
-                      _isRequestingLocation ||
-                      (!_b1Owned && _discoveryChanging))
-                  ? null
-                  : _toggleRouteSession,
-              tooltip: _b1Owned
-                  ? 'Detener recorrido GPS'
-                  : 'Iniciar recorrido GPS',
-              icon: Icon(_b1Owned ? Icons.stop_circle : Icons.route),
-            ),
-          if (widget.offlineDiscovery case final offline?)
-            IconButton(
-              tooltip: 'Gestionar copia offline',
-              icon: const Icon(Icons.offline_pin),
-              onPressed: _ownershipPending || _b1Owned || _b1Busy
-                  ? null
-                  : () => showModalBottomSheet<void>(
-                      context: context,
-                      isScrollControlled: true,
-                      builder: (_) => OfflineCacheSheet(controller: offline),
-                    ),
-            ),
-          IconButton(
-            tooltip: (_b1Owned || _b1Busy)
-                ? 'Ubicación puntual no disponible durante el recorrido GPS'
-                : 'Usar ubicación actual',
-            onPressed:
-                (_ownershipPending ||
-                    _isRequestingLocation ||
-                    _b1Owned ||
-                    _b1Busy)
-                ? null
-                : _requestLocation,
-            icon: const Icon(Icons.my_location),
-          ),
-          if (_followLocation && !_followCamera)
-            IconButton(
-              tooltip: 'Reanudar seguimiento de cámara',
-              icon: const Icon(Icons.center_focus_strong),
-              onPressed: _resumeFollowCamera,
-            ),
-          IconButton(
-            tooltip: (_b1Owned || _b1Busy)
-                ? 'Seguimiento normal no disponible: el recorrido GPS controla la ubicación'
-                : _followLocation
-                ? 'Detener seguimiento de ubicación'
-                : 'Activar seguimiento de ubicación',
-            icon: Icon(_followLocation ? Icons.gps_fixed : Icons.gps_not_fixed),
-            onPressed:
-                (_ownershipPending ||
-                    _isRequestingLocation ||
-                    _b1Owned ||
-                    _b1Busy)
-                ? null
-                : _toggleFollowLocation,
-          ),
-        ],
+        ),
       ),
       body: Stack(
         children: [
@@ -1002,152 +1031,166 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
             right: 16,
             bottom: 24,
             top: 80,
-            child: Align(
-              alignment: Alignment.bottomCenter,
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_routePlanning.origin != null &&
-                        _routePlanning.destination != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: FilledButton.icon(
-                          onPressed:
-                              _routePlanning.canPlan &&
-                                  !_routeDiscovery.isDiscovering
-                              ? _calculateRoute
-                              : null,
-                          icon: _routePlanning.isCalculating
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Icon(Icons.alt_route),
-                          label: const Text('Calcular ruta'),
-                        ),
-                      ),
-                    if (_routePlanning.route != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: FilledButton.tonalIcon(
-                          key: const ValueKey('route-category-filter'),
-                          onPressed:
-                              _routeDiscovery.isDiscovering ||
-                                  _b1Owned ||
-                                  _b1Busy ||
-                                  _ownershipPending
-                              ? null
-                              : _openFilters,
-                          icon: const Icon(Icons.filter_alt),
-                          label: Text('Categorías: ${_filterSummary()}'),
-                        ),
-                      ),
-                    if (_routeDiscovery.pois.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: FilledButton.tonalIcon(
-                          onPressed: () => setState(
-                            () => _showDiscoveryList = !_showDiscoveryList,
-                          ),
-                          icon: Icon(
-                            _showDiscoveryList ? Icons.map : Icons.list,
-                          ),
-                          label: Text(
-                            _showDiscoveryList ? 'Ver mapa' : 'Ver lista',
-                          ),
-                        ),
-                      ),
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              _routeDiscovery.status ?? _routePlanning.status,
-                              textAlign: TextAlign.center,
+            child: LayoutBuilder(
+              builder: (context, constraints) => Align(
+                alignment: Alignment.bottomCenter,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxHeight: constraints.maxHeight * 0.45,
+                  ),
+                  child: SingleChildScrollView(
+                    key: const ValueKey('exploration-status-scroll'),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_routePlanning.origin != null &&
+                            _routePlanning.destination != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: FilledButton.icon(
+                              onPressed:
+                                  _routePlanning.canPlan &&
+                                      !_routeDiscovery.isDiscovering
+                                  ? _calculateRoute
+                                  : null,
+                              icon: _routePlanning.isCalculating
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.alt_route),
+                              label: const Text('Calcular ruta'),
                             ),
-                            if (_b1Status != null)
-                              Text(_b1StatusText, textAlign: TextAlign.center),
-                            if (_b1Owned || _b1Busy)
-                              const Text(
-                                'Ubicación controlada por el recorrido GPS; controles normales no disponibles',
-                                textAlign: TextAlign.center,
+                          ),
+                        if (_routePlanning.route != null)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: FilledButton.tonalIcon(
+                              key: const ValueKey('route-category-filter'),
+                              onPressed:
+                                  _routeDiscovery.isDiscovering ||
+                                      _b1Owned ||
+                                      _b1Busy ||
+                                      _ownershipPending
+                                  ? null
+                                  : _openFilters,
+                              icon: const Icon(Icons.filter_alt),
+                              label: Text('Categorías: ${_filterSummary()}'),
+                            ),
+                          ),
+                        if (_routeDiscovery.pois.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: FilledButton.tonalIcon(
+                              onPressed: () => setState(
+                                () => _showDiscoveryList = !_showDiscoveryList,
                               ),
-                            if (_b1Status == null ||
-                                _locationStatus != _b1StatusText)
-                              Text(
-                                _locationStatus,
-                                textAlign: TextAlign.center,
+                              icon: Icon(
+                                _showDiscoveryList ? Icons.map : Icons.list,
                               ),
-                            if (widget.offlineDiscovery
-                                case final offline?) ...[
-                              if (offline.snapshot case final snapshot?)
+                              label: Text(
+                                _showDiscoveryList ? 'Ver mapa' : 'Ver lista',
+                              ),
+                            ),
+                          ),
+                        Card(
+                          key: const ValueKey('exploration-status'),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
                                 Text(
-                                  'Ruta: ${(snapshot.route.distanceMeters / 1000).toStringAsFixed(1)} km · ${(snapshot.route.durationSeconds / 60).round()} min planificados\n'
-                                  'Origen: ${snapshot.query.origin.latitude.toStringAsFixed(4)}, ${snapshot.query.origin.longitude.toStringAsFixed(4)}\n'
-                                  'Destino: ${snapshot.query.destination.latitude.toStringAsFixed(4)}, ${snapshot.query.destination.longitude.toStringAsFixed(4)}\n'
-                                  'Corredor: ${snapshot.query.corridorMeters} m · hasta ${snapshot.query.limit} lugares',
+                                  _routeDiscovery.status ??
+                                      _routePlanning.status,
                                   textAlign: TextAlign.center,
                                 ),
-                              Semantics(
-                                liveRegion: true,
-                                child: Text(switch (offline.availability) {
-                                  DiscoveryAvailability.online => 'Online',
-                                  DiscoveryAvailability.cached =>
-                                    'Copia offline · vigencia máxima 24 horas',
-                                  DiscoveryAvailability.unavailable =>
-                                    'No disponible',
-                                  DiscoveryAvailability.error =>
-                                    'Error de actualización',
-                                }),
-                              ),
-                              if (offline.cacheMessage case final message?)
-                                Text(message, textAlign: TextAlign.center),
-                            ],
-                            if (_routeDiscovery.isDiscovering)
-                              Semantics(
-                                liveRegion: true,
-                                label: 'Cargando lugares de la ruta',
-                                child: Padding(
-                                  padding: EdgeInsets.only(top: 8),
-                                  child: CircularProgressIndicator(),
-                                ),
-                              ),
-                            if (_routeDiscovery.hasError)
-                              Padding(
-                                padding: const EdgeInsets.only(top: 8),
-                                child: OutlinedButton.icon(
-                                  onPressed: _routeDiscovery.isDiscovering
-                                      ? null
-                                      : _retryDiscovery,
-                                  icon: const Icon(Icons.refresh),
-                                  label: const Text('Reintentar'),
-                                ),
-                              ),
-                            if (_routeDiscovery.pois.isEmpty &&
-                                _routeDiscovery.appliedCategories.length !=
-                                    discoveryCategoryCodes.length &&
-                                !_routeDiscovery.isDiscovering)
-                              const Text(
-                                'No encontramos lugares de estas categorías para esta ruta.',
-                              ),
-                            if (widget.offlineDiscovery?.snapshot != null &&
-                                !_routeDiscovery.isDiscovering)
-                              FilledButton.icon(
-                                onPressed: _enterDriving,
-                                icon: const Icon(Icons.directions_car),
-                                label: const Text('Entrar en modo conducción'),
-                              ),
-                          ],
+                                if (_b1Status != null)
+                                  Text(
+                                    _b1StatusText,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                if (_b1Owned || _b1Busy)
+                                  const Text(
+                                    'Ubicación controlada por el recorrido GPS; controles normales no disponibles',
+                                    textAlign: TextAlign.center,
+                                  ),
+                                if (_b1Status == null ||
+                                    _locationStatus != _b1StatusText)
+                                  Text(
+                                    _locationStatus,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                if (widget.offlineDiscovery
+                                    case final offline?) ...[
+                                  if (offline.snapshot case final snapshot?)
+                                    Text(
+                                      'Ruta: ${(snapshot.route.distanceMeters / 1000).toStringAsFixed(1)} km · ${(snapshot.route.durationSeconds / 60).round()} min planificados\n'
+                                      'Origen: ${snapshot.query.origin.latitude.toStringAsFixed(4)}, ${snapshot.query.origin.longitude.toStringAsFixed(4)}\n'
+                                      'Destino: ${snapshot.query.destination.latitude.toStringAsFixed(4)}, ${snapshot.query.destination.longitude.toStringAsFixed(4)}\n'
+                                      'Corredor: ${snapshot.query.corridorMeters} m · hasta ${snapshot.query.limit} lugares',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  Semantics(
+                                    liveRegion: true,
+                                    child: Text(switch (offline.availability) {
+                                      DiscoveryAvailability.online => 'Online',
+                                      DiscoveryAvailability.cached => 'Copia offline · vigencia máxima 24 horas',
+                                      DiscoveryAvailability.unavailable =>
+                                        'No disponible',
+                                      DiscoveryAvailability.error =>
+                                        'Error de actualización',
+                                    }),
+                                  ),
+                                  if (offline.cacheMessage case final message?)
+                                    Text(message, textAlign: TextAlign.center),
+                                ],
+                                if (_routeDiscovery.isDiscovering)
+                                  Semantics(
+                                    liveRegion: true,
+                                    label: 'Cargando lugares de la ruta',
+                                    child: Padding(
+                                      padding: EdgeInsets.only(top: 8),
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  ),
+                                if (_routeDiscovery.hasError)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    child: OutlinedButton.icon(
+                                      onPressed: _routeDiscovery.isDiscovering
+                                          ? null
+                                          : _retryDiscovery,
+                                      icon: const Icon(Icons.refresh),
+                                      label: const Text('Reintentar'),
+                                    ),
+                                  ),
+                                if (_routeDiscovery.pois.isEmpty &&
+                                    _routeDiscovery.appliedCategories.length !=
+                                        discoveryCategoryCodes.length &&
+                                    !_routeDiscovery.isDiscovering)
+                                  const Text(
+                                    'No encontramos lugares de estas categorías para esta ruta.',
+                                  ),
+                                if (widget.offlineDiscovery?.snapshot != null &&
+                                    !_routeDiscovery.isDiscovering)
+                                  FilledButton.icon(
+                                    onPressed: _enterDriving,
+                                    icon: const Icon(Icons.directions_car),
+                                    label: const Text(
+                                      'Entrar en modo conducción',
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
