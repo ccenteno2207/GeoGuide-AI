@@ -199,7 +199,9 @@ void main() {
       );
       await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Entrar en modo conducción'));
+      final enter = find.text('Entrar en modo conducción');
+      await tester.ensureVisible(enter);
+      await tester.tap(enter);
       await tester.pumpAndSettle();
       expect(find.text('Modo conducción reducido'), findsOneWidget);
       final callsBeforeExpiry = source.calls;
@@ -233,7 +235,10 @@ void main() {
     );
     await tester.pumpWidget(
       MediaQuery(
-        data: const MediaQueryData(textScaler: TextScaler.linear(2)),
+        data: const MediaQueryData(
+          size: Size(360, 800),
+          textScaler: TextScaler.linear(2),
+        ),
         child: GeoGuideApp(offlineDiscovery: app),
       ),
     );
