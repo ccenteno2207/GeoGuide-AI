@@ -31,16 +31,30 @@ class PoiPreviewSheet extends StatelessWidget {
           container: true,
           label: 'Vista previa de ${poi.name}',
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const PoiThumbnail(detail: true),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 Text(poi.name, style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 8),
-                Text('Categoría: ${friendlyPoiCategory(poi.category)}'),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    child: Text(
+                      'Categoría: ${friendlyPoiCategory(poi.category)}',
+                    ),
+                  ),
+                ),
                 if (distance != null) ...[
                   const SizedBox(height: 4),
                   Text(distance),

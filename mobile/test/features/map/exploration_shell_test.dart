@@ -66,9 +66,16 @@ void main() {
     final statusRect = tester.getRect(
       find.byKey(const ValueKey('exploration-status')),
     );
+    final actionsRect = tester.getRect(
+      find.byKey(const ValueKey('exploration-floating-actions')),
+    );
+    expect(actionsRect.height, lessThanOrEqualTo(64));
     final safeAreaHeight = screen.height - 48;
-    final unoccludedMapHeight = mapRect.height - statusRect.height;
+    final unoccludedMapHeight =
+        mapRect.height - statusRect.height - actionsRect.height;
     expect(unoccludedMapHeight / safeAreaHeight, greaterThanOrEqualTo(0.5));
+    expect(find.text('GeoGuide AI'), findsNothing);
+    expect(find.text('Exploración'), findsNothing);
     expect(find.byTooltip('Usar ubicación actual'), findsOneWidget);
     expect(find.byTooltip('Activar seguimiento de ubicación'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
@@ -174,8 +181,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('close-discovery-list')));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Entrar en modo conducción'));
-    await tester.tap(find.text('Entrar en modo conducción'));
+    await tester.ensureVisible(find.byTooltip('Entrar en modo conducción'));
+    await tester.tap(find.byTooltip('Entrar en modo conducción'));
     await tester.pumpAndSettle();
     expect(
       Theme.of(tester.element(find.text('Modo conducción reducido')))

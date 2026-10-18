@@ -39,7 +39,7 @@ void main() {
       expect(find.textContaining('m del trazado'), findsNothing);
       expect(find.textContaining('UNKNOWN_CODE'), findsNothing);
       expect(find.textContaining('not-for-display'), findsNothing);
-      expect(tester.getSize(find.byType(PoiThumbnail)), const Size(96, 72));
+      expect(tester.getSize(find.byType(PoiThumbnail)), const Size(72, 54));
       expect(
         find.bySemanticsLabel(RegExp('Imagen no disponible')),
         findsWidgets,
@@ -58,6 +58,12 @@ void main() {
       expect(find.textContaining('null'), findsNothing);
       expect(find.textContaining('44%'), findsNothing);
       expect(find.textContaining('N/A'), findsNothing);
+      expect(
+        tester.getSize(
+          find.byKey(const ValueKey('poi-detail-thumbnail-frame')),
+        ),
+        const Size(160, 90),
+      );
       await tester.pumpWidget(const SizedBox());
       semantics.dispose();
     },

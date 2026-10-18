@@ -14,24 +14,27 @@ class PoiThumbnail extends StatelessWidget {
       child: ExcludeSemantics(
         child: DecoratedBox(
           decoration: BoxDecoration(
-            color: colors.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(12),
+            color: colors.surface,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: colors.outlineVariant),
           ),
           child: Center(
             child: Icon(
               Icons.landscape_outlined,
               color: colors.onSurfaceVariant,
-              size: 32,
+              size: detail ? 28 : 24,
             ),
           ),
         ),
       ),
     );
-    if (!detail) return SizedBox(width: 96, height: 72, child: placeholder);
+    if (!detail) return SizedBox(width: 72, height: 54, child: placeholder);
     return Center(
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 320),
-        child: AspectRatio(aspectRatio: 16 / 9, child: placeholder),
+      child: SizedBox(
+        key: const ValueKey('poi-detail-thumbnail-frame'),
+        width: 160,
+        height: 90,
+        child: placeholder,
       ),
     );
   }
