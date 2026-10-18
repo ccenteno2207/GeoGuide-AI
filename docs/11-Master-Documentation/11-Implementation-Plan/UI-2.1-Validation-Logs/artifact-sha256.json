@@ -4,16 +4,16 @@
     "debug": {
       "path": "build/app/outputs/flutter-apk/app-debug.apk",
       "bytes": 167843977,
-      "sha256": "641deaff0f167444cc3e2e45e3c5c0a7767f2cc1c8cbb0462a583db06034a2f3"
+      "sha256": "635ab1225fe54b3a079196df5b87dd5cf1431966130f81195b386c9cffd92055"
     },
     "release": {
       "path": "build/app/outputs/flutter-apk/app-release.apk",
       "bytes": 60472029,
-      "sha256": "fe4df3cf18388c70c99296dd148e530dfa4cb487ca06979a517611fc35022b65"
+      "sha256": "88b4ae4da816ee2650f6e9b88d32a52511f8e4ce7d72af44e8e85a3af111fa3a"
     }
   },
   "fixture_file": "mobile/test/features/discovery/ui2_experience_test.dart",
-  "fixture_file_sha256_utf8_lf": "f1b7a625d705b8c294037a24978a78d40aba75a9d3c89df171dec1b28cbf715f",
+  "fixture_file_sha256_utf8_lf": "b7c896ff213be1b295c4ddcb96376869fb38461f9105c7a16b8573b2197e4155",
   "comparison_fixture_function_sha256_utf8_lf": "85ba790b1784b4b4fbb9121c6d7b7a7a9118fdc13a1ae40be062151b853fa102",
   "sdk_fonts_sha256": {
     "roboto-regular.ttf": "79e851404657dac2106b3d22ad256d47824a9a5765458edb72c9102a45816d95",
@@ -21,20 +21,20 @@
   },
   "visual_pngs": {
     "FLUTTER_RENDERER_TEST-comparison-after-list-360x640.png": {
-      "bytes": 32225,
-      "sha256": "eaee1f6ca97868f1d48ff76307ecc6bb7041fc788adfd6eb2926f465fe50347e"
+      "bytes": 31310,
+      "sha256": "86655648293d02a02d357601f7ef6e16941b81dd41606fb60d567f0251f8b0c3"
     },
     "FLUTTER_RENDERER_TEST-comparison-after-list-360x800.png": {
-      "bytes": 38528,
-      "sha256": "f563a14c03108ac0f8838c6fa749efa2131c0ff026c4da08ebbbdc0a33236388"
+      "bytes": 37528,
+      "sha256": "d21e3dbc650d68756392906dd57abfb0de9f9fdec4e79dbe69e4b32a8a437663"
     },
     "FLUTTER_RENDERER_TEST-comparison-after-map-360x640.png": {
-      "bytes": 24336,
-      "sha256": "cfda6345513011b8e21a42bf76836b292d369a86354afa2672a34a5ca20483b2"
+      "bytes": 23389,
+      "sha256": "042b20091b068ed964c359aa6faf6525f1a53f63f38c8b749c0508cca04b35b0"
     },
     "FLUTTER_RENDERER_TEST-comparison-after-map-360x800.png": {
-      "bytes": 30801,
-      "sha256": "d50241ae04137f305b6f5db995af0b18a5dbe3e1b68f94d0822e07477135b4e7"
+      "bytes": 29838,
+      "sha256": "9d6caf47561fb3b0cd0cb9dad4e0ff9eefda171d3b80b50590a1a7a278b0e581"
     },
     "FLUTTER_RENDERER_TEST-comparison-before-list-360x640.png": {
       "bytes": 26854,
@@ -53,64 +53,64 @@
       "sha256": "e41bb6c6cacfcff6fec4aea1506ecbe1d21c93e15b54425a7abf213dece75142"
     },
     "FLUTTER_RENDERER_TEST-detail-360x800.png": {
-      "bytes": 30275,
-      "sha256": "04df1c2dbcd8dfec5e58079fc6252ea36280015b006198217dfb0029126bdb69"
+      "bytes": 29268,
+      "sha256": "dce6b6a1d18e4fe6a991433c108efa37b28f5cad27052878d0bbb2123b24f501"
     },
     "FLUTTER_RENDERER_TEST-error-360x800.png": {
-      "bytes": 32853,
-      "sha256": "7d17c8885d9bf517617b18cf677d55e9618d15455754bceb6401de29089938b2"
+      "bytes": 31916,
+      "sha256": "cfa4b4b40ca790409e0304bdf66321e49c5f03c2610c30b6cba8eb4af6bd97ef"
     },
     "FLUTTER_RENDERER_TEST-list-360x640-text1.0.png": {
-      "bytes": 32992,
-      "sha256": "6624fb9c25c419402251530d2de6c4c91b6a887335c3d4d47d926ca703cf2952"
+      "bytes": 32075,
+      "sha256": "baf113dcf7983fd05d12db2f7c4a41a2794b105216706eeeaa9c3fc8d72c80c6"
     },
     "FLUTTER_RENDERER_TEST-list-360x640-text2.0.png": {
-      "bytes": 33475,
-      "sha256": "5dd3289753f1e1704404a8fbc7458da3673224b62a6adb29b78824af96005344"
+      "bytes": 32648,
+      "sha256": "8622b68f77fbdb4edf67f423950c53d141490805051344803d67c2c44b86f7ce"
     },
     "FLUTTER_RENDERER_TEST-list-360x800-text1.0.png": {
-      "bytes": 39481,
-      "sha256": "01701a8e002598622625d943bf8a99e6546d801401cba400f1760f2373742d87"
+      "bytes": 38464,
+      "sha256": "9204f50b39b4c225972ce633caa284df6ad7112888e53e2febb283e088f9288e"
     },
     "FLUTTER_RENDERER_TEST-list-360x800-text2.0.png": {
-      "bytes": 41263,
-      "sha256": "52b0ff58f1c93c35534d53c3a552aec2e7dc1ed3634d7353d4140fe628cb8691"
+      "bytes": 40331,
+      "sha256": "bca6dcf2e96e421e05e0cf3f1ac2d6ac34097a6c82bef994d57c9b823268b755"
     },
     "FLUTTER_RENDERER_TEST-list-640x360-text1.0.png": {
-      "bytes": 34497,
-      "sha256": "bfb726e354ef8adc996f4ebafa7229b6305eee54d840e5f0b2134aab1de5f364"
+      "bytes": 33518,
+      "sha256": "13b3736b8e2f5d1c44a09d3825c594491ff872fd7b115dadcebabfd5c48dc2d2"
     },
     "FLUTTER_RENDERER_TEST-list-640x360-text2.0.png": {
-      "bytes": 32453,
-      "sha256": "3bc6e4e7c9e06df66749085a5699a236b8ca6ba09a002cc12da2ae991fd0ef12"
+      "bytes": 31596,
+      "sha256": "a2dc73a9e1e48fb9188ca6b0ceb1435d42d88000711a461a76a0e1d1a6ba88d2"
     },
     "FLUTTER_RENDERER_TEST-list-800x360-text1.0.png": {
-      "bytes": 36139,
-      "sha256": "d23587adf73aafdc3dc1ee36299dcdb1222deb9e213a48413b7d6ef68eb9aef4"
+      "bytes": 35163,
+      "sha256": "5f9235712980c1b87b170012d5dc08c7210f8adc2d869859d547e14a9ab7c00e"
     },
     "FLUTTER_RENDERER_TEST-list-800x360-text2.0.png": {
-      "bytes": 33906,
-      "sha256": "200c28de0dbb316d3c777b98c87f83ec1f288dc71d653d80aaad295f7943067a"
+      "bytes": 33040,
+      "sha256": "cc7c0cb18e80fd50e1b2aab66cac4acff0822e667dac64e2b399fbacbcd3c639"
     },
     "FLUTTER_RENDERER_TEST-local-filter-empty-360x800.png": {
-      "bytes": 26688,
-      "sha256": "222b050f6049a470dd2327b5d4988f6ff930cba2fddbd9176d66df0b9dd10d36"
+      "bytes": 25769,
+      "sha256": "4779a78420f07e69544753b28efe2d2c77b842903ebaa13cc90a9b708120cb25"
     },
     "FLUTTER_RENDERER_TEST-local-filter-match-360x800.png": {
-      "bytes": 36286,
-      "sha256": "f06d81f8ce55d7436eb32931e65dd879aa34430c2965b99042e2f949b914a0e3"
+      "bytes": 35353,
+      "sha256": "5a224f8f1b63e2eaae2d2f8c14838018099ab48de3b0676738be9a7fa143140e"
     },
     "FLUTTER_RENDERER_TEST-map-route-360x800.png": {
-      "bytes": 30801,
-      "sha256": "d50241ae04137f305b6f5db995af0b18a5dbe3e1b68f94d0822e07477135b4e7"
+      "bytes": 29838,
+      "sha256": "9d6caf47561fb3b0cd0cb9dad4e0ff9eefda171d3b80b50590a1a7a278b0e581"
     },
     "FLUTTER_RENDERER_TEST-offline-360x800.png": {
-      "bytes": 35409,
-      "sha256": "36ad9c22002f7d086bdbcc8f0151b6a8bd0a687f06a56ecd0fffe6d99e8dfca2"
+      "bytes": 34493,
+      "sha256": "66a003165f1931c1d55c469f53dce6ed591ccfb0c19afae76b209b92a9ac5c28"
     },
     "FLUTTER_RENDERER_TEST-preview-360x800.png": {
-      "bytes": 28746,
-      "sha256": "fa83cde0ca82b167d58ba583675c174c08980e9bdbdf754a0d246305d06c4e4a"
+      "bytes": 27722,
+      "sha256": "ce446230591af381b38b64ec4d1ea9f677baf81459f95000b95ccb4427dd22b5"
     }
   }
 }

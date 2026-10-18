@@ -34,4 +34,4 @@ Got dependencies!
 30 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
 Analyzing mobile...
-No issues found! (ran in 5.5s)
+No issues found! (ran in 6.6s)

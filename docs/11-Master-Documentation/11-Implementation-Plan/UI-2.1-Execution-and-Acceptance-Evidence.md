@@ -92,9 +92,12 @@ real y dispositivo: N/A, fuera de esta autorización.
 
 Las primeras pasadas encontraron selectores de scroll ambiguos, scroll de distancia
 fija insuficiente para tarjetas nuevas, expectativa de código crudo, overflow con
-teclado horizontal y solapamiento visual de ruta. Se corrigieron dentro de UI-2,
+teclado horizontal y solapamiento visual de ruta. La auditoría pre-PR encontró además
+el banner rojo `DEBUG` en las capturas posteriores. Se corrigieron dentro de UI-2,
 manteniendo las aserciones de identidad, cierre, selección, estados y no regresión.
-Los PNG iniciales con Ahem fueron reemplazados por capturas con fuentes del SDK.
+Los PNG iniciales con Ahem fueron reemplazados por capturas con fuentes del SDK; luego
+se ocultó el banner de depuración y se regeneraron las 15 capturas posteriores. Las
+cuatro capturas "antes" siguen representando el renderer baseline intacto.
 
 ## Matriz UI2-AC-01 a UI2-AC-14
 
@@ -134,8 +137,9 @@ equivale a validación física ni aprobación de integración. TalkBack permanec
 | `flutter build apk --release --dart-define=BACKEND_BASE_URL=https://geoguide.getcom.pe:5443` | PASS | [Build release](UI-2.1-Validation-Logs/release-build.txt) |
 | `python tool/verify_poi_unicode.py` | PASS, 100.170 vectores oficiales NFD + eliminación de marcas | [Conformidad Unicode](UI-2.1-Validation-Logs/unicode-conformance.txt) |
 | `verify_apk_icons.py` sobre ambos APK y auditoría ZIP release | PASS; sin fixtures TEST_ONLY ni media no verificada; único PNG de assets Flutter es logo preexistente del paquete fijado flutter_map, hash cotejado | [Auditoría APK](UI-2.1-Validation-Logs/apk-audit.txt) |
+| Auditoría visual pre-PR | 23/23 PNG abiertos; se detectó y corrigió el banner DEBUG en producción/capturas posteriores; 15 capturas regeneradas y revisadas | [Evidencia visual](UI-2-Visual-Evidence/README.md) |
 | Métodos/rutas protegidos y contratos congelados | PASS; Driving tree y métodos GPS/voz/lifecycle intactos; entrada Driving solo añade limpieza de consulta | [Auditoría alcance](UI-2.1-Validation-Logs/scope-audit.txt) |
-| Integridad Git de entornos protegidos | PASS: 18 worktrees previos y 3 stashes intactos; 12 archivos pendientes con SHA-256 idéntico; rama de implementación ausente del remoto | [Auditoría previa al commit](UI-2.1-Validation-Logs/git-integrity.txt) |
+| Integridad Git de entornos protegidos | PASS: 17 worktrees ajenos intactos y 3 stashes preservados; 12 archivos pendientes con SHA-256 idéntico; rama ausente del remoto en el checkpoint pre-publicación | [Auditoría previa al commit](UI-2.1-Validation-Logs/git-integrity.txt) |
 | Documentación | PASS: UTF-8 estricto, enlaces locales, 14 criterios, whitespace y diff autorizado | Validación documental y `git diff --check` de esta ejecución |
 
 Los logs archivados conservan resultados reales; se redactaron prefijos locales de
@@ -147,20 +151,21 @@ cambiaron SDK, dependencias o permisos. Todas las validaciones son locales.
 
 | Artefacto local | Bytes | SHA-256 |
 | --- | --- | --- |
-| `mobile/build/app/outputs/flutter-apk/app-debug.apk` | 167843977 | `641deaff0f167444cc3e2e45e3c5c0a7767f2cc1c8cbb0462a583db06034a2f3` |
-| `mobile/build/app/outputs/flutter-apk/app-release.apk` | 60472029 | `fe4df3cf18388c70c99296dd148e530dfa4cb487ca06979a517611fc35022b65` |
+| `mobile/build/app/outputs/flutter-apk/app-debug.apk` | 167843977 | `635ab1225fe54b3a079196df5b87dd5cf1431966130f81195b386c9cffd92055` |
+| `mobile/build/app/outputs/flutter-apk/app-release.apk` | 60472029 | `88b4ae4da816ee2650f6e9b88d32a52511f8e4ce7d72af44e8e85a3af111fa3a` |
 
 [Inventario SHA-256](UI-2.1-Validation-Logs/artifact-sha256.json): APK, 23 PNG,
 fixture y fuentes SDK. El hash de la función de fixture es idéntico entre baseline
 y ejecución actual. Los hashes de fuente se normalizan a UTF-8/LF para corresponder
-al contenido canónico Git. Los APK son posteriores a la última edición de producción;
-los cambios posteriores se limitan a herramientas/captura de pruebas y documentación.
+al contenido canónico Git. Los APK corresponden al código de producción final, incluida la ocultación del banner DEBUG;
+los cambios posteriores se limitan a tests, herramientas, capturas y documentación.
 No se ejecutó instalación ni distribución.
 
 ### Archivos de implementación
 
-Nueve fuentes de presentación:
+Diez fuentes de presentación y configuración visual del shell:
 
+- `mobile/lib/app/app.dart` (banner DEBUG deshabilitado).
 - `mobile/lib/features/map/presentation/base_map_page.dart`.
 - `mobile/lib/features/discovery/presentation/poi_preview_sheet.dart`.
 - `mobile/lib/features/discovery/presentation/poi_detail_sheet.dart`.
@@ -196,9 +201,10 @@ posterior incorpora este informe y los logs. Su SHA final se entrega en el repor
 de cierre local, junto a la comprobación del worktree limpio.
 
 El checkout principal continúa en main/e443c0aa con sus tres borradores UI-0.
-origin/main permanece en el baseline contractual. Se preservan los 18 worktrees
-previos, 3 stashes y 12 archivos pendientes con hashes idénticos. Se conserva la
-rama/worktree nuevos. No se hizo push, PR, merge, rebase, reset ni limpieza.
+En el checkpoint de implementación local, `origin/main` permanecía en el baseline
+contractual. Se preservaron 17 worktrees ajenos, 3 stashes y 12 archivos pendientes
+con hashes idénticos. En ese checkpoint todavía no se había publicado la rama ni
+creado un PR; el registro post-PR aparece en la sección de cierre de auditoría.
 
 ## Evidencia visual y límites
 
@@ -224,15 +230,37 @@ UI_2_PHYSICAL_VALIDATION = NOT_EXECUTED
 UI_2_TALKBACK_VALIDATION = NOT_EXECUTED
 UI_2_REAL_TILES_VALIDATION = NOT_EXECUTED
 UI_2_PRODUCTION_READINESS = NOT_DECLARED
-UI_2_PUSH = NOT_AUTHORIZED
-UI_2_PR = NOT_AUTHORIZED
+UI_2_PUSH = AUTHORIZED_BY_UI2_1_PRE_PR_PROMPT
+UI_2_PR = AUTHORIZED_PENDING_CREATION
 UI_2_MERGE = NOT_AUTHORIZED
 ADMIN_IMPLEMENTATION = NOT_AUTHORIZED
 DRIVING_FUNCTIONAL_PACKAGE = NOT_AUTHORIZED
 ```
 
-Siguiente gate: revisión humana de implementación y evidencia local. Publicación,
-PR/merge, validación física y cierre maestro requieren autorizaciones independientes.
-UI-3 y posteriores no se inician por este resultado.
+Siguiente gate: auditoría pre-PR, publicación y apertura de PR están autorizadas por
+el encargo UI-2.1 pre-PR. Merge, validación física y cierre maestro siguen fuera de
+esta autorización. UI-3 y posteriores no se inician por este resultado.
 
 `STOP_AND_REPORT`
+
+
+## Auditoría UI-2.1 pre-PR (2026-10-18)
+
+La reconciliación confirmó el baseline contractual `597950decddecef38dd4f6c44595b807a4087f14`,
+`origin/main` en el mismo SHA y los dos commits locales conocidos. El diff se limita a
+Flutter UI-2, pruebas, herramientas y evidencia; los cinco documentos contractuales
+congelados, dependencias, manifests/permisos, backend, API, Driving, GPS, B1/R01, CEFI y
+ADMIN no presentan cambios. El worktree principal, worktrees ajenos y stashes se preservan.
+
+La remediación pre-PR deshabilitó `debugShowCheckedModeBanner` en el `MaterialApp` y añadió
+una aserción UI2. La auditoría había detectado la cinta roja de Flutter en todas las
+capturas posteriores; se regeneraron y revisaron las 15 capturas después de la corrección.
+Los ocho PNG de comparación "antes" preservan la salida del commit baseline. La validación
+actual pasó con 202 pruebas Flutter, 15 casos renderer, formato global, análisis, builds
+APK debug/release, 100.170 vectores Unicode y auditoría de iconos/assets. Los SHA vigentes
+y las capturas se registran en el inventario correspondiente.
+
+La revisión de accesibilidad automatizada confirmó viewports/escalas cubiertos, lista
+desplazable, cierre de 48×48 dp, placeholder etiquetado, ausencia de excepciones/overflow
+y geometría sin oclusión. No se ejecutaron Android físico, TalkBack físico ni tiles reales;
+permanecen `NOT_EXECUTED`. No se declara Production Readiness.

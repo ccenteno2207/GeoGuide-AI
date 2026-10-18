@@ -1,21 +1,3 @@
-APK debug {"path": "build/app/outputs/flutter-apk/app-debug.apk", "bytes": 167843977, "sha256": "641deaff0f167444cc3e2e45e3c5c0a7767f2cc1c8cbb0462a583db06034a2f3"}
-{"result": "PASS", "material_font_bytes": 1645184, "flutter_assets": 11, "sha256": "641DEAFF0F167444CC3E2E45E3C5C0A7767F2CC1C8CBB0462A583DB06034A2F3"}
-
-
-APK release {"path": "build/app/outputs/flutter-apk/app-release.apk", "bytes": 60472029, "sha256": "fe4df3cf18388c70c99296dd148e530dfa4cb487ca06979a517611fc35022b65"}
-{"result": "PASS", "material_font_bytes": 4108, "flutter_assets": 8, "sha256": "FE4DF3CF18388C70C99296DD148E530DFA4CB487CA06979A517611FC35022B65"}
-
-
-RELEASE_FLUTTER_ASSETS 8
-assets/flutter_assets/AssetManifest.bin
-assets/flutter_assets/FontManifest.json
-assets/flutter_assets/NOTICES.Z
-assets/flutter_assets/NativeAssetsManifest.json
-assets/flutter_assets/fonts/MaterialIcons-Regular.otf
-assets/flutter_assets/packages/flutter_map/lib/assets/flutter_map_logo.png
-assets/flutter_assets/shaders/ink_sparkle.frag
-assets/flutter_assets/shaders/stretch_effect.frag
-EXISTING_FLUTTER_MAP_LOGO_MATCHES_PINNED_PACKAGE PASS SHA256=6051ae42fb505931a833e58f9209a9f96669a4d0e4b3f06f6d82cde12a0e0401
-TEST_ONLY_AND_UNVERIFIED_MEDIA_ABSENT_FROM_RELEASE PASS
-NO_POI_IMAGE_ASSET_IN_RELEASE PASS
-APK_SOURCE_MTIME_AFTER_FINAL_PRODUCTION_SOURCE PASS
+APK debug {"result": "PASS", "material_font_bytes": 1645184, "flutter_assets": 11, "sha256": "635AB1225FE54B3A079196DF5B87DD5CF1431966130F81195B386C9CFFD92055"}
+APK release {"result": "PASS", "material_font_bytes": 4108, "flutter_assets": 8, "sha256": "88B4AE4DA816EE2650F6E9B88D32A52511F8E4CE7D72AF44E8E85A3AF111FA3A"}
+RELEASE_ASSET_AUDIT PASS assets=8 poi_media=0 test_markers=0

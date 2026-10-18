@@ -1,7 +1,7 @@
-00:00 +0: loading <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart
+00:00 +0: loading D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart
 00:00 +0: (setUpAll)
 00:00 +0: filter has zero source calls; map/list share IDs; preview/detail preserve query and context
-  [flutter_map]
+  [1m[flutter_map][0m
     We want to help keep OpenStreetMap available for everyone. Our examples
     and demo app use the public tile servers, but they are NOT free to use by
     everyone! Please review whether the OpenStreetMap tile servers are suitable
@@ -40,7 +40,7 @@ HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1173/218
 HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1169/2188.png
 HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1173/2188.png
 00:04 +1: replacement and expiry clear query; Driving never retains or queues search
-  [flutter_map]
+  [1m[flutter_map][0m
     We want to help keep OpenStreetMap available for everyone. Our examples
     and demo app use the public tile servers, but they are NOT free to use by
     everyone! Please review whether the OpenStreetMap tile servers are suitable
@@ -48,7 +48,7 @@ HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1173/218
     See:
       * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
       * https://docs.fleaflet.dev/osm-warn for more information about this warning
-  [flutter_map]
+  [1m[flutter_map][0m
     We want to help keep OpenStreetMap available for everyone. Our examples
     and demo app use the public tile servers, but they are NOT free to use by
     everyone! Please review whether the OpenStreetMap tile servers are suitable
@@ -56,7 +56,7 @@ HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1173/218
     See:
       * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
       * https://docs.fleaflet.dev/osm-warn for more information about this warning
-  [flutter_map]
+  [1m[flutter_map][0m
     We want to help keep OpenStreetMap available for everyone. Our examples
     and demo app use the public tile servers, but they are NOT free to use by
     everyone! Please review whether the OpenStreetMap tile servers are suitable
@@ -65,7 +65,7 @@ HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1173/218
       * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
       * https://docs.fleaflet.dev/osm-warn for more information about this warning
 00:05 +2: choosing new map endpoints hides previous filtered POIs without mutating the snapshot
-  [flutter_map]
+  [1m[flutter_map][0m
     We want to help keep OpenStreetMap available for everyone. Our examples
     and demo app use the public tile servers, but they are NOT free to use by
     everyone! Please review whether the OpenStreetMap tile servers are suitable
@@ -73,8 +73,8 @@ HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1173/218
     See:
       * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
       * https://docs.fleaflet.dev/osm-warn for more information about this warning
-00:06 +3: editing at the online TTL boundary clears results without a new source call
-  [flutter_map]
+00:05 +3: editing at the online TTL boundary clears results without a new source call
+  [1m[flutter_map][0m
     We want to help keep OpenStreetMap available for everyone. Our examples
     and demo app use the public tile servers, but they are NOT free to use by
     everyone! Please review whether the OpenStreetMap tile servers are suitable
@@ -83,7 +83,7 @@ HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1173/218
       * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
       * https://docs.fleaflet.dev/osm-warn for more information about this warning
 00:06 +4: renderer fixtures distinguish offline and error with existing messages
-  [flutter_map]
+  [1m[flutter_map][0m
     We want to help keep OpenStreetMap available for everyone. Our examples
     and demo app use the public tile servers, but they are NOT free to use by
     everyone! Please review whether the OpenStreetMap tile servers are suitable
@@ -92,7 +92,7 @@ HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1173/218
       * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
       * https://docs.fleaflet.dev/osm-warn for more information about this warning
 00:06 +5: keyboard Size(360.0, 640.0) keeps editing and dismissal reachable; query does not persist after disposal
-  [flutter_map]
+  [1m[flutter_map][0m
     We want to help keep OpenStreetMap available for everyone. Our examples
     and demo app use the public tile servers, but they are NOT free to use by
     everyone! Please review whether the OpenStreetMap tile servers are suitable
@@ -100,7 +100,7 @@ HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1173/218
     See:
       * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
       * https://docs.fleaflet.dev/osm-warn for more information about this warning
-  [flutter_map]
+  [1m[flutter_map][0m
     We want to help keep OpenStreetMap available for everyone. Our examples
     and demo app use the public tile servers, but they are NOT free to use by
     everyone! Please review whether the OpenStreetMap tile servers are suitable
@@ -109,7 +109,7 @@ HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1173/218
       * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
       * https://docs.fleaflet.dev/osm-warn for more information about this warning
 00:07 +6: keyboard Size(640.0, 360.0) keeps editing and dismissal reachable; query does not persist after disposal
-  [flutter_map]
+  [1m[flutter_map][0m
     We want to help keep OpenStreetMap available for everyone. Our examples
     and demo app use the public tile servers, but they are NOT free to use by
     everyone! Please review whether the OpenStreetMap tile servers are suitable
@@ -117,7 +117,7 @@ HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1173/218
     See:
       * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
       * https://docs.fleaflet.dev/osm-warn for more information about this warning
-  [flutter_map]
+  [1m[flutter_map][0m
     We want to help keep OpenStreetMap available for everyone. Our examples
     and demo app use the public tile servers, but they are NOT free to use by
     everyone! Please review whether the OpenStreetMap tile servers are suitable
@@ -126,7 +126,7 @@ HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1173/218
       * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
       * https://docs.fleaflet.dev/osm-warn for more information about this warning
 00:08 +7: list preview detail long fields 360.0x640.0 text 1.0
-  [flutter_map]
+  [1m[flutter_map][0m
     We want to help keep OpenStreetMap available for everyone. Our examples
     and demo app use the public tile servers, but they are NOT free to use by
     everyone! Please review whether the OpenStreetMap tile servers are suitable
@@ -134,8 +134,8 @@ HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1173/218
     See:
       * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
       * https://docs.fleaflet.dev/osm-warn for more information about this warning
-00:09 +8: list preview detail long fields 360.0x640.0 text 2.0
-  [flutter_map]
+00:08 +8: list preview detail long fields 360.0x640.0 text 2.0
+  [1m[flutter_map][0m
     We want to help keep OpenStreetMap available for everyone. Our examples
     and demo app use the public tile servers, but they are NOT free to use by
     everyone! Please review whether the OpenStreetMap tile servers are suitable
@@ -144,7 +144,7 @@ HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1173/218
       * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
       * https://docs.fleaflet.dev/osm-warn for more information about this warning
 00:09 +9: list preview detail long fields 360.0x800.0 text 1.0
-  [flutter_map]
+  [1m[flutter_map][0m
     We want to help keep OpenStreetMap available for everyone. Our examples
     and demo app use the public tile servers, but they are NOT free to use by
     everyone! Please review whether the OpenStreetMap tile servers are suitable
@@ -152,8 +152,8 @@ HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1173/218
     See:
       * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
       * https://docs.fleaflet.dev/osm-warn for more information about this warning
-00:10 +10: list preview detail long fields 360.0x800.0 text 2.0
-  [flutter_map]
+00:09 +10: list preview detail long fields 360.0x800.0 text 2.0
+  [1m[flutter_map][0m
     We want to help keep OpenStreetMap available for everyone. Our examples
     and demo app use the public tile servers, but they are NOT free to use by
     everyone! Please review whether the OpenStreetMap tile servers are suitable
@@ -161,8 +161,8 @@ HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1173/218
     See:
       * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
       * https://docs.fleaflet.dev/osm-warn for more information about this warning
-00:11 +11: list preview detail long fields 640.0x360.0 text 1.0
-  [flutter_map]
+00:10 +11: list preview detail long fields 640.0x360.0 text 1.0
+  [1m[flutter_map][0m
     We want to help keep OpenStreetMap available for everyone. Our examples
     and demo app use the public tile servers, but they are NOT free to use by
     everyone! Please review whether the OpenStreetMap tile servers are suitable
@@ -171,7 +171,7 @@ HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1173/218
       * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
       * https://docs.fleaflet.dev/osm-warn for more information about this warning
 00:11 +12: list preview detail long fields 640.0x360.0 text 2.0
-  [flutter_map]
+  [1m[flutter_map][0m
     We want to help keep OpenStreetMap available for everyone. Our examples
     and demo app use the public tile servers, but they are NOT free to use by
     everyone! Please review whether the OpenStreetMap tile servers are suitable
@@ -179,8 +179,8 @@ HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1173/218
     See:
       * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
       * https://docs.fleaflet.dev/osm-warn for more information about this warning
-00:12 +13: list preview detail long fields 800.0x360.0 text 1.0
-  [flutter_map]
+00:11 +13: list preview detail long fields 800.0x360.0 text 1.0
+  [1m[flutter_map][0m
     We want to help keep OpenStreetMap available for everyone. Our examples
     and demo app use the public tile servers, but they are NOT free to use by
     everyone! Please review whether the OpenStreetMap tile servers are suitable
@@ -188,8 +188,8 @@ HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1173/218
     See:
       * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
       * https://docs.fleaflet.dev/osm-warn for more information about this warning
-00:13 +14: list preview detail long fields 800.0x360.0 text 2.0
-  [flutter_map]
+00:12 +14: list preview detail long fields 800.0x360.0 text 2.0
+  [1m[flutter_map][0m
     We want to help keep OpenStreetMap available for everyone. Our examples
     and demo app use the public tile servers, but they are NOT free to use by
     everyone! Please review whether the OpenStreetMap tile servers are suitable
@@ -197,5 +197,5 @@ HTTP request failed, statusCode: 400, https://tile.openstreetmap.org/12/1173/218
     See:
       * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
       * https://docs.fleaflet.dev/osm-warn for more information about this warning
-00:13 +15: (tearDownAll)
-00:13 +15: All tests passed!
+00:12 +15: (tearDownAll)
+00:12 +15: All tests passed!

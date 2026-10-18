@@ -46,11 +46,14 @@ permanece fijo y el resto del contenido es desplazable. El texto 2.0 ocupa todo 
 ancho de tarjeta debajo del placeholder estable de 96×72 dp. Las fichas reservan un
 área 16:9 de ancho máximo 320 dp (altura máxima 180 dp).
 
-La revisión visual inicial detectó columna estrecha con texto 2.0 y solapamiento del
-trazado por el panel horizontal. Se corrigieron ambos: distribución vertical de
-tarjeta a escala grande, mapa/lista en espacios separados y atribución fuera de la
-cartografía con texto escalable. Los tests comprueban no solapamiento y geometría del
-fixture dentro del mapa, sin añadir movimientos de cámara.
+La revisión visual detectó una columna estrecha con texto 2.0, solapamiento del
+trazado por el panel horizontal y la cinta roja "DEBUG" de Flutter en las capturas.
+Se corrigieron: distribución vertical de tarjeta a escala grande, mapa/lista en espacios
+separados, atribución fuera de la cartografía con texto escalable y ocultamiento del
+banner de depuración en `MaterialApp`. Se regeneraron y revisaron las 15 capturas
+posteriores; las 8 imágenes comparativas conservan el estado original del baseline.
+Los tests comprueban no solapamiento y geometría del fixture dentro del mapa, sin
+añadir movimientos de cámara.
 
 ## Comparación contractual AC-01
 
