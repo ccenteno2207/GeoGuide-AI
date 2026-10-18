@@ -1,7 +1,7 @@
 # UI-2.3 — Convergencia visual y evidencia del inventario fotográfico
 
-**Baseline:** `db29b127aa6b2eff1942c37276f88421de0b8323` (`origin/main` verificado al iniciar).  
-**Rama/worktree:** `codex/ui2-3-visual-convergence` — `D:\Codex\worktrees\GeoGuide-AI\ui2-3-visual-convergence`.  
+**Baseline:** `db29b127aa6b2eff1942c37276f88421de0b8323` (`origin/main` verificado al iniciar).
+**Rama/worktree:** `codex/ui2-3-visual-convergence` — `D:\Codex\worktrees\GeoGuide-AI\ui2-3-visual-convergence`.
 **Estatus:** evidencia de implementación y validación local; no equivale a integración ni validación física.
 
 ## Reconciliación visual y cambios
@@ -59,7 +59,3 @@ Los nombres sugieren cinco posibles coincidencias con los POI de prueba, pero no
 No se modificaron contratos congelados, backend/API/DTO/DB, dependencias, permisos, GPS, Driving funcional ni recursos fotográficos. No hubo push, PR, merge, instalación ni publicación. La incidencia del servidor de la VM se considera resuelta conforme a la verificación y prueba reportadas por el propietario.
 
 Pendiente para integración: autorización de procedencia/derechos antes de usar cualquiera de las cinco imágenes; instalación y validación física de este APK UI-2.3 en HONOR; lector de pantalla; integración remota en una fase autorizada.
-
-
-
-
