@@ -25,7 +25,8 @@ void main() {
     );
 
     expect(find.text('Museum'), findsOneWidget);
-    expect(find.text('Categoría: CULTURE'), findsOneWidget);
+    expect(find.text('Categoría: Lugar de interés'), findsOneWidget);
+    expect(find.textContaining('CULTURE'), findsNothing);
     expect(find.text('A 150 m del trazado'), findsOneWidget);
     expect(find.text('Cerca del trazado'), findsOneWidget);
     expect(find.textContaining('25%'), findsNothing);

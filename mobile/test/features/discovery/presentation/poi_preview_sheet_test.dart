@@ -75,6 +75,7 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.text('Catarata de prueba'), findsOneWidget);
+    await tester.ensureVisible(find.text('Cerrar'));
     await tester.tap(find.text('Cerrar'));
     await tester.pumpAndSettle();
     expect(find.text('Catarata de prueba'), findsNothing);

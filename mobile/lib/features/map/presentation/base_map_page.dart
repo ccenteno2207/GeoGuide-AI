@@ -24,7 +24,8 @@ import '../../discovery/domain/discovery_poi.dart';
 import '../../discovery/presentation/poi_preview_sheet.dart';
 import '../../discovery/presentation/poi_detail_sheet.dart';
 import '../../discovery/presentation/discovery_filter_sheet.dart';
-import '../../discovery/presentation/poi_presentation.dart';
+import '../../discovery/presentation/poi_result_card.dart';
+import '../../discovery/presentation/poi_result_filter.dart';
 import '../../discovery/presentation/route_discovery_controller.dart';
 import '../../route_planning/application/plan_route.dart';
 import '../../route_planning/domain/route_point.dart';
@@ -95,6 +96,59 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         }
       },
     );
+  }
+
+  static const _unavailableResults =
+      'Resultados no disponibles. Reintenta para consultar datos nuevos.';
+  final _poiFilter = PoiResultFilter();
+  final _poiQuery = TextEditingController();
+  int _poiQueryRevision = 0;
+  Timer? _poiQueryExpiry;
+  int get _snapshotNow =>
+      widget.offlineDiscovery?.now() ?? _now().millisecondsSinceEpoch;
+
+  void _bindPoiFilter() {
+    final snapshot = widget.offlineDiscovery?.snapshot;
+    if (_poiFilter.bind(snapshot, _snapshotNow)) {
+      ++_poiQueryRevision;
+      _poiQuery.clear();
+    }
+    _poiQueryExpiry?.cancel();
+    if (!_drivingReduced &&
+        snapshot != null &&
+        snapshot.eligible(_snapshotNow)) {
+      _poiQueryExpiry = Timer(
+        Duration(milliseconds: snapshot.expiresAtUtcMs - _snapshotNow),
+        () {
+          if (!mounted || _drivingReduced) return;
+          setState(() {
+            _clearPoiQuery();
+          });
+          // Use P9's existing expiration policy; never revive a stale snapshot.
+          unawaited(widget.offlineDiscovery?.revalidate());
+        },
+      );
+    }
+  }
+
+  void _clearPoiQuery() {
+    ++_poiQueryRevision;
+    _poiQueryExpiry?.cancel();
+    _poiFilter.clear();
+    _poiQuery.clear();
+    FocusScope.of(context).unfocus();
+  }
+
+  void _updatePoiQuery(String query, int revision) {
+    if (!mounted || _drivingReduced || revision != _poiQueryRevision) return;
+    _bindPoiFilter();
+    if (revision != _poiQueryRevision ||
+        widget.offlineDiscovery?.snapshot?.eligible(_snapshotNow) != true) {
+      setState(() {});
+      unawaited(widget.offlineDiscovery?.revalidate());
+      return;
+    }
+    setState(() => _poiFilter.query = query);
   }
 
   bool _showDiscoveryList = false;
@@ -361,6 +415,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     final offline = widget.offlineDiscovery!;
     final snapshot = offline.snapshot;
     _poiSelection.bind(snapshot, _now().millisecondsSinceEpoch);
+    _bindPoiFilter();
     setState(() {
       _routeDiscovery.pois = snapshot?.pois ?? const [];
       _routeDiscovery.status = offline.message;
@@ -590,6 +645,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    ++_poiQueryRevision;
     ++_refreshRevision;
     _cancelFreshness();
     unawaited(_detachNormal());
@@ -597,6 +653,8 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     _routeSession.onState = null;
     WidgetsBinding.instance.removeObserver(this);
     widget.offlineDiscovery?.dispose();
+    _poiQueryExpiry?.cancel();
+    _poiQuery.dispose();
     _mapController.dispose();
     super.dispose();
   }
@@ -803,6 +861,16 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Widget _buildExploration(BuildContext context) {
+    final snapshot = widget.offlineDiscovery?.snapshot;
+    final snapshotExpired =
+        snapshot != null && !snapshot.eligible(_snapshotNow);
+    final queryRevision = _poiQueryRevision;
+    final editing = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final visiblePois = widget.offlineDiscovery == null
+        ? _routeDiscovery.pois
+        : _routeDiscovery.pois.isEmpty
+        ? const <DiscoveryPoi>[]
+        : _poiFilter.visible(_snapshotNow);
     final actions = <Widget>[
       if (VoiceDiagnosticAction.available(
         debug: kDebugMode,
@@ -886,18 +954,20 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: toolbarHeight,
-        title: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('GeoGuide AI'),
-            Text(
-              'Exploración',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-            ),
-          ],
-        ),
+        toolbarHeight: editing ? 0 : toolbarHeight,
+        title: editing
+            ? null
+            : const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('GeoGuide AI'),
+                  Text(
+                    'Exploración',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
         bottom: PreferredSize(
           preferredSize: Size.fromHeight(actionBarHeight),
           child: SizedBox(
@@ -906,347 +976,501 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
           ),
         ),
       ),
-      body: Stack(
-        children: [
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: _initialCenter,
-              initialZoom: 12,
-              onTap: _selectRoutePoint,
-              onPositionChanged: (_, hasGesture) {
-                if (hasGesture && _followCamera) {
-                  setState(() => _followCamera = false);
-                }
-              },
-            ),
+      body: LayoutBuilder(
+        builder: (context, viewport) {
+          final listOpen =
+              _showDiscoveryList && _routeDiscovery.pois.isNotEmpty;
+          final landscape =
+              MediaQuery.orientationOf(context) == Orientation.landscape;
+          return Stack(
+            key: const ValueKey('exploration-body'),
             children: [
-              TileLayer(
-                urlTemplate: developmentTileUrl,
-                userAgentPackageName: 'com.geoguideai.geoguide_ai',
-                maxNativeZoom: 19,
-              ),
-              if (_currentLocation case final location?)
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: LatLng(location.latitude, location.longitude),
-                      width: 48,
-                      height: 48,
-                      child: const Icon(
-                        Icons.my_location,
-                        color: Colors.blue,
-                        size: 36,
-                      ),
-                    ),
-                  ],
+              Padding(
+                padding: EdgeInsets.only(
+                  right: listOpen && landscape ? viewport.maxWidth * .5 : 0,
+                  bottom: listOpen && !landscape ? viewport.maxHeight * .55 : 0,
                 ),
-              if (_routePlanning.origin case final origin?)
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: LatLng(origin.latitude, origin.longitude),
-                      width: 44,
-                      height: 44,
-                      child: const Icon(
-                        Icons.trip_origin,
-                        color: Colors.green,
-                        size: 34,
-                      ),
-                    ),
-                  ],
-                ),
-              if (_routePlanning.destination case final destination?)
-                MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: LatLng(
-                        destination.latitude,
-                        destination.longitude,
-                      ),
-                      width: 44,
-                      height: 44,
-                      child: const Icon(
-                        Icons.location_on,
-                        color: Colors.red,
-                        size: 36,
-                      ),
-                    ),
-                  ],
-                ),
-              if (_routePlanning.route case final route?)
-                PolylineLayer(
-                  polylines: [
-                    Polyline(
-                      points: route.geometry
-                          .map(
-                            (point) => LatLng(point.latitude, point.longitude),
-                          )
-                          .toList(growable: false),
-                      color: Theme.of(context).colorScheme.primary,
-                      strokeWidth: 5,
-                    ),
-                  ],
-                ),
-              if (_routeDiscovery.pois.isNotEmpty)
-                MarkerLayer(
-                  markers: _routeDiscovery.pois
-                      .map(
-                        (poi) => Marker(
-                          point: LatLng(
-                            poi.location.latitude,
-                            poi.location.longitude,
-                          ),
-                          width: 48,
-                          height: 48,
-                          child: IconButton(
-                            tooltip: 'Vista previa de ${poi.name}',
-                            onPressed: () => _showPoiPreview(poi),
-                            icon: const Icon(
-                              Icons.place,
-                              color: Colors.deepOrange,
-                              size: 32,
-                            ),
-                          ),
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: FlutterMap(
+                        mapController: _mapController,
+                        options: MapOptions(
+                          initialCenter: _initialCenter,
+                          initialZoom: 12,
+                          onTap: _selectRoutePoint,
+                          onPositionChanged: (_, hasGesture) {
+                            if (hasGesture && _followCamera) {
+                              setState(() => _followCamera = false);
+                            }
+                          },
                         ),
-                      )
-                      .toList(growable: false),
-                ),
-              Align(
-                alignment: Alignment.topRight,
-                child: ColoredBox(
-                  color: Theme.of(context).colorScheme.surface,
-                  child: const Padding(
-                    padding: EdgeInsets.all(4),
-                    child: Wrap(
-                      children: [Text('flutter_map | © '), Text(attribution)],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 24,
-            top: 80,
-            child: LayoutBuilder(
-              builder: (context, constraints) => Align(
-                alignment: Alignment.bottomCenter,
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxHeight: constraints.maxHeight * 0.45,
-                  ),
-                  child: SingleChildScrollView(
-                    key: const ValueKey('exploration-status-scroll'),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (_routePlanning.origin != null &&
-                            _routePlanning.destination != null)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: FilledButton.icon(
-                              onPressed:
-                                  _routePlanning.canPlan &&
-                                      !_routeDiscovery.isDiscovering
-                                  ? _calculateRoute
-                                  : null,
-                              icon: _routePlanning.isCalculating
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Icon(Icons.alt_route),
-                              label: const Text('Calcular ruta'),
-                            ),
+                        children: [
+                          TileLayer(
+                            urlTemplate: developmentTileUrl,
+                            userAgentPackageName: 'com.geoguideai.geoguide_ai',
+                            maxNativeZoom: 19,
                           ),
-                        if (_routePlanning.route != null)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: FilledButton.tonalIcon(
-                              key: const ValueKey('route-category-filter'),
-                              onPressed:
-                                  _routeDiscovery.isDiscovering ||
-                                      _b1Owned ||
-                                      _b1Busy ||
-                                      _ownershipPending
-                                  ? null
-                                  : _openFilters,
-                              icon: const Icon(Icons.filter_alt),
-                              label: Text('Categorías: ${_filterSummary()}'),
-                            ),
-                          ),
-                        if (_routeDiscovery.pois.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: FilledButton.tonalIcon(
-                              onPressed: () => setState(
-                                () => _showDiscoveryList = !_showDiscoveryList,
-                              ),
-                              icon: Icon(
-                                _showDiscoveryList ? Icons.map : Icons.list,
-                              ),
-                              label: Text(
-                                _showDiscoveryList ? 'Ver mapa' : 'Ver lista',
-                              ),
-                            ),
-                          ),
-                        Card(
-                          key: const ValueKey('exploration-status'),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  _routeDiscovery.status ??
-                                      _routePlanning.status,
-                                  textAlign: TextAlign.center,
+                          if (_currentLocation case final location?)
+                            MarkerLayer(
+                              markers: [
+                                Marker(
+                                  point: LatLng(
+                                    location.latitude,
+                                    location.longitude,
+                                  ),
+                                  width: 48,
+                                  height: 48,
+                                  child: const Icon(
+                                    Icons.my_location,
+                                    color: Colors.blue,
+                                    size: 36,
+                                  ),
                                 ),
-                                if (_b1Status != null)
-                                  Text(
-                                    _b1StatusText,
-                                    textAlign: TextAlign.center,
-                                  ),
-                                if (_b1Owned || _b1Busy)
-                                  const Text(
-                                    'Ubicación controlada por el recorrido GPS; controles normales no disponibles',
-                                    textAlign: TextAlign.center,
-                                  ),
-                                if (_b1Status == null ||
-                                    _locationStatus != _b1StatusText)
-                                  Text(
-                                    _locationStatus,
-                                    textAlign: TextAlign.center,
-                                  ),
-                                if (widget.offlineDiscovery
-                                    case final offline?) ...[
-                                  if (offline.snapshot case final snapshot?)
-                                    Text(
-                                      'Ruta: ${(snapshot.route.distanceMeters / 1000).toStringAsFixed(1)} km · ${(snapshot.route.durationSeconds / 60).round()} min planificados\n'
-                                      'Origen: ${snapshot.query.origin.latitude.toStringAsFixed(4)}, ${snapshot.query.origin.longitude.toStringAsFixed(4)}\n'
-                                      'Destino: ${snapshot.query.destination.latitude.toStringAsFixed(4)}, ${snapshot.query.destination.longitude.toStringAsFixed(4)}\n'
-                                      'Corredor: ${snapshot.query.corridorMeters} m · hasta ${snapshot.query.limit} lugares',
-                                      textAlign: TextAlign.center,
-                                    ),
-                                  Semantics(
-                                    liveRegion: true,
-                                    child: Text(switch (offline.availability) {
-                                      DiscoveryAvailability.online => 'Online',
-                                      DiscoveryAvailability.cached => 'Copia offline · vigencia máxima 24 horas',
-                                      DiscoveryAvailability.unavailable =>
-                                        'No disponible',
-                                      DiscoveryAvailability.error =>
-                                        'Error de actualización',
-                                    }),
-                                  ),
-                                  if (offline.cacheMessage case final message?)
-                                    Text(message, textAlign: TextAlign.center),
-                                ],
-                                if (_routeDiscovery.isDiscovering)
-                                  Semantics(
-                                    liveRegion: true,
-                                    label: 'Cargando lugares de la ruta',
-                                    child: Padding(
-                                      padding: EdgeInsets.only(top: 8),
-                                      child: CircularProgressIndicator(),
-                                    ),
-                                  ),
-                                if (_routeDiscovery.hasError)
-                                  Padding(
-                                    padding: const EdgeInsets.only(top: 8),
-                                    child: OutlinedButton.icon(
-                                      onPressed: _routeDiscovery.isDiscovering
-                                          ? null
-                                          : _retryDiscovery,
-                                      icon: const Icon(Icons.refresh),
-                                      label: const Text('Reintentar'),
-                                    ),
-                                  ),
-                                if (_routeDiscovery.pois.isEmpty &&
-                                    _routeDiscovery.appliedCategories.length !=
-                                        discoveryCategoryCodes.length &&
-                                    !_routeDiscovery.isDiscovering)
-                                  const Text(
-                                    'No encontramos lugares de estas categorías para esta ruta.',
-                                  ),
-                                if (widget.offlineDiscovery?.snapshot != null &&
-                                    !_routeDiscovery.isDiscovering)
-                                  FilledButton.icon(
-                                    onPressed: _enterDriving,
-                                    icon: const Icon(Icons.directions_car),
-                                    label: const Text(
-                                      'Entrar en modo conducción',
-                                    ),
-                                  ),
                               ],
                             ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          if (_showDiscoveryList && _routeDiscovery.pois.isNotEmpty)
-            Positioned(
-              left: 16,
-              right: 16,
-              top: 16,
-              bottom: 16,
-              child: Align(
-                alignment: Alignment.bottomCenter,
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 320),
-                  child: Card(
-                    key: const ValueKey('discovery-list-panel'),
-                    child: Semantics(
-                      container: true,
-                      label: 'Lista de lugares descubiertos',
-                      child: Column(
-                        children: [
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: TextButton.icon(
-                              key: const ValueKey('close-discovery-list'),
-                              onPressed: () =>
-                                  setState(() => _showDiscoveryList = false),
-                              icon: const Icon(Icons.close),
-                              label: const Text('Cerrar lista y ver mapa'),
-                            ),
-                          ),
-                          Expanded(
-                            child: ListView.builder(
-                              itemCount: _routeDiscovery.pois.length,
-                              itemBuilder: (context, index) {
-                                final poi = _routeDiscovery.pois[index];
-                                return ListTile(
-                                  key: ValueKey('discovery-list-${poi.id}'),
-                                  title: Text(poi.name),
-                                  subtitle: Text(
-                                    poiDistanceLabel(poi) ??
-                                        friendlyPoiCategory(poi.category),
+                          if (_routePlanning.origin case final origin?)
+                            MarkerLayer(
+                              markers: [
+                                Marker(
+                                  point: LatLng(
+                                    origin.latitude,
+                                    origin.longitude,
                                   ),
-                                  onTap: () => _showPoiPreview(poi),
-                                );
-                              },
+                                  width: 44,
+                                  height: 44,
+                                  child: const Icon(
+                                    Icons.trip_origin,
+                                    color: Colors.green,
+                                    size: 34,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
+                          if (_routePlanning.destination
+                              case final destination?)
+                            MarkerLayer(
+                              markers: [
+                                Marker(
+                                  point: LatLng(
+                                    destination.latitude,
+                                    destination.longitude,
+                                  ),
+                                  width: 44,
+                                  height: 44,
+                                  child: const Icon(
+                                    Icons.location_on,
+                                    color: Colors.red,
+                                    size: 36,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          if (_routePlanning.route case final route?)
+                            PolylineLayer(
+                              polylines: [
+                                Polyline(
+                                  points: route.geometry
+                                      .map(
+                                        (point) => LatLng(
+                                          point.latitude,
+                                          point.longitude,
+                                        ),
+                                      )
+                                      .toList(growable: false),
+                                  color: Theme.of(context).colorScheme.primary,
+                                  strokeWidth: 5,
+                                ),
+                              ],
+                            ),
+                          if (visiblePois.isNotEmpty)
+                            MarkerLayer(
+                              markers: visiblePois
+                                  .map(
+                                    (poi) => Marker(
+                                      point: LatLng(
+                                        poi.location.latitude,
+                                        poi.location.longitude,
+                                      ),
+                                      width: 48,
+                                      height: 48,
+                                      child: IconButton(
+                                        tooltip: 'Vista previa de ${poi.name}',
+                                        onPressed: () => _showPoiPreview(poi),
+                                        icon: const Icon(
+                                          Icons.place,
+                                          color: Colors.deepOrange,
+                                          size: 32,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(growable: false),
+                            ),
                         ],
                       ),
                     ),
-                  ),
+                    ColoredBox(
+                      color: Theme.of(context).colorScheme.surface,
+                      child: const Padding(
+                        padding: EdgeInsets.all(4),
+                        child: Text(
+                          'flutter_map | © $attribution',
+                          style: TextStyle(fontSize: 12, height: 1.3),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-        ],
+              if (!listOpen)
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 24,
+                  top: 80,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => Align(
+                      alignment: Alignment.bottomCenter,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxHeight: constraints.maxHeight * 0.45,
+                        ),
+                        child: SingleChildScrollView(
+                          key: const ValueKey('exploration-status-scroll'),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (_routePlanning.origin != null &&
+                                  _routePlanning.destination != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: FilledButton.icon(
+                                    onPressed:
+                                        _routePlanning.canPlan &&
+                                            !_routeDiscovery.isDiscovering
+                                        ? _calculateRoute
+                                        : null,
+                                    icon: _routePlanning.isCalculating
+                                        ? const SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : const Icon(Icons.alt_route),
+                                    label: const Text('Calcular ruta'),
+                                  ),
+                                ),
+                              if (_routePlanning.route != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: FilledButton.tonalIcon(
+                                    key: const ValueKey(
+                                      'route-category-filter',
+                                    ),
+                                    onPressed:
+                                        _routeDiscovery.isDiscovering ||
+                                            _b1Owned ||
+                                            _b1Busy ||
+                                            _ownershipPending
+                                        ? null
+                                        : _openFilters,
+                                    icon: const Icon(Icons.filter_alt),
+                                    label: Text(
+                                      'Categorías: ${_filterSummary()}',
+                                    ),
+                                  ),
+                                ),
+                              if (_routeDiscovery.pois.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: FilledButton.tonalIcon(
+                                    onPressed: () => setState(
+                                      () => _showDiscoveryList =
+                                          !_showDiscoveryList,
+                                    ),
+                                    icon: Icon(
+                                      _showDiscoveryList
+                                          ? Icons.map
+                                          : Icons.list,
+                                    ),
+                                    label: Text(
+                                      _showDiscoveryList
+                                          ? 'Ver mapa'
+                                          : 'Ver lista',
+                                    ),
+                                  ),
+                                ),
+                              Card(
+                                key: const ValueKey('exploration-status'),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        snapshotExpired
+                                            ? _unavailableResults
+                                            : _routeDiscovery.status ??
+                                                  _routePlanning.status,
+                                        textAlign: TextAlign.center,
+                                      ),
+                                      if (_b1Status != null)
+                                        Text(
+                                          _b1StatusText,
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      if (_b1Owned || _b1Busy)
+                                        const Text(
+                                          'Ubicación controlada por el recorrido GPS; controles normales no disponibles',
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      if (_b1Status == null ||
+                                          _locationStatus != _b1StatusText)
+                                        Text(
+                                          _locationStatus,
+                                          textAlign: TextAlign.center,
+                                        ),
+                                      if (widget.offlineDiscovery
+                                          case final offline?) ...[
+                                        if (offline.snapshot
+                                            case final snapshot?)
+                                          Text(
+                                            'Ruta: ${(snapshot.route.distanceMeters / 1000).toStringAsFixed(1)} km · ${(snapshot.route.durationSeconds / 60).round()} min planificados\n'
+                                            'Origen: ${snapshot.query.origin.latitude.toStringAsFixed(4)}, ${snapshot.query.origin.longitude.toStringAsFixed(4)}\n'
+                                            'Destino: ${snapshot.query.destination.latitude.toStringAsFixed(4)}, ${snapshot.query.destination.longitude.toStringAsFixed(4)}\n'
+                                            'Corredor: ${snapshot.query.corridorMeters} m · hasta ${snapshot.query.limit} lugares',
+                                            textAlign: TextAlign.center,
+                                          ),
+                                        Semantics(
+                                          liveRegion: true,
+                                          child: Text(
+                                            snapshotExpired
+                                                ? 'No disponible'
+                                                : switch (offline
+                                                      .availability) {
+                                                    DiscoveryAvailability
+                                                        .online =>
+                                                      'Online',
+                                                    DiscoveryAvailability
+                                                        .cached =>
+                                                      'Copia offline · vigencia máxima 24 horas',
+                                                    DiscoveryAvailability
+                                                        .unavailable =>
+                                                      'No disponible',
+                                                    DiscoveryAvailability
+                                                        .error =>
+                                                      'Error de actualización',
+                                                  },
+                                          ),
+                                        ),
+                                        if (offline.cacheMessage
+                                            case final message?)
+                                          Text(
+                                            message,
+                                            textAlign: TextAlign.center,
+                                          ),
+                                      ],
+                                      if (_routeDiscovery.isDiscovering)
+                                        Semantics(
+                                          liveRegion: true,
+                                          label: 'Cargando lugares de la ruta',
+                                          child: Padding(
+                                            padding: EdgeInsets.only(top: 8),
+                                            child: CircularProgressIndicator(),
+                                          ),
+                                        ),
+                                      if (_routeDiscovery.hasError ||
+                                          snapshotExpired)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 8,
+                                          ),
+                                          child: OutlinedButton.icon(
+                                            onPressed:
+                                                _routeDiscovery.isDiscovering
+                                                ? null
+                                                : _retryDiscovery,
+                                            icon: const Icon(Icons.refresh),
+                                            label: const Text('Reintentar'),
+                                          ),
+                                        ),
+                                      if (_routeDiscovery.pois.isEmpty &&
+                                          _routeDiscovery
+                                                  .appliedCategories
+                                                  .length !=
+                                              discoveryCategoryCodes.length &&
+                                          !_routeDiscovery.isDiscovering)
+                                        const Text(
+                                          'No encontramos lugares de estas categorías para esta ruta.',
+                                        ),
+                                      if (widget.offlineDiscovery?.snapshot !=
+                                              null &&
+                                          !_routeDiscovery.isDiscovering)
+                                        FilledButton.icon(
+                                          onPressed: _enterDriving,
+                                          icon: const Icon(
+                                            Icons.directions_car,
+                                          ),
+                                          label: const Text(
+                                            'Entrar en modo conducción',
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              if (_showDiscoveryList && _routeDiscovery.pois.isNotEmpty)
+                Positioned.fill(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final landscape =
+                          MediaQuery.orientationOf(context) ==
+                          Orientation.landscape;
+                      return Align(
+                        alignment: Alignment.bottomRight,
+                        child: SizedBox(
+                          width: landscape
+                              ? constraints.maxWidth * .5
+                              : constraints.maxWidth,
+                          height: landscape
+                              ? constraints.maxHeight
+                              : constraints.maxHeight * .55,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Card(
+                              key: const ValueKey('discovery-list-panel'),
+                              child: Semantics(
+                                container: true,
+                                label: 'Lista de lugares descubiertos',
+                                child: Column(
+                                  children: [
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: IconButton(
+                                        key: const ValueKey(
+                                          'close-discovery-list',
+                                        ),
+                                        tooltip: 'Cerrar lista y ver mapa',
+                                        onPressed: () => setState(
+                                          () => _showDiscoveryList = false,
+                                        ),
+                                        icon: const Icon(Icons.close),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: ListView(
+                                        key: const ValueKey(
+                                          'poi-results-scroll',
+                                        ),
+                                        padding: const EdgeInsets.fromLTRB(
+                                          12,
+                                          0,
+                                          12,
+                                          12,
+                                        ),
+                                        children: [
+                                          if (widget.offlineDiscovery?.snapshot
+                                                  ?.eligible(_snapshotNow) ==
+                                              true)
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                bottom: 12,
+                                              ),
+                                              child: TextField(
+                                                key: const ValueKey(
+                                                  'poi-local-search',
+                                                ),
+                                                controller: _poiQuery,
+                                                decoration:
+                                                    const InputDecoration(
+                                                      labelText: 'Buscar en estos resultados',
+                                                      border:
+                                                          OutlineInputBorder(),
+                                                    ),
+                                                textInputAction:
+                                                    TextInputAction.search,
+                                                onSubmitted: (_) {
+                                                  if (!_drivingReduced &&
+                                                      queryRevision ==
+                                                          _poiQueryRevision) {
+                                                    FocusScope.of(context)
+                                                        .unfocus();
+                                                  }
+                                                },
+                                                onChanged: (query) =>
+                                                    _updatePoiQuery(
+                                                      query,
+                                                      queryRevision,
+                                                    ),
+                                              ),
+                                            ),
+                                          if (snapshotExpired) ...[
+                                            Semantics(
+                                              liveRegion: true,
+                                              child: const Text(
+                                                _unavailableResults,
+                                              ),
+                                            ),
+                                            OutlinedButton.icon(
+                                              onPressed:
+                                                  _routeDiscovery.isDiscovering
+                                                  ? null
+                                                  : _retryDiscovery,
+                                              icon: const Icon(Icons.refresh),
+                                              label: const Text('Reintentar'),
+                                            ),
+                                          ] else
+                                            Semantics(
+                                              liveRegion: true,
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(
+                                                  bottom: 8,
+                                                ),
+                                                child: Text(
+                                                  '${visiblePois.length} de ${_routeDiscovery.pois.length} lugares en estos resultados',
+                                                ),
+                                              ),
+                                            ),
+                                          if (visiblePois.isEmpty &&
+                                              _poiQuery.text.isNotEmpty)
+                                            const Text(
+                                              'No hay coincidencias en estos resultados',
+                                            ),
+                                          for (final poi in visiblePois)
+                                            PoiResultCard(
+                                              key: ValueKey(
+                                                'discovery-list-${poi.id}',
+                                              ),
+                                              poi: poi,
+                                              onPressed: () =>
+                                                  _showPoiPreview(poi),
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -1260,6 +1484,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       return;
     }
     setState(() {
+      _clearPoiQuery();
       _drivingReduced = true;
       _showDiscoveryList = false;
     });

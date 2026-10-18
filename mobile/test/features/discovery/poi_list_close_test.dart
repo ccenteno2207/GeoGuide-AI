@@ -71,7 +71,16 @@ void main() {
         of: find.byKey(const ValueKey('discovery-list-panel')),
         matching: find.byType(ListView),
       );
-      await tester.drag(list, const Offset(0, -2000));
+      await tester.scrollUntilVisible(
+        find.text('Fixture 20'),
+        300,
+        scrollable: find.descendant(
+          of: list,
+          matching: find.byWidgetPredicate(
+            (w) => w is Scrollable && w.axisDirection == AxisDirection.down,
+          ),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(find.text('Fixture 20'), findsOneWidget);
       expect(close.hitTestable(), findsOneWidget);
