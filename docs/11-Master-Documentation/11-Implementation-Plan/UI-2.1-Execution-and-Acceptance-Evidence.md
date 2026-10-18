@@ -224,14 +224,14 @@ Los APK se generan únicamente como artefactos de build locales.
 UI_2_1_IMPLEMENTATION = READY_FOR_REVIEW
 UI_2_CONTRACT = APPROVED_FROZEN
 UI_2_FROZEN_CONTRACT_INTEGRATION = PASS
-UI_2_IMPLEMENTATION = IMPLEMENTED_LOCAL_PENDING_REVIEW
+UI_2_IMPLEMENTATION = IMPLEMENTED_PR_OPEN_PENDING_REVIEW
 UI_2_AUTOMATED_VALIDATION = PASS
 UI_2_PHYSICAL_VALIDATION = NOT_EXECUTED
 UI_2_TALKBACK_VALIDATION = NOT_EXECUTED
 UI_2_REAL_TILES_VALIDATION = NOT_EXECUTED
 UI_2_PRODUCTION_READINESS = NOT_DECLARED
-UI_2_PUSH = AUTHORIZED_BY_UI2_1_PRE_PR_PROMPT
-UI_2_PR = AUTHORIZED_PENDING_CREATION
+UI_2_PUSH = PUSHED_BRANCH_ONLY
+UI_2_PR = OPEN_NOT_MERGED
 UI_2_MERGE = NOT_AUTHORIZED
 ADMIN_IMPLEMENTATION = NOT_AUTHORIZED
 DRIVING_FUNCTIONAL_PACKAGE = NOT_AUTHORIZED
@@ -264,3 +264,26 @@ La revisión de accesibilidad automatizada confirmó viewports/escalas cubiertos
 desplazable, cierre de 48×48 dp, placeholder etiquetado, ausencia de excepciones/overflow
 y geometría sin oclusión. No se ejecutaron Android físico, TalkBack físico ni tiles reales;
 permanecen `NOT_EXECUTED`. No se declara Production Readiness.
+
+
+## Publicación y estado del PR
+
+- Pull request: [#86 — feat(ui2): implement map, local POI search and exploration experience](https://github.com/ccenteno2207/GeoGuide-AI/pull/86).
+- Base: `main`, `597950decddecef38dd4f6c44595b807a4087f14`.
+- Head: `feat/ui2-map-search-poi-experience`; la revisión posterior a la actualización documental confirma el SHA vigente en el PR.
+- Estado GitHub: `OPEN`; mergeability: `MERGEABLE`; decisión de revisión: pendiente.
+- Checks: `NOT_CONFIGURED` (sin checks devueltos por GitHub). No se afirma validación CI.
+- Diff verificado: 59 archivos, dentro de UI Flutter, pruebas, herramientas y evidencia autorizadas.
+- No se hizo merge. Revisión humana y autorización de merge continúan pendientes.
+
+```ini
+UI_2_1_PRE_PR_AUDIT = PASS
+UI_2_1_PR = OPEN_NOT_MERGED
+UI_2_AUTOMATED_VALIDATION = PASS
+UI_2_PHYSICAL_VALIDATION = NOT_EXECUTED
+UI_2_TALKBACK_VALIDATION = NOT_EXECUTED
+UI_2_REAL_TILES_VALIDATION = NOT_EXECUTED
+UI_2_MERGE = NOT_AUTHORIZED
+UI_2_PRODUCTION_READINESS = NOT_DECLARED
+UI_2_1_MERGE_AUTHORIZATION = PENDING_HUMAN_APPROVAL
+```
