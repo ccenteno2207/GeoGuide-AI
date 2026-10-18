@@ -221,3 +221,74 @@ UI_2_PRODUCTION_READINESS = NOT_DECLARED
 
 Recomendación: revisión de la corrección de layout y de la clasificación A01;
 integración y segunda sesión física permanecen sujetas a autorización posterior.
+
+## Reconciliación post-merge — 2026-10-18
+
+El estado anterior conserva el alcance de la ejecución local. La autorización
+humana posterior aprobó integración, revisión y merge normal, además de preparar
+la segunda sesión; no autorizó ejecutarla. Este registro complementa la evidencia
+sin reescribir contratos ni convertir las limitaciones físicas en PASS.
+
+### Integración funcional verificada
+
+- Auditoría pre-PR: `PASS / READY_FOR_INTEGRATION_WITH_DOCUMENTED_LIMITATION`.
+- [PR #90](https://github.com/ccenteno2207/GeoGuide-AI/pull/90): `MERGED`.
+- Baseline anterior: `0b249514b99fdc4f2753d6dc8005516d8287bf93`.
+- HEAD funcional: `e1a9eb9ef12f36279a8f9e058c92098d94b5c976`.
+- Merge técnico: `37d5ef23136610e896ad1ac000fdda2f1774c1e5`.
+- Dos padres: `0b249514b99fdc4f2753d6dc8005516d8287bf93` y
+  `e1a9eb9ef12f36279a8f9e058c92098d94b5c976`; ascendencia comprobada.
+- Fecha remota de integración: 2026-10-18T23:50:40Z.
+- El árbol del merge es idéntico al HEAD auditado; `origin/main` actualizado
+  mediante fetch, sin sincronizar ni modificar el checkout principal.
+- Los ocho blobs del PR coinciden con los archivos del commit local revisado.
+  No hubo cambio funcional adicional ni conflicto de integración.
+- Checks GitHub: `NOT_CONFIGURED`, cero check-runs y cero estados de commit,
+  sin workflows versionados ni reglas de rama aplicables detectadas. El estado
+  agregado de commit `pending` con cero contextos no representa una ejecución CI.
+- Revisiones externas GitHub: ninguna registrada. Auditoría local ejecutada y
+  autorización humana expresas; no se atribuye una aprobación GitHub inexistente.
+- Merge realizado por el mecanismo normal de GitHub, sin squash/rebase,
+  force push, bypass de controles ni borrado de ramas.
+
+### Evidencia reutilizada y controles de esta integración
+
+La implementación no cambió desde el commit validado. Se reutilizan formato,
+analyze, 228 pruebas, regresión final de 24 combinaciones y ambos builds descritos
+arriba. No se repitieron builds ni se afirma una suite post-merge nueva.
+La verificación post-merge es de Git/alcance/evidencia y equivalencia de árboles.
+
+En esta ejecución se revalidaron los hashes reales de ambos APK y se repitió
+la auditoría ZIP de endpoint/assets/marcadores: `PASS`. Se comprobaron diff,
+enlaces/UTF-8 de documentación y la ausencia de registros privados en el PR.
+
+La preservación se controla contra un inventario local previo de 22 worktrees,
+12 archivos pendientes, stashes y SHA-256 de pendientes/registro privado. El
+checkout principal mantiene su HEAD y los tres borradores UI-0 sin seguimiento;
+solo se añadió el worktree documental bajo el directorio oficial. La comparación
+final y el SHA del merge documental se entregan en el reporte de esta ejecución.
+No se incorpora el inventario privado al repositorio.
+
+### Segunda sesión preparada
+
+El [procedimiento focalizado](UI-2.3.1-Second-Physical-Validation-Protocol.md)
+identifica el APK debug y hash, los gates de autorización, los aspectos L01,
+la comparación precisa texto/voz A01 y las regresiones/casos UI-2.2 seleccionados.
+No se ejecutó ADB, instalación, TalkBack ni acceso al HONOR en esta tarea.
+La esfera/ondas CEFI, fotografías, casos físicos restantes y cierre UI-2 conservan
+sus pendientes; no se amplió el alcance.
+
+```ini
+UI_2_3_1_PRE_PR_AUDIT = PASS
+UI_2_3_1_PR = MERGED
+UI_2_3_1_INTEGRATION = PASS
+UI_2_3_1_GITHUB_CHECKS = NOT_CONFIGURED
+UI_2_3_1_LAYOUT_AUTOMATED = PASS
+UI_2_3_1_LAYOUT_PHYSICAL = NOT_EXECUTED
+UI_2_3_1_TALKBACK_ROOT_CAUSE = UNCONFIRMED
+UI_2_3_1_TALKBACK_REMEDIATION = DEFERRED
+UI_2_3_1_SECOND_PHYSICAL_SESSION = PREPARED
+UI_2_3_1_PHYSICAL_INSTALLATION = NOT_AUTHORIZED
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+UI_2_PRODUCTION_READINESS = NOT_DECLARED
+```
