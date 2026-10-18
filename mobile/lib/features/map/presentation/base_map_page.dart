@@ -31,6 +31,21 @@ import '../../route_planning/domain/route_point.dart';
 import '../../route_planning/presentation/route_planning_controller.dart';
 import '../../../app/theme/geoguide_theme.dart';
 
+// Keep the map edge-to-edge at the top while reserving lateral system insets.
+// The Scaffold footer independently reserves attribution and bottom navigation.
+class _ExplorationLayout extends StatelessWidget {
+  const _ExplorationLayout({required this.builder});
+
+  final LayoutWidgetBuilder builder;
+
+  @override
+  Widget build(BuildContext context) => SafeArea(
+    top: false,
+    bottom: false,
+    child: LayoutBuilder(builder: builder),
+  );
+}
+
 class BaseMapPage extends StatefulWidget {
   const BaseMapPage({
     super.key,
@@ -1007,7 +1022,23 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       ),
     ];
     return Scaffold(
-      body: LayoutBuilder(
+      // Reserve attribution space independently from map/list overlays and let
+      // the system insets, rather than a device-specific offset, protect it.
+      bottomNavigationBar: ColoredBox(
+        color: Theme.of(context).colorScheme.surface,
+        child: SafeArea(
+          top: false,
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            child: Text(
+              '© $attribution',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 11, height: 1.2),
+            ),
+          ),
+        ),
+      ),
+      body: _ExplorationLayout(
         builder: (context, viewport) {
           final listOpen =
               _showDiscoveryList && _routeDiscovery.pois.isNotEmpty;
@@ -1149,19 +1180,6 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                         ],
                       ),
                     ),
-                    ColoredBox(
-                      color: Theme.of(context).colorScheme.surface,
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        child: Text(
-                          '© $attribution',
-                          style: TextStyle(fontSize: 11, height: 1.2),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -1203,7 +1221,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                       child: ConstrainedBox(
                         constraints: BoxConstraints(
                           maxHeight:
-                              constraints.maxHeight * (landscape ? 0.5 : 0.32),
+                              constraints.maxHeight * (landscape ? 0.5 : 0.36),
                         ),
                         child: SingleChildScrollView(
                           key: const ValueKey('exploration-status-scroll'),
