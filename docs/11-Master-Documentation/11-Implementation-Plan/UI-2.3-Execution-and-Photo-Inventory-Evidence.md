@@ -93,16 +93,50 @@ UI_2_3_VISUAL_REFINEMENT = PARTIAL
 UI_2_3_PHOTO_INVENTORY = PASS
 UI_2_3_PHOTO_APK_INTEGRATION = NOT_AUTHORIZED
 UI_2_3_PHOTO_PUBLICATION = NOT_AUTHORIZED
-UI_2_3_PUSH = NOT_AUTHORIZED
-UI_2_3_PR = NOT_AUTHORIZED
-UI_2_3_MERGE = NOT_AUTHORIZED
+UI_2_3_PUSH = PASS
+UI_2_3_PR = MERGED
+UI_2_3_MERGE = PASS
 UI_2_3_PHYSICAL_INSTALLATION = NOT_AUTHORIZED
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+UI_2_PRODUCTION_READINESS = NOT_DECLARED
+```
+
+## Cierre de integración post-merge — PR #88
+
+PR [#88](https://github.com/ccenteno2207/GeoGuide-AI/pull/88) se integró mediante merge commit normal el 2026-10-18. El baseline anterior de `main` fue `db29b127aa6b2eff1942c37276f88421de0b8323`; el merge y nuevo `origin/main` verificado es `30ed7b92c9fafc14de4c0908deb1a7742146b98c`. El merge tiene dos padres: el baseline anterior y el HEAD aprobado `abd29e4805c96de9a21698d109b612c5ac25cead`. El árbol integrado contiene ese HEAD aprobado. La rama remota de trabajo y el worktree se conservaron.
+
+La revisión del PR confirmó que el diff se limita a la presentación Flutter, pruebas y evidencia de UI-2.3. No se detectaron cambios backend/API/DTO/DB, dependencias, permisos, GPS/Driving/voz funcional ni fotografías piloto. GitHub no tiene workflows de Actions, checks de estado ni reviews requeridos configurados; `statusCheckRollup` está vacío y `gh pr checks` informó que no hay checks. Esto queda como `NOT_CONFIGURED`, no como PASS de CI. La rama principal tampoco tiene protección configurada. Las validaciones locales descritas arriba son la evidencia automatizada aplicable.
+
+### Verificación estática del APK para futura instalación
+
+Se verificaron los dos APK existentes sin reconstruirlos ni acceder al HONOR:
+
+| Variante | Ruta | Bytes | SHA-256 | Endpoint empaquetado |
+| --- | --- | ---: | --- | --- |
+| Debug | `mobile/build/app/outputs/flutter-apk/app-debug.apk` | 167840957 | `c6121a6244eab9a55837d81d9afd6e02a5ee7214d7a0ac346f9af4423568da0a` | Sí, en `assets/flutter_assets/kernel_blob.bin` |
+| Release | `mobile/build/app/outputs/flutter-apk/app-release.apk` | 60472029 | `1e3beb2f04022f33866b3b4197c952f404ae20cec0a04062ea3432948cd6d3fb` | Sí, en `libapp.so` para las tres ABI |
+
+`aapt` confirmó para ambas variantes `applicationId=com.geoguideai.geoguide_ai`, `versionCode=1`, `versionName=1.0.0`, `minSdk=24`, `targetSdk=36` y ABI `arm64-v8a`, `armeabi-v7a`, `x86_64`. La extracción estática de los archivos Flutter verificó el endpoint exacto `https://geoguide.getcom.pe:5443` en ambas variantes. `apksigner` reportó para ambas el certificado `C=US, O=Android, CN=Android Debug`, SHA-256 `894975b5bc6751da09b3d69923d4ae399192470d86c107106f65f6cb8d7eab7e`; por ello son artefactos de prueba firmados con clave debug y no artefactos de distribución de producción. El inventario APK previo no halló fotografías piloto ni fixtures sintéticos empaquetados.
+
+Los hashes actuales coinciden con la evidencia de compilación UI23R del HEAD aprobado, y ese HEAD es el segundo padre del merge. La identidad hashada confirma el archivo inspeccionado; por sí sola no demuestra procedencia. No se reconstruyó el APK ni se instaló. La instalación futura en HONOR y la ejecución real continúan pendientes de autorización/validación física.
+
+```ini
+UI_2_3_PRE_PR_AUDIT = PASS
+UI_2_3_PR = MERGED
+UI_2_3_INTEGRATION = PASS
+UI_2_3_GITHUB_CHECKS = NOT_CONFIGURED
+UI_2_3_APK_STATIC_VERIFICATION = PASS
+UI_2_3_PHYSICAL_INSTALLATION = NOT_AUTHORIZED
+UI_2_3_PHYSICAL_VALIDATION = NOT_EXECUTED
+UI_2_3_TALKBACK_VALIDATION = NOT_EXECUTED
+UI_2_3_PHOTO_APK_INTEGRATION = NOT_AUTHORIZED
+UI_2_3_PHOTO_PUBLICATION = NOT_AUTHORIZED
 UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
 UI_2_PRODUCTION_READINESS = NOT_DECLARED
 ```
 
 ## Alcance preservado y pendientes
 
-No se modificaron contratos congelados, backend/API/DTO/DB, dependencias, permisos, GPS, Driving funcional ni recursos fotográficos. No hubo push, PR, merge, instalación ni publicación. La incidencia del servidor de la VM se considera resuelta conforme a la verificación y prueba reportadas por el propietario.
+No se modificaron contratos congelados, backend/API/DTO/DB, dependencias, permisos, GPS, Driving funcional ni recursos fotográficos. La incidencia del servidor de la VM se considera resuelta conforme a la verificación y prueba reportadas por el propietario.
 
-Pendiente para integración: autorización de procedencia/derechos antes de usar cualquiera de las cinco imágenes; instalación y validación física de este APK UI-2.3 en HONOR; lector de pantalla; integración remota en una fase autorizada.
+Pendiente: autorización de procedencia/derechos antes de usar cualquiera de las cinco imágenes; instalación y validación física de este APK UI-2.3 en HONOR; lector de pantalla; recurso oficial de esfera/ondas de CEFI; cierre maestro UI-2.
