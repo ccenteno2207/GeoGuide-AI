@@ -44,7 +44,7 @@ Los nombres sugieren cinco posibles coincidencias con los POI de prueba, pero no
 
 ## Validación y límites
 
-- `dart format`: ejecutado en `mobile`; solo formateó `base_map_page.dart`.
+- `dart format`: ejecutado en `mobile`; formateó `base_map_page.dart` y `poi_visual_contract_test.dart`. `dart format --output=none --set-exit-if-changed .` pasó después sin cambios.
 - `flutter analyze --no-pub`: PASS, sin issues.
 - `flutter test --no-pub --reporter expanded --dart-define=UI23_CAPTURE=true`: PASS, 202 pruebas; generó 19 capturas.
 - `flutter build apk --debug --no-pub --dart-define=BACKEND_BASE_URL=https://geoguide.getcom.pe:5443`: PASS; 167840957 bytes; SHA-256 `7f7247214152bbfbed83f6a19b3e0dcc392c012afa4b9c180f3d89267b216d5d`.
