@@ -39,15 +39,15 @@ Si falta procedencia verificable o difiere hash, parar antes de conexión/instal
 - [ ] G2 concedido específicamente; no inferirlo de G1.
 - [ ] Anotar ajustes originales antes de USB: depuración, fuente, TalkBack, orientación, red, permisos, ubicación, estado de sesiones.
 - [ ] Operador conecta y habilita/autoriza depuración solo dentro del alcance aprobado.
-- [ ] Obtener serial solo en sesión privada; usar alias en reportes y no guardar salida completa sin sanear.
-- [ ] Si aparece otro equipo, seleccionar únicamente el autorizado; no actuar sobre dispositivos ajenos.
+- [ ] El operador identifica físicamente el HONOR autorizado y entrega su serial al ejecutor solo de forma privada; usar alias en reportes. No enumerar ni inspeccionar otros dispositivos.
+- [ ] No ejecutar comandos exploratorios ni abrir shell interactiva. Usar únicamente las consultas específicas de compatibilidad enumeradas aquí.
 
 **Solo en la futura sesión autorizada:**
 
 ```powershell
 $adb = 'C:\Users\CC_Laptop\AppData\Local\Android\Sdk\platform-tools\adb.exe'
-& $adb devices -l
-$serial = '<serial del HONOR autorizado, privado>'
+$serial = '<serial privado proporcionado por el operador para el alias autorizado>'
+& $adb -s $serial get-state
 & $adb -s $serial shell getprop ro.product.manufacturer
 & $adb -s $serial shell getprop ro.product.model
 & $adb -s $serial shell getprop ro.build.version.release
@@ -88,8 +88,8 @@ No ejecutar flutter devices como paso alternativo.
 - [ ] Si un subcaso exige un cambio no aprobado, dejarlo bloqueado; no pedir aprobación por cada toque ordinario ya autorizado.
 - [ ] Borrado de copia requiere consentimiento adicional específico y datos desechables.
 - [ ] Audio/vídeo no se autorizan por aprobar una captura estática. Acordar cada medio.
-- [ ] No capturar notificaciones, ubicaciones sensibles, tokens o seriales; revisar antes de exportar del teléfono.
-- [ ] Para fallos, recoger solo trazas acotadas y saneadas del proceso si se autorizó; no volcar logcat completo ni borrar logs existentes.
+- [ ] No capturar notificaciones, ubicaciones sensibles, tokens o seriales; revisar la captura mientras Rutea está en primer plano. Si aparece contenido ajeno, no conservarla.
+- [ ] Para fallos, recoger solo trazas acotadas al proceso GeoGuide AI/Rutea y saneadas si se autorizó; no volcar logcat completo, bugreport ni borrar logs existentes.
 - [ ] Identificar cada evidencia por tipo, caso, alias de sesión, fecha/hora y paso; guardar privadamente.
 
 ## 4. Orden operativo de casos
@@ -139,6 +139,8 @@ No ejecutar flutter devices como paso alternativo.
 - [ ] Restituir depuración al estado original y desconectar USB de forma acordada.
 - [ ] Completar resultado observado por subcaso, links privados/hashes, incidencias, pendientes y responsable.
 - [ ] Revisar redacción de PII y permisos de acceso a evidencia; no publicar ni push/PR.
+- [ ] No explorar almacenamiento, fotos, vídeos, documentos, descargas, contactos, mensajes, llamadas, correo, cuentas, portapapeles, notificaciones o datos de otras apps.
+- [ ] No inspeccionar bases de datos ni datos privados ajenos a Rutea; no crear backups completos, extraer datos, instalar monitores/certificados/apps auxiliares, borrar datos, desinstalar o restablecer el dispositivo.
 - [ ] Responsable confirma restauración o deja discrepancia con propietario y siguiente acción.
 - [ ] Mantener UI-2 maestro NOT_AUTHORIZED y Production Readiness NOT_DECLARED.
 

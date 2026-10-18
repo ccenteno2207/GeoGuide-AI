@@ -144,6 +144,15 @@ Ni silencio del servidor, ni logcat, ni tráfico HTTPS cifrado por sí solos dem
 No crear archivos ficticios para llenar la tabla. No almacenar tokens, serial completo, ubicaciones personales,
 notificaciones ni audio sin consentimiento; no subir automáticamente al repositorio.
 
+## PERSONAL_DEVICE_MINIMUM_ACCESS
+
+El teléfono es personal. Registrar únicamente alias, datos de compatibilidad necesarios,
+identidad del APK y observaciones autorizadas de Rutea. No incorporar serial completo, datos
+de otras aplicaciones, archivos personales, dumps generales ni copias de almacenamiento.
+Revisar capturas y logs para contenido ajeno a Rutea antes de conservarlos; si no se pueden
+sanear, no conservarlos. La autorización para instalar Rutea no amplía el acceso al resto
+del dispositivo. Restaurar únicamente los ajustes que se cambiaron durante la sesión.
+
 ## Incidencias y decisión futura
 
 | ID hallazgo | Caso/observación | Severidad y fundamento | Preexistente/UI-2/indeterminado | Evidencia | Responsable y gate |
@@ -159,8 +168,9 @@ No se asigna PASS agregado mientras una cobertura aprobada está pendiente sin d
 ```ini
 UI_2_CONTRACT = APPROVED_FROZEN
 UI_2_1_CODE_INTEGRATION = PASS
-UI_2_2_PROTOCOL = READY_FOR_HUMAN_REVIEW
-UI_2_2_PROTOCOL_APPROVAL = PENDING
+UI_2_2_PROTOCOL = APPROVED
+UI_2_2_PROTOCOL_APPROVAL = APPROVED
+PERSONAL_DEVICE_MINIMUM_ACCESS = ENFORCED
 UI_2_2_PHYSICAL_EXECUTION = NOT_AUTHORIZED
 UI_2_PHYSICAL_VALIDATION = NOT_EXECUTED
 UI_2_TALKBACK_VALIDATION = NOT_EXECUTED

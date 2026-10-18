@@ -97,6 +97,6 @@ Fecha: 2026-10-18. Base efectiva: `083239649c86dd9efd9e0050dd3c955ae574b12a`.
 - [Formato](UI-2.1-Validation-Logs/format.txt), [análisis](UI-2.1-Validation-Logs/analyze.txt), [202 pruebas](UI-2.1-Validation-Logs/flutter-tests.txt), [APK/assets](UI-2.1-Validation-Logs/apk-audit.txt), [renderer](UI-2-Visual-Evidence/README.md): evidencia histórica, sin repetir ahora.
 - Datos reales ausentes, tiempo <24 h, observabilidad insuficiente o permiso no concedido bloquean el subcaso futuro; hoy NOT_EXECUTED.
 - No se propone prueba física de GIS/ranking, inyección de payload, backup del usuario, proxy/certificados TLS, GPS continuo, voz de proximidad, STT o conducción.
-- Protocolo READY_FOR_HUMAN_REVIEW no equivale a entorno listo ni a aceptación del producto.
+- Protocolo APPROVED no equivale a entorno listo, ejecución física ni aceptación del producto.
 
 [Checklist](UI-2.2-Physical-Validation-Session-Checklist.md) · [Resultados sin ejecutar](UI-2.2-Physical-Validation-Results-Template.md).

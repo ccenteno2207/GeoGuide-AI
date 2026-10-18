@@ -1,6 +1,6 @@
 # UI-2.2 — Propuesta de protocolo de validación física
 
-Fecha de preparación: 2026-10-18. Estado documental: **READY_FOR_HUMAN_REVIEW**.
+Fecha de preparación: 2026-10-18. Protocolo aprobado por autorización humana expresa para su integración documental.
 Autoridad: encargo humano «UI-2.2 — Physical Validation Protocol & Execution Readiness».
 Solo análisis, preparación, documentación y commit local; **ninguna ejecución física autorizada**.
 Esta propuesta no congela requisitos nuevos ni aprueba instalación o validación.
@@ -97,6 +97,48 @@ La visita reducida Driving de PHY-35 requiere inclusión explícita en G1; B1 ac
 | Cierre real del proceso | REQUIRES_AUTORIZACION G4 | NO_DESTRUCTIVA en almacenamiento; pierde estado efímero. Prohibido con GPS/voz activos |
 
 Nada de esta tabla se ejecutó durante la preparación.
+
+## PERSONAL_DEVICE_MINIMUM_ACCESS — salvaguarda obligatoria
+
+El HONOR LLY-NX3 es personal y contiene información privada y sensible. Aun después de G2–G4,
+cada acceso se limita al propósito autorizado, a GeoGuide AI/Rutea y al dato mínimo necesario.
+Que ADB permita una consulta no la autoriza. No ejecutar ADB exploratorio ni usar una shell
+interactiva para explorar el equipo.
+
+**Acceso permitido únicamente con autorización física específica y propósito anotado:**
+
+- Identificar por alias privado; consultar solo fabricante/modelo, Android/API, ABI, resolución y
+  densidad necesarios para compatibilidad. El serial completo no se conserva en el reporte.
+- Verificar hash/firma del APK local y, si se requiere, la identidad del paquete de Rutea.
+- Instalar una actualización compatible de Rutea mediante el método aprobado que conserva la
+  instalación. No se promete preservación de datos; nunca se desinstala para resolver incompatibilidad.
+- Iniciar y observar exclusivamente Rutea; no abrir otras apps.
+- Capturar únicamente contenido de Rutea, con consentimiento previo, mientras está en primer plano.
+  Revisar la imagen inmediatamente y descartarla de la evidencia si incluye notificaciones, ventanas,
+  identificadores u otro contenido ajeno a la app.
+- Consultar solo logs acotados al proceso de Rutea cuando sean necesarios y autorizados; sanearlos
+  antes de conservarlos. La captura de logs no incluye volcados generales.
+- Restaurar únicamente los ajustes cambiados durante la sesión, uno por uno, comparando con el
+  registro inicial.
+
+**Prohibido durante toda la sesión:**
+
+- Explorar archivos personales o almacenamiento general; leer fotos, vídeos, documentos, descargas,
+  contactos, mensajes, llamadas, correo, cuentas, contraseñas o información de otras apps.
+- Inspeccionar bases de datos o datos privados ajenos a GeoGuide AI/Rutea; crear backups completos,
+  extraer datos del teléfono o volcar almacenamiento.
+- Volcar logcat completo, bugreport, notificaciones, portapapeles, ubicación histórica o datos de
+  localización ajenos a las pruebas.
+- Instalar herramientas de monitorización, certificados o apps auxiliares; modificar ajustes del
+  sistema fuera de las operaciones G4 aprobadas.
+- Borrar datos, desinstalar apps, restablecer el dispositivo, limpiar logs existentes o ejecutar
+  comandos amplios para buscar información obtenible mediante una consulta específica.
+- Publicar capturas, logs, seriales u otros identificadores. La evidencia permanece privada salvo
+  autorización independiente para compartir una copia previamente saneada.
+
+Si un caso necesita acceso adicional, se detiene solo ese caso y se reporta la finalidad, el dato
+solicitado, el riesgo y la alternativa menos invasiva para aprobación específica. No se infiere
+permiso desde G1, desde ADB ni desde una autorización para instalar Rutea.
 
 ## Secuencia y datos necesarios
 
@@ -816,16 +858,19 @@ Inventario comparado antes/después de redacción: 19 worktrees preexistentes co
 rama y status; 12 archivos pendientes con mismos SHA-256; 3 stashes con mismos OID y mensajes.
 Solo se añadió el worktree UI-2.2. Los APK leídos conservaron sus hashes. Ninguna interacción ADB,
 descubrimiento Flutter de dispositivos, instalación, captura física, ajuste o despliegue.
-El commit local autorizado contiene exclusivamente estos cuatro documentos. Su SHA y estado final
-se registran en el reporte de entrega para evitar autorreferencia; sin push, PR o merge.
+En el checkpoint inicial de preparación, el commit local 8da7c62eb69540400600d19d5b96cf5c30836f17
+contenía exclusivamente estos cuatro documentos y aún no se había publicado. La autorización
+humana posterior aprueba el protocolo y su integración documental; el SHA/PR/merge se informa
+en el reporte final de esta integración.
 
 ## Gobierno al entregar
 
 ```ini
 UI_2_CONTRACT = APPROVED_FROZEN
 UI_2_1_CODE_INTEGRATION = PASS
-UI_2_2_PROTOCOL = READY_FOR_HUMAN_REVIEW
-UI_2_2_PROTOCOL_APPROVAL = PENDING
+UI_2_2_PROTOCOL = APPROVED
+UI_2_2_PROTOCOL_APPROVAL = APPROVED
+PERSONAL_DEVICE_MINIMUM_ACCESS = ENFORCED
 UI_2_2_PHYSICAL_EXECUTION = NOT_AUTHORIZED
 UI_2_PHYSICAL_VALIDATION = NOT_EXECUTED
 UI_2_TALKBACK_VALIDATION = NOT_EXECUTED
