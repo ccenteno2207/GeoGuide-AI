@@ -56,11 +56,10 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
-      expect(find.textContaining('Corredor:'), findsOneWidget);
+      expect(find.textContaining('Ruta:'), findsOneWidget);
       expect(
-        MediaQuery.textScalerOf(
-          tester.element(find.textContaining('Corredor:')),
-        ).scale(10),
+        MediaQuery.textScalerOf(tester.element(find.textContaining('Ruta:')))
+            .scale(10),
         20,
       );
       await tester.pumpWidget(const SizedBox());

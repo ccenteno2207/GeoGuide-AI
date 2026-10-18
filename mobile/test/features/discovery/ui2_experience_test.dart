@@ -86,7 +86,9 @@ const resultsKey = ValueKey('poi-results-scroll');
 const captureKey = ValueKey('ui2-renderer-boundary');
 
 Future<void> capture(WidgetTester tester, String name) async {
-  if (!const bool.fromEnvironment('UI2_CAPTURE')) return;
+  const captureUi2 = bool.fromEnvironment('UI2_CAPTURE');
+  const captureUi23 = bool.fromEnvironment('UI23_CAPTURE');
+  if (!captureUi2 && !captureUi23) return;
   final boundary = tester.renderObject<RenderRepaintBoundary>(
     find.byKey(captureKey),
   );
@@ -94,9 +96,16 @@ Future<void> capture(WidgetTester tester, String name) async {
     final image = await boundary.toImage(pixelRatio: 1);
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
     image.dispose();
-    final file = File(
-      '../docs/11-Master-Documentation/11-Implementation-Plan/UI-2-Visual-Evidence/FLUTTER_RENDERER_TEST-$name.png',
+    final directory = Directory(
+      captureUi23
+          ? '../docs/11-Master-Documentation/11-Implementation-Plan/UI-2.3-Visual-Evidence'
+          : '../docs/11-Master-Documentation/11-Implementation-Plan/UI-2-Visual-Evidence',
     );
+    await directory.create(recursive: true);
+    final prefix = captureUi23
+        ? 'FLUTTER_RENDERER_TEST_UI23'
+        : 'FLUTTER_RENDERER_TEST';
+    final file = File('${directory.path}/$prefix-$name.png');
     await file.parent.create(recursive: true);
     await file.writeAsBytes(bytes!.buffer.asUint8List());
   });

@@ -66,9 +66,15 @@ void main() {
     final statusRect = tester.getRect(
       find.byKey(const ValueKey('exploration-status')),
     );
+    final actionsRect = tester.getRect(
+      find.byKey(const ValueKey('exploration-floating-actions')),
+    );
     final safeAreaHeight = screen.height - 48;
-    final unoccludedMapHeight = mapRect.height - statusRect.height;
+    final unoccludedMapHeight =
+        mapRect.height - statusRect.height - actionsRect.height;
     expect(unoccludedMapHeight / safeAreaHeight, greaterThanOrEqualTo(0.5));
+    expect(find.text('GeoGuide AI'), findsNothing);
+    expect(find.text('Exploración'), findsNothing);
     expect(find.byTooltip('Usar ubicación actual'), findsOneWidget);
     expect(find.byTooltip('Activar seguimiento de ubicación'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());

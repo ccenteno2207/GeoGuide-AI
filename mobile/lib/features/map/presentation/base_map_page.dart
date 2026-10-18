@@ -2,7 +2,6 @@ import '../../tracking/application/selected_poi_session.dart';
 import '../../tracking/application/route_session_client.dart';
 
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -860,6 +859,38 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     );
   }
 
+  Widget _routePointMarker({
+    required IconData icon,
+    required Color color,
+    required String label,
+  }) => Semantics(
+    image: true,
+    label: label,
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x55000000),
+            blurRadius: 5,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Icon(
+          icon,
+          size: 27,
+          color: color == GeoGuideTheme.exploration.accent
+              ? GeoGuideTheme.exploration.textPrimary
+              : Colors.white,
+        ),
+      ),
+    ),
+  );
+
   Widget _buildExploration(BuildContext context) {
     final snapshot = widget.offlineDiscovery?.snapshot;
     final snapshotExpired =
@@ -880,14 +911,25 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
           consent: _routeSession.voiceEnabled,
           routeBusy: _b1Owned || _b1Busy || _routeSession.active,
         ),
-      IconButton(
-        tooltip: _routeSession.voiceEnabled
+      Tooltip(
+        message: _routeSession.voiceEnabled
             ? 'Desactivar avisos de voz CEFI'
             : 'Activar avisos de voz CEFI',
-        icon: Icon(
-          _routeSession.voiceEnabled ? Icons.volume_up : Icons.volume_off,
+        child: FilledButton.icon(
+          key: const ValueKey('cefi-notices-control'),
+          style: FilledButton.styleFrom(
+            backgroundColor: GeoGuideTheme.exploration.cefi,
+            foregroundColor: Colors.white,
+            minimumSize: const Size(48, 48),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            shape: const StadiumBorder(),
+          ),
+          icon: Icon(
+            _routeSession.voiceEnabled ? Icons.graphic_eq : Icons.volume_off,
+          ),
+          label: const Text('Avisos de CEFI'),
+          onPressed: _b1Busy ? null : _toggleVoiceConsent,
         ),
-        onPressed: _b1Busy ? null : _toggleVoiceConsent,
       ),
       if (widget.offlineDiscovery?.snapshot != null || _b1Owned)
         IconButton(
@@ -942,40 +984,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
             : _toggleFollowLocation,
       ),
     ];
-    final columns = ((MediaQuery.sizeOf(context).width - 32) / 48)
-        .floor()
-        .clamp(1, actions.length);
-    final actionRows = (actions.length / columns).ceil();
-    final actionBarHeight = actionRows * 48.0;
-    final toolbarHeight = math.max(
-      64.0,
-      MediaQuery.textScalerOf(context).scale(30) + 20,
-    );
-
     return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: editing ? 0 : toolbarHeight,
-        title: editing
-            ? null
-            : const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('GeoGuide AI'),
-                  Text(
-                    'Exploración',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
-        bottom: PreferredSize(
-          preferredSize: Size.fromHeight(actionBarHeight),
-          child: SizedBox(
-            height: actionBarHeight,
-            child: Wrap(alignment: WrapAlignment.end, children: actions),
-          ),
-        ),
-      ),
       body: LayoutBuilder(
         builder: (context, viewport) {
           final listOpen =
@@ -1037,12 +1046,14 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                     origin.latitude,
                                     origin.longitude,
                                   ),
-                                  width: 44,
-                                  height: 44,
-                                  child: const Icon(
-                                    Icons.trip_origin,
-                                    color: Colors.green,
-                                    size: 34,
+                                  width: 48,
+                                  height: 48,
+                                  child: _routePointMarker(
+                                    icon: Icons.trip_origin,
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .primary,
+                                    label: 'Origen seleccionado',
                                   ),
                                 ),
                               ],
@@ -1056,12 +1067,12 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                     destination.latitude,
                                     destination.longitude,
                                   ),
-                                  width: 44,
-                                  height: 44,
-                                  child: const Icon(
-                                    Icons.location_on,
-                                    color: Colors.red,
-                                    size: 36,
+                                  width: 48,
+                                  height: 48,
+                                  child: _routePointMarker(
+                                    icon: Icons.location_on,
+                                    color: GeoGuideTheme.exploration.accent,
+                                    label: 'Destino seleccionado',
                                   ),
                                 ),
                               ],
@@ -1096,12 +1107,18 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                       height: 48,
                                       child: IconButton(
                                         tooltip: 'Vista previa de ${poi.name}',
-                                        onPressed: () => _showPoiPreview(poi),
-                                        icon: const Icon(
-                                          Icons.place,
-                                          color: Colors.deepOrange,
-                                          size: 32,
+                                        style: IconButton.styleFrom(
+                                          backgroundColor: Theme.of(context)
+                                              .colorScheme
+                                              .surface,
+                                          foregroundColor: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
+                                          elevation: 3,
+                                          shape: const CircleBorder(),
                                         ),
+                                        onPressed: () => _showPoiPreview(poi),
+                                        icon: const Icon(Icons.place, size: 28),
                                       ),
                                     ),
                                   )
@@ -1113,103 +1130,169 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                     ColoredBox(
                       color: Theme.of(context).colorScheme.surface,
                       child: const Padding(
-                        padding: EdgeInsets.all(4),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         child: Text(
-                          'flutter_map | © $attribution',
-                          style: TextStyle(fontSize: 12, height: 1.3),
+                          '© $attribution',
+                          style: TextStyle(fontSize: 11, height: 1.2),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
+              if (!editing)
+                Positioned(
+                  left: 12,
+                  right: 12,
+                  top: 4,
+                  child: SafeArea(
+                    bottom: false,
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 360),
+                        child: Material(
+                          key: const ValueKey('exploration-floating-actions'),
+                          color: Theme.of(context).colorScheme.surface,
+                          elevation: 4,
+                          shadowColor: const Color(0x33203632),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            side: const BorderSide(color: Color(0xFFDCE7E4)),
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: Padding(
+                            padding: const EdgeInsets.all(4),
+                            child: Wrap(
+                              alignment: WrapAlignment.center,
+                              runAlignment: WrapAlignment.center,
+                              children: actions,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               if (!listOpen)
                 Positioned(
                   left: 16,
                   right: 16,
-                  bottom: 24,
-                  top: 80,
+                  bottom: 32,
+                  top: 72,
                   child: LayoutBuilder(
                     builder: (context, constraints) => Align(
                       alignment: Alignment.bottomCenter,
                       child: ConstrainedBox(
                         constraints: BoxConstraints(
-                          maxHeight: constraints.maxHeight * 0.45,
+                          maxHeight: constraints.maxHeight * 0.4,
                         ),
                         child: SingleChildScrollView(
                           key: const ValueKey('exploration-status-scroll'),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (_routePlanning.origin != null &&
-                                  _routePlanning.destination != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: FilledButton.icon(
-                                    onPressed:
-                                        _routePlanning.canPlan &&
-                                            !_routeDiscovery.isDiscovering
-                                        ? _calculateRoute
-                                        : null,
-                                    icon: _routePlanning.isCalculating
-                                        ? const SizedBox(
-                                            width: 18,
-                                            height: 18,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                            ),
-                                          )
-                                        : const Icon(Icons.alt_route),
-                                    label: const Text('Calcular ruta'),
-                                  ),
-                                ),
-                              if (_routePlanning.route != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: FilledButton.tonalIcon(
-                                    key: const ValueKey(
-                                      'route-category-filter',
-                                    ),
-                                    onPressed:
-                                        _routeDiscovery.isDiscovering ||
-                                            _b1Owned ||
-                                            _b1Busy ||
-                                            _ownershipPending
-                                        ? null
-                                        : _openFilters,
-                                    icon: const Icon(Icons.filter_alt),
-                                    label: Text(
-                                      'Categorías: ${_filterSummary()}',
-                                    ),
-                                  ),
-                                ),
-                              if (_routeDiscovery.pois.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: FilledButton.tonalIcon(
-                                    onPressed: () => setState(
-                                      () => _showDiscoveryList =
-                                          !_showDiscoveryList,
-                                    ),
-                                    icon: Icon(
-                                      _showDiscoveryList
-                                          ? Icons.map
-                                          : Icons.list,
-                                    ),
-                                    label: Text(
-                                      _showDiscoveryList
-                                          ? 'Ver mapa'
-                                          : 'Ver lista',
-                                    ),
-                                  ),
-                                ),
                               Card(
                                 key: const ValueKey('exploration-status'),
                                 child: Padding(
-                                  padding: const EdgeInsets.all(12),
+                                  padding: const EdgeInsets.all(10),
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
+                                      Wrap(
+                                        alignment: WrapAlignment.center,
+                                        crossAxisAlignment:
+                                            WrapCrossAlignment.center,
+                                        spacing: 6,
+                                        runSpacing: 4,
+                                        children: [
+                                          if (_routePlanning.origin != null &&
+                                              _routePlanning.destination !=
+                                                  null)
+                                            FilledButton.icon(
+                                              key: const ValueKey(
+                                                'calculate-route',
+                                              ),
+                                              onPressed:
+                                                  _routePlanning.canPlan &&
+                                                      !_routeDiscovery
+                                                          .isDiscovering
+                                                  ? _calculateRoute
+                                                  : null,
+                                              icon: _routePlanning.isCalculating
+                                                  ? const SizedBox(
+                                                      width: 18,
+                                                      height: 18,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                            strokeWidth: 2,
+                                                          ),
+                                                    )
+                                                  : const Icon(Icons.alt_route),
+                                              label: const Text(
+                                                'Calcular ruta',
+                                              ),
+                                            ),
+                                          if (_routePlanning.route != null)
+                                            FilledButton.tonalIcon(
+                                              key: const ValueKey(
+                                                'route-category-filter',
+                                              ),
+                                              onPressed:
+                                                  _routeDiscovery
+                                                          .isDiscovering ||
+                                                      _b1Owned ||
+                                                      _b1Busy ||
+                                                      _ownershipPending
+                                                  ? null
+                                                  : _openFilters,
+                                              icon: const Icon(
+                                                Icons.filter_alt,
+                                              ),
+                                              label: Text(
+                                                'Categorías: ${_filterSummary()}',
+                                              ),
+                                            ),
+                                          if (_routeDiscovery.pois.isNotEmpty)
+                                            OutlinedButton.icon(
+                                              key: const ValueKey(
+                                                'toggle-discovery-list',
+                                              ),
+                                              onPressed: () => setState(
+                                                () => _showDiscoveryList =
+                                                    !_showDiscoveryList,
+                                              ),
+                                              icon: Icon(
+                                                _showDiscoveryList
+                                                    ? Icons.map
+                                                    : Icons.list,
+                                              ),
+                                              label: Text(
+                                                _showDiscoveryList
+                                                    ? 'Ver mapa'
+                                                    : 'Ver lista',
+                                              ),
+                                            ),
+                                          if (widget
+                                                      .offlineDiscovery
+                                                      ?.snapshot !=
+                                                  null &&
+                                              !_routeDiscovery.isDiscovering)
+                                            OutlinedButton.icon(
+                                              onPressed: _enterDriving,
+                                              icon: const Icon(
+                                                Icons.directions_car,
+                                              ),
+                                              label: const Text(
+                                                'Entrar en modo conducción',
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
                                       Text(
                                         snapshotExpired
                                             ? _unavailableResults
@@ -1239,9 +1322,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                             case final snapshot?)
                                           Text(
                                             'Ruta: ${(snapshot.route.distanceMeters / 1000).toStringAsFixed(1)} km · ${(snapshot.route.durationSeconds / 60).round()} min planificados\n'
-                                            'Origen: ${snapshot.query.origin.latitude.toStringAsFixed(4)}, ${snapshot.query.origin.longitude.toStringAsFixed(4)}\n'
-                                            'Destino: ${snapshot.query.destination.latitude.toStringAsFixed(4)}, ${snapshot.query.destination.longitude.toStringAsFixed(4)}\n'
-                                            'Corredor: ${snapshot.query.corridorMeters} m · hasta ${snapshot.query.limit} lugares',
+                                            '${snapshot.pois.length} lugares en este resultado',
                                             textAlign: TextAlign.center,
                                           ),
                                         Semantics(
@@ -1305,18 +1386,6 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                           !_routeDiscovery.isDiscovering)
                                         const Text(
                                           'No encontramos lugares de estas categorías para esta ruta.',
-                                        ),
-                                      if (widget.offlineDiscovery?.snapshot !=
-                                              null &&
-                                          !_routeDiscovery.isDiscovering)
-                                        FilledButton.icon(
-                                          onPressed: _enterDriving,
-                                          icon: const Icon(
-                                            Icons.directions_car,
-                                          ),
-                                          label: const Text(
-                                            'Entrar en modo conducción',
-                                          ),
                                         ),
                                     ],
                                   ),
