@@ -178,6 +178,12 @@ void main() {
         now: () => fixtures.captured,
       );
       await pump(tester, offline, session: session);
+      expect(
+        tester
+            .widget<MaterialApp>(find.byType(MaterialApp))
+            .debugShowCheckedModeBanner,
+        isFalse,
+      );
       final map = tester
           .widget<FlutterMap>(find.byType(FlutterMap))
           .mapController!;
