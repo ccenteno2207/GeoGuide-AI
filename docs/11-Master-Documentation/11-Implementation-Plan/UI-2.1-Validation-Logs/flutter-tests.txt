@@ -1,0 +1,842 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 104.0.0 (109.0.0 available)
+  analyzer 14.0.0 (14.5.0 available)
+  archive 4.3.0 (4.5.2 available)
+  build 4.0.11 (5.0.0 available)
+  build_config 1.3.3 (1.4.0 available)
+  build_daemon 4.1.6 (4.1.7 available)
+  build_runner 2.16.1 (2.17.1 available)
+  code_assets 1.2.1 (2.1.0 available)
+  dart_style 3.1.13 (3.1.14 available)
+  dbus 0.7.15 (0.8.0 available)
+  drift 2.35.1 (2.35.2 available)
+  geolocator 14.0.3 (14.1.1 available)
+  geolocator_android 5.0.3 (5.1.1+1 available)
+  geolocator_apple 2.3.14 (2.3.15 available)
+  geolocator_platform_interface 4.3.0 (4.4.0 available)
+  gsettings 0.2.8 (0.2.9 available)
+  jni 1.0.3 (1.1.0 available)
+  jni_flutter 1.0.3 (1.0.4+1 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  native_toolchain_c 0.19.3 (0.19.5 available)
+  objective_c 9.5.0 (9.6.2 available)
+  package_info_plus 10.2.1 (10.2.2 available)
+  petitparser 7.0.2 (7.1.0 available)
+  shelf 1.4.2 (1.4.3 available)
+  source_gen 4.3.0 (4.3.1 available)
+  sqlite3 3.7.0 (3.7.1 available)
+  test_api 0.7.12 (0.7.15 available)
+  vector_math 2.4.0 (2.4.3 available)
+  vm_service 15.3.0 (15.4.0 available)
+  xml 7.0.1 (7.1.0 available)
+Got dependencies!
+30 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+00:00 +0: loading <WORKTREE>/mobile/test/app/theme/geoguide_theme_test.dart
+00:00 +0: <WORKTREE>/mobile/test/app/theme/geoguide_theme_test.dart: exploration design tokens match the approved visual contract
+00:00 +1: <WORKTREE>/mobile/test/app/theme/geoguide_theme_test.dart: exploration palette has accessible text pairs and local scope
+00:01 +2: <WORKTREE>/mobile/test/core/network/backend_configuration_test.dart: accepts an externally supplied HTTP pilot endpoint
+00:01 +3: <WORKTREE>/mobile/test/core/network/backend_configuration_test.dart: rejects an absent or unsupported backend endpoint
+00:02 +4: <WORKTREE>/mobile/test/core/network/geoguide_http_client_test.dart: mapDioException TLS and authorization failures never become cacheable network failures
+00:02 +5: <WORKTREE>/mobile/test/core/network/geoguide_http_client_test.dart: mapDioException maps a connection error without exposing connection details
+00:02 +6: <WORKTREE>/mobile/test/b1_startup_test.dart: real entrypoint initializes binding before constructing channels
+00:02 +6: loading <WORKTREE>/mobile/test/b1_startup_test.dart
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:02 +7: <WORKTREE>/mobile/test/b1_startup_test.dart: real entrypoint initializes binding before constructing channels
+00:02 +8: <WORKTREE>/mobile/test/b1_startup_test.dart: real entrypoint initializes binding before constructing channels
+00:03 +9: <WORKTREE>/mobile/test/b1_startup_test.dart: (tearDownAll)
+00:04 +9: <WORKTREE>/mobile/test/features/discovery/infrastructure/route_discovery_response_mapper_test.dart: keeps only usable discovery POIs
+00:04 +10: <WORKTREE>/mobile/test/features/discovery/infrastructure/route_discovery_response_mapper_test.dart: accepts optional detail and provenance fields
+00:04 +11: <WORKTREE>/mobile/test/features/discovery/infrastructure/route_discovery_response_mapper_test.dart: keeps optional fields absent for backward-compatible payloads
+00:05 +12: <WORKTREE>/mobile/test/features/discovery/offline_cache_test.dart: zero/one slot, replacement, empty result, restart and deletion
+00:05 +13: <WORKTREE>/mobile/test/features/discovery/offline_cache_test.dart: TTL boundary 86399999, restart never renews
+00:05 +14: <WORKTREE>/mobile/test/features/discovery/offline_cache_test.dart: TTL boundary 86400000, restart never renews
+00:06 +15: <WORKTREE>/mobile/test/features/discovery/offline_cache_test.dart: TTL boundary 86400001, restart never renews
+00:06 +16: <WORKTREE>/mobile/test/features/discovery/offline_cache_test.dart: read does not renew TTL and clock rollback invalidates
+00:06 +17: <WORKTREE>/mobile/test/features/discovery/offline_cache_test.dart: cancelled transaction preserves previous and delete blocks late capture
+00:06 +18: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:06 +19: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:06 +20: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:06 +21: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:06 +22: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:06 +23: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:07 +24: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:08 +25: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:08 +26: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:08 +27: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:08 +28: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:08 +29: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:08 +30: <WORKTREE>/mobile/test/features/discovery/offline_cache_test.dart: real exclusive lock causes bounded write failure preserving previous
+00:09 +30: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: expiry removes visible cached detail without resurrecting stale POI
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:09 +31: <WORKTREE>/mobile/test/features/discovery/offline_cache_test.dart: real exclusive lock causes bounded write failure preserving previous
+00:10 +31: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: restart copy has no modal, Map/List Preview Detail preserve context
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:10 +32: <WORKTREE>/mobile/test/features/discovery/offline_cache_test.dart: real exclusive lock causes bounded write failure preserving previous
+00:10 +33: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: reduced driving mode is static and exits explicitly
+00:10 +34: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: reduced driving mode is static and exits explicitly
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:10 +35: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: reduced driving mode is static and exits explicitly
+00:10 +36: <WORKTREE>/mobile/test/features/discovery/offline_cache_test.dart: invalid envelope rejects missing metadata, wrong route and invalid UUID without partial rescue
+00:10 +37: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: Driving entry is unavailable without a coherent snapshot
+00:10 +38: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: Driving entry is unavailable without a coherent snapshot
+00:10 +39: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: Driving entry is unavailable without a coherent snapshot
+00:10 +40: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: Driving entry is unavailable without a coherent snapshot
+00:11 +41: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: Driving entry is unavailable without a coherent snapshot
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:11 +42: <WORKTREE>/mobile/test/features/discovery/offline_cache_test.dart: offline failure AppFailureType.timeout is classified without silent security fallback
+00:11 +43: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: Driving preserves static state through expiry and supports re-entry
+00:11 +44: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: Driving preserves static state through expiry and supports re-entry
+00:11 +45: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: Driving preserves static state through expiry and supports re-entry
+00:11 +46: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: Driving preserves static state through expiry and supports re-entry
+00:11 +47: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: Driving preserves static state through expiry and supports re-entry
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:11 +48: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: Driving exit remains accessible at TextScaler 2.0
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:11 +49: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: Driving interaction tree has no alternate controls and map gestures are disabled
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:12 +50: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: consent sheet scales 2.0, accessible labels and 48px targets
+00:12 +51: <WORKTREE>/mobile/test/features/discovery/offline_ui_test.dart: theme contrast satisfies normal text and action thresholds
+00:12 +52: <WORKTREE>/mobile/test/features/discovery/poi_list_close_test.dart: long POI list closes at Size(320.0, 480.0) without changing route
+00:13 +53: <WORKTREE>/mobile/test/features/discovery/poi_list_close_test.dart: long POI list closes at Size(320.0, 480.0) without changing route
+00:13 +54: <WORKTREE>/mobile/test/features/discovery/poi_list_close_test.dart: long POI list closes at Size(320.0, 480.0) without changing route
+00:13 +55: <WORKTREE>/mobile/test/features/discovery/poi_list_close_test.dart: long POI list closes at Size(320.0, 480.0) without changing route
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:16 +56: <WORKTREE>/mobile/test/features/discovery/presentation/discovery_filter_sheet_test.dart: shows only Discovery categories with multi-select and Apply
+00:16 +57: <WORKTREE>/mobile/test/features/discovery/poi_list_close_test.dart: long POI list closes at Size(360.0, 640.0) without changing route
+00:17 +58: <WORKTREE>/mobile/test/features/discovery/poi_list_close_test.dart: long POI list closes at Size(360.0, 640.0) without changing route
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:17 +59: <WORKTREE>/mobile/test/features/discovery/poi_list_close_test.dart: long POI list closes at Size(640.0, 360.0) without changing route
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:18 +60: <WORKTREE>/mobile/test/features/discovery/poi_list_close_test.dart: detail and list close preserve an active route session
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:19 +61: <WORKTREE>/mobile/test/features/discovery/presentation/poi_detail_sheet_test.dart: shows only the contractual basic POI fields
+00:19 +62: <WORKTREE>/mobile/test/features/discovery/presentation/poi_detail_sheet_test.dart: renders factual description and reduced provenance
+00:20 +63: <WORKTREE>/mobile/test/features/discovery/presentation/poi_detail_sheet_test.dart: omits absent optional detail and provenance sections
+00:20 +64: <WORKTREE>/mobile/test/features/discovery/presentation/poi_preview_sheet_test.dart: renders approved preview fields and friendly mappings
+00:21 +65: <WORKTREE>/mobile/test/features/discovery/presentation/poi_visual_contract_test.dart: optional fields and internal codes are absent; placeholder is stable and informative
+00:21 +66: <WORKTREE>/mobile/test/features/discovery/presentation/poi_visual_contract_test.dart: optional fields and internal codes are absent; placeholder is stable and informative
+00:21 +67: <WORKTREE>/mobile/test/features/discovery/presentation/poi_visual_contract_test.dart: optional fields and internal codes are absent; placeholder is stable and informative
+00:22 +68: <WORKTREE>/mobile/test/features/discovery/presentation/poi_visual_contract_test.dart: optional fields and internal codes are absent; placeholder is stable and informative
+00:23 +69: <WORKTREE>/mobile/test/features/discovery/presentation/route_discovery_controller_test.dart: represents usable POIs returned for the selected route points
+00:24 +70: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: (setUpAll)
+00:24 +70: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: filter has zero source calls; map/list share IDs; preview/detail preserve query and context
+00:27 +70: <WORKTREE>/mobile/test/features/location/gps_camera_widget_test.dart: camera course zoom gesture pause and explicit resume use real map controller
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:28 +71: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: filter has zero source calls; map/list share IDs; preview/detail preserve query and context
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:29 +72: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: replacement and expiry clear query; Driving never retains or queues search
+00:29 +73: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: replacement and expiry clear query; Driving never retains or queues search
+00:29 +74: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: replacement and expiry clear query; Driving never retains or queues search
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:30 +75: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: choosing new map endpoints hides previous filtered POIs without mutating the snapshot
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:31 +76: <WORKTREE>/mobile/test/features/map/exploration_shell_test.dart: default exploration keeps at least half its safe area as map
+00:31 +76: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: editing at the online TTL boundary clears results without a new source call
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:31 +77: <WORKTREE>/mobile/test/features/map/exploration_shell_test.dart: default exploration keeps at least half its safe area as map
+00:31 +77: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: renderer fixtures distinguish offline and error with existing messages
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:32 +78: <WORKTREE>/mobile/test/features/map/exploration_shell_test.dart: default exploration keeps at least half its safe area as map
+00:32 +78: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: keyboard Size(360.0, 640.0) keeps editing and dismissal reachable; query does not persist after disposal
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:32 +79: <WORKTREE>/mobile/test/features/map/exploration_shell_test.dart: default exploration keeps at least half its safe area as map
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:33 +80: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: keyboard Size(640.0, 360.0) keeps editing and dismissal reachable; query does not persist after disposal
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:33 +81: <WORKTREE>/mobile/test/features/map/exploration_shell_test.dart: responsive shell 360.0x640.0 scale 1.0
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:33 +82: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 360.0x640.0 text 1.0
+00:34 +82: <WORKTREE>/mobile/test/features/map/exploration_shell_test.dart: responsive shell 360.0x640.0 scale 2.0
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:34 +83: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 360.0x640.0 text 1.0
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:34 +84: <WORKTREE>/mobile/test/features/map/exploration_shell_test.dart: responsive shell 360.0x800.0 scale 1.0
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:34 +85: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 360.0x640.0 text 2.0
+00:34 +85: <WORKTREE>/mobile/test/features/map/exploration_shell_test.dart: responsive shell 360.0x800.0 scale 2.0
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:34 +86: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 360.0x640.0 text 2.0
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:34 +87: <WORKTREE>/mobile/test/features/map/exploration_shell_test.dart: responsive shell 640.0x360.0 scale 1.0
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:35 +88: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 360.0x800.0 text 1.0
+00:35 +88: <WORKTREE>/mobile/test/features/map/exploration_shell_test.dart: responsive shell 640.0x360.0 scale 2.0
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:35 +89: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 360.0x800.0 text 1.0
+00:35 +89: <WORKTREE>/mobile/test/features/map/exploration_shell_test.dart: responsive shell 800.0x360.0 scale 1.0
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:35 +90: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 360.0x800.0 text 1.0
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:35 +91: <WORKTREE>/mobile/test/features/map/exploration_shell_test.dart: responsive shell 800.0x360.0 scale 2.0
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:35 +92: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 360.0x800.0 text 2.0
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:36 +93: <WORKTREE>/mobile/test/features/map/exploration_shell_test.dart: viewport resize preserves BaseMapPage state and data calls
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:36 +94: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 640.0x360.0 text 1.0
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:36 +95: <WORKTREE>/mobile/test/features/map/exploration_shell_test.dart: preview and Driving retain the baseline app theme
+00:37 +95: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 640.0x360.0 text 2.0
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:37 +96: <WORKTREE>/mobile/test/features/map/exploration_shell_test.dart: preview and Driving retain the baseline app theme
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:37 +97: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 800.0x360.0 text 1.0
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:38 +98: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 800.0x360.0 text 2.0
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:38 +99: <WORKTREE>/mobile/test/features/discovery/ui2_experience_test.dart: (tearDownAll)
+00:39 +99: <WORKTREE>/mobile/test/features/route_planning/infrastructure/route_plan_response_mapper_test.dart: maps a valid GeoJSON LineString preserving longitude-latitude input
+00:39 +100: <WORKTREE>/mobile/test/features/route_planning/infrastructure/route_plan_response_mapper_test.dart: rejects invalid geometry
+00:39 +101: <WORKTREE>/mobile/test/features/route_planning/presentation/route_planning_controller_test.dart: selects origin and destination with two explicit map points
+00:39 +102: <WORKTREE>/mobile/test/features/route_planning/presentation/route_planning_controller_test.dart: draw-ready route is supplied only by the planning use case
+00:40 +103: <WORKTREE>/mobile/test/features/tracking/accelerated_core_test.dart: invalid different snapshot does not mutate valid candidate context
+00:40 +104: <WORKTREE>/mobile/test/features/tracking/accelerated_core_test.dart: proximity hysteresis retains a pending candidate in the boundary band
+00:40 +105: <WORKTREE>/mobile/test/features/tracking/accelerated_core_test.dart: detection preserves chosen priority without consuming candidates
+00:40 +106: <WORKTREE>/mobile/test/features/tracking/accelerated_core_test.dart: session switches await stop before start and discard previous callback
+00:40 +107: <WORKTREE>/mobile/test/features/tracking/accelerated_core_test.dart: queued mode change cannot be mistaken for an idempotent active start
+00:40 +108: <WORKTREE>/mobile/test/features/tracking/accelerated_core_test.dart: failed service stop reports interrupted rather than off
+00:40 +109: <WORKTREE>/mobile/test/features/tracking/accelerated_core_test.dart: camera rejects old future degraded duplicate and out-of-range samples
+00:40 +110: <WORKTREE>/mobile/test/features/tracking/accelerated_core_test.dart: course rotation wraps smoothly and stops preserve view
+00:40 +111: <WORKTREE>/mobile/test/features/tracking/accelerated_core_test.dart: zoom hysteresis and invalid heading retain stable orientation
+00:40 +112: <WORKTREE>/mobile/test/features/tracking/accelerated_core_test.dart: session repeated start and stop are idempotent and late samples rejected
+00:40 +113: <WORKTREE>/mobile/test/features/tracking/accelerated_core_test.dart: revocation during service start cancels pending activation
+00:40 +114: <WORKTREE>/mobile/test/features/tracking/accelerated_core_test.dart: continuous gate fails and route completion never activates continuous
+00:40 +115: <WORKTREE>/mobile/test/features/tracking/accelerated_core_test.dart: detection reoffers selected POI until delivery and rejects expired snapshot
+00:40 +116: <WORKTREE>/mobile/test/features/tracking/accelerated_core_test.dart: proximity rejects degraded and suggested POIs without course
+00:41 +117: <WORKTREE>/mobile/test/features/tracking/b1_session_test.dart: route consent missing never starts producer
+00:41 +118: <WORKTREE>/mobile/test/features/tracking/b1_session_test.dart: expired route never starts producer
+00:41 +119: <WORKTREE>/mobile/test/features/tracking/b1_session_test.dart: route stop releases producer and rejects late samples
+00:41 +120: <WORKTREE>/mobile/test/features/tracking/b1_session_test.dart: route expiry during session stops rather than evaluating stale snapshot
+00:41 +121: <WORKTREE>/mobile/test/features/tracking/b1_session_test.dart: native port stop nulls callback before awaited teardown
+00:41 +122: <WORKTREE>/mobile/test/features/tracking/b1_session_test.dart: platform denial propagates without claiming active session
+00:41 +123: <WORKTREE>/mobile/test/features/tracking/b1_session_test.dart: native status separates interruption from voluntary stop across refresh
+00:47 +124: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:48 +125: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:48 +126: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:48 +127: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:48 +128: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:48 +129: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:48 +130: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:48 +131: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +132: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +133: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +134: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +135: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +136: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +137: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +138: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +139: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:50 +140: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:50 +141: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:50 +142: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:50 +143: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:50 +144: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:50 +145: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:50 +146: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:50 +147: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:51 +148: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+00:52 +149: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+00:52 +150: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+00:52 +151: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+00:52 +152: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+00:52 +153: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+00:52 +154: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+00:52 +155: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+00:52 +156: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+00:52 +157: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+00:52 +158: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+00:52 +159: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+00:52 +160: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+00:52 +161: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:53 +162: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=true notification=false
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:54 +163: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=true
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:55 +164: <WORKTREE>/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=true notification=true
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:08 +165: <WORKTREE>/mobile/test/features/tracking/i01_widget_test.dart: blocking assertion rejects an enabled real IconButton and accepts disabled
+01:10 +166: <WORKTREE>/mobile/test/features/tracking/i01_widget_test.dart: blocking assertion rejects an enabled real IconButton and accepts disabled
+01:10 +167: <WORKTREE>/mobile/test/features/tracking/i01_widget_test.dart: blocking assertion rejects an enabled real IconButton and accepts disabled
+01:10 +168: <WORKTREE>/mobile/test/features/tracking/i01_widget_test.dart: blocking assertion rejects an enabled real IconButton and accepts disabled
+01:10 +169: <WORKTREE>/mobile/test/features/tracking/i01_widget_test.dart: localized selector fails for misdecoded UTF-8; key and exact text detect it
+01:10 +170: <WORKTREE>/mobile/test/features/tracking/i01_widget_test.dart: explicit selection reaches B1; inspection and voice consent do not select; stop clears
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:18 +171: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: fixed clock control rejects sample after freshness limit
+01:18 +172: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: silent stream expires and recovers with controlled clock route=false
+01:18 +173: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: silent stream expires and recovers with controlled clock route=false
+01:19 +174: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: silent stream expires and recovers with controlled clock route=false
+01:19 +175: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: silent stream expires and recovers with controlled clock route=false
+01:20 +176: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: silent stream expires and recovers with controlled clock route=false
+01:20 +177: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: silent stream expires and recovers with controlled clock route=false
+01:20 +178: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: silent stream expires and recovers with controlled clock route=false
+01:20 +179: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: silent stream expires and recovers with controlled clock route=false
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:20 +180: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: silent stream expires and recovers with controlled clock route=false
+01:20 +181: <WORKTREE>/mobile/test/features/tracking/voice_diagnostic_test.dart: dispose cancels and ignores late ack
+01:20 +182: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: silent stream expires and recovers with controlled clock route=true
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:21 +183: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: pending refresh blocks both normal producers under native ownership
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:21 +184: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: late refresh cannot resurrect active state after stop
+01:21 +185: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: control resolved active state blocks normal location stream
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:21 +186: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: late start completion cannot overwrite stop
+01:21 +187: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: late voice-state refresh cannot restore consent after stop
+01:21 +188: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: late consent acceptance cannot undo revocation
+01:21 +189: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: newer refresh wins when replies arrive in reverse order
+01:21 +190: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: failed refresh stays closed and recovers only after valid check
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:21 +191: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: late point request cannot move camera after native ownership transfer
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:22 +192: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: dispose detaches callbacks and discards pending recovery
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:22 +193: <WORKTREE>/mobile/test/widget_test.dart: renders the GeoGuide AI base map shell
+01:22 +193: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: silence before first sample also expires route=false
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:22 +194: <WORKTREE>/mobile/test/widget_test.dart: renders the GeoGuide AI base map shell
+01:22 +194: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: silence before first sample also expires route=true
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:22 +195: <WORKTREE>/mobile/test/widget_test.dart: renders the GeoGuide AI base map shell
+01:23 +195: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: expired future invalid and duplicate samples cannot move camera or postpone expiry
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:23 +196: <WORKTREE>/mobile/test/widget_test.dart: renders the GeoGuide AI base map shell
+01:23 +196: <WORKTREE>/mobile/test/features/tracking/r01_investigation_test.dart: recovery waits for real stream cancellation before resolving ownership
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:23 +197: <WORKTREE>/mobile/test/widget_test.dart: renders the GeoGuide AI base map shell
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:24 +198: <WORKTREE>/mobile/test/widget_test.dart: represents denied location permission
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:24 +199: <WORKTREE>/mobile/test/widget_test.dart: renders the returned current location marker without changing route state
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:24 +200: <WORKTREE>/mobile/test/widget_test.dart: represents unavailable location service
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:25 +201: <WORKTREE>/mobile/test/widget_test.dart: represents permanently denied location permission
+  [flutter_map]
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:25 +202: All tests passed!
