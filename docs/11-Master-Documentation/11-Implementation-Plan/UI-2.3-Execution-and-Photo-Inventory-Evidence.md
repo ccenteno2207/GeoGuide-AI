@@ -6,6 +6,8 @@
 
 ## Reconciliación visual y cambios
 
+Esta tabla conserva el registro de la primera iteración UI23; la remediación visual final y sus APK se documentan más abajo como UI23R.
+
 | Elemento actual | Dirección UI-1/UI-2 aprobada | Componente | Acción | Evidencia |
 | --- | --- | --- | --- | --- |
 | Título grande y banda dominante de seis iconos | Mapa protagonista, controles flotantes compactos | `mobile/lib/features/map/presentation/base_map_page.dart` | Retirar título de Explorer; reagrupar acciones preexistentes en panel flotante compacto | Capturas UI-2.3 `map-route`, `list`; tests `exploration_shell_test`, `widget_test` |
@@ -20,7 +22,7 @@ La geometría de ruta se conserva estática salvo el encuadre inicial previsto p
 
 ## CEFI
 
-El control visual usa la identidad violeta/ondas aprobada y mantiene `_toggleVoiceConsent`; no activa conversación, escucha, micrófono ni permisos. La etiqueta visible y accesible es **“Avisos de CEFI”**, porque describe el único control operativo existente. **“Habla con CEFI”** permanece reservado para la capacidad conversacional futura. La entrada de avisos sigue su consentimiento, guards y lifecycle previos.
+El control visual usa el color violeta aprobado y mantiene `_toggleVoiceConsent`; no activa conversación, escucha, micrófono ni permisos. La etiqueta funcional accesible es **«Avisos de CEFI»**, porque describe el único control operativo existente. En la remediación final se presenta como botón circular con tooltip de activar/desactivar avisos; la esfera luminosa/ondas exacta requiere un recurso oficial aún ausente. **«Habla con CEFI»** permanece reservado para la capacidad conversacional futura. La entrada de avisos sigue su consentimiento, guards y lifecycle previos.
 
 ## Evidencia de renderizado
 
@@ -54,6 +56,51 @@ Los nombres sugieren cinco posibles coincidencias con los POI de prueba, pero no
 - Accesibilidad automatizada: guías Flutter de tap target, etiquetas y contraste en tests pertinentes; suite responsive cubre 360×640, 360×800, 640×360 y 800×360 con escala 1.0/2.0; revisión física con lector de pantalla pendiente.
 - Dispositivo HONOR: el propietario reportó que el APK previamente instalado calcula ruta y muestra cinco POI después de reiniciar la VM. Esta compilación UI-2.3 no se instaló; su validación física permanece pendiente.
 - La prueba renderer no representa una sesión real ni una respuesta backend. El binding bloqueó tiles HTTP con respuestas 400; no se interpreta como fallo de la VM. No se afirma validación física ni de producción.
+
+## Remediación visual final solicitada tras revisar las 19 capturas UI23
+
+Las observaciones R01–R04 se evaluaron sobre las capturas UI23 anteriores. La nueva evidencia está en el [índice comparativo UI23R](UI-2.3-Remediation-Visual-Evidence/README.md); se conserva íntegra la serie UI23 original. Los cambios siguientes solo afectan presentación y pruebas Flutter.
+
+| Observación | Antes UI23 | Después UI23R | Veredicto |
+| --- | --- | --- | --- |
+| R01 controles superiores | Una pastilla blanca de dos filas con seis acciones en debug. | Dos grupos flotantes de hasta 144 dp: acciones contextuales de diagnóstico/recorrido/copia a la izquierda y CEFI/ubicación/seguimiento a la derecha. Cada IconButton conserva al menos 48 dp; el grupo primario mide 48 dp de alto en el estado normal. | `PASS` |
+| R02 panel inferior | Cuatro botones apilados, mensajes redundantes y resumen oculto por scroll en 360×800. | Etiquetas visuales breves «Categorías» y «Conducción», con el estado completo en tooltip; las cuatro acciones caben en dos filas con fuentes reales. El resumen factual de distancia/duración/POI es de una línea. Se suprime el estado de Discovery repetido cuando ya se muestra la disponibilidad de la copia, sin eliminar error ni «Reintentar». En la captura 360×800, la tarjeta mide 208 dp y el resumen es visible. | `PASS` |
+| R03 identidad CEFI | Pastilla violeta con texto «Avisos de CEFI» e icono de voz. | Control circular violeta de 48 dp, etiqueta accesible «Avisos de CEFI» y tooltip según consentimiento; se mantiene `_toggleVoiceConsent`. No hay recurso oficial de esfera luminosa/ondas en el repositorio, por lo que no se representa aún esa ilustración exacta. | `PARTIAL` |
+| R04 POI y fichas | Placeholders compactos existentes. | Preview, Detail, lista, búsqueda local, nombres/descripciones largos, procedencia, distancia al trazado y selección explícita I01 verificados con fixtures sintéticos y matriz 360×640, 360×800, 640×360, 800×360 a texto 1.0/2.0. No se integraron fotografías. | `PASS` |
+
+La pantalla muestra «Categorías» y «Conducción» para reducir anchura; sus tooltips mantienen «Categorías: N categorías» y «Entrar en modo conducción». Los controles normales GPS, offline, ubicación y seguimiento mantienen los callbacks, guardas y estados de habilitación anteriores. El control de avisos CEFI no incorpora STT, conversación, micrófono ni activación automática. Las capturas de renderer comprueban composición, no lector de pantalla ni dispositivo físico. `APK_BUILD` y `PHYSICAL_DEVICE` deben distinguirse expresamente de `FLUTTER_RENDERER_TEST_UI23R`.
+
+La limitación visual pendiente es obtener e integrar el recurso oficial de esfera luminosa/ondas de CEFI bajo autorización de diseño; no se creó una identidad alternativa. La validación física de este APK y la revisión con lector de pantalla siguen pendientes.
+
+### Validación de la remediación UI23R
+
+- `dart format --output=none --set-exit-if-changed .`: PASS, 83 archivos comprobados sin cambios.
+- `flutter analyze --no-pub`: PASS, sin issues.
+- `flutter test --no-pub --dart-define=UI23_REMEDIATION_CAPTURE=true --reporter expanded`: PASS, 202 pruebas. La suite generó 19 PNG `FLUTTER_RENDERER_TEST_UI23R`; los 19 PNG UI23 previos permanecen intactos. Los PNG nuevos abren correctamente y sus enlaces relativos se comprobaron.
+- Matriz automatizada de cuatro viewports y escalas de texto 1.0/2.0, mapa/ruta, lista, filtro local, Preview/Detail, offline/error, I01, GPS, Driving reducido y avisos CEFI: PASS. La revisión visual de las capturas confirma el estado compacto y la atribución OpenStreetMap visible; las pruebas del renderer no sustituyen validación física ni lector de pantalla.
+- `flutter build apk --debug --no-pub --dart-define=BACKEND_BASE_URL=https://geoguide.getcom.pe:5443`: PASS, 167840957 bytes; SHA-256 `c6121a6244eab9a55837d81d9afd6e02a5ee7214d7a0ac346f9af4423568da0a`.
+- `flutter build apk --release --no-pub --dart-define=BACKEND_BASE_URL=https://geoguide.getcom.pe:5443`: PASS, 60472029 bytes; SHA-256 `1e3beb2f04022f33866b3b4197c952f404ae20cec0a04062ea3432948cd6d3fb`.
+- `verify_apk_icons.py` en ambos APK: PASS. El único PNG de `assets/flutter_assets` sigue siendo el logo preexistente de `flutter_map`; no hay fotografías piloto ni nombres de fixtures `synthetic-`/`TEST_ONLY`.
+- `git diff --check`, UTF-8 de los documentos y enlaces Markdown: PASS. Los cinco PNG del inventario externo conservan los SHA-256 registrados arriba; no se copiaron al repositorio ni se empaquetaron en los APK.
+
+```ini
+UI_2_3_R01_TOP_CONTROLS = PASS
+UI_2_3_R02_BOTTOM_PANEL = PASS
+UI_2_3_R03_CEFI_IDENTITY = PARTIAL
+UI_2_3_R04_POI_COMPOSITION = PASS
+UI_2_3_AUTOMATED_VALIDATION = PASS
+UI_2_3_VISUAL_REFINEMENT = PARTIAL
+UI_2_3_PHOTO_INVENTORY = PASS
+UI_2_3_PHOTO_APK_INTEGRATION = NOT_AUTHORIZED
+UI_2_3_PHOTO_PUBLICATION = NOT_AUTHORIZED
+UI_2_3_PUSH = NOT_AUTHORIZED
+UI_2_3_PR = NOT_AUTHORIZED
+UI_2_3_MERGE = NOT_AUTHORIZED
+UI_2_3_PHYSICAL_INSTALLATION = NOT_AUTHORIZED
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+UI_2_PRODUCTION_READINESS = NOT_DECLARED
+```
+
 ## Alcance preservado y pendientes
 
 No se modificaron contratos congelados, backend/API/DTO/DB, dependencias, permisos, GPS, Driving funcional ni recursos fotográficos. No hubo push, PR, merge, instalación ni publicación. La incidencia del servidor de la VM se considera resuelta conforme a la verificación y prueba reportadas por el propietario.

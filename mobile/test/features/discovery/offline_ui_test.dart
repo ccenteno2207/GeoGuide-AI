@@ -149,7 +149,7 @@ void main() {
     await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
     await tester.pumpAndSettle();
 
-    final enter = find.text('Entrar en modo conducción');
+    final enter = find.byTooltip('Entrar en modo conducción');
     await tester.ensureVisible(enter);
     await tester.tap(enter);
     await tester.pumpAndSettle();
@@ -168,7 +168,7 @@ void main() {
     await tester.tap(find.text('Salir de modo conducción'));
     await tester.pumpAndSettle();
     expect(find.text('Modo conducción reducido'), findsNothing);
-    expect(find.text('Entrar en modo conducción'), findsOneWidget);
+    expect(find.byTooltip('Entrar en modo conducción'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
   testWidgets('Driving entry is unavailable without a coherent snapshot', (
@@ -183,7 +183,7 @@ void main() {
     );
     await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
     await tester.pumpAndSettle();
-    expect(find.text('Entrar en modo conducción'), findsNothing);
+    expect(find.byTooltip('Entrar en modo conducción'), findsNothing);
     expect(find.text('Modo conducción reducido'), findsNothing);
     expect(source.calls, 0);
     await tester.pumpWidget(const SizedBox());
@@ -201,7 +201,7 @@ void main() {
       );
       await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
       await tester.pumpAndSettle();
-      final enter = find.text('Entrar en modo conducción');
+      final enter = find.byTooltip('Entrar en modo conducción');
       await tester.ensureVisible(enter);
       await tester.tap(enter);
       await tester.pumpAndSettle();
@@ -218,7 +218,7 @@ void main() {
       await tester.tap(find.text('Salir de modo conducción'));
       await tester.pumpAndSettle();
       expect(find.text('Modo conducción reducido'), findsNothing);
-      expect(find.text('Entrar en modo conducción'), findsNothing);
+      expect(find.byTooltip('Entrar en modo conducción'), findsNothing);
       await tester.pumpWidget(const SizedBox());
     },
   );
@@ -245,7 +245,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    final enter = find.text('Entrar en modo conducción');
+    final enter = find.byTooltip('Entrar en modo conducción');
     await tester.ensureVisible(enter);
     await tester.tap(enter);
     await tester.pumpAndSettle();
@@ -276,7 +276,7 @@ void main() {
       );
       await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
       await tester.pumpAndSettle();
-      final enter = find.text('Entrar en modo conducción');
+      final enter = find.byTooltip('Entrar en modo conducción');
       await tester.ensureVisible(enter);
       await tester.tap(enter);
       await tester.pumpAndSettle();

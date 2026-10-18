@@ -891,6 +891,26 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     ),
   );
 
+  Widget _floatingActionGroup(
+    BuildContext context,
+    List<Widget> controls,
+    String key,
+  ) => Material(
+    key: ValueKey(key),
+    color: Theme.of(context).colorScheme.surface,
+    elevation: 4,
+    shadowColor: const Color(0x33203632),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(24),
+      side: const BorderSide(color: Color(0xFFDCE7E4)),
+    ),
+    clipBehavior: Clip.antiAlias,
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 144),
+      child: Wrap(alignment: WrapAlignment.center, children: controls),
+    ),
+  );
+
   Widget _buildExploration(BuildContext context) {
     final snapshot = widget.offlineDiscovery?.snapshot;
     final snapshotExpired =
@@ -902,7 +922,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         : _routeDiscovery.pois.isEmpty
         ? const <DiscoveryPoi>[]
         : _poiFilter.visible(_snapshotNow);
-    final actions = <Widget>[
+    final secondaryActions = <Widget>[
       if (VoiceDiagnosticAction.available(
         debug: kDebugMode,
         driving: _drivingReduced,
@@ -911,26 +931,6 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
           consent: _routeSession.voiceEnabled,
           routeBusy: _b1Owned || _b1Busy || _routeSession.active,
         ),
-      Tooltip(
-        message: _routeSession.voiceEnabled
-            ? 'Desactivar avisos de voz CEFI'
-            : 'Activar avisos de voz CEFI',
-        child: FilledButton.icon(
-          key: const ValueKey('cefi-notices-control'),
-          style: FilledButton.styleFrom(
-            backgroundColor: GeoGuideTheme.exploration.cefi,
-            foregroundColor: Colors.white,
-            minimumSize: const Size(48, 48),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            shape: const StadiumBorder(),
-          ),
-          icon: Icon(
-            _routeSession.voiceEnabled ? Icons.graphic_eq : Icons.volume_off,
-          ),
-          label: const Text('Avisos de CEFI'),
-          onPressed: _b1Busy ? null : _toggleVoiceConsent,
-        ),
-      ),
       if (widget.offlineDiscovery?.snapshot != null || _b1Owned)
         IconButton(
           onPressed:
@@ -955,6 +955,34 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                   builder: (_) => OfflineCacheSheet(controller: offline),
                 ),
         ),
+      if (_followLocation && !_followCamera)
+        IconButton(
+          tooltip: 'Reanudar seguimiento de cámara',
+          icon: const Icon(Icons.center_focus_strong),
+          onPressed: _resumeFollowCamera,
+        ),
+    ];
+    final primaryActions = <Widget>[
+      Semantics(
+        label: 'Avisos de CEFI',
+        button: true,
+        child: IconButton(
+          key: const ValueKey('cefi-notices-control'),
+          tooltip: _routeSession.voiceEnabled
+              ? 'Desactivar avisos de voz CEFI'
+              : 'Activar avisos de voz CEFI',
+          style: IconButton.styleFrom(
+            backgroundColor: GeoGuideTheme.exploration.cefi,
+            foregroundColor: Colors.white,
+            minimumSize: const Size(48, 48),
+            shape: const CircleBorder(),
+          ),
+          icon: Icon(
+            _routeSession.voiceEnabled ? Icons.graphic_eq : Icons.volume_off,
+          ),
+          onPressed: _b1Busy ? null : _toggleVoiceConsent,
+        ),
+      ),
       IconButton(
         tooltip: (_b1Owned || _b1Busy)
             ? 'Ubicación puntual no disponible durante el recorrido GPS'
@@ -965,12 +993,6 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
             : _requestLocation,
         icon: const Icon(Icons.my_location),
       ),
-      if (_followLocation && !_followCamera)
-        IconButton(
-          tooltip: 'Reanudar seguimiento de cámara',
-          icon: const Icon(Icons.center_focus_strong),
-          onPressed: _resumeFollowCamera,
-        ),
       IconButton(
         tooltip: (_b1Owned || _b1Busy)
             ? 'Seguimiento normal no disponible: el recorrido GPS controla la ubicación'
@@ -1150,30 +1172,22 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                   top: 4,
                   child: SafeArea(
                     bottom: false,
-                    child: Align(
-                      alignment: Alignment.topCenter,
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 360),
-                        child: Material(
-                          key: const ValueKey('exploration-floating-actions'),
-                          color: Theme.of(context).colorScheme.surface,
-                          elevation: 4,
-                          shadowColor: const Color(0x33203632),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            side: const BorderSide(color: Color(0xFFDCE7E4)),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (secondaryActions.isNotEmpty)
+                          _floatingActionGroup(
+                            context,
+                            secondaryActions,
+                            'exploration-secondary-actions',
                           ),
-                          clipBehavior: Clip.antiAlias,
-                          child: Padding(
-                            padding: const EdgeInsets.all(4),
-                            child: Wrap(
-                              alignment: WrapAlignment.center,
-                              runAlignment: WrapAlignment.center,
-                              children: actions,
-                            ),
-                          ),
+                        const Spacer(),
+                        _floatingActionGroup(
+                          context,
+                          primaryActions,
+                          'exploration-floating-actions',
                         ),
-                      ),
+                      ],
                     ),
                   ),
                 ),
@@ -1188,7 +1202,8 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                       alignment: Alignment.bottomCenter,
                       child: ConstrainedBox(
                         constraints: BoxConstraints(
-                          maxHeight: constraints.maxHeight * 0.4,
+                          maxHeight:
+                              constraints.maxHeight * (landscape ? 0.5 : 0.32),
                         ),
                         child: SingleChildScrollView(
                           key: const ValueKey('exploration-status-scroll'),
@@ -1198,7 +1213,10 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                               Card(
                                 key: const ValueKey('exploration-status'),
                                 child: Padding(
-                                  padding: const EdgeInsets.all(10),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 6,
+                                  ),
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -1237,23 +1255,25 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                               ),
                                             ),
                                           if (_routePlanning.route != null)
-                                            FilledButton.tonalIcon(
-                                              key: const ValueKey(
-                                                'route-category-filter',
-                                              ),
-                                              onPressed:
-                                                  _routeDiscovery
-                                                          .isDiscovering ||
-                                                      _b1Owned ||
-                                                      _b1Busy ||
-                                                      _ownershipPending
-                                                  ? null
-                                                  : _openFilters,
-                                              icon: const Icon(
-                                                Icons.filter_alt,
-                                              ),
-                                              label: Text(
-                                                'Categorías: ${_filterSummary()}',
+                                            Tooltip(
+                                              message:
+                                                  'Categorías: ${_filterSummary()}',
+                                              child: FilledButton.tonalIcon(
+                                                key: const ValueKey(
+                                                  'route-category-filter',
+                                                ),
+                                                onPressed:
+                                                    _routeDiscovery
+                                                            .isDiscovering ||
+                                                        _b1Owned ||
+                                                        _b1Busy ||
+                                                        _ownershipPending
+                                                    ? null
+                                                    : _openFilters,
+                                                icon: const Icon(
+                                                  Icons.filter_alt,
+                                                ),
+                                                label: const Text('Categorías'),
                                               ),
                                             ),
                                           if (_routeDiscovery.pois.isNotEmpty)
@@ -1281,25 +1301,34 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                                       ?.snapshot !=
                                                   null &&
                                               !_routeDiscovery.isDiscovering)
-                                            OutlinedButton.icon(
-                                              onPressed: _enterDriving,
-                                              icon: const Icon(
-                                                Icons.directions_car,
-                                              ),
-                                              label: const Text(
-                                                'Entrar en modo conducción',
+                                            Tooltip(
+                                              message:
+                                                  'Entrar en modo conducción',
+                                              child: OutlinedButton.icon(
+                                                onPressed: _enterDriving,
+                                                icon: const Icon(
+                                                  Icons.directions_car,
+                                                ),
+                                                label: const Text('Conducción'),
                                               ),
                                             ),
                                         ],
                                       ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        snapshotExpired
-                                            ? _unavailableResults
-                                            : _routeDiscovery.status ??
-                                                  _routePlanning.status,
-                                        textAlign: TextAlign.center,
-                                      ),
+                                      if ((snapshot == null &&
+                                              _routePlanning.route == null) ||
+                                          snapshotExpired ||
+                                          (_routeDiscovery.hasError &&
+                                              widget
+                                                      .offlineDiscovery
+                                                      ?.availability !=
+                                                  DiscoveryAvailability.cached))
+                                        Text(
+                                          snapshotExpired
+                                              ? _unavailableResults
+                                              : _routeDiscovery.status ??
+                                                    _routePlanning.status,
+                                          textAlign: TextAlign.center,
+                                        ),
                                       if (_b1Status != null)
                                         Text(
                                           _b1StatusText,
@@ -1310,8 +1339,13 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                           'Ubicación controlada por el recorrido GPS; controles normales no disponibles',
                                           textAlign: TextAlign.center,
                                         ),
-                                      if (_b1Status == null ||
-                                          _locationStatus != _b1StatusText)
+                                      if ((_b1Status == null ||
+                                              _locationStatus !=
+                                                  _b1StatusText) &&
+                                          (_currentLocation != null ||
+                                              (snapshot == null &&
+                                                  _routePlanning.route ==
+                                                      null)))
                                         Text(
                                           _locationStatus,
                                           textAlign: TextAlign.center,
@@ -1321,8 +1355,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                         if (offline.snapshot
                                             case final snapshot?)
                                           Text(
-                                            'Ruta: ${(snapshot.route.distanceMeters / 1000).toStringAsFixed(1)} km · ${(snapshot.route.durationSeconds / 60).round()} min planificados\n'
-                                            '${snapshot.pois.length} lugares en este resultado',
+                                            'Ruta: ${(snapshot.route.distanceMeters / 1000).toStringAsFixed(1)} km · ${(snapshot.route.durationSeconds / 60).round()} min · ${snapshot.pois.length} lugares',
                                             textAlign: TextAlign.center,
                                           ),
                                         Semantics(
@@ -1349,10 +1382,14 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                         ),
                                         if (offline.cacheMessage
                                             case final message?)
-                                          Text(
-                                            message,
-                                            textAlign: TextAlign.center,
-                                          ),
+                                          if (snapshot == null ||
+                                              snapshotExpired ||
+                                              offline.availability ==
+                                                  DiscoveryAvailability.error)
+                                            Text(
+                                              message,
+                                              textAlign: TextAlign.center,
+                                            ),
                                       ],
                                       if (_routeDiscovery.isDiscovering)
                                         Semantics(

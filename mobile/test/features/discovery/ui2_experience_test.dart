@@ -88,7 +88,10 @@ const captureKey = ValueKey('ui2-renderer-boundary');
 Future<void> capture(WidgetTester tester, String name) async {
   const captureUi2 = bool.fromEnvironment('UI2_CAPTURE');
   const captureUi23 = bool.fromEnvironment('UI23_CAPTURE');
-  if (!captureUi2 && !captureUi23) return;
+  const captureUi23Remediation = bool.fromEnvironment(
+    'UI23_REMEDIATION_CAPTURE',
+  );
+  if (!captureUi2 && !captureUi23 && !captureUi23Remediation) return;
   final boundary = tester.renderObject<RenderRepaintBoundary>(
     find.byKey(captureKey),
   );
@@ -97,12 +100,16 @@ Future<void> capture(WidgetTester tester, String name) async {
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
     image.dispose();
     final directory = Directory(
-      captureUi23
+      captureUi23Remediation
+          ? '../docs/11-Master-Documentation/11-Implementation-Plan/UI-2.3-Remediation-Visual-Evidence'
+          : captureUi23
           ? '../docs/11-Master-Documentation/11-Implementation-Plan/UI-2.3-Visual-Evidence'
           : '../docs/11-Master-Documentation/11-Implementation-Plan/UI-2-Visual-Evidence',
     );
     await directory.create(recursive: true);
-    final prefix = captureUi23
+    final prefix = captureUi23Remediation
+        ? 'FLUTTER_RENDERER_TEST_UI23R'
+        : captureUi23
         ? 'FLUTTER_RENDERER_TEST_UI23'
         : 'FLUTTER_RENDERER_TEST';
     final file = File('${directory.path}/$prefix-$name.png');
@@ -187,6 +194,20 @@ void main() {
         now: () => fixtures.captured,
       );
       await pump(tester, offline, session: session);
+      expect(
+        tester
+            .getSize(find.byKey(const ValueKey('exploration-floating-actions')))
+            .height,
+        lessThanOrEqualTo(64),
+      );
+      expect(
+        tester.getSize(find.byKey(const ValueKey('exploration-status'))).height,
+        lessThanOrEqualTo(216),
+      );
+      expect(
+        find.byTooltip('Entrar en modo conducción').hitTestable(),
+        findsOneWidget,
+      );
       expect(
         tester
             .widget<MaterialApp>(find.byType(MaterialApp))
@@ -296,8 +317,8 @@ void main() {
           .onChanged!;
       await tester.tap(find.byKey(const ValueKey('close-discovery-list')));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Entrar en modo conducción'));
-      await tester.tap(find.text('Entrar en modo conducción'));
+      await tester.ensureVisible(find.byTooltip('Entrar en modo conducción'));
+      await tester.tap(find.byTooltip('Entrar en modo conducción'));
       await tester.pumpAndSettle();
       expect(find.byType(TextField), findsNothing);
       expect(find.byType(PoiThumbnail), findsNothing);
@@ -351,7 +372,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byTooltip('Vista previa de Museo Ámbar'), findsOneWidget);
       await tester.tapAt(
-        tester.getTopLeft(find.byType(FlutterMap)) + const Offset(30, 30),
+        tester.getTopLeft(find.byType(FlutterMap)) + const Offset(30, 150),
       );
       // flutter_map defers a single tap until the double-tap window closes.
       await tester.pump(const Duration(milliseconds: 400));

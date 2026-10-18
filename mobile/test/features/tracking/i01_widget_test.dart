@@ -133,12 +133,10 @@ void main() {
 
       final filter = find.byKey(const ValueKey('route-category-filter'));
       expect(
-        find.descendant(
-          of: filter,
-          matching: find.text('Categorías: 0 categorías'),
-        ),
+        find.descendant(of: filter, matching: find.text('Categorías')),
         findsOneWidget,
       );
+      expect(find.byTooltip('Categorías: 0 categorías'), findsOneWidget);
       expect(tester.widget<FilledButton>(filter).onPressed, isNotNull);
       await tester.tap(filter);
       await tester.pumpAndSettle();
@@ -206,12 +204,10 @@ void main() {
       final category = find.byKey(const ValueKey('route-category-filter'));
       expect(category, findsOneWidget);
       expect(
-        find.descendant(
-          of: category,
-          matching: find.text('Categorías: 0 categorías'),
-        ),
+        find.descendant(of: category, matching: find.text('Categorías')),
         findsOneWidget,
       );
+      expect(find.byTooltip('Categorías: 0 categorías'), findsOneWidget);
       expect(tester.widget<FilledButton>(category).onPressed, isNull);
       await tester.tap(find.byTooltip('Detener recorrido GPS'));
       await tester.pumpAndSettle();

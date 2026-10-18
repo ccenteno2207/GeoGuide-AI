@@ -69,6 +69,7 @@ void main() {
     final actionsRect = tester.getRect(
       find.byKey(const ValueKey('exploration-floating-actions')),
     );
+    expect(actionsRect.height, lessThanOrEqualTo(64));
     final safeAreaHeight = screen.height - 48;
     final unoccludedMapHeight =
         mapRect.height - statusRect.height - actionsRect.height;
@@ -180,8 +181,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const ValueKey('close-discovery-list')));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Entrar en modo conducción'));
-    await tester.tap(find.text('Entrar en modo conducción'));
+    await tester.ensureVisible(find.byTooltip('Entrar en modo conducción'));
+    await tester.tap(find.byTooltip('Entrar en modo conducción'));
     await tester.pumpAndSettle();
     expect(
       Theme.of(tester.element(find.text('Modo conducción reducido')))
