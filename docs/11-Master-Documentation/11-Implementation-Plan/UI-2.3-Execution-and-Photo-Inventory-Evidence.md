@@ -38,7 +38,7 @@ Ruta examinada: `D:\Proyectos\Desarrollo\Ruteo\Imagenes`. Se leyeron nombres, by
 | Petroglifos de Checta | `petroglifos de checta.png` | 1348×569 | 1782463 | `3b2940f2ad8ec60f0cf877f74f82dc3e307e8843250af4e55140ed6dcdab74be` | `PENDING_OWNER_CONFIRMATION` |
 | Plaza de Armas de Canta | `Plaza de armas de canta.png` | 1037×635 | 1495827 | `b09d081fda65691a1d4ba0ea528b6eb875dfb2145f28846c3adf7ac31d955858` | `PENDING_OWNER_CONFIRMATION` |
 | Plaza de Armas de Obrajillo | `Plaza de Armas de obrajillo.png` | 1063×740 | 1937791 | `d8ba0829948f38cb0dcdad5520f2059387614d94c0d07311b424db20db01ff16` | `PENDING_OWNER_CONFIRMATION` |
-| Santa Rosa de Quives | `Santa rosa de quives.png` | 1020×598 | 1247218 | `0ee69a45559a9e4a715f7b4193930eafb79145d277a18d8543d57e4dc592c5` | `PENDING_OWNER_CONFIRMATION` |
+| Santuario de Santa Rosa de Quives | `Santa rosa de quives.png` | 1020×598 | 1247218 | `0ee69a45559a9e4a715f7b4193930eafb79145d277a18d8543d57e4dc592c5` | `PENDING_OWNER_CONFIRMATION` |
 
 Los nombres sugieren cinco posibles coincidencias con los POI de prueba, pero no prueban que el archivo represente el lugar ni que se permita su uso. La futura estrategia recomendada es un catálogo de pruebas separado y no versionado que requiera registro explícito de POI, autor/fuente, licencia, atribución y autorización antes de usar cada archivo. No se integró ninguna foto.
 
