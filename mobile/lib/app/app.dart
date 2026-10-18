@@ -94,6 +94,7 @@ class GeoGuideApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'GeoGuide AI',
+      debugShowCheckedModeBanner: false,
       theme: GeoGuideTheme.light(),
       home: BaseMapPage(
         routeSession: routeSession,

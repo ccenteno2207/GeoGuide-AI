@@ -36,7 +36,7 @@ void main() {
 
     expect(find.text('GeoGuide AI'), findsOneWidget);
     expect(find.byType(FlutterMap), findsOneWidget);
-    expect(find.text('OpenStreetMap contributors'), findsOneWidget);
+    expect(find.textContaining('OpenStreetMap contributors'), findsOneWidget);
     expect(find.text('Ubicación no solicitada'), findsOneWidget);
   });
 

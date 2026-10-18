@@ -1,0 +1,846 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 104.0.0 (109.0.0 available)
+  analyzer 14.0.0 (14.5.0 available)
+  archive 4.3.0 (4.5.2 available)
+  build 4.0.11 (5.0.0 available)
+  build_config 1.3.3 (1.4.0 available)
+  build_daemon 4.1.6 (4.1.7 available)
+  build_runner 2.16.1 (2.17.1 available)
+  code_assets 1.2.1 (2.1.0 available)
+  dart_style 3.1.13 (3.1.14 available)
+  dbus 0.7.15 (0.8.0 available)
+  drift 2.35.1 (2.35.2 available)
+  geolocator 14.0.3 (14.1.1 available)
+  geolocator_android 5.0.3 (5.1.1+1 available)
+  geolocator_apple 2.3.14 (2.3.15 available)
+  geolocator_platform_interface 4.3.0 (4.4.0 available)
+  gsettings 0.2.8 (0.2.9 available)
+  jni 1.0.3 (1.1.0 available)
+  jni_flutter 1.0.3 (1.0.4+1 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  native_toolchain_c 0.19.3 (0.19.5 available)
+  objective_c 9.5.0 (9.6.2 available)
+  package_info_plus 10.2.1 (10.2.2 available)
+  petitparser 7.0.2 (7.1.0 available)
+  shelf 1.4.2 (1.4.3 available)
+  source_gen 4.3.0 (4.3.1 available)
+  sqlite3 3.7.0 (3.7.1 available)
+  test_api 0.7.12 (0.7.15 available)
+  vector_math 2.4.0 (2.4.3 available)
+  vm_service 15.3.0 (15.4.0 available)
+  xml 7.0.1 (7.1.0 available)
+Got dependencies!
+30 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+00:00 +0: loading D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/app/theme/geoguide_theme_test.dart
+00:00 +0: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/app/theme/geoguide_theme_test.dart: exploration design tokens match the approved visual contract
+00:00 +1: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/app/theme/geoguide_theme_test.dart: exploration palette has accessible text pairs and local scope
+00:01 +2: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/core/network/backend_configuration_test.dart: accepts an externally supplied HTTP pilot endpoint
+00:01 +3: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/core/network/backend_configuration_test.dart: rejects an absent or unsupported backend endpoint
+00:02 +4: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/core/network/geoguide_http_client_test.dart: mapDioException TLS and authorization failures never become cacheable network failures
+00:02 +5: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/core/network/geoguide_http_client_test.dart: mapDioException maps a connection error without exposing connection details
+00:02 +6: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/core/network/geoguide_http_client_test.dart: mapDioException maps a timeout to a safe application failure
+00:02 +7: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/core/network/geoguide_http_client_test.dart: mapDioException maps the backend no-route code
+00:03 +8: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/b1_startup_test.dart: real entrypoint initializes binding before constructing channels
+00:03 +8: loading D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/b1_startup_test.dart
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:03 +9: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/b1_startup_test.dart: (tearDownAll)
+00:04 +9: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/infrastructure/route_discovery_response_mapper_test.dart: keeps only usable discovery POIs
+00:04 +10: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/infrastructure/route_discovery_response_mapper_test.dart: accepts optional detail and provenance fields
+00:04 +11: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/infrastructure/route_discovery_response_mapper_test.dart: keeps optional fields absent for backward-compatible payloads
+00:04 +12: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_cache_test.dart: zero/one slot, replacement, empty result, restart and deletion
+00:05 +13: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:05 +14: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:05 +15: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:05 +16: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:05 +17: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:06 +18: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:06 +19: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:06 +20: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:06 +21: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:06 +22: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:06 +23: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+00:07 +24: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: offline shell at 360px and scale 2.0 has readable state and route summary
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:08 +25: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_cache_test.dart: UTF8 payload exact boundary 5242880 preserves old when oversized
+00:08 +26: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: expiry removes visible cached detail without resurrecting stale POI
+00:08 +27: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: expiry removes visible cached detail without resurrecting stale POI
+00:08 +28: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: expiry removes visible cached detail without resurrecting stale POI
+00:08 +29: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: expiry removes visible cached detail without resurrecting stale POI
+00:08 +30: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: expiry removes visible cached detail without resurrecting stale POI
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:09 +31: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_cache_test.dart: real exclusive lock causes bounded write failure preserving previous
+00:10 +31: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: restart copy has no modal, Map/List Preview Detail preserve context
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:10 +32: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_cache_test.dart: real exclusive lock causes bounded write failure preserving previous
+00:10 +32: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: reduced driving mode is static and exits explicitly
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:10 +33: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_cache_test.dart: real exclusive lock causes bounded write failure preserving previous
+00:10 +33: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: Driving entry is unavailable without a coherent snapshot
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:10 +34: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_cache_test.dart: real exclusive lock causes bounded write failure preserving previous
+00:10 +35: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: Driving preserves static state through expiry and supports re-entry
+00:10 +36: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: Driving preserves static state through expiry and supports re-entry
+00:11 +37: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: Driving preserves static state through expiry and supports re-entry
+00:11 +38: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: Driving preserves static state through expiry and supports re-entry
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:11 +39: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_cache_test.dart: no cache plus network failure is unavailable, valid empty is online
+00:11 +40: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: Driving exit remains accessible at TextScaler 2.0
+00:11 +41: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: Driving exit remains accessible at TextScaler 2.0
+00:11 +42: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: Driving exit remains accessible at TextScaler 2.0
+00:11 +43: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: Driving exit remains accessible at TextScaler 2.0
+00:11 +44: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: Driving exit remains accessible at TextScaler 2.0
+00:11 +45: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: Driving exit remains accessible at TextScaler 2.0
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:11 +46: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_cache_test.dart: offline failure AppFailureType.invalidResponse is classified without silent security fallback
+00:11 +47: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: Driving interaction tree has no alternate controls and map gestures are disabled
+00:11 +48: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: Driving interaction tree has no alternate controls and map gestures are disabled
+00:11 +49: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: Driving interaction tree has no alternate controls and map gestures are disabled
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:11 +50: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: consent sheet scales 2.0, accessible labels and 48px targets
+00:11 +51: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/offline_ui_test.dart: theme contrast satisfies normal text and action thresholds
+00:13 +52: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/poi_list_close_test.dart: long POI list closes at Size(320.0, 480.0) without changing route
+00:13 +53: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/poi_list_close_test.dart: long POI list closes at Size(320.0, 480.0) without changing route
+00:13 +54: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/poi_list_close_test.dart: long POI list closes at Size(320.0, 480.0) without changing route
+00:13 +55: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/poi_list_close_test.dart: long POI list closes at Size(320.0, 480.0) without changing route
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:17 +56: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/presentation/discovery_filter_sheet_test.dart: shows only Discovery categories with multi-select and Apply
+00:17 +57: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/poi_list_close_test.dart: long POI list closes at Size(360.0, 640.0) without changing route
+00:17 +58: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/poi_list_close_test.dart: long POI list closes at Size(360.0, 640.0) without changing route
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:18 +59: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/poi_list_close_test.dart: long POI list closes at Size(640.0, 360.0) without changing route
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:19 +60: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/presentation/poi_detail_sheet_test.dart: shows only the contractual basic POI fields
+00:20 +60: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/poi_list_close_test.dart: detail and list close preserve an active route session
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:20 +61: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/presentation/poi_detail_sheet_test.dart: shows only the contractual basic POI fields
+00:20 +62: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/presentation/poi_detail_sheet_test.dart: renders factual description and reduced provenance
+00:21 +63: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/presentation/poi_detail_sheet_test.dart: omits absent optional detail and provenance sections
+00:21 +64: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/presentation/poi_preview_sheet_test.dart: renders approved preview fields and friendly mappings
+00:24 +65: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/presentation/poi_visual_contract_test.dart: optional fields and internal codes are absent; placeholder is stable and informative
+00:24 +66: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/presentation/poi_visual_contract_test.dart: optional fields and internal codes are absent; placeholder is stable and informative
+00:24 +67: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/presentation/poi_visual_contract_test.dart: optional fields and internal codes are absent; placeholder is stable and informative
+00:24 +68: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/presentation/poi_visual_contract_test.dart: optional fields and internal codes are absent; placeholder is stable and informative
+00:26 +69: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/presentation/route_discovery_controller_test.dart: represents usable POIs returned for the selected route points
+00:26 +70: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: (setUpAll)
+00:26 +70: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: filter has zero source calls; map/list share IDs; preview/detail preserve query and context
+00:31 +70: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/location/gps_camera_widget_test.dart: camera course zoom gesture pause and explicit resume use real map controller
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:31 +71: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: filter has zero source calls; map/list share IDs; preview/detail preserve query and context
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:31 +72: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: replacement and expiry clear query; Driving never retains or queues search
+00:32 +73: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: replacement and expiry clear query; Driving never retains or queues search
+00:32 +74: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: replacement and expiry clear query; Driving never retains or queues search
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:33 +75: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: choosing new map endpoints hides previous filtered POIs without mutating the snapshot
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:34 +76: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: editing at the online TTL boundary clears results without a new source call
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:34 +77: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/map/exploration_shell_test.dart: default exploration keeps at least half its safe area as map
+00:35 +77: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: renderer fixtures distinguish offline and error with existing messages
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:35 +78: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/map/exploration_shell_test.dart: default exploration keeps at least half its safe area as map
+00:36 +78: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: keyboard Size(360.0, 640.0) keeps editing and dismissal reachable; query does not persist after disposal
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:36 +79: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/map/exploration_shell_test.dart: default exploration keeps at least half its safe area as map
+00:37 +79: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: keyboard Size(640.0, 360.0) keeps editing and dismissal reachable; query does not persist after disposal
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:37 +80: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/map/exploration_shell_test.dart: default exploration keeps at least half its safe area as map
+00:37 +80: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 360.0x640.0 text 1.0
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:37 +80: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/map/exploration_shell_test.dart: default exploration keeps at least half its safe area as map
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:37 +81: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 360.0x640.0 text 1.0
+00:37 +82: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/map/exploration_shell_test.dart: responsive shell 360.0x640.0 scale 1.0
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:38 +83: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 360.0x640.0 text 2.0
+00:38 +83: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/map/exploration_shell_test.dart: responsive shell 360.0x640.0 scale 2.0
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:38 +84: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 360.0x640.0 text 2.0
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:38 +85: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/map/exploration_shell_test.dart: responsive shell 360.0x800.0 scale 1.0
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:38 +86: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 360.0x800.0 text 1.0
+00:38 +86: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/map/exploration_shell_test.dart: responsive shell 360.0x800.0 scale 2.0
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:38 +87: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 360.0x800.0 text 1.0
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:39 +88: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/map/exploration_shell_test.dart: responsive shell 640.0x360.0 scale 1.0
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:39 +89: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 360.0x800.0 text 2.0
+00:39 +89: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/map/exploration_shell_test.dart: responsive shell 640.0x360.0 scale 2.0
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:39 +90: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 360.0x800.0 text 2.0
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:39 +91: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/map/exploration_shell_test.dart: responsive shell 800.0x360.0 scale 1.0
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:39 +92: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 640.0x360.0 text 1.0
+00:40 +92: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/map/exploration_shell_test.dart: responsive shell 800.0x360.0 scale 2.0
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:40 +93: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 640.0x360.0 text 1.0
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:40 +94: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/map/exploration_shell_test.dart: viewport resize preserves BaseMapPage state and data calls
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:41 +95: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 640.0x360.0 text 2.0
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:41 +96: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/map/exploration_shell_test.dart: preview and Driving retain the baseline app theme
+00:42 +96: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 800.0x360.0 text 1.0
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:42 +97: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/map/exploration_shell_test.dart: preview and Driving retain the baseline app theme
+00:42 +97: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/discovery/ui2_experience_test.dart: list preview detail long fields 800.0x360.0 text 2.0
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:42 +98: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/map/exploration_shell_test.dart: preview and Driving retain the baseline app theme
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:44 +99: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/route_planning/infrastructure/route_plan_response_mapper_test.dart: maps a valid GeoJSON LineString preserving longitude-latitude input
+00:44 +100: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/route_planning/infrastructure/route_plan_response_mapper_test.dart: rejects invalid geometry
+00:44 +101: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/route_planning/presentation/route_planning_controller_test.dart: selects origin and destination with two explicit map points
+00:44 +102: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/route_planning/presentation/route_planning_controller_test.dart: draw-ready route is supplied only by the planning use case
+00:45 +103: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/accelerated_core_test.dart: invalid different snapshot does not mutate valid candidate context
+00:45 +104: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/accelerated_core_test.dart: proximity hysteresis retains a pending candidate in the boundary band
+00:45 +105: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/accelerated_core_test.dart: detection preserves chosen priority without consuming candidates
+00:45 +106: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/accelerated_core_test.dart: session switches await stop before start and discard previous callback
+00:45 +107: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/accelerated_core_test.dart: queued mode change cannot be mistaken for an idempotent active start
+00:45 +108: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/accelerated_core_test.dart: failed service stop reports interrupted rather than off
+00:45 +109: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/accelerated_core_test.dart: camera rejects old future degraded duplicate and out-of-range samples
+00:45 +110: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/accelerated_core_test.dart: course rotation wraps smoothly and stops preserve view
+00:45 +111: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/accelerated_core_test.dart: zoom hysteresis and invalid heading retain stable orientation
+00:45 +112: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/accelerated_core_test.dart: session repeated start and stop are idempotent and late samples rejected
+00:45 +113: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/accelerated_core_test.dart: revocation during service start cancels pending activation
+00:45 +114: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/accelerated_core_test.dart: continuous gate fails and route completion never activates continuous
+00:45 +115: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/accelerated_core_test.dart: detection reoffers selected POI until delivery and rejects expired snapshot
+00:45 +116: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/accelerated_core_test.dart: proximity rejects degraded and suggested POIs without course
+00:46 +117: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_session_test.dart: route consent missing never starts producer
+00:46 +118: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_session_test.dart: expired route never starts producer
+00:46 +119: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_session_test.dart: route stop releases producer and rejects late samples
+00:46 +120: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_session_test.dart: route expiry during session stops rather than evaluating stale snapshot
+00:46 +121: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_session_test.dart: native port stop nulls callback before awaited teardown
+00:46 +122: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_session_test.dart: platform denial propagates without claiming active session
+00:46 +123: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_session_test.dart: native status separates interruption from voluntary stop across refresh
+00:47 +124: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:48 +125: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:48 +126: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:48 +127: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:48 +128: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:48 +129: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:48 +130: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:48 +131: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +132: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +133: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +134: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +135: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +136: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +137: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +138: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +139: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +140: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +141: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +142: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +143: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +144: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +145: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +146: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:49 +147: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:51 +148: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:51 +149: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:51 +150: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:51 +151: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: route start waits for pending normal location request
+00:51 +152: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/i01_selection_test.dart: context rejects version without partial rescue
+00:51 +153: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/i01_selection_test.dart: context rejects unknown without partial rescue
+00:51 +154: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+00:51 +155: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+00:51 +156: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+00:51 +157: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+00:51 +158: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+00:51 +159: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+00:51 +160: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+00:51 +161: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=false
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:53 +162: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=true notification=false
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:54 +163: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/i01_widget_test.dart: blocking assertion rejects an enabled real IconButton and accepts disabled
+00:55 +163: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=true
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:55 +164: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=true
+00:55 +165: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=false notification=true
+00:56 +166: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/i01_widget_test.dart: explicit selection reaches B1; inspection and voice consent do not select; stop clears
+00:56 +166: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/b1_widget_test.dart: B1 denied=true notification=true
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+00:56 +167: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/i01_widget_test.dart: explicit selection reaches B1; inspection and voice consent do not select; stop clears
+00:58 +168: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/i01_widget_test.dart: explicit selection reaches B1; inspection and voice consent do not select; stop clears
+00:58 +169: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/i01_widget_test.dart: explicit selection reaches B1; inspection and voice consent do not select; stop clears
+00:58 +170: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/i01_widget_test.dart: explicit selection reaches B1; inspection and voice consent do not select; stop clears
+01:00 +171: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/i01_widget_test.dart: explicit selection reaches B1; inspection and voice consent do not select; stop clears
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:01 +172: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/r01_investigation_test.dart: silent stream expires and recovers with controlled clock route=false
+01:03 +173: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/r01_investigation_test.dart: silent stream expires and recovers with controlled clock route=false
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:04 +174: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/voice_diagnostic_test.dart: rejects consent without starting output
+01:04 +174: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/r01_investigation_test.dart: silent stream expires and recovers with controlled clock route=true
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:04 +175: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/voice_diagnostic_test.dart: rejects consent without starting output
+01:05 +175: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/r01_investigation_test.dart: pending refresh blocks both normal producers under native ownership
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:05 +176: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/voice_diagnostic_test.dart: rejects consent without starting output
+01:05 +177: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/voice_diagnostic_test.dart: rejects consent without starting output
+01:05 +178: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/r01_investigation_test.dart: control resolved active state blocks normal location stream
+01:05 +179: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/r01_investigation_test.dart: control resolved active state blocks normal location stream
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:05 +180: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/voice_diagnostic_test.dart: single flight and COMPLETED
+01:05 +181: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/voice_diagnostic_test.dart: single flight and COMPLETED
+01:05 +182: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/voice_diagnostic_test.dart: single flight and COMPLETED
+01:05 +183: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/voice_diagnostic_test.dart: single flight and COMPLETED
+01:05 +184: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/voice_diagnostic_test.dart: single flight and COMPLETED
+01:05 +185: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/r01_investigation_test.dart: failed refresh stays closed and recovers only after valid check
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:06 +186: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/voice_diagnostic_test.dart: single flight and CANCELLED
+01:06 +187: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/r01_investigation_test.dart: late point request cannot move camera after native ownership transfer
+01:06 +188: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/r01_investigation_test.dart: late point request cannot move camera after native ownership transfer
+01:06 +189: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/r01_investigation_test.dart: late point request cannot move camera after native ownership transfer
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:06 +190: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/voice_diagnostic_test.dart: single flight and ERROR
+01:06 +191: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/r01_investigation_test.dart: dispose detaches callbacks and discards pending recovery
+01:06 +192: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/r01_investigation_test.dart: dispose detaches callbacks and discards pending recovery
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:06 +193: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/r01_investigation_test.dart: silence before first sample also expires route=false
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:06 +194: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/r01_investigation_test.dart: silence before first sample also expires route=true
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:07 +195: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/r01_investigation_test.dart: expired future invalid and duplicate samples cannot move camera or postpone expiry
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:08 +196: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/features/tracking/r01_investigation_test.dart: recovery waits for real stream cancellation before resolving ownership
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:08 +197: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/widget_test.dart: renders the GeoGuide AI base map shell
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:10 +198: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/widget_test.dart: represents denied location permission
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:10 +199: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/widget_test.dart: renders the returned current location marker without changing route state
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:10 +200: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/widget_test.dart: represents unavailable location service
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:11 +201: D:/Codex/worktrees/GeoGuide-AI/ui2-implementation/mobile/test/widget_test.dart: represents permanently denied location permission
+  [1m[flutter_map][0m
+    We want to help keep OpenStreetMap available for everyone. Our examples
+    and demo app use the public tile servers, but they are NOT free to use by
+    everyone! Please review whether the OpenStreetMap tile servers are suitable
+    for your project.
+    See:
+      * https://operations.osmfoundation.org/policies/tiles (OSM Tile Usage Policy)
+      * https://docs.fleaflet.dev/osm-warn for more information about this warning
+01:11 +202: All tests passed!

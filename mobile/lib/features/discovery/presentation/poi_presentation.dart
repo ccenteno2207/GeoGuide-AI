@@ -15,7 +15,7 @@ String friendlyPoiCategory(String code) =>
       'HISTORIC_CHURCH': 'Iglesia histórica',
       'VIEWPOINT': 'Mirador',
     }[code] ??
-    code;
+    'Lugar de interés';
 
 String? friendlyPoiReason(String code) => const {
   'NEAR_ROUTE': 'Cerca del trazado',

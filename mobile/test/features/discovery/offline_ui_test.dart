@@ -131,7 +131,10 @@ void main() {
       await tester.tap(find.text('Volver'));
       await tester.pumpAndSettle();
       expect(app.snapshot!.query.sameAs(fixtures.query()), isTrue);
-      expect(find.text('Ver mapa'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('close-discovery-list')).hitTestable(),
+        findsOneWidget,
+      );
       await tester.pumpWidget(const SizedBox());
     },
   );

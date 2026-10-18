@@ -1,0 +1,116 @@
+{
+  "baseline": "597950decddecef38dd4f6c44595b807a4087f14",
+  "apks": {
+    "debug": {
+      "path": "build/app/outputs/flutter-apk/app-debug.apk",
+      "bytes": 167843977,
+      "sha256": "635ab1225fe54b3a079196df5b87dd5cf1431966130f81195b386c9cffd92055"
+    },
+    "release": {
+      "path": "build/app/outputs/flutter-apk/app-release.apk",
+      "bytes": 60472029,
+      "sha256": "88b4ae4da816ee2650f6e9b88d32a52511f8e4ce7d72af44e8e85a3af111fa3a"
+    }
+  },
+  "fixture_file": "mobile/test/features/discovery/ui2_experience_test.dart",
+  "fixture_file_sha256_utf8_lf": "b7c896ff213be1b295c4ddcb96376869fb38461f9105c7a16b8573b2197e4155",
+  "comparison_fixture_function_sha256_utf8_lf": "85ba790b1784b4b4fbb9121c6d7b7a7a9118fdc13a1ae40be062151b853fa102",
+  "sdk_fonts_sha256": {
+    "roboto-regular.ttf": "79e851404657dac2106b3d22ad256d47824a9a5765458edb72c9102a45816d95",
+    "materialicons-regular.otf": "d9865b671a09d683d13a863089d8825e0f61a37696ce5d7d448bc8023aa62453"
+  },
+  "visual_pngs": {
+    "FLUTTER_RENDERER_TEST-comparison-after-list-360x640.png": {
+      "bytes": 31310,
+      "sha256": "86655648293d02a02d357601f7ef6e16941b81dd41606fb60d567f0251f8b0c3"
+    },
+    "FLUTTER_RENDERER_TEST-comparison-after-list-360x800.png": {
+      "bytes": 37528,
+      "sha256": "d21e3dbc650d68756392906dd57abfb0de9f9fdec4e79dbe69e4b32a8a437663"
+    },
+    "FLUTTER_RENDERER_TEST-comparison-after-map-360x640.png": {
+      "bytes": 23389,
+      "sha256": "042b20091b068ed964c359aa6faf6525f1a53f63f38c8b749c0508cca04b35b0"
+    },
+    "FLUTTER_RENDERER_TEST-comparison-after-map-360x800.png": {
+      "bytes": 29838,
+      "sha256": "9d6caf47561fb3b0cd0cb9dad4e0ff9eefda171d3b80b50590a1a7a278b0e581"
+    },
+    "FLUTTER_RENDERER_TEST-comparison-before-list-360x640.png": {
+      "bytes": 26854,
+      "sha256": "f8203a9b163f5a85bbc20680f2fb764ba5bc51554e4bf5bc0178700c498044ab"
+    },
+    "FLUTTER_RENDERER_TEST-comparison-before-list-360x800.png": {
+      "bytes": 30524,
+      "sha256": "43d856bb873f2adaaf274523ef2efd496cceea58cc52457cc10a7501cc3e1db6"
+    },
+    "FLUTTER_RENDERER_TEST-comparison-before-map-360x640.png": {
+      "bytes": 25311,
+      "sha256": "1ae70a058b6128f4c54da97b6d6c63175a4bfcfa55ee430d4de68bd4be5889bc"
+    },
+    "FLUTTER_RENDERER_TEST-comparison-before-map-360x800.png": {
+      "bytes": 31768,
+      "sha256": "e41bb6c6cacfcff6fec4aea1506ecbe1d21c93e15b54425a7abf213dece75142"
+    },
+    "FLUTTER_RENDERER_TEST-detail-360x800.png": {
+      "bytes": 29268,
+      "sha256": "dce6b6a1d18e4fe6a991433c108efa37b28f5cad27052878d0bbb2123b24f501"
+    },
+    "FLUTTER_RENDERER_TEST-error-360x800.png": {
+      "bytes": 31916,
+      "sha256": "cfa4b4b40ca790409e0304bdf66321e49c5f03c2610c30b6cba8eb4af6bd97ef"
+    },
+    "FLUTTER_RENDERER_TEST-list-360x640-text1.0.png": {
+      "bytes": 32075,
+      "sha256": "baf113dcf7983fd05d12db2f7c4a41a2794b105216706eeeaa9c3fc8d72c80c6"
+    },
+    "FLUTTER_RENDERER_TEST-list-360x640-text2.0.png": {
+      "bytes": 32648,
+      "sha256": "8622b68f77fbdb4edf67f423950c53d141490805051344803d67c2c44b86f7ce"
+    },
+    "FLUTTER_RENDERER_TEST-list-360x800-text1.0.png": {
+      "bytes": 38464,
+      "sha256": "9204f50b39b4c225972ce633caa284df6ad7112888e53e2febb283e088f9288e"
+    },
+    "FLUTTER_RENDERER_TEST-list-360x800-text2.0.png": {
+      "bytes": 40331,
+      "sha256": "bca6dcf2e96e421e05e0cf3f1ac2d6ac34097a6c82bef994d57c9b823268b755"
+    },
+    "FLUTTER_RENDERER_TEST-list-640x360-text1.0.png": {
+      "bytes": 33518,
+      "sha256": "13b3736b8e2f5d1c44a09d3825c594491ff872fd7b115dadcebabfd5c48dc2d2"
+    },
+    "FLUTTER_RENDERER_TEST-list-640x360-text2.0.png": {
+      "bytes": 31596,
+      "sha256": "a2dc73a9e1e48fb9188ca6b0ceb1435d42d88000711a461a76a0e1d1a6ba88d2"
+    },
+    "FLUTTER_RENDERER_TEST-list-800x360-text1.0.png": {
+      "bytes": 35163,
+      "sha256": "5f9235712980c1b87b170012d5dc08c7210f8adc2d869859d547e14a9ab7c00e"
+    },
+    "FLUTTER_RENDERER_TEST-list-800x360-text2.0.png": {
+      "bytes": 33040,
+      "sha256": "cc7c0cb18e80fd50e1b2aab66cac4acff0822e667dac64e2b399fbacbcd3c639"
+    },
+    "FLUTTER_RENDERER_TEST-local-filter-empty-360x800.png": {
+      "bytes": 25769,
+      "sha256": "4779a78420f07e69544753b28efe2d2c77b842903ebaa13cc90a9b708120cb25"
+    },
+    "FLUTTER_RENDERER_TEST-local-filter-match-360x800.png": {
+      "bytes": 35353,
+      "sha256": "5a224f8f1b63e2eaae2d2f8c14838018099ab48de3b0676738be9a7fa143140e"
+    },
+    "FLUTTER_RENDERER_TEST-map-route-360x800.png": {
+      "bytes": 29838,
+      "sha256": "9d6caf47561fb3b0cd0cb9dad4e0ff9eefda171d3b80b50590a1a7a278b0e581"
+    },
+    "FLUTTER_RENDERER_TEST-offline-360x800.png": {
+      "bytes": 34493,
+      "sha256": "66a003165f1931c1d55c469f53dce6ed591ccfb0c19afae76b209b92a9ac5c28"
+    },
+    "FLUTTER_RENDERER_TEST-preview-360x800.png": {
+      "bytes": 27722,
+      "sha256": "ce446230591af381b38b64ec4d1ea9f677baf81459f95000b95ccb4427dd22b5"
+    }
+  }
+}
