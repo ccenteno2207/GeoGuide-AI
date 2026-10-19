@@ -17,8 +17,9 @@ maestro UI-2 ni validación física.
 La reproducción automatizada antes del cambio falló tras aplicar `viewInsets`
 con el campo enfocado. El `TextField` seguía encontrándose en el árbol, pero su
 estado pasaba a `defunct` y el canal de texto emitía `TextInput.clearClient` y
-`TextInput.hide`. El fallo automatizado se reprodujo en 360×640; la causa física
-se corroboró originalmente en el HONOR por observación del propietario.
+`TextInput.hide`. El fallo automatizado se reprodujo en 360×640; el propietario
+había corroborado el síntoma en el HONOR. La causa técnica se demuestra en el
+harness Flutter y su correspondencia física queda pendiente de revalidación.
 
 El `Stack` de exploración elimina condicionalmente el grupo flotante al aparecer
 el teclado. Sus ramas dinámicas compartían posición sin identidad estable; al
