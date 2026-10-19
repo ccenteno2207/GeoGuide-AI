@@ -116,6 +116,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       'Resultados no disponibles. Reintenta para consultar datos nuevos.';
   final _poiFilter = PoiResultFilter();
   final _poiQuery = TextEditingController();
+  final _poiSearchFocusNode = FocusNode(debugLabel: 'poi-local-search');
   int _poiQueryRevision = 0;
   Timer? _poiQueryExpiry;
   int get _snapshotNow =>
@@ -669,6 +670,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     widget.offlineDiscovery?.dispose();
     _poiQueryExpiry?.cancel();
     _poiQuery.dispose();
+    _poiSearchFocusNode.dispose();
     _mapController.dispose();
     super.dispose();
   }
@@ -1183,8 +1185,11 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                   ],
                 ),
               ),
+              // Stable sibling identity keeps the list overlay mounted when
+              // keyboard insets remove these exploration actions.
               if (!editing)
                 Positioned(
+                  key: const ValueKey('exploration-floating-actions-position'),
                   left: 12,
                   right: 12,
                   top: 4,
@@ -1455,6 +1460,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                 ),
               if (_showDiscoveryList && _routeDiscovery.pois.isNotEmpty)
                 Positioned.fill(
+                  key: const ValueKey('discovery-list-overlay'),
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final landscape =
@@ -1491,6 +1497,42 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                         icon: const Icon(Icons.close),
                                       ),
                                     ),
+                                    if (widget.offlineDiscovery?.snapshot
+                                            ?.eligible(_snapshotNow) ==
+                                        true)
+                                      Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                          12,
+                                          0,
+                                          12,
+                                          12,
+                                        ),
+                                        child: TextField(
+                                          key: const ValueKey(
+                                            'poi-local-search',
+                                          ),
+                                          controller: _poiQuery,
+                                          focusNode: _poiSearchFocusNode,
+                                          decoration: const InputDecoration(
+                                            labelText:
+                                                'Buscar en estos resultados',
+                                            border: OutlineInputBorder(),
+                                          ),
+                                          textInputAction:
+                                              TextInputAction.search,
+                                          onSubmitted: (_) {
+                                            if (!_drivingReduced &&
+                                                queryRevision ==
+                                                    _poiQueryRevision) {
+                                              FocusScope.of(context).unfocus();
+                                            }
+                                          },
+                                          onChanged: (query) => _updatePoiQuery(
+                                            query,
+                                            queryRevision,
+                                          ),
+                                        ),
+                                      ),
                                     Expanded(
                                       child: ListView(
                                         key: const ValueKey(
@@ -1503,41 +1545,6 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                           12,
                                         ),
                                         children: [
-                                          if (widget.offlineDiscovery?.snapshot
-                                                  ?.eligible(_snapshotNow) ==
-                                              true)
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                bottom: 12,
-                                              ),
-                                              child: TextField(
-                                                key: const ValueKey(
-                                                  'poi-local-search',
-                                                ),
-                                                controller: _poiQuery,
-                                                decoration:
-                                                    const InputDecoration(
-                                                      labelText: 'Buscar en estos resultados',
-                                                      border:
-                                                          OutlineInputBorder(),
-                                                    ),
-                                                textInputAction:
-                                                    TextInputAction.search,
-                                                onSubmitted: (_) {
-                                                  if (!_drivingReduced &&
-                                                      queryRevision ==
-                                                          _poiQueryRevision) {
-                                                    FocusScope.of(context)
-                                                        .unfocus();
-                                                  }
-                                                },
-                                                onChanged: (query) =>
-                                                    _updatePoiQuery(
-                                                      query,
-                                                      queryRevision,
-                                                    ),
-                                              ),
-                                            ),
                                           if (snapshotExpired) ...[
                                             Semantics(
                                               liveRegion: true,
