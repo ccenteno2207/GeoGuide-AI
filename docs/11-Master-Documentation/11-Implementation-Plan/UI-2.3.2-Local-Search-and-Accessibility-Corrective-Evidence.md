@@ -103,6 +103,10 @@ si se generan, no representan un teléfono ni TalkBack.
 - No se cambió idioma, TTS, permisos, backend, API, DTO, base de datos,
   dependencias, fotos, Driving, GPS, CEFI ni los contratos congelados.
 
+El bloque siguiente conserva el estado al terminar la ejecución local original.
+La autorización posterior y su integración se registran al final, sin convertir
+la evidencia automatizada en validación física.
+
 ```ini
 UI_2_3_2_S01_ROOT_CAUSE = CONFIRMED
 UI_2_3_2_S01_REMEDIATION = PASS
@@ -116,6 +120,78 @@ UI_2_3_2_PR = NOT_AUTHORIZED
 UI_2_3_2_MERGE = NOT_AUTHORIZED
 UI_2_3_2_PHYSICAL_INSTALLATION = NOT_AUTHORIZED
 
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+UI_2_PRODUCTION_READINESS = NOT_DECLARED
+```
+
+## Integración controlada y verificación post-merge
+
+Registro: 2026-10-18 (UTC-05). El propietario autorizó posteriormente push, PR,
+auditoría y merge normal, además de trazabilidad y preparación documental de la
+revalidación. Esta autorización no incluye dispositivo, ADB ni instalación.
+
+| Evidencia Git/PR | Resultado verificado |
+| --- | --- |
+| Baseline remoto antes de integrar | `2f84123536ddd2da62a1bcbf53fc415a1cd1f4a5`, sin avance al hacer fetch |
+| Commit funcional | `3b4ee6f985edd5f7f7af7621a98be6d7ccce9358` |
+| Precisión documental pre-PR | `c1be6c0c2cbd8f5290a628f23dae60a7478f37c9`; distingue síntoma físico de causa demostrada en harness, sin cambios móviles |
+| Pull Request | [PR #92](https://github.com/ccenteno2207/GeoGuide-AI/pull/92), `MERGED` |
+| Momento del merge | `2026-10-19T04:19:32Z` |
+| Merge normal / baseline funcional integrado | `853a9d7d115259ecc3d8b0db06b2ee7240b9a119` |
+| Primer padre | `2f84123536ddd2da62a1bcbf53fc415a1cd1f4a5` |
+| Segundo padre | `c1be6c0c2cbd8f5290a628f23dae60a7478f37c9` |
+| Árbol auditado e integrado | `2dbc311161440ff32c5bcb5d378ca958dc35bf94`; igualdad completa del árbol entre head del PR y merge |
+| Ascendencia del commit funcional | PASS, `git merge-base --is-ancestor` devuelve 0 |
+| GitHub checks | `NOT_CONFIGURED`: cero check-runs, cero commit statuses y rollup vacío; no se declara CI_PASS |
+| Revisiones externas | Ninguna registrada, solicitudes y comentarios vacíos al auditar; no se afirma aprobación externa |
+
+La auditoría pre-PR revisó el diff completo de cinco archivos y ambos commits,
+la compatibilidad con UI-2 y la protección de insets/atribución de UI-2.3.1. Solo
+se modificaron la pantalla de exploración, dos pruebas y la evidencia/índice.
+El `FocusNode` tiene creación y dispose explícitos; no se añadieron timers ni
+solicitudes repetitivas de foco. Backend, DTO, API, DB, permisos, dependencias,
+contratos congelados, GPS, Driving, CEFI y medios permanecen fuera del diff.
+
+Se reutilizan los resultados locales anteriores: 232 pruebas, analyze, formato,
+regresión S01 y ambos builds. El commit posterior a la validación fue solamente
+documental. El merge tiene el mismo árbol que el head auditado y el mismo
+contenido móvil validado, por lo que no se repitieron tests ni builds sin causa
+técnica adicional. Las comprobaciones post-merge fueron Git/PR, ascendencia,
+árbol, alcance, hashes y preservación; no se inventa una nueva ejecución CI.
+
+Se recalcularon los hashes debug/release y coinciden exactamente con los de la
+tabla local. La inspección de ambos ZIP APK no encontró paths de assets de test
+o fixtures ni fotografías piloto. Los assets Flutter contienen manifiestos,
+fuente Material Icons, shaders y el logo de flutter_map; debug incorpora los
+artefactos kernel/snapshot esperados. El endpoint esperado también está presente
+en el kernel debug. No se recompiló, instaló ni accedió al teléfono.
+
+El nuevo [protocolo focalizado S01](UI-2.3.2-Focused-Physical-Validation-Protocol.md)
+queda `PREPARED`, con cada resultado físico en `NOT_EXECUTED`. Los casos UI-2.2
+no ejecutados, aspectos parciales de accesibilidad, deuda visual CEFI y demás
+pendientes aceptados conservan sus estados; este merge no les concede PASS.
+No se repiten automáticamente los 36 casos ni el layout UI-2.3.1 ya observado.
+
+El registro post-merge se prepara en rama/worktree documental independiente,
+partiendo de `853a9d7d115259ecc3d8b0db06b2ee7240b9a119`, para un PR documental
+separado. Su integración no cambia el baseline de código descrito arriba.
+El checkout principal permanece en `e443c0aa10987e04367dd15a1df259438426c3bc`
+con los tres borradores UI-0. La comparación de worktrees, archivos pendientes,
+stashes y hash del registro privado se conserva fuera del repositorio; no se
+copió evidencia privada al PR.
+
+```ini
+UI_2_3_2_PRE_PR_AUDIT = PASS
+UI_2_3_2_PR = MERGED
+UI_2_3_2_INTEGRATION = PASS
+UI_2_3_2_S01_AUTOMATED = PASS
+UI_2_3_2_S01_PHYSICAL = NOT_EXECUTED
+UI_2_3_2_A01_ROOT_CAUSE = UNCONFIRMED
+UI_2_3_2_A01_REMEDIATION = DEFERRED
+UI_2_3_2_PHYSICAL_SESSION = PREPARED
+UI_2_3_2_PHYSICAL_INSTALLATION = NOT_AUTHORIZED
+GITHUB_CHECKS = NOT_CONFIGURED
+EXTERNAL_REVIEW = NONE_RECORDED
 UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
 UI_2_PRODUCTION_READINESS = NOT_DECLARED
 ```
