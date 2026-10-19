@@ -72,29 +72,67 @@ void main() {
       final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
       expect(app.supportedLocales, const [Locale('en', 'US')]);
       expect(app.localizationsDelegates, isNull);
-      await tester.tap(find.byTooltip('Vista previa de Museo Ámbar'));
+      await tester.tap(find.text('Ver lista'));
+      await tester.pumpAndSettle();
+      for (final platformLocale in const [
+        Locale('es', 'PE'),
+        Locale('en', 'US'),
+      ]) {
+        tester.platformDispatcher.localeTestValue = platformLocale;
+        await tester.pump();
+        final listText = tester
+            .getSemantics(find.text('Museo Ámbar'))
+            .getSemanticsData();
+        expect(listText.label, contains('Museo Ámbar'));
+        expect(listText.locale, isNull);
+      }
+      await tester.tap(
+        find.byKey(const ValueKey('discovery-list-synthetic-1')),
+      );
       await tester.pumpAndSettle();
       expect(find.byType(PoiPreviewSheet), findsOneWidget);
       expect(
         find.bySemanticsLabel(RegExp('Vista previa de Museo Ámbar')),
         findsWidgets,
       );
-      expect(
-        Localizations.localeOf(tester.element(find.byType(PoiPreviewSheet))),
-        const Locale('en', 'US'),
-      );
+      for (final platformLocale in const [
+        Locale('es', 'PE'),
+        Locale('en', 'US'),
+      ]) {
+        tester.platformDispatcher.localeTestValue = platformLocale;
+        await tester.pump();
+        expect(
+          Localizations.localeOf(tester.element(find.byType(PoiPreviewSheet))),
+          const Locale('en', 'US'),
+        );
+        expect(
+          find.bySemanticsLabel(RegExp('Vista previa de Museo Ámbar')),
+          findsWidgets,
+        );
+      }
       await tester.ensureVisible(find.text('Ver detalle'));
       await tester.tap(find.text('Ver detalle'));
       await tester.pumpAndSettle();
       expect(find.byType(PoiDetailSheet), findsOneWidget);
-      expect(find.text(snapshot.pois.first.description!), findsOneWidget);
-      final textNode = tester
-          .getSemantics(find.text(snapshot.pois.first.description!))
-          .getSemanticsData();
-      expect(textNode.label, contains(snapshot.pois.first.description!));
-      // No explicit per-text speech locale is supplied. App localizations and
-      // the actual voice chosen by TalkBack are separate observations.
-      expect(textNode.locale, isNull);
+      expect(find.text(snapshot.pois.first.description!), findsWidgets);
+      for (final platformLocale in const [
+        Locale('es', 'PE'),
+        Locale('en', 'US'),
+      ]) {
+        tester.platformDispatcher.localeTestValue = platformLocale;
+        await tester.pump();
+        expect(
+          Localizations.localeOf(tester.element(find.byType(PoiDetailSheet))),
+          const Locale('en', 'US'),
+        );
+        final textNode = tester
+            .getSemantics(find.text(snapshot.pois.first.description!).last)
+            .getSemanticsData();
+        expect(textNode.label, contains(snapshot.pois.first.description!));
+        // No per-text speech locale is supplied. App localizations and the
+        // actual voice chosen by TalkBack remain separate observations.
+        expect(textNode.locale, isNull);
+      }
       await tester.ensureVisible(find.text('Volver'));
       expect(find.text('Volver').hitTestable(), findsOneWidget);
       await tester.pumpWidget(const SizedBox());

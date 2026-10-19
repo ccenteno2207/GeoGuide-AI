@@ -515,6 +515,70 @@ void main() {
     Size(640, 360),
     Size(800, 360),
   ]) {
+    testWidgets(
+      'local search retains focus and accepts edits with keyboard insets at $size',
+      (tester) async {
+        tester.view.physicalSize = size;
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        addTearDown(tester.view.resetViewInsets);
+        final snapshot = syntheticSnapshot();
+        final offline = OfflineDiscovery(
+          source: CountingSource(),
+          store: MemoryStore()..value = snapshot,
+          backendContext: snapshot.query.backendContext,
+          now: () => fixtures.captured,
+        );
+        await pump(tester, offline);
+        await openList(tester);
+        final search = find.byKey(searchKey);
+        await tester.ensureVisible(search);
+        await tester.tap(search);
+        await tester.pump();
+        final originalFieldState = tester.state<State>(search);
+        final field = tester.widget<TextField>(search);
+        final editable = tester.widget<EditableText>(
+          find.descendant(of: search, matching: find.byType(EditableText)),
+        );
+        expect(editable.focusNode.hasFocus, isTrue);
+        expect(tester.testTextInput.isVisible, isTrue);
+
+        // Android publishes the IME inset after the field gains focus. This
+        // rebuild removes the floating controls while preserving the field.
+        tester.view.viewInsets = const FakeViewPadding(bottom: 180);
+        await tester.pumpAndSettle();
+        expect(find.byKey(searchKey), findsOneWidget);
+        expect(tester.state<State>(search), same(originalFieldState));
+        final rebuiltEditable = tester.widget<EditableText>(
+          find.descendant(of: search, matching: find.byType(EditableText)),
+        );
+        expect(rebuiltEditable.focusNode.hasFocus, isTrue);
+        expect(tester.testTextInput.isVisible, isTrue);
+
+        await tester.enterText(search, '  MUSEO   ambar  ');
+        await tester.pumpAndSettle();
+        expect(field.controller!.text, '  MUSEO   ambar  ');
+        expect(find.text('1 de 2 lugares en estos resultados'), findsOneWidget);
+        await tester.enterText(search, '');
+        await tester.pumpAndSettle();
+        expect(find.text('2 de 2 lugares en estos resultados'), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('close-discovery-list')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Ver lista'));
+        await tester.pumpAndSettle();
+        expect(tester.widget<TextField>(search).controller!.text, isEmpty);
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+  }
+
+  for (final size in const [
+    Size(360, 640),
+    Size(360, 800),
+    Size(640, 360),
+    Size(800, 360),
+  ]) {
     for (final scale in [1.0, 2.0]) {
       testWidgets(
         'list preview detail long fields ${size.width}x${size.height} text $scale',
