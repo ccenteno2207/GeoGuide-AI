@@ -3,6 +3,10 @@
 Fecha: 2026-10-18. Ejecución local autorizada; no representa integración, cierre
 maestro UI-2 ni validación física.
 
+Las secciones locales y de integración conservan sus fechas y estados históricos.
+El [cierre documental del 2026-10-24](#cierre-documental-2026-10-24) registra la
+sesión física posterior y constituye el seguimiento vigente de este checkpoint.
+
 ## Baseline y alcance
 
 - Baseline de `origin/main` tras `git fetch origin`: `2f84123536ddd2da62a1bcbf53fc415a1cd1f4a5`.
@@ -194,4 +198,116 @@ GITHUB_CHECKS = NOT_CONFIGURED
 EXTERNAL_REVIEW = NONE_RECORDED
 UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
 UI_2_PRODUCTION_READINESS = NOT_DECLARED
+```
+
+## Cierre documental 2026-10-24
+
+El propietario autorizó consolidar documentalmente la tercera sesión, actualizar
+la matriz oficial e integrar mediante PR/merge normal. Esta actualización no
+modifica código, contratos congelados ni el protocolo histórico, y no autoriza
+otra sesión física o cierre maestro. Sin crear otro registro de estado, el
+seguimiento vigente de UI-2.3.2 se consolida aquí y en la
+[matriz oficial UI-2.2](UI-2.2-Physical-Validation-Traceability-Matrix.md#seguimiento-vigente-2026-10-24).
+
+### Procedencia y artefacto de la sesión
+
+- Fecha física: 2026-10-24, America/Bogota. Dispositivo: HONOR LLY-NX3.
+- Baseline integrado de la sesión y de este cierre documental:
+  `692d3f5dd2e958b1b680df126d600a11fd18835b`, confirmado nuevamente tras fetch.
+- PR funcional [#92](https://github.com/ccenteno2207/GeoGuide-AI/pull/92), merge
+  `853a9d7d115259ecc3d8b0db06b2ee7240b9a119`; PR documental/protocolo
+  [#93](https://github.com/ccenteno2207/GeoGuide-AI/pull/93), merge del baseline
+  anterior; correctivo original `3b4ee6f985edd5f7f7af7621a98be6d7ccce9358`.
+- APK debug `com.geoguideai.geoguide_ai`, `1.0.0 / versionCode 1`, SHA-256
+  `32F2D62A4B7E6A007E92CB89F2DB6990F8D9E4E2AE6E0983BAEA045E1FDB70B5`.
+- Instalación PASS: tras confirmación específica se usó `adb install -r`, con
+  datos conservados, firma válida/certificado compatible, SDK/ABI compatibles y
+  coincidencia exacta del hash del APK instalado. Evidencia CODEX_VERIFIED de la
+  sesión física anterior; no se repite acceso al dispositivo en este cierre.
+- La bitácora privada está disponible y fue consultada exclusivamente en lectura.
+  Este seguimiento publica conclusiones sanitizadas, no su contenido completo,
+  rutas de artefactos privados, identificadores únicos, certificados personales
+  ni APK extraídos. Las interacciones se atribuyen al propietario, sin capturas.
+
+### Resultados físicos consolidados
+
+Escenario inicial Lima–Canta: 97,7 km, 104 min, 5 POIs, Online. Un toque accidental
+en el mapa seleccionó otro extremo; tras recalcular, el resumen fue 97,6 km,
+104 min, 5 lugares. Se aclaró la instrucción y P05 se repitió correctamente sobre
+el cuadro de texto y la tarjeta. Esa diferencia no es una regresión demostrada.
+
+| Caso | Estado | Evidencia y alcance real |
+| --- | --- | --- |
+| S01-P01 | PASS | OWNER_OBSERVED: el teclado abre y permanece estable. |
+| S01-P02 | PASS | OWNER_OBSERVED: escribir/editar «Cant» y «Canta» deja una coincidencia, Plaza de Armas de Canta. |
+| S01-P03 | PASS | OWNER_OBSERVED: «zzsincoincidencia» muestra «0 de 5 lugares en estos resultados» y «No hay coincidencias en estos resultados»; borrar recupera «5 de 5» y los cinco POIs. |
+| S01-P04 | PASS | OWNER_OBSERVED: Back cierra teclado; cerrar/reabrir conserva «Canta»/un resultado y el refoco abre teclado estable. |
+| S01-P05 | PASS | OWNER_OBSERVED: tras la repetición correcta, Preview/Detail y retorno conservan filtro y resultado. |
+| S01-P06 | PASS | OWNER_OBSERVED: Sitio arqueológico muestra 1 POI en mapa/lista; restablecer recupera 5, sin errores. |
+| S01-P07 | NOT_VERIFIED_PHYSICALLY | Evidencia automatizada previa PASS; no existió observación autorizada del tráfico real del HONOR. |
+
+La prueba de experiencia con spy de UI-2.3.2 valida cero llamadas al source al
+escribir; se conserva como evidencia automatizada, no como PASS físico de P07.
+No se usaron proxies, captura general de red ni instrumentación adicional.
+P01–P06 y el objetivo de interacción física pasan sin degradarse por P07; la
+sesión global y S01 global siguen PARTIAL por esa limitación.
+
+Regresión incidental PASS en el alcance observado: no hubo nueva obstrucción
+reportada en el panel y la atribución «© OpenStreetMap contributors» siguió
+visible, sin problemas. La etiqueta «A 131 m del trazado» se confirmó literalmente:
+son metros al trazado, no minutos ni distancia desde el origen. No se confirmó
+una regresión nueva; no se repitió la matriz completa de layout/UI-2.2.
+
+Restauración PASS por OWNER_OBSERVED: búsqueda vacía, teclado/fichas cerrados y
+ruta vigente conservada. TalkBack no se activó; no se inició GPS continuo o voz
+CEFI ni se cambiaron permisos/ajustes. No se accedió a otras apps o información
+personal ni se tomaron capturas. El defecto original de desaparición inesperada
+del teclado se considera corregido y confirmado físicamente dentro de P01–P06.
+
+### Pendientes y auditoría del cierre
+
+A01 sigue con causa UNCONFIRMED y remediación DEFERRED. El locale Flutter
+`en_US` no demuestra la causa de la pronunciación de TalkBack. No se propone ni
+implementa localización global, traducciones Material, política internacional,
+TTS o configuración del teléfono como parte de este cierre.
+
+Los casos no ejecutados o parciales de UI-2.2 y la esfera luminosa/ondas CEFI
+continúan pendientes. La cobertura por subcasos está delimitada en la matriz;
+no se transforma P07, accesibilidad con lector, variantes Unicode no observadas,
+offline/TTL, Driving o B1 en PASS físico. Los históricos UI-2.3/UI-2.3.1 y el
+protocolo se conservan sin reescritura retrospectiva.
+
+Este cierre cambia exclusivamente tres Markdown: matriz oficial, este seguimiento
+e índice. No hay cambios Flutter/Dart/Java/Android, dependencias, API/DB, permisos,
+binarios o contratos congelados. No se repiten tests/builds, pues la revisión no
+introduce cambios funcionales. Se comprueban whitespace, UTF-8, vínculos/rutas,
+diff documental, preservación de worktrees/stashes y hashes de registros privados.
+La integración se realiza desde rama/worktree independiente mediante merge
+normal; el commit, PR y merge del cierre quedan identificados en el reporte Git
+post-merge, sin asignar al documento el SHA de su propio merge por anticipado.
+Los checks/revisiones se registran según GitHub; los resultados locales previos
+no se presentan como CI ni como aprobación externa.
+
+Auditoría documental pre-PR: PASS, tres Markdown en alcance, UTF-8 estricto,
+201 vínculos locales con destinos existentes, anclas nuevas resueltas y
+`git diff --check` sin errores. Matriz y evidencia reciben adiciones fechadas;
+solo se sustituye la fila del índice para apuntar al estado actual. Ningún
+estado histórico, contrato congelado, archivo funcional o binario se elimina.
+
+```ini
+UI_2_3_2_DOCUMENTARY_CLOSURE = PASS
+UI_2_3_2_S01_USER_INTERACTION_PHYSICAL = PASS
+UI_2_3_2_S01_NETWORK_AUTOMATED = PASS
+UI_2_3_2_S01_NETWORK_PHYSICAL = NOT_VERIFIED_PHYSICALLY
+UI_2_3_2_THIRD_PHYSICAL_SESSION = PARTIAL
+UI_2_3_2_S01_PHYSICAL = PARTIAL
+UI_2_3_2_PHYSICAL_INSTALLATION = PASS
+UI_2_3_2_PHYSICAL_REGRESSION = PASS
+UI_2_3_2_DEVICE_RESTORATION = PASS
+UI_2_3_2_A01_ROOT_CAUSE = UNCONFIRMED
+UI_2_3_2_A01_REMEDIATION = DEFERRED
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+UI_2_PRODUCTION_READINESS = NOT_DECLARED
+GITHUB_CHECKS = NOT_CONFIGURED
+EXTERNAL_REVIEW = NONE_RECORDED
 ```
