@@ -3,6 +3,10 @@
 Fecha: 2026-10-18. Base efectiva: `083239649c86dd9efd9e0050dd3c955ae574b12a`.
 [Protocolo y autoridad](UI-2.2-Physical-Validation-Protocol-Proposal.md). UI2-AC-01–14 y U2-D01–D06 permanecen congelados.
 
+El catálogo y sus estados iniciales se conservan como preparación histórica.
+El [seguimiento vigente del 2026-10-24](#seguimiento-vigente-2026-10-24)
+registra los subcasos S01 ejecutados sin convertir los 36 casos completos en PASS.
+
 ## Leyenda
 
 - COVERED_AUTOMATED: respaldo en UI-2.1; no prueba física.
@@ -100,3 +104,55 @@ Fecha: 2026-10-18. Base efectiva: `083239649c86dd9efd9e0050dd3c955ae574b12a`.
 - Protocolo APPROVED no equivale a entorno listo, ejecución física ni aceptación del producto.
 
 [Checklist](UI-2.2-Physical-Validation-Session-Checklist.md) · [Resultados sin ejecutar](UI-2.2-Physical-Validation-Results-Template.md).
+
+## Seguimiento vigente 2026-10-24
+
+La tercera sesión UI-2.3.2 fue focalizada en la desaparición del teclado, bajo
+autorización específica del propietario y el
+[protocolo S01](UI-2.3.2-Focused-Physical-Validation-Protocol.md).
+La [evidencia consolidada](UI-2.3.2-Local-Search-and-Accessibility-Corrective-Evidence.md#cierre-documental-2026-10-24)
+contiene P01–P07, identidad del APK, escenario y clasificación. Se consultó la
+bitácora privada solo en lectura; aquí se publican conclusiones sanitizadas,
+sin identificadores únicos, registros completos, APK extraídos ni datos personales.
+
+Dispositivo de prueba: HONOR LLY-NX3. APK debug `com.geoguideai.geoguide_ai`,
+`1.0.0 / versionCode 1`, SHA-256
+`32F2D62A4B7E6A007E92CB89F2DB6990F8D9E4E2AE6E0983BAEA045E1FDB70B5`.
+Instalación y coincidencia binaria: CODEX_VERIFIED, PASS. Interacciones P01–P06,
+regresión incidental y restauración: OWNER_OBSERVED, PASS en el alcance probado.
+
+| Casos del catálogo relacionados | Evidencia S01 del 2026-10-24 | Alcance y pendientes conservados |
+| --- | --- | --- |
+| UI2-PHY-01–04 | Identidad, firma compatible, actualización con datos conservados y apertura verificadas; ruta Online calculada. | Evidencia de esta instalación/arranque; no se completa por asociación cada requisito de los cuatro casos originales. |
+| UI2-PHY-13 | P01/P02 PASS: teclado estable, escritura/edición de «Cant»/«Canta», una coincidencia correcta. | Subcaso de interacción y subcadena PASS; variantes de diacríticos, espacios y Unicode no probadas en esta sesión siguen pendientes físicamente. |
+| UI2-PHY-14 | P02/P03 PASS: Plaza de Armas de Canta; vacío exacto; borrar recupera 5 POIs. | Subconjunto/vacío observado PASS; no se acredita auditoría completa de IDs, orden y equivalencia mapa/lista. |
+| UI2-PHY-07/11/15 | P04/P05 PASS: Back, reapertura/refoco, Preview/Detail y retorno conservan «Canta»/una coincidencia. | Retención en contexto válido PASS; no prueba todo el viewport, I01, reemplazo de identidad o expiración del snapshot. |
+| UI2-PHY-08 | P06 PASS: Sitio arqueológico muestra 1 POI en mapa/lista; restablecer devuelve 5. | Subcaso de categorías PASS; error/retry, vacío backend y demás estados no se acreditan. |
+| UI2-PHY-18 | P07 NOT_VERIFIED_PHYSICALLY; evidencia automatizada previa de cero llamadas al source al escribir, PASS. | No observación del tráfico real. Sin proxy, captura general ni instrumentación. No se declara PASS físico. |
+| UI2-PHY-29 | P01–P05 prueban teclado ordinario y estados visuales del filtro. | TalkBack no se activó; el caso con lector y anuncios de estados no se considera ejecutado en esta tercera sesión. A01 sigue UNCONFIRMED / DEFERRED. |
+| UI2-PHY-05/06/33/34 | Observación incidental sin nueva obstrucción; atribución OpenStreetMap visible; sin activar GPS continuo/voz ni cambiar permisos. | PASS incidental del alcance S01; no repite cartografía, layout completo, navegación ampliada, permisos ni sesiones. |
+| UI2-PHY-36 | G6 PASS: búsqueda vacía, teclado/fichas cerrados y ruta conservada; TalkBack no activado. | Restauración de esta sesión confirmada por el propietario; no equivale al cierre de todo UI-2.2. |
+
+El defecto de desaparición del teclado queda corregido y confirmado en la
+interacción física probada. P01–P06 conservan PASS; la limitación de red no los
+degrada. La sesión global y S01 global permanecen PARTIAL por P07. El toque
+accidental en mapa y el recálculo de 97,7 a 97,6 km (104 min/5 POIs) no constituyen
+una regresión demostrada. La etiqueta «A 131 m del trazado» expresa metros.
+
+Los casos/subcasos UI-2.2 ajenos a esta cobertura conservan sus resultados previos
+o pendientes; no se reasignan a PASS por asociación. Tampoco se reabren los
+resultados previos de UI-2.3.1. A01, variantes no observadas, offline/TTL, B1,
+Driving y otros casos pendientes no se cierran. La esfera luminosa/ondas de CEFI
+continúa como deuda visual aceptada, sin cambio de diseño o comportamiento.
+
+```ini
+UI_2_3_2_S01_USER_INTERACTION_PHYSICAL = PASS
+UI_2_3_2_S01_NETWORK_AUTOMATED = PASS
+UI_2_3_2_S01_NETWORK_PHYSICAL = NOT_VERIFIED_PHYSICALLY
+UI_2_3_2_THIRD_PHYSICAL_SESSION = PARTIAL
+UI_2_3_2_S01_PHYSICAL = PARTIAL
+UI_2_3_2_A01_ROOT_CAUSE = UNCONFIRMED
+UI_2_3_2_A01_REMEDIATION = DEFERRED
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+UI_2_PRODUCTION_READINESS = NOT_DECLARED
+```
