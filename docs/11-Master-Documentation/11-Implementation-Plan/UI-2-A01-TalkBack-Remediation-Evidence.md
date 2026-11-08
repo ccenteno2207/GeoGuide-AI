@@ -860,7 +860,7 @@ de otro modo las acciones o reemplazar labels por tooltips.
 | [base_map_page.dart](../../../mobile/lib/features/map/presentation/base_map_page.dart) | Wrapper de idioma del botón de lista; handler y reglas de visibilidad intactos. |
 | [poi_detail_sheet.dart](../../../mobile/lib/features/discovery/presentation/poi_detail_sheet.dart) | Volver, segmentos UI locales y atributos del prefijo/etiqueta de procedencia. |
 | [poi_result_card.dart](../../../mobile/lib/features/discovery/presentation/poi_result_card.dart) | Categoría/distancia y prefijo Fuente: segmentado; InkWell/rol/callback intactos. |
-| [poi_ui_language.dart](../../../mobile/lib/features/discovery/presentation/poi_ui_language.dart) | Helper pequeño de presentación para constante es_PE y AttributedString de prefijo español más sufijo factual sin idioma. Dependencia directa de tarjeta/Detail, no servicio ni localización global. |
+| `mobile/lib/features/discovery/presentation/poi_ui_language.dart` (Paquete B, pendiente de integración funcional) | Helper pequeño de presentación para constante es_PE y AttributedString de prefijo español más sufijo factual sin idioma. Dependencia directa de tarjeta/Detail, no servicio ni localización global. |
 | `mobile/test/features/discovery/presentation/a01_b_ui_language_test.dart` (Paquete B, pendiente) | Cuatro pruebas nuevas sobre nodos efectivos, rangos, categorías, navegación/foco y protección multilingüe. |
 | `mobile/test/features/discovery/presentation/a01_preview_actions_test.dart` (Paquete B, pendiente) | Refuerza protección por rango de cada dato factual en label y value; mantiene las pruebas previas de Preview. |
 | Este informe / DOCUMENTATION_INDEX | Seguimiento nuevo e índice actual, sin reescribir observaciones físicas. |
@@ -1285,4 +1285,3 @@ La evidencia del APK A01-B `912E1DDB8936577F603FD8A3F4C00FBB742089A8F6B1F89F621E
 se conserva como artefacto de la sesión física. Su correspondencia exacta con el
 código que se proponga integrar queda pendiente del paquete funcional A01-B y no
 se infiere aquí.
-
