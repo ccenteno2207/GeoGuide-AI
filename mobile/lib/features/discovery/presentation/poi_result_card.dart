@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../domain/discovery_poi.dart';
 import 'poi_presentation.dart';
 import 'poi_thumbnail.dart';
+import 'poi_ui_language.dart';
 
 class PoiResultCard extends StatelessWidget {
   const PoiResultCard({super.key, required this.poi, required this.onPressed});
@@ -28,14 +29,25 @@ class PoiResultCard extends StatelessWidget {
           children: [
             _poiTag(context, friendlyPoiCategory(poi.category)),
             if (poiDistanceLabel(poi) case final distance?)
-              Text(distance, style: Theme.of(context).textTheme.labelMedium),
+              Text(
+                distance,
+                locale: spanishPoiUiLocale,
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
           ],
         ),
         if (poi.description case final description?
             when description.trim().isNotEmpty)
           Text(description, maxLines: 2, overflow: TextOverflow.ellipsis),
         if (poi.sourceLabel case final source? when source.trim().isNotEmpty)
-          Text('Fuente: $source'),
+          Text.rich(
+            TextSpan(
+              children: [
+                const TextSpan(text: 'Fuente: ', locale: spanishPoiUiLocale),
+                TextSpan(text: source),
+              ],
+            ),
+          ),
         if (poi.attribution case final attribution?
             when attribution.trim().isNotEmpty)
           Text(attribution),
@@ -87,7 +99,11 @@ class PoiResultCard extends StatelessWidget {
     ),
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      child: Text(label, style: Theme.of(context).textTheme.labelMedium),
+      child: Text(
+        label,
+        locale: spanishPoiUiLocale,
+        style: Theme.of(context).textTheme.labelMedium,
+      ),
     ),
   );
 }
