@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../domain/discovery_poi.dart';
 import 'poi_presentation.dart';
 import 'poi_thumbnail.dart';
+import 'poi_ui_language.dart';
 
 class PoiDetailSheet extends StatelessWidget {
   const PoiDetailSheet({super.key, required this.poi});
@@ -15,7 +16,7 @@ class PoiDetailSheet extends StatelessWidget {
       child: SingleChildScrollView(
         child: Semantics(
           container: true,
-          label: 'Detalle de ${poi.name}',
+          attributedLabel: spanishPoiUiPrefix('Detalle de ', poi.name),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
             child: Column(
@@ -38,6 +39,7 @@ class PoiDetailSheet extends StatelessWidget {
                     ),
                     child: Text(
                       'Categoría: ${friendlyPoiCategory(poi.category)}',
+                      locale: spanishPoiUiLocale,
                     ),
                   ),
                 ),
@@ -48,19 +50,23 @@ class PoiDetailSheet extends StatelessWidget {
                 ],
                 if (poiDistanceLabel(poi) case final distance?) ...[
                   const SizedBox(height: 12),
-                  Text(distance),
+                  Text(distance, locale: spanishPoiUiLocale),
                 ],
                 for (final reason
                     in poi.reasonCodes
                         .map(friendlyPoiReason)
                         .whereType<String>()) ...[
                   const SizedBox(height: 4),
-                  Text(reason),
+                  Text(reason, locale: spanishPoiUiLocale),
                 ],
                 if (poi.sourceLabel case final source?
                     when source.trim().isNotEmpty) ...[
                   const SizedBox(height: 16),
-                  Text('Fuente', style: Theme.of(context).textTheme.labelLarge),
+                  Text(
+                    'Fuente',
+                    locale: spanishPoiUiLocale,
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
                   Text(source),
                 ],
                 if (poi.attribution case final attribution?
@@ -70,18 +76,21 @@ class PoiDetailSheet extends StatelessWidget {
                     when sourceUrl.trim().isNotEmpty)
                   Semantics(
                     link: true,
-                    label: 'URL de la fuente',
+                    attributedLabel: spanishPoiUiPrefix('URL de la fuente', ''),
                     child: SelectableText(sourceUrl),
                   ),
                 const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(48, 48),
+                  child: Semantics(
+                    localeForSubtree: spanishPoiUiLocale,
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(48, 48),
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Volver'),
                     ),
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('Volver'),
                   ),
                 ),
               ],

@@ -65,28 +65,33 @@ class PoiPreviewSheet extends StatelessWidget {
                 ],
                 ?selectionControl,
                 const SizedBox(height: 20),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          minimumSize: const Size(48, 48),
+                // Only fixed Spanish actions inherit this semantic language.
+                // Factual POI fields above retain their original language.
+                Semantics(
+                  localeForSubtree: const Locale('es', 'PE'),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(48, 48),
+                          ),
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: const Text('Cerrar'),
                         ),
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Cerrar'),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: FilledButton(
-                        style: FilledButton.styleFrom(
-                          minimumSize: const Size(48, 48),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: FilledButton(
+                          style: FilledButton.styleFrom(
+                            minimumSize: const Size(48, 48),
+                          ),
+                          onPressed: onViewDetail,
+                          child: const Text('Ver detalle'),
                         ),
-                        onPressed: onViewDetail,
-                        child: const Text('Ver detalle'),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),

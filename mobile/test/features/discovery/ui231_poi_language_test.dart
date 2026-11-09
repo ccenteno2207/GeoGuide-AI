@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geoguide_ai/app/app.dart';
@@ -13,6 +15,25 @@ import 'offline_cache_test.dart' as fixtures;
 import 'offline_ui_test.dart' show MemoryStore;
 import 'ui2_experience_test.dart' show CountingSource, syntheticSnapshot;
 import '../tracking/b1_widget_test.dart' show FakeSession;
+
+// Diagnostic output only: neither a node locale nor a string attribute proves
+// which voice the Android accessibility service will actually use.
+void recordSpeechMetadata(WidgetTester tester, Finder finder, String scope) {
+  void recordNode(SemanticsNode node) {
+    final data = node.getSemanticsData();
+    debugPrint(
+      'A01_METADATA scope=$scope label=${data.label} '
+      'tooltip=${data.tooltip} hint=${data.hint} '
+      'locale=${data.locale} attributes=${data.attributedLabel.attributes}',
+    );
+    node.visitChildren((child) {
+      recordNode(child);
+      return true;
+    });
+  }
+
+  recordNode(tester.getSemantics(finder));
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -47,6 +68,36 @@ void main() {
     }
   });
 
+  test(
+    'span locale metadata can distinguish known languages without translation',
+    () {
+      const spanish = 'Descripción histórica. ';
+      const english = 'Historical description.';
+      const span = TextSpan(
+        children: [
+          TextSpan(text: spanish, locale: Locale('es', 'PE')),
+          TextSpan(text: english, locale: Locale('en', 'US')),
+        ],
+      );
+      final information = <InlineSpanSemanticsInformation>[];
+      span.computeSemanticsInformation(information);
+      expect(information.map((part) => part.text).join(), spanish + english);
+      final languageParts = information
+          .where((part) => part.text.isNotEmpty)
+          .toList();
+      expect(languageParts, hasLength(2));
+      expect(
+        languageParts.map(
+          (part) => part.stringAttributes
+              .whereType<ui.LocaleStringAttribute>()
+              .single
+              .locale,
+        ),
+        const [Locale('es', 'PE'), Locale('en', 'US')],
+      );
+    },
+  );
+
   testWidgets(
     'diagnostic: Spanish POI text survives Preview/Detail under current app locale',
     (tester) async {
@@ -72,8 +123,24 @@ void main() {
       final app = tester.widget<MaterialApp>(find.byType(MaterialApp));
       expect(app.supportedLocales, const [Locale('en', 'US')]);
       expect(app.localizationsDelegates, isNull);
+      recordSpeechMetadata(
+        tester,
+        find.byTooltip('Usar ubicación actual'),
+        'upper-control',
+      );
+      recordSpeechMetadata(
+        tester,
+        find.byTooltip('Vista previa de Museo Ámbar'),
+        'map-poi-marker',
+      );
+      recordSpeechMetadata(
+        tester,
+        find.text('Ver lista'),
+        'lower-list-control',
+      );
       await tester.tap(find.text('Ver lista'));
       await tester.pumpAndSettle();
+      recordSpeechMetadata(tester, find.text('Museo Ámbar'), 'list-card-name');
       for (final platformLocale in const [
         Locale('es', 'PE'),
         Locale('en', 'US'),
@@ -91,6 +158,11 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.byType(PoiPreviewSheet), findsOneWidget);
+      recordSpeechMetadata(
+        tester,
+        find.bySemanticsLabel(RegExp('Vista previa de Museo Ámbar')).first,
+        'preview-heading',
+      );
       expect(
         find.bySemanticsLabel(RegExp('Vista previa de Museo Ámbar')),
         findsWidgets,
@@ -115,6 +187,11 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(PoiDetailSheet), findsOneWidget);
       expect(find.text(snapshot.pois.first.description!), findsWidgets);
+      recordSpeechMetadata(
+        tester,
+        find.text(snapshot.pois.first.description!).last,
+        'detail-description',
+      );
       for (final platformLocale in const [
         Locale('es', 'PE'),
         Locale('en', 'US'),

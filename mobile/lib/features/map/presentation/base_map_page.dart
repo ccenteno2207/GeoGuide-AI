@@ -1300,23 +1300,29 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                               ),
                                             ),
                                           if (_routeDiscovery.pois.isNotEmpty)
-                                            OutlinedButton.icon(
-                                              key: const ValueKey(
-                                                'toggle-discovery-list',
+                                            Semantics(
+                                              localeForSubtree: const Locale(
+                                                'es',
+                                                'PE',
                                               ),
-                                              onPressed: () => setState(
-                                                () => _showDiscoveryList =
-                                                    !_showDiscoveryList,
-                                              ),
-                                              icon: Icon(
-                                                _showDiscoveryList
-                                                    ? Icons.map
-                                                    : Icons.list,
-                                              ),
-                                              label: Text(
-                                                _showDiscoveryList
-                                                    ? 'Ver mapa'
-                                                    : 'Ver lista',
+                                              child: OutlinedButton.icon(
+                                                key: const ValueKey(
+                                                  'toggle-discovery-list',
+                                                ),
+                                                onPressed: () => setState(
+                                                  () => _showDiscoveryList =
+                                                      !_showDiscoveryList,
+                                                ),
+                                                icon: Icon(
+                                                  _showDiscoveryList
+                                                      ? Icons.map
+                                                      : Icons.list,
+                                                ),
+                                                label: Text(
+                                                  _showDiscoveryList
+                                                      ? 'Ver mapa'
+                                                      : 'Ver lista',
+                                                ),
                                               ),
                                             ),
                                           if (widget
