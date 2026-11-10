@@ -12,6 +12,7 @@ class RoutePlanningController {
   RoutePoint? destination;
   PlannedRoute? route;
   bool isCalculating = false;
+  bool hasError = false;
   String status = 'Selecciona el origen en el mapa';
 
   bool get canPlan =>
@@ -21,6 +22,7 @@ class RoutePlanningController {
       planRoute != null;
 
   void selectPoint(RoutePoint point) {
+    hasError = false;
     route = null;
     if (origin == null || destination != null) {
       origin = point;
@@ -42,11 +44,13 @@ class RoutePlanningController {
     if (origin == null || destination == null || routePlanner == null) return;
 
     isCalculating = true;
+    hasError = false;
     status = 'Calculando ruta';
     try {
       route = await routePlanner(origin: origin, destination: destination);
       status = 'Ruta visible';
     } on AppFailure catch (failure) {
+      hasError = true;
       status = failure.userMessage;
     } finally {
       isCalculating = false;

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geoguide_ai/app/app.dart';
+import 'package:geoguide_ai/core/network/app_failure.dart';
 import 'package:geoguide_ai/app/theme/geoguide_theme.dart';
 import 'package:geoguide_ai/features/discovery/application/offline_discovery.dart';
 import 'package:geoguide_ai/features/discovery/domain/route_snapshot.dart';
@@ -34,7 +35,7 @@ class MemoryStore implements RouteDiscoverySnapshotStore {
 
 void main() {
   testWidgets(
-    'offline shell at 360px and scale 2.0 has readable state and route summary',
+    'cached route at 360px and scale 2.0 keeps the map clean and actions readable',
     (tester) async {
       tester.view.physicalSize = const Size(360, 800);
       tester.view.devicePixelRatio = 1;
@@ -56,15 +57,101 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
-      expect(find.textContaining('Ruta:'), findsOneWidget);
+      expect(find.byKey(const ValueKey('exploration-status')), findsNothing);
       expect(
-        MediaQuery.textScalerOf(tester.element(find.textContaining('Ruta:')))
-            .scale(10),
-        20,
+        find.byKey(const ValueKey('exploration-bottom-panel')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('exploration-bottom-actions')),
+        findsOneWidget,
+      );
+      expect(find.text('Conducción'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets('no offline snapshot at startup leaves the map unobstructed', (
+    tester,
+  ) async {
+    final app = OfflineDiscovery(
+      source: fixtures.Source(),
+      store: MemoryStore(),
+      backendContext: fixtures.query().backendContext,
+      now: () => fixtures.captured,
+    );
+    await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const ValueKey('exploration-bottom-panel')),
+      findsNothing,
+    );
+    expect(find.textContaining('Sin copia offline disponible'), findsNothing);
+    expect(
+      find.text('No encontramos lugares de estas categorías para esta ruta.'),
+      findsNothing,
+    );
+    expect(find.textContaining('OpenStreetMap contributors'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets(
+    'real discovery failure is contextual and keeps retry available',
+    (tester) async {
+      final source = fixtures.Source()
+        ..response = (_) async =>
+            throw const AppFailure(AppFailureType.backendUnavailable);
+      final app = OfflineDiscovery(
+        source: source,
+        store: MemoryStore(),
+        backendContext: fixtures.query().backendContext,
+        now: () => fixtures.captured,
+      );
+      await app.discover(fixtures.query());
+
+      await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const ValueKey('exploration-bottom-panel')),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Servicio no disponible'), findsOneWidget);
+      expect(find.text('Reintentar'), findsOneWidget);
+      expect(
+        find.text('No encontramos lugares de estas categorías para esta ruta.'),
+        findsNothing,
       );
       await tester.pumpWidget(const SizedBox());
     },
   );
+
+  testWidgets('valid empty route result is shown as a contextual empty state', (
+    tester,
+  ) async {
+    final source = fixtures.Source()
+      ..response = (query) async => fixtures.snapshot(q: query, empty: true);
+    final app = OfflineDiscovery(
+      source: source,
+      store: MemoryStore(),
+      backendContext: fixtures.query().backendContext,
+      now: () => fixtures.captured,
+    );
+    await app.discover(fixtures.query());
+
+    await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('No se encontraron lugares con estos filtros para esta ruta.'),
+      findsOneWidget,
+    );
+    expect(find.text('Online'), findsNothing);
+    expect(find.textContaining('Ruta:'), findsNothing);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets(
     'expiry removes visible cached detail without resurrecting stale POI',
     (tester) async {
@@ -114,7 +201,11 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(PoiPreviewSheet), findsNothing);
       expect(find.byType(PoiDetailSheet), findsNothing);
-      expect(find.textContaining('Copia offline'), findsWidgets);
+      expect(find.textContaining('Copia offline'), findsNothing);
+      expect(
+        find.byKey(const ValueKey('exploration-bottom-actions')),
+        findsOneWidget,
+      );
       await tester.tap(find.text('Ver lista'));
       await tester.pumpAndSettle();
       await tester.tap(

@@ -63,16 +63,17 @@ void main() {
 
     final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
     final mapRect = tester.getRect(find.byType(FlutterMap));
-    final statusRect = tester.getRect(
-      find.byKey(const ValueKey('exploration-status')),
-    );
     final actionsRect = tester.getRect(
       find.byKey(const ValueKey('exploration-floating-actions')),
     );
     expect(actionsRect.height, lessThanOrEqualTo(64));
     final safeAreaHeight = screen.height - 48;
-    final unoccludedMapHeight =
-        mapRect.height - statusRect.height - actionsRect.height;
+    expect(find.byKey(const ValueKey('exploration-status')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('exploration-bottom-panel')),
+      findsNothing,
+    );
+    final unoccludedMapHeight = mapRect.height - actionsRect.height;
     expect(unoccludedMapHeight / safeAreaHeight, greaterThanOrEqualTo(0.5));
     expect(find.text('GeoGuide AI'), findsNothing);
     expect(find.text('Exploración'), findsNothing);

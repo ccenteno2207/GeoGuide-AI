@@ -40,10 +40,20 @@ enum LocationAvailability {
 }
 
 class CurrentLocationResult {
-  const CurrentLocationResult._({required this.availability, this.position});
+  const CurrentLocationResult._({
+    required this.availability,
+    this.position,
+    this.accuracyMeters,
+  });
 
-  const CurrentLocationResult.available(LocationPoint position)
-    : this._(availability: LocationAvailability.available, position: position);
+  const CurrentLocationResult.available(
+    LocationPoint position, {
+    double? accuracyMeters,
+  }) : this._(
+         availability: LocationAvailability.available,
+         position: position,
+         accuracyMeters: accuracyMeters,
+       );
 
   const CurrentLocationResult.withAvailability(
     LocationAvailability availability,
@@ -51,6 +61,7 @@ class CurrentLocationResult {
 
   final LocationAvailability availability;
   final LocationPoint? position;
+  final double? accuracyMeters;
 }
 
 abstract class LocationRepository {
