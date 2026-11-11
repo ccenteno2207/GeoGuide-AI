@@ -91,6 +91,37 @@ void main() {
     expect(controller.status, contains('backend esté configurado'));
   });
 
+  test(
+    'search destination preserves existing origin and awaits explicit plan',
+    () {
+      final controller = RoutePlanningController(
+        planRoute: PlanRoute(FakeRoutePlanningRepository()),
+      );
+      const origin = RoutePoint(latitude: -12, longitude: -77);
+      const destination = RoutePoint(latitude: -11, longitude: -76);
+      controller.origin = origin;
+
+      controller.selectDestinationFromSearch(destination);
+
+      expect(controller.origin, origin);
+      expect(controller.destination, destination);
+      expect(controller.route, isNull);
+      expect(controller.canPlan, isTrue);
+    },
+  );
+
+  test('manual map tap after search destination fills missing origin', () {
+    final controller = RoutePlanningController();
+    const destination = RoutePoint(latitude: -11, longitude: -76);
+    const origin = RoutePoint(latitude: -12, longitude: -77);
+
+    controller.selectDestinationFromSearch(destination);
+    controller.selectPoint(origin);
+
+    expect(controller.origin, origin);
+    expect(controller.destination, destination);
+  });
+
   test('draw-ready route is supplied only by the planning use case', () async {
     final controller = RoutePlanningController(
       planRoute: PlanRoute(FakeRoutePlanningRepository()),

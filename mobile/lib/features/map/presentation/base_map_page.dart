@@ -31,6 +31,8 @@ import '../../route_planning/application/plan_route.dart';
 import '../../route_planning/domain/route_point.dart';
 import '../../route_planning/presentation/route_planning_controller.dart';
 import '../../../app/theme/geoguide_theme.dart';
+import '../../destination_search/application/search_destinations.dart';
+import '../../destination_search/presentation/destination_search_sheet.dart';
 
 // Keep the map edge-to-edge at the top while reserving lateral system insets.
 // The Scaffold footer independently reserves attribution and bottom navigation.
@@ -55,6 +57,7 @@ class BaseMapPage extends StatefulWidget {
     this.planRoute,
     this.discoverRoute,
     this.offlineDiscovery,
+    this.searchDestinations,
     this.locationClock,
   });
 
@@ -63,6 +66,7 @@ class BaseMapPage extends StatefulWidget {
   final PlanRoute? planRoute;
   final DiscoverRoute? discoverRoute;
   final OfflineDiscovery? offlineDiscovery;
+  final SearchDestinations? searchDestinations;
   final DateTime Function()? locationClock;
 
   @override
@@ -77,6 +81,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   String _locationStatus = 'Ubicación no solicitada';
   bool _isRequestingLocation = false;
   bool _ownershipPending = true;
+  bool _destinationSelectionAwaitingSnapshot = false;
   int _refreshRevision = 0, _normalRevision = 0;
   Timer? _freshnessTimer;
   Future<void> _normalCancellation = Future.value();
@@ -431,16 +436,26 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     if (!mounted) return;
     final offline = widget.offlineDiscovery!;
     final snapshot = offline.snapshot;
+    final selectedRouteMatchesSnapshot =
+        snapshot != null &&
+        _samePoint(snapshot.query.origin, _routePlanning.origin) &&
+        _samePoint(snapshot.query.destination, _routePlanning.destination);
+    if (_destinationSelectionAwaitingSnapshot && selectedRouteMatchesSnapshot) {
+      _destinationSelectionAwaitingSnapshot = false;
+    }
+    final useSnapshot = !_destinationSelectionAwaitingSnapshot;
     _poiSelection.bind(snapshot, _now().millisecondsSinceEpoch);
     _bindPoiFilter();
     setState(() {
-      _routeDiscovery.pois = snapshot?.pois ?? const [];
+      _routeDiscovery.pois = useSnapshot
+          ? snapshot?.pois ?? const []
+          : const [];
       _routeDiscovery.status = offline.message;
       _routeDiscovery.isDiscovering = offline.busy;
       _routeDiscovery.hasError =
           offline.availability != DiscoveryAvailability.online;
-      _routePlanning.route = snapshot?.route;
-      if (snapshot != null) {
+      _routePlanning.route = useSnapshot ? snapshot?.route : null;
+      if (snapshot != null && useSnapshot) {
         _routeDiscovery.origin = snapshot.query.origin;
         _routeDiscovery.destination = snapshot.query.destination;
         _routeDiscovery.appliedCategories = snapshot.query.categories.toSet();
@@ -454,6 +469,12 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       Navigator.of(context).pop();
     }
   }
+
+  bool _samePoint(RoutePoint? first, RoutePoint? second) =>
+      first != null &&
+      second != null &&
+      first.latitude == second.latitude &&
+      first.longitude == second.longitude;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
@@ -704,7 +725,42 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       _routePlanning.selectPoint(
         RoutePoint(latitude: point.latitude, longitude: point.longitude),
       );
+      if (widget.offlineDiscovery != null) {
+        _destinationSelectionAwaitingSnapshot = true;
+      }
     });
+  }
+
+  Future<void> _openDestinationSearch() async {
+    final search = widget.searchDestinations;
+    if (search == null ||
+        _drivingReduced ||
+        _ownershipPending ||
+        _b1Owned ||
+        _b1Busy) {
+      return;
+    }
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => DestinationSearchSheet(
+        searchDestinations: search,
+        onDestinationSelected: (point) {
+          if (!point.isValid || !mounted) return;
+          widget.offlineDiscovery?.invalidatePending();
+          setState(() {
+            _routePlanning.selectDestinationFromSearch(point);
+            _showDiscoveryList = false;
+            _routeDiscovery.pois = const [];
+            if (widget.offlineDiscovery != null) {
+              _destinationSelectionAwaitingSnapshot = true;
+            }
+          });
+          _mapController.move(LatLng(point.latitude, point.longitude), 13);
+          Navigator.of(sheetContext).pop();
+        },
+      ),
+    );
   }
 
   Future<void> _calculateRoute() async {
@@ -1012,11 +1068,21 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         !_b1Busy &&
         !_b1Owned &&
         _b1Status != RouteSessionStatus.interrupted &&
-        locationStatus == null) {
+        locationStatus == null &&
+        widget.searchDestinations == null) {
       return const SizedBox.shrink();
     }
 
     final actions = <Widget>[
+      if (widget.searchDestinations != null)
+        OutlinedButton.icon(
+          key: const ValueKey('open-destination-search'),
+          onPressed: _ownershipPending || _b1Owned || _b1Busy
+              ? null
+              : _openDestinationSearch,
+          icon: const Icon(Icons.search),
+          label: const Text('¿Qué conoceremos hoy?'),
+        ),
       if (hasEndpoints)
         FilledButton.icon(
           key: const ValueKey('calculate-route'),
@@ -1156,7 +1222,9 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Widget _buildExploration(BuildContext context) {
-    final snapshot = widget.offlineDiscovery?.snapshot;
+    final snapshot = _destinationSelectionAwaitingSnapshot
+        ? null
+        : widget.offlineDiscovery?.snapshot;
     final snapshotExpired =
         snapshot != null && !snapshot.eligible(_snapshotNow);
     final queryRevision = _poiQueryRevision;

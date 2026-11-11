@@ -19,6 +19,8 @@ import '../features/location/infrastructure/geolocator_location_repository.dart'
 import '../features/route_planning/infrastructure/dio_route_planning_repository.dart';
 import 'theme/geoguide_theme.dart';
 import '../features/route_planning/application/plan_route.dart';
+import '../features/destination_search/application/search_destinations.dart';
+import '../features/destination_search/infrastructure/dio_destination_search_repository.dart';
 
 class GeoGuideApp extends StatelessWidget {
   GeoGuideApp({
@@ -27,6 +29,7 @@ class GeoGuideApp extends StatelessWidget {
     RouteSessionClient? routeSession,
     PlanRoute? planRoute,
     DiscoverRoute? discoverRoute,
+    SearchDestinations? searchDestinations,
     String? backendBaseUrl,
     OfflineDiscovery? offlineDiscovery,
     this.locationClock,
@@ -36,6 +39,8 @@ class GeoGuideApp extends StatelessWidget {
        ),
        planRoute = planRoute ?? _createPlanRoute(backendBaseUrl),
        discoverRoute = discoverRoute ?? _createDiscoverRoute(backendBaseUrl),
+       searchDestinations =
+           searchDestinations ?? _createSearchDestinations(backendBaseUrl),
        offlineDiscovery =
            offlineDiscovery ??
            (discoverRoute == null ? _createOffline(backendBaseUrl) : null);
@@ -44,6 +49,7 @@ class GeoGuideApp extends StatelessWidget {
   final RouteSessionClient routeSession;
   final PlanRoute? planRoute;
   final DiscoverRoute? discoverRoute;
+  final SearchDestinations? searchDestinations;
   final OfflineDiscovery? offlineDiscovery;
   final DateTime Function()? locationClock;
   static OfflineDiscovery? _createOffline(String? value) {
@@ -90,6 +96,16 @@ class GeoGuideApp extends StatelessWidget {
     );
   }
 
+  static SearchDestinations? _createSearchDestinations(String? backendBaseUrl) {
+    final configuration = _backendConfiguration(backendBaseUrl);
+    if (configuration == null) return null;
+    return SearchDestinations(
+      DioDestinationSearchRepository(
+        GeoGuideHttpClient(configuration: configuration),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -102,6 +118,7 @@ class GeoGuideApp extends StatelessWidget {
         planRoute: planRoute,
         discoverRoute: discoverRoute,
         offlineDiscovery: offlineDiscovery,
+        searchDestinations: searchDestinations,
         locationClock: locationClock,
       ),
     );

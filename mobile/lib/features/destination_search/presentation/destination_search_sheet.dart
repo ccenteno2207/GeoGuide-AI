@@ -6,10 +6,7 @@ import '../domain/destination_search_result.dart';
 
 enum _SearchState { idle, loading, results, empty, error }
 
-/// Search surface prepared for an approved destination source.
-///
-/// This widget is intentionally not mounted in the production map until a real
-/// repository adapter is approved and available.
+/// Search surface backed by the configured first-party destination catalog.
 class DestinationSearchSheet extends StatefulWidget {
   const DestinationSearchSheet({
     super.key,
@@ -193,12 +190,15 @@ class _DestinationResultTile extends StatelessWidget {
       result.geographicContext,
       if (result.provenanceLabel.trim().isNotEmpty)
         'Fuente: ${result.provenanceLabel}',
+      if (result.attribution.trim().isNotEmpty)
+        'Atribución: ${result.attribution}',
+      if (result.license.trim().isNotEmpty) 'Licencia: ${result.license}',
     ].where((part) => part.trim().isNotEmpty).join(' · ');
 
     return ListTile(
       key: ValueKey('destination-result-${result.id}'),
       title: Text(result.name),
-      subtitle: Text(subtitle),
+      subtitle: Text(subtitle, maxLines: 3, overflow: TextOverflow.ellipsis),
       isThreeLine: subtitle.contains(' · '),
       trailing: FilledButton.tonal(
         onPressed: selectable ? () => onSelected(result.verifiedPoint!) : null,

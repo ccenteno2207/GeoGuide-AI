@@ -4,6 +4,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geoguide_ai/app/app.dart';
 import 'package:geoguide_ai/features/location/domain/location_repository.dart';
+import 'package:geoguide_ai/features/destination_search/application/search_destinations.dart';
+import 'package:geoguide_ai/features/destination_search/domain/destination_search_repository.dart';
+import 'package:geoguide_ai/features/destination_search/domain/destination_search_result.dart';
+import 'package:geoguide_ai/features/route_planning/domain/route_point.dart';
 import 'package:geoguide_ai/features/map/presentation/rutea_location_marker.dart';
 
 class FakeLocationRepository
@@ -24,6 +28,31 @@ class FakeLocationRepository
   Stream<LocationSample> watchLocation() {
     watchCalls++;
     return const Stream<LocationSample>.empty();
+  }
+}
+
+class FakeDestinationSearchRepository implements DestinationSearchRepository {
+  final queries = <String>[];
+
+  @override
+  Future<List<DestinationSearchResult>> searchByName(String query) async {
+    queries.add(query);
+    return const [
+      DestinationSearchResult(
+        id: 'catalog-fixture-canta',
+        name: 'Plaza de Armas de Canta',
+        typeLabel: 'Plaza',
+        geographicContext: 'Lima, Canta',
+        provenanceLabel: 'MINCETUR',
+        verifiedPoint: RoutePoint(
+          latitude: -11.4669625,
+          longitude: -76.6247746,
+        ),
+        sourceUrl: 'https://example.test/canta',
+        license: 'ODC-BY-1.0',
+        attribution: 'MINCETUR test fixture',
+      ),
+    ];
   }
 }
 
@@ -55,6 +84,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.byType(FlutterMap), findsOneWidget);
+    expect(find.byKey(const ValueKey('open-destination-search')), findsNothing);
     expect(find.textContaining('OpenStreetMap contributors'), findsOneWidget);
     expect(find.byKey(const ValueKey('exploration-status')), findsNothing);
     expect(
@@ -68,6 +98,43 @@ void main() {
     );
     expect(location.calls, 0);
     expect(location.watchCalls, 0);
+  });
+
+  testWidgets('shows real search UI only when a search service is configured', (
+    tester,
+  ) async {
+    final repository = FakeDestinationSearchRepository();
+    final location = FakeLocationRepository(
+      const CurrentLocationResult.withAvailability(
+        LocationAvailability.unavailable,
+      ),
+    );
+    await tester.pumpWidget(
+      GeoGuideApp(
+        locationRepository: location,
+        searchDestinations: SearchDestinations(repository),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('open-destination-search')),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('open-destination-search')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('destination-search-query')),
+      'Canta',
+    );
+    expect(repository.queries, isEmpty);
+    await tester.tap(find.byKey(const ValueKey('destination-search-submit')));
+    await tester.pumpAndSettle();
+
+    expect(repository.queries, ['Canta']);
+    expect(find.text('Plaza de Armas de Canta'), findsOneWidget);
+    expect(location.calls, 0);
+    await tester.pumpWidget(const SizedBox());
   });
 
   testWidgets('represents denied location permission', (tester) async {

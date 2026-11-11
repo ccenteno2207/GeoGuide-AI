@@ -12,6 +12,9 @@ class DestinationSearchResult {
     required this.geographicContext,
     required this.provenanceLabel,
     required this.verifiedPoint,
+    this.sourceUrl = '',
+    this.license = '',
+    this.attribution = '',
   });
 
   final String id;
@@ -20,6 +23,9 @@ class DestinationSearchResult {
   final String geographicContext;
   final String provenanceLabel;
   final RoutePoint? verifiedPoint;
+  final String sourceUrl;
+  final String license;
+  final String attribution;
 
   bool get isRouteable =>
       id.trim().isNotEmpty &&

@@ -8,6 +8,9 @@ import ai.geoguide.poi.domain.GeoPoint;
 import ai.geoguide.poi.domain.PoiId;
 import ai.geoguide.poi.domain.PointOfInterest;
 import ai.geoguide.poi.domain.SourceReference;
+import ai.geoguide.destination.application.port.DestinationRepository;
+import ai.geoguide.destination.domain.Destination;
+import ai.geoguide.destination.infrastructure.dataset.DestinationCatalogLoader;
 import ai.geoguide.poi.infrastructure.dataset.P3DatasetLoader;
 import ai.geoguide.discovery.domain.DiscoveryCriteria;
 import ai.geoguide.discovery.infrastructure.persistence.JdbcRoutePoiCandidateQuery;
@@ -28,6 +31,11 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.test.web.servlet.MockMvc;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -35,6 +43,7 @@ import org.testcontainers.utility.DockerImageName;
 
 @Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest
+@AutoConfigureMockMvc
 @Import({JdbcPoiRepository.class, JdbcCategoryRepository.class, JdbcRoutePoiCandidateQuery.class})
 class PostgisIntegrationTests {
 
@@ -57,6 +66,9 @@ class PostgisIntegrationTests {
     JdbcTemplate jdbcTemplate;
 
     @Autowired
+    DestinationRepository destinationRepository;
+
+    @Autowired
     JdbcRoutePoiCandidateQuery discoveryQuery;
 
     @Autowired
@@ -65,9 +77,13 @@ class PostgisIntegrationTests {
     @Autowired
     ObjectMapper objectMapper;
 
+    @Autowired
+    MockMvc mockMvc;
+
     @BeforeEach
     void cleanP3Data() {
         jdbcTemplate.execute("TRUNCATE geo.poi_provenance, geo.point_of_interest, geo.category CASCADE");
+        jdbcTemplate.execute("TRUNCATE geo.destination_alias, geo.destination CASCADE");
     }
 
     @Test
@@ -76,7 +92,7 @@ class PostgisIntegrationTests {
 
         assertThat(jdbcTemplate.queryForObject("SELECT PostGIS_Version()", String.class)).isNotBlank();
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM flyway_schema_history", Integer.class))
-                .isEqualTo(4);
+                .isEqualTo(5);
         assertThat(jdbcTemplate.queryForObject("""
                 SELECT COUNT(*) FROM information_schema.tables
                 WHERE table_schema = 'geo'
@@ -94,6 +110,38 @@ class PostgisIntegrationTests {
                 SELECT data_type FROM information_schema.columns
                 WHERE table_schema = 'geo' AND table_name = 'point_of_interest' AND column_name = 'created_at'
                 """, String.class)).isEqualTo("timestamp with time zone");
+    }
+
+    @Test
+    void destinationCatalogSearchMatchesAccentInsensitiveNamesAndAliases() {
+        UUID id = UUID.randomUUID();
+        Destination destination = new Destination(id, "Líneas Y Geoglifos De Nasca Y Palpa", null,
+                "ARCHAEOLOGICAL_SITE", "Ica, Nazca, NASCA", -14.73900594, -75.13001561,
+                "MINCETUR", "254", "https://example.test/254", "ODC-BY-1.0", "Fuente MINCETUR",
+                List.of(new Destination.Alias(UUID.randomUUID(), "Líneas de Nazca", null, "Ficha 254")));
+        destinationRepository.saveCatalogEntry(destination, "test-v1", java.time.LocalDate.of(2026, 11, 10));
+
+        assertThat(destinationRepository.search("lineas de nazca", 10))
+                .extracting(Destination::canonicalName)
+                .containsExactly("Líneas Y Geoglifos De Nasca Y Palpa");
+        assertThat(destinationRepository.search("nazca", 1)).hasSize(1);
+    }
+
+    @Test
+    void optInCatalogLoadsIdempotentlyAndSearchEndpointReturnsVerifiedCoordinate() throws Exception {
+        var loader = new DestinationCatalogLoader(objectMapper, destinationRepository,
+                new ClassPathResource("data/destination-search/mincetur-pilot-v1.json"));
+        assertThat(loader.load()).isEqualTo(9);
+        assertThat(loader.load()).isEqualTo(9);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.destination", Integer.class)).isEqualTo(9);
+
+        mockMvc.perform(post("/api/v1/destinations/search")
+                        .contentType("application/json")
+                        .content("{\"query\":\"canta\",\"limit\":20}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.results[0].name").value("Plaza De Armas De Canta"))
+                .andExpect(jsonPath("$.results[0].latitude").value(-11.4669625))
+                .andExpect(jsonPath("$.results[0].source").value("MINCETUR - Inventario Nacional de Recursos Turísticos"));
     }
 
     @Test

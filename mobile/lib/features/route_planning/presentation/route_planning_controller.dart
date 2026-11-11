@@ -13,6 +13,7 @@ class RoutePlanningController {
   PlannedRoute? route;
   bool isCalculating = false;
   bool hasError = false;
+  bool _preserveSearchDestinationForNextMapTap = false;
   String status = 'Selecciona el origen en el mapa';
 
   bool get canPlan =>
@@ -24,6 +25,14 @@ class RoutePlanningController {
   void selectPoint(RoutePoint point) {
     hasError = false;
     route = null;
+    if (_preserveSearchDestinationForNextMapTap && origin == null) {
+      origin = point;
+      _preserveSearchDestinationForNextMapTap = false;
+      status = planRoute == null
+          ? 'Origen y destino listos; configura el servicio para solicitar la ruta'
+          : 'Origen y destino seleccionados';
+      return;
+    }
     if (origin == null || destination != null) {
       origin = point;
       destination = null;
@@ -35,6 +44,16 @@ class RoutePlanningController {
     status = planRoute == null
         ? 'Ruta lista para solicitar cuando el backend esté configurado'
         : 'Origen y destino seleccionados';
+  }
+
+  void selectDestinationFromSearch(RoutePoint point) {
+    hasError = false;
+    route = null;
+    destination = point;
+    _preserveSearchDestinationForNextMapTap = origin == null;
+    status = origin == null
+        ? 'Destino seleccionado; elige el origen en el mapa'
+        : 'Destino seleccionado; puedes calcular la ruta';
   }
 
   Future<void> calculate() async {

@@ -1,12 +1,70 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:geoguide_ai/core/network/backend_configuration.dart';
+import 'package:geoguide_ai/core/network/geoguide_http_client.dart';
 import 'package:geoguide_ai/features/destination_search/application/search_destinations.dart';
 import 'package:geoguide_ai/features/destination_search/domain/destination_search_repository.dart';
 import 'package:geoguide_ai/features/destination_search/domain/destination_search_result.dart';
+import 'package:geoguide_ai/features/destination_search/infrastructure/dio_destination_search_repository.dart';
 import 'package:geoguide_ai/features/destination_search/presentation/destination_search_sheet.dart';
 import 'package:geoguide_ai/features/route_planning/domain/route_point.dart';
 
 void main() {
+  test(
+    'Dio repository maps source attribution and verified coordinates',
+    () async {
+      RequestOptions? capturedRequest;
+      final dio = Dio();
+      dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            capturedRequest = options;
+            handler.resolve(
+              Response<Map<String, Object?>>(
+                requestOptions: options,
+                statusCode: 200,
+                data: {
+                  'results': [
+                    {
+                      'id': 'catalog-id',
+                      'name': 'Plaza de Armas de Canta',
+                      'type': 'LANDMARK',
+                      'administrativeContext': 'Lima, Canta',
+                      'latitude': -11.4669625,
+                      'longitude': -76.6247746,
+                      'source': 'MINCETUR',
+                      'sourceUrl': 'https://example.test/ficha',
+                      'license': 'ODC-BY-1.0',
+                      'attribution': 'Inventario MINCETUR',
+                    },
+                  ],
+                },
+              ),
+            );
+          },
+        ),
+      );
+      final repository = DioDestinationSearchRepository(
+        GeoGuideHttpClient(
+          configuration: BackendConfiguration(
+            Uri.parse('https://api.example.test'),
+          ),
+          dio: dio,
+        ),
+      );
+
+      final results = await repository.searchByName('Canta');
+
+      expect(capturedRequest?.path, '/api/v1/destinations/search');
+      expect(capturedRequest?.data, {'query': 'Canta', 'limit': 10});
+      expect(results.single.verifiedPoint?.latitude, -11.4669625);
+      expect(results.single.sourceUrl, 'https://example.test/ficha');
+      expect(results.single.license, 'ODC-BY-1.0');
+      expect(results.single.attribution, 'Inventario MINCETUR');
+    },
+  );
+
   testWidgets('does not search while typing and trims submitted query', (
     tester,
   ) async {
