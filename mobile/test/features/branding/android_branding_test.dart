@@ -37,6 +37,34 @@ void main() {
     },
   );
 
+  test('adaptive launcher follows the approved gradient icon artwork', () {
+    final adaptiveV26 = File(
+      'android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml',
+    ).readAsStringSync();
+    final adaptiveV33 = File(
+      'android/app/src/main/res/mipmap-anydpi-v33/ic_launcher.xml',
+    ).readAsStringSync();
+    final background = File(
+      'android/app/src/main/res/drawable/ic_launcher_background.xml',
+    ).readAsStringSync();
+    final foreground = File(
+      'android/app/src/main/res/drawable/ic_launcher_foreground.xml',
+    ).readAsStringSync();
+    final master = File('assets/branding/rutea_launcher.svg')
+        .readAsStringSync();
+
+    expect(adaptiveV26, contains('@drawable/ic_launcher_background'));
+    expect(adaptiveV33, contains('@drawable/ic_launcher_background'));
+    expect(background, contains('android:type="linear"'));
+    expect(foreground, contains('android:scaleX="0.68"'));
+    expect(foreground, contains('android:scaleY="0.68"'));
+    expect(master, contains('<linearGradient'));
+    expect(master, contains('stroke-width="18"'));
+    expect(master, contains('stroke-width="32"'));
+    expect(master, contains('cx="376" cy="122"'));
+    expect(master, isNot(contains('<text')));
+  });
+
   test('legacy launcher PNGs match Android density dimensions', () {
     const densities = <String, int>{
       'mdpi': 48,

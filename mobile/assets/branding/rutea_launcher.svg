@@ -1,6 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Rutea">
-  <rect width="512" height="512" rx="112" fill="#5B20C5"/>
-  <path d="M82 347 178 218l41 52 50-62 111 126c7 8 3 19-8 22l-126 25c-49 10-70 35-65 84" fill="none" stroke="#fff" stroke-width="22" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M370 82c-39 0-70 31-70 70 0 45 70 113 70 113s70-68 70-113c0-39-31-70-70-70Z" fill="#fff"/>
-  <circle cx="370" cy="151" r="23" fill="#5B20C5"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Rutea">
+  <defs>
+    <linearGradient id="rutea-violet" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="512" y2="512">
+      <stop offset="0" stop-color="#7C2CE0" />
+      <stop offset="0.48" stop-color="#5A18B5" />
+      <stop offset="1" stop-color="#351069" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="96" fill="url(#rutea-violet)" />
+  <path d="M70 366 218 185 259 224 292 198 330 239" fill="none" stroke="#FFFFFF" stroke-width="18" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M80 520 C115 463 173 440 239 418 C315 391 386 374 438 345 C459 333 463 318 455 299 C445 275 424 261 403 260 C380 258 357 267 336 252" fill="none" stroke="#FFFFFF" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M376 64 C344 64 318 90 318 122 C318 167 376 238 376 238 C376 238 434 167 434 122 C434 90 408 64 376 64 Z" fill="#FFFFFF" />
+  <circle cx="376" cy="122" r="22" fill="url(#rutea-violet)" />
 </svg>
