@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter_test/flutter_test.dart';
 
@@ -68,6 +69,31 @@ void main() {
     expect(dimensions.getUint32(16), 432);
     expect(dimensions.getUint32(20), 432);
   });
+
+  test(
+    'adaptive launcher artwork has a transparent edge safety margin',
+    () async {
+      final bytes = File(
+        'android/app/src/main/res/drawable-xxxhdpi/ic_launcher_foreground.png',
+      ).readAsBytesSync();
+      final codec = await ui.instantiateImageCodec(bytes);
+      final frame = await codec.getNextFrame();
+      final pixels = (await frame.image.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      ))!;
+
+      expect(frame.image.width, 432);
+      expect(frame.image.height, 432);
+      for (var y = 0; y < 432; y++) {
+        for (var x = 0; x < 432; x++) {
+          if (x >= 48 && x < 384 && y >= 48 && y < 384) continue;
+          expect(pixels.getUint8((y * 432 + x) * 4 + 3), 0);
+        }
+      }
+      frame.image.dispose();
+      codec.dispose();
+    },
+  );
 
   test('legacy launcher PNGs match Android density dimensions', () {
     const densities = <String, int>{

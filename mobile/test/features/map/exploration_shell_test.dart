@@ -82,6 +82,40 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('manual endpoints explain when route service is not configured', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      GeoGuideApp(
+        locationRepository: _LocationRepository(),
+        backendBaseUrl: '',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final mapRect = tester.getRect(find.byType(FlutterMap));
+    final center = mapRect.center;
+    await tester.tapAt(center + const Offset(-20, -20));
+    await tester.pumpAndSettle();
+    await tester.tapAt(center + const Offset(20, 20));
+    await tester.pumpAndSettle();
+
+    final calculateButton = tester.widget<FilledButton>(
+      find.byKey(const ValueKey('calculate-route')),
+    );
+    expect(calculateButton.onPressed, isNull);
+    expect(
+      find.text('El servicio de rutas no está configurado en esta versión.'),
+      findsOneWidget,
+    );
+    await tester.pumpWidget(const SizedBox());
+  });
+
   for (final size in const [
     Size(360, 640),
     Size(360, 800),

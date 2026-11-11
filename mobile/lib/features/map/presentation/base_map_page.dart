@@ -1001,6 +1001,8 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         ? 'No se encontraron lugares con estos filtros para esta ruta.'
         : _b1Busy || _b1Owned || _b1Status == RouteSessionStatus.interrupted
         ? _b1StatusText
+        : hasEndpoints && route == null && _routePlanning.planRoute == null
+        ? 'El servicio de rutas no está configurado en esta versión.'
         : null;
 
     if (!hasEndpoints &&

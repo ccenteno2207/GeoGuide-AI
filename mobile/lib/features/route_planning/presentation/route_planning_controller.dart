@@ -16,8 +16,8 @@ class RoutePlanningController {
   String status = 'Selecciona el origen en el mapa';
 
   bool get canPlan =>
-      origin != null &&
-      destination != null &&
+      origin?.isValid == true &&
+      destination?.isValid == true &&
       !isCalculating &&
       planRoute != null;
 
@@ -41,7 +41,13 @@ class RoutePlanningController {
     final origin = this.origin;
     final destination = this.destination;
     final routePlanner = planRoute;
-    if (origin == null || destination == null || routePlanner == null) return;
+    if (origin == null ||
+        destination == null ||
+        !origin.isValid ||
+        !destination.isValid ||
+        routePlanner == null) {
+      return;
+    }
 
     isCalculating = true;
     hasError = false;
