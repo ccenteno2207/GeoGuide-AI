@@ -128,26 +128,25 @@ void main() {
           expect(attribution.left, greaterThanOrEqualTo(side));
           expect(attribution.right, lessThanOrEqualTo(size.width - side));
           expect(find.bySemanticsLabel(_attribution), findsOneWidget);
-          final panel = tester.getRect(
-            find.byKey(const ValueKey('exploration-status-scroll')),
+          final actions = tester.getRect(
+            find.byKey(const ValueKey('exploration-bottom-actions')),
           );
           expect(
-            panel.bottom,
+            actions.bottom,
             lessThanOrEqualTo(attribution.top),
-            reason: 'Panel viewport and attribution must not overlap',
+            reason: 'Floating actions and attribution must not overlap',
           );
-          expect(panel.left, greaterThanOrEqualTo(side));
-          expect(panel.right, lessThanOrEqualTo(size.width - side));
-          if (size == const Size(360, 800) && scale == 1) {
-            final card = tester.getRect(
-              find.byKey(const ValueKey('exploration-status')),
-            );
-            expect(
-              card.intersect(panel).height,
-              closeTo(card.height, .01),
-              reason: 'Normal route card must remain fully visible after reserving insets',
-            );
-          }
+          expect(actions.left, greaterThanOrEqualTo(side));
+          expect(actions.right, lessThanOrEqualTo(size.width - side));
+          expect(
+            find.byKey(const ValueKey('exploration-bottom-panel')),
+            findsNothing,
+            reason: 'Healthy route exploration has no persistent panel',
+          );
+          expect(
+            find.byKey(const ValueKey('exploration-status')),
+            findsNothing,
+          );
           expect(find.byType(PolylineLayer), findsOneWidget);
           expect(find.byTooltip('Vista previa de Museo Ámbar'), findsOneWidget);
           expect(

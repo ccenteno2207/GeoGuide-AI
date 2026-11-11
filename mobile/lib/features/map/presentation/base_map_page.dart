@@ -18,6 +18,7 @@ import '../../discovery/presentation/offline_cache_sheet.dart';
 import '../../location/application/request_current_location.dart';
 import '../../location/application/gps_camera_policy.dart';
 import '../../location/domain/location_repository.dart';
+import 'rutea_location_marker.dart';
 import '../../discovery/application/discover_route.dart';
 import '../../discovery/domain/discovery_poi.dart';
 import '../../discovery/presentation/poi_preview_sheet.dart';
@@ -72,6 +73,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   final MapController _mapController = MapController();
   final GPSCameraPolicy _cameraPolicy = GPSCameraPolicy();
   LocationPoint? _currentLocation;
+  double? _currentAccuracyMeters;
   String _locationStatus = 'Ubicación no solicitada';
   bool _isRequestingLocation = false;
   bool _ownershipPending = true;
@@ -506,6 +508,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     setState(() {
       _isRequestingLocation = false;
       _currentLocation = result.position;
+      _currentAccuracyMeters = _validAccuracy(result.accuracyMeters);
       _locationStatus = switch (result.availability) {
         LocationAvailability.available => 'Ubicación actual visible',
         LocationAvailability.serviceDisabled =>
@@ -520,6 +523,10 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     final position = result.position;
     if (position != null) {
       _mapController.move(LatLng(position.latitude, position.longitude), 15);
+    } else {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(_locationStatus)));
     }
   }
 
@@ -543,11 +550,17 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     setState(() {
       _isRequestingLocation = false;
       _currentLocation = result.position;
+      _currentAccuracyMeters = _validAccuracy(result.accuracyMeters);
       _locationStatus = result.availability == LocationAvailability.available
           ? 'Seguimiento de ubicación activo'
           : 'Seguimiento no disponible';
     });
-    if (result.position == null) return;
+    if (result.position == null) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(_locationStatus)));
+      return;
+    }
     _followLocation = true;
     _followCamera = true;
     _lastLocationTimestamp = null;
@@ -612,6 +625,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     _armFreshness(sample.timestamp);
     setState(() {
       _currentLocation = sample.position;
+      _currentAccuracyMeters = _validAccuracy(sample.accuracyMeters);
       _locationStatus = sample.accuracyMeters > _cameraPolicy.config.maxAccuracy
           ? 'Precisión de ubicación reducida'
           : 'Seguimiento de ubicación activo';
@@ -632,6 +646,9 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       }
     }
   }
+
+  double? _validAccuracy(double? accuracy) =>
+      accuracy != null && accuracy.isFinite && accuracy >= 0 ? accuracy : null;
 
   Future<void> _stopFollowLocation() async {
     await _detachNormal();
@@ -928,6 +945,216 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     ),
   );
 
+  Widget _buildExplorationBottomPanel(
+    BuildContext context, {
+    required RouteSnapshot? snapshot,
+    required bool snapshotExpired,
+  }) {
+    final offline = widget.offlineDiscovery;
+    final route = snapshotExpired
+        ? null
+        : snapshot?.route ?? _routePlanning.route;
+    final hasEndpoints =
+        _routePlanning.origin != null && _routePlanning.destination != null;
+    final isLoading = offline?.busy == true || _routeDiscovery.isDiscovering;
+    final discoveryError = offline != null
+        ? offline.requested != null &&
+              (offline.availability == DiscoveryAvailability.error ||
+                  (offline.availability == DiscoveryAvailability.unavailable &&
+                      offline.snapshot == null))
+        : _routeDiscovery.hasError;
+    final cacheError = offline?.cacheMessage != null;
+    final locationStatusIsOperational =
+        _followLocation ||
+        _b1Owned ||
+        _b1Busy ||
+        _b1Status == RouteSessionStatus.interrupted ||
+        _b1Status == RouteSessionStatus.stopped ||
+        _locationStatus ==
+            'No se pudo iniciar el recorrido: revisa ubicación y notificaciones' ||
+        _locationStatus == 'Esperando una muestra de ubicación válida' ||
+        _locationStatus ==
+            'Estado GPS sin confirmar; vuelve a la app para comprobarlo';
+    final locationStatus = locationStatusIsOperational ? _locationStatus : null;
+    final hasError =
+        snapshotExpired ||
+        discoveryError ||
+        _routePlanning.hasError ||
+        cacheError;
+    final hasValidEmpty =
+        route != null &&
+        !isLoading &&
+        !hasError &&
+        ((snapshot != null && !snapshotExpired && snapshot.pois.isEmpty) ||
+            (offline == null && _routeDiscovery.pois.isEmpty));
+    final statusMessage = snapshotExpired
+        ? _unavailableResults
+        : _routePlanning.hasError
+        ? _routePlanning.status
+        : discoveryError
+        ? offline?.message ?? _routeDiscovery.status
+        : cacheError
+        ? offline?.cacheMessage
+        : isLoading
+        ? 'Buscando lugares en la ruta'
+        : hasValidEmpty
+        ? 'No se encontraron lugares con estos filtros para esta ruta.'
+        : _b1Busy || _b1Owned || _b1Status == RouteSessionStatus.interrupted
+        ? _b1StatusText
+        : hasEndpoints && route == null && _routePlanning.planRoute == null
+        ? 'El servicio de rutas no está configurado en esta versión.'
+        : null;
+
+    if (!hasEndpoints &&
+        route == null &&
+        !isLoading &&
+        !hasError &&
+        !_b1Busy &&
+        !_b1Owned &&
+        _b1Status != RouteSessionStatus.interrupted &&
+        locationStatus == null) {
+      return const SizedBox.shrink();
+    }
+
+    final actions = <Widget>[
+      if (hasEndpoints)
+        FilledButton.icon(
+          key: const ValueKey('calculate-route'),
+          onPressed: _routePlanning.canPlan && !isLoading
+              ? _calculateRoute
+              : null,
+          icon: _routePlanning.isCalculating || isLoading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.alt_route),
+          label: const Text('Calcular ruta'),
+        ),
+      if (route != null)
+        Tooltip(
+          message: 'Categorías: ${_filterSummary()}',
+          child: FilledButton.tonalIcon(
+            key: const ValueKey('route-category-filter'),
+            onPressed: isLoading || _b1Owned || _b1Busy || _ownershipPending
+                ? null
+                : _openFilters,
+            icon: const Icon(Icons.filter_alt),
+            label: const Text('Categorías'),
+          ),
+        ),
+      if (_routeDiscovery.pois.isNotEmpty && !snapshotExpired)
+        Semantics(
+          localeForSubtree: const Locale('es', 'PE'),
+          child: OutlinedButton.icon(
+            key: const ValueKey('toggle-discovery-list'),
+            onPressed: () =>
+                setState(() => _showDiscoveryList = !_showDiscoveryList),
+            icon: Icon(_showDiscoveryList ? Icons.map : Icons.list),
+            label: Text(_showDiscoveryList ? 'Ver mapa' : 'Ver lista'),
+          ),
+        ),
+      if (snapshot != null && !isLoading)
+        Tooltip(
+          message: 'Entrar en modo conducción',
+          child: OutlinedButton.icon(
+            onPressed: _enterDriving,
+            icon: const Icon(Icons.directions_car),
+            label: const Text('Conducción'),
+          ),
+        ),
+    ];
+    final showRetry =
+        (snapshotExpired || discoveryError) && !_routePlanning.hasError;
+    final showContext =
+        statusMessage != null ||
+        locationStatus != null ||
+        showRetry ||
+        isLoading;
+    if (!showContext && actions.isEmpty) return const SizedBox.shrink();
+
+    return Positioned(
+      left: 12,
+      right: 12,
+      bottom: 8,
+      child: Align(
+        alignment: Alignment.bottomCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 620),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (showContext)
+                Card(
+                  key: const ValueKey('exploration-bottom-panel'),
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    child: Semantics(
+                      liveRegion: hasError || isLoading,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isLoading)
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 6),
+                              child: SizedBox.square(
+                                dimension: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              ),
+                            ),
+                          if (statusMessage != null) Text(statusMessage),
+                          if (locationStatus != null &&
+                              locationStatus != statusMessage)
+                            Text(locationStatus),
+                          if (showRetry)
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton.icon(
+                                onPressed: _retryDiscovery,
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Reintentar'),
+                              ),
+                            ),
+                          if (_routePlanning.hasError && hasEndpoints)
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: TextButton.icon(
+                                onPressed: _calculateRoute,
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Reintentar ruta'),
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              if (actions.isNotEmpty)
+                Padding(
+                  padding: EdgeInsets.only(top: showContext ? 8 : 0),
+                  child: Wrap(
+                    key: const ValueKey('exploration-bottom-actions'),
+                    alignment: WrapAlignment.center,
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: actions,
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildExploration(BuildContext context) {
     final snapshot = widget.offlineDiscovery?.snapshot;
     final snapshotExpired =
@@ -1075,7 +1302,23 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                             userAgentPackageName: 'com.geoguideai.geoguide_ai',
                             maxNativeZoom: 19,
                           ),
-                          if (_currentLocation case final location?)
+                          if (_currentLocation case final location?) ...[
+                            if (_currentAccuracyMeters case final accuracy?)
+                              CircleLayer(
+                                circles: [
+                                  CircleMarker(
+                                    point: LatLng(
+                                      location.latitude,
+                                      location.longitude,
+                                    ),
+                                    radius: accuracy,
+                                    useRadiusInMeter: true,
+                                    color: const Color(0x26713BD8),
+                                    borderColor: const Color(0x66713BD8),
+                                    borderStrokeWidth: 1,
+                                  ),
+                                ],
+                              ),
                             MarkerLayer(
                               markers: [
                                 Marker(
@@ -1083,16 +1326,14 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                     location.latitude,
                                     location.longitude,
                                   ),
-                                  width: 48,
-                                  height: 48,
-                                  child: const Icon(
-                                    Icons.my_location,
-                                    color: Colors.blue,
-                                    size: 36,
-                                  ),
+                                  width: 36,
+                                  height: 42,
+                                  alignment: Alignment.bottomCenter,
+                                  child: const RuteaLocationMarker(),
                                 ),
                               ],
                             ),
+                          ],
                           if (_routePlanning.origin case final origin?)
                             MarkerLayer(
                               markers: [
@@ -1215,254 +1456,10 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                   ),
                 ),
               if (!listOpen)
-                Positioned(
-                  left: 16,
-                  right: 16,
-                  bottom: 32,
-                  top: 72,
-                  child: LayoutBuilder(
-                    builder: (context, constraints) => Align(
-                      alignment: Alignment.bottomCenter,
-                      child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                          maxHeight:
-                              constraints.maxHeight * (landscape ? 0.5 : 0.36),
-                        ),
-                        child: SingleChildScrollView(
-                          key: const ValueKey('exploration-status-scroll'),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Card(
-                                key: const ValueKey('exploration-status'),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 6,
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Wrap(
-                                        alignment: WrapAlignment.center,
-                                        crossAxisAlignment:
-                                            WrapCrossAlignment.center,
-                                        spacing: 6,
-                                        runSpacing: 4,
-                                        children: [
-                                          if (_routePlanning.origin != null &&
-                                              _routePlanning.destination !=
-                                                  null)
-                                            FilledButton.icon(
-                                              key: const ValueKey(
-                                                'calculate-route',
-                                              ),
-                                              onPressed:
-                                                  _routePlanning.canPlan &&
-                                                      !_routeDiscovery
-                                                          .isDiscovering
-                                                  ? _calculateRoute
-                                                  : null,
-                                              icon: _routePlanning.isCalculating
-                                                  ? const SizedBox(
-                                                      width: 18,
-                                                      height: 18,
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                            strokeWidth: 2,
-                                                          ),
-                                                    )
-                                                  : const Icon(Icons.alt_route),
-                                              label: const Text(
-                                                'Calcular ruta',
-                                              ),
-                                            ),
-                                          if (_routePlanning.route != null)
-                                            Tooltip(
-                                              message:
-                                                  'Categorías: ${_filterSummary()}',
-                                              child: FilledButton.tonalIcon(
-                                                key: const ValueKey(
-                                                  'route-category-filter',
-                                                ),
-                                                onPressed:
-                                                    _routeDiscovery
-                                                            .isDiscovering ||
-                                                        _b1Owned ||
-                                                        _b1Busy ||
-                                                        _ownershipPending
-                                                    ? null
-                                                    : _openFilters,
-                                                icon: const Icon(
-                                                  Icons.filter_alt,
-                                                ),
-                                                label: const Text('Categorías'),
-                                              ),
-                                            ),
-                                          if (_routeDiscovery.pois.isNotEmpty)
-                                            Semantics(
-                                              localeForSubtree: const Locale(
-                                                'es',
-                                                'PE',
-                                              ),
-                                              child: OutlinedButton.icon(
-                                                key: const ValueKey(
-                                                  'toggle-discovery-list',
-                                                ),
-                                                onPressed: () => setState(
-                                                  () => _showDiscoveryList =
-                                                      !_showDiscoveryList,
-                                                ),
-                                                icon: Icon(
-                                                  _showDiscoveryList
-                                                      ? Icons.map
-                                                      : Icons.list,
-                                                ),
-                                                label: Text(
-                                                  _showDiscoveryList
-                                                      ? 'Ver mapa'
-                                                      : 'Ver lista',
-                                                ),
-                                              ),
-                                            ),
-                                          if (widget
-                                                      .offlineDiscovery
-                                                      ?.snapshot !=
-                                                  null &&
-                                              !_routeDiscovery.isDiscovering)
-                                            Tooltip(
-                                              message:
-                                                  'Entrar en modo conducción',
-                                              child: OutlinedButton.icon(
-                                                onPressed: _enterDriving,
-                                                icon: const Icon(
-                                                  Icons.directions_car,
-                                                ),
-                                                label: const Text('Conducción'),
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                      if ((snapshot == null &&
-                                              _routePlanning.route == null) ||
-                                          snapshotExpired ||
-                                          (_routeDiscovery.hasError &&
-                                              widget
-                                                      .offlineDiscovery
-                                                      ?.availability !=
-                                                  DiscoveryAvailability.cached))
-                                        Text(
-                                          snapshotExpired
-                                              ? _unavailableResults
-                                              : _routeDiscovery.status ??
-                                                    _routePlanning.status,
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      if (_b1Status != null)
-                                        Text(
-                                          _b1StatusText,
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      if (_b1Owned || _b1Busy)
-                                        const Text(
-                                          'Ubicación controlada por el recorrido GPS; controles normales no disponibles',
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      if ((_b1Status == null ||
-                                              _locationStatus !=
-                                                  _b1StatusText) &&
-                                          (_currentLocation != null ||
-                                              (snapshot == null &&
-                                                  _routePlanning.route ==
-                                                      null)))
-                                        Text(
-                                          _locationStatus,
-                                          textAlign: TextAlign.center,
-                                        ),
-                                      if (widget.offlineDiscovery
-                                          case final offline?) ...[
-                                        if (offline.snapshot
-                                            case final snapshot?)
-                                          Text(
-                                            'Ruta: ${(snapshot.route.distanceMeters / 1000).toStringAsFixed(1)} km · ${(snapshot.route.durationSeconds / 60).round()} min · ${snapshot.pois.length} lugares',
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        Semantics(
-                                          liveRegion: true,
-                                          child: Text(
-                                            snapshotExpired
-                                                ? 'No disponible'
-                                                : switch (offline
-                                                      .availability) {
-                                                    DiscoveryAvailability
-                                                        .online =>
-                                                      'Online',
-                                                    DiscoveryAvailability
-                                                        .cached =>
-                                                      'Copia offline · vigencia máxima 24 horas',
-                                                    DiscoveryAvailability
-                                                        .unavailable =>
-                                                      'No disponible',
-                                                    DiscoveryAvailability
-                                                        .error =>
-                                                      'Error de actualización',
-                                                  },
-                                          ),
-                                        ),
-                                        if (offline.cacheMessage
-                                            case final message?)
-                                          if (snapshot == null ||
-                                              snapshotExpired ||
-                                              offline.availability ==
-                                                  DiscoveryAvailability.error)
-                                            Text(
-                                              message,
-                                              textAlign: TextAlign.center,
-                                            ),
-                                      ],
-                                      if (_routeDiscovery.isDiscovering)
-                                        Semantics(
-                                          liveRegion: true,
-                                          label: 'Cargando lugares de la ruta',
-                                          child: Padding(
-                                            padding: EdgeInsets.only(top: 8),
-                                            child: CircularProgressIndicator(),
-                                          ),
-                                        ),
-                                      if (_routeDiscovery.hasError ||
-                                          snapshotExpired)
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            top: 8,
-                                          ),
-                                          child: OutlinedButton.icon(
-                                            onPressed:
-                                                _routeDiscovery.isDiscovering
-                                                ? null
-                                                : _retryDiscovery,
-                                            icon: const Icon(Icons.refresh),
-                                            label: const Text('Reintentar'),
-                                          ),
-                                        ),
-                                      if (_routeDiscovery.pois.isEmpty &&
-                                          _routeDiscovery
-                                                  .appliedCategories
-                                                  .length !=
-                                              discoveryCategoryCodes.length &&
-                                          !_routeDiscovery.isDiscovering)
-                                        const Text(
-                                          'No encontramos lugares de estas categorías para esta ruta.',
-                                        ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                _buildExplorationBottomPanel(
+                  context,
+                  snapshot: snapshot,
+                  snapshotExpired: snapshotExpired,
                 ),
               if (_showDiscoveryList && _routeDiscovery.pois.isNotEmpty)
                 Positioned.fill(

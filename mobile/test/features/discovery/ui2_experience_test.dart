@@ -201,8 +201,10 @@ void main() {
         lessThanOrEqualTo(64),
       );
       expect(
-        tester.getSize(find.byKey(const ValueKey('exploration-status'))).height,
-        lessThanOrEqualTo(216),
+        tester
+            .getSize(find.byKey(const ValueKey('exploration-bottom-actions')))
+            .height,
+        lessThanOrEqualTo(120),
       );
       expect(
         find.byTooltip('Entrar en modo conducción').hitTestable(),
@@ -442,18 +444,20 @@ void main() {
         now: () => fixtures.captured,
       );
       await pump(tester, offline);
-      await tester.ensureVisible(
-        find.text('Copia offline · vigencia máxima 24 horas'),
-      );
-      await tester.pumpAndSettle();
-      await capture(tester, 'offline-360x800');
-      // Explicit synthetic presentation fixture; not a real server outage.
+      expect(find.text('Sin copia offline disponible'), findsNothing);
+      expect(find.text('Ubicación no solicitada'), findsNothing);
+      expect(find.text('No disponible'), findsNothing);
+      await capture(tester, 'offline-route-summary-360x800');
+      // Explicit synthetic presentation fixture; a route query was attempted.
+      offline.requested = snapshot.query;
       offline.availability = DiscoveryAvailability.error;
       offline.message = 'Error: no se pudieron validar los datos recibidos';
       offline.onChanged?.call();
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('Error de actualización'));
-      await tester.pumpAndSettle();
+      expect(
+        find.text('Error: no se pudieron validar los datos recibidos'),
+        findsOneWidget,
+      );
       expect(find.text('Reintentar'), findsOneWidget);
       await capture(tester, 'error-360x800');
       await tester.pumpWidget(const SizedBox());

@@ -63,21 +63,56 @@ void main() {
 
     final screen = tester.view.physicalSize / tester.view.devicePixelRatio;
     final mapRect = tester.getRect(find.byType(FlutterMap));
-    final statusRect = tester.getRect(
-      find.byKey(const ValueKey('exploration-status')),
-    );
     final actionsRect = tester.getRect(
       find.byKey(const ValueKey('exploration-floating-actions')),
     );
     expect(actionsRect.height, lessThanOrEqualTo(64));
     final safeAreaHeight = screen.height - 48;
-    final unoccludedMapHeight =
-        mapRect.height - statusRect.height - actionsRect.height;
+    expect(find.byKey(const ValueKey('exploration-status')), findsNothing);
+    expect(
+      find.byKey(const ValueKey('exploration-bottom-panel')),
+      findsNothing,
+    );
+    final unoccludedMapHeight = mapRect.height - actionsRect.height;
     expect(unoccludedMapHeight / safeAreaHeight, greaterThanOrEqualTo(0.5));
     expect(find.text('GeoGuide AI'), findsNothing);
     expect(find.text('Exploración'), findsNothing);
     expect(find.byTooltip('Usar ubicación actual'), findsOneWidget);
     expect(find.byTooltip('Activar seguimiento de ubicación'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('manual endpoints explain when route service is not configured', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      GeoGuideApp(
+        locationRepository: _LocationRepository(),
+        backendBaseUrl: '',
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final mapRect = tester.getRect(find.byType(FlutterMap));
+    final center = mapRect.center;
+    await tester.tapAt(center + const Offset(-20, -20));
+    await tester.pumpAndSettle();
+    await tester.tapAt(center + const Offset(20, 20));
+    await tester.pumpAndSettle();
+
+    final calculateButton = tester.widget<FilledButton>(
+      find.byKey(const ValueKey('calculate-route')),
+    );
+    expect(calculateButton.onPressed, isNull);
+    expect(
+      find.text('El servicio de rutas no está configurado en esta versión.'),
+      findsOneWidget,
+    );
     await tester.pumpWidget(const SizedBox());
   });
 

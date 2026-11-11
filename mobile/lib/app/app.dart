@@ -93,7 +93,7 @@ class GeoGuideApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'GeoGuide AI',
+      title: 'Rutea',
       debugShowCheckedModeBanner: false,
       theme: GeoGuideTheme.light(),
       home: BaseMapPage(

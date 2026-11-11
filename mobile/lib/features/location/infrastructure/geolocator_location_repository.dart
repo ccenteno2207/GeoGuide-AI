@@ -61,6 +61,7 @@ class GeolocatorLocationRepository
           latitude: position.latitude,
           longitude: position.longitude,
         ),
+        accuracyMeters: position.accuracy,
       );
     } on LocationServiceDisabledException {
       return const CurrentLocationResult.withAvailability(

@@ -123,4 +123,4 @@ PR #76 integrado en `8a2e6cad14f2ae88111c0ba17dd89241894a5ee6`; implementación 
 
 - [I01: selección explícita de POIs, contexto de sesión y validación automatizada](docs/11-Master-Documentation/11-Implementation-Plan/I01-Selected-POI-Session-Integration-Evidence.md); validación física I01 pendiente, sin nuevo crédito P12.
 
-P12.4 Gate 7 reconciliation: [protocol and decision record](docs/11-Master-Documentation/11-Implementation-Plan/P12.4-Pilot-Readiness-Protocol.md#roles-and-safety). Documentary conflict RECONCILED, execution validation PENDING, P12.5 NOT_AUTHORIZED.
+P12.4 Gate 7 reconciliation: [protocol and decision record](docs/11-Master-Documentation/11-Implementation-Plan/P12.4-Pilot-Readiness-Protocol.md#roles-and-safety). Documentary conflict RECONCILED, execution validation PARTIAL, P12.5 NOT_AUTHORIZED. UI2-MAP/BRAND stationary hotfix evidence: [V01–V05](docs/11-Master-Documentation/11-Implementation-Plan/P12.4-Pilot-Readiness-Protocol.md#ui2-mapbrand-hotfix-stationary-validation-2026-11-11).

@@ -20,6 +20,66 @@ class FakeRoutePlanningRepository implements RoutePlanningRepository {
 }
 
 void main() {
+  test(
+    'route calculation requires two valid points and a configured planner',
+    () {
+      final controller = RoutePlanningController(
+        planRoute: PlanRoute(FakeRoutePlanningRepository()),
+      );
+
+      expect(controller.canPlan, isFalse, reason: 'no endpoints');
+
+      controller.origin = const RoutePoint(latitude: 10, longitude: 20);
+      expect(controller.canPlan, isFalse, reason: 'destination missing');
+
+      controller.origin = null;
+      controller.destination = const RoutePoint(latitude: 11, longitude: 21);
+      expect(controller.canPlan, isFalse, reason: 'origin missing');
+
+      controller.origin = const RoutePoint(latitude: 10, longitude: 20);
+      expect(controller.canPlan, isTrue, reason: 'valid manual endpoints');
+    },
+  );
+
+  test('invalid coordinates or missing planner keep calculation disabled', () {
+    final noPlanner = RoutePlanningController();
+    noPlanner.origin = const RoutePoint(latitude: 10, longitude: 20);
+    noPlanner.destination = const RoutePoint(latitude: 11, longitude: 21);
+    expect(noPlanner.canPlan, isFalse, reason: 'planner missing');
+
+    final invalidPointController = RoutePlanningController(
+      planRoute: PlanRoute(FakeRoutePlanningRepository()),
+    );
+    invalidPointController.origin = const RoutePoint(
+      latitude: 91,
+      longitude: 20,
+    );
+    invalidPointController.destination = const RoutePoint(
+      latitude: 11,
+      longitude: 21,
+    );
+    expect(invalidPointController.canPlan, isFalse);
+  });
+
+  test(
+    'changing manual endpoints invalidates the old route until complete',
+    () async {
+      final controller = RoutePlanningController(
+        planRoute: PlanRoute(FakeRoutePlanningRepository()),
+      );
+      controller.selectPoint(const RoutePoint(latitude: 10, longitude: 20));
+      controller.selectPoint(const RoutePoint(latitude: 11, longitude: 21));
+      await controller.calculate();
+      expect(controller.route, isNotNull);
+
+      controller.selectPoint(const RoutePoint(latitude: 12, longitude: 22));
+      expect(controller.route, isNull);
+      expect(controller.canPlan, isFalse);
+      controller.selectPoint(const RoutePoint(latitude: 13, longitude: 23));
+      expect(controller.canPlan, isTrue);
+    },
+  );
+
   test('selects origin and destination with two explicit map points', () {
     final controller = RoutePlanningController();
 
