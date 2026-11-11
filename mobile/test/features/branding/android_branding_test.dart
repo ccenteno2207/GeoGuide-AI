@@ -30,9 +30,7 @@ void main() {
       expect(
         File('android/app/src/main/res/mipmap-anydpi-v33/ic_launcher.xml')
             .readAsStringSync(),
-        contains(
-          '<monochrome android:drawable="@drawable/ic_launcher_monochrome"',
-        ),
+        contains('@drawable/ic_launcher_foreground'),
       );
     },
   );
@@ -47,22 +45,28 @@ void main() {
     final background = File(
       'android/app/src/main/res/drawable/ic_launcher_background.xml',
     ).readAsStringSync();
-    final foreground = File(
-      'android/app/src/main/res/drawable/ic_launcher_foreground.xml',
-    ).readAsStringSync();
     final master = File('assets/branding/rutea_launcher.svg')
         .readAsStringSync();
+    final foreground = File(
+      'android/app/src/main/res/drawable-xxxhdpi/ic_launcher_foreground.png',
+    );
 
     expect(adaptiveV26, contains('@drawable/ic_launcher_background'));
     expect(adaptiveV33, contains('@drawable/ic_launcher_background'));
     expect(background, contains('android:type="linear"'));
-    expect(foreground, contains('android:scaleX="0.68"'));
-    expect(foreground, contains('android:scaleY="0.68"'));
-    expect(master, contains('<linearGradient'));
-    expect(master, contains('stroke-width="18"'));
-    expect(master, contains('stroke-width="32"'));
-    expect(master, contains('cx="376" cy="122"'));
+    expect(background, contains('android:angle="270"'));
+    expect(background, contains('android:startColor="#27A9D8"'));
+    expect(background, contains('android:endColor="#39BCA5"'));
+    expect(adaptiveV33, isNot(contains('<monochrome')));
+    expect(master, contains('<image'));
+    expect(master, contains('data:image/png;base64,'));
     expect(master, isNot(contains('<text')));
+    expect(foreground.existsSync(), isTrue);
+    final bytes = foreground.readAsBytesSync();
+    expect(bytes.sublist(0, 8), <int>[137, 80, 78, 71, 13, 10, 26, 10]);
+    final dimensions = ByteData.sublistView(bytes);
+    expect(dimensions.getUint32(16), 432);
+    expect(dimensions.getUint32(20), 432);
   });
 
   test('legacy launcher PNGs match Android density dimensions', () {
