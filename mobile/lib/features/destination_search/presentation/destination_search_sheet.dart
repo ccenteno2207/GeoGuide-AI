@@ -202,7 +202,7 @@ class _DestinationResultTile extends StatelessWidget {
       isThreeLine: subtitle.contains(' · '),
       trailing: FilledButton.tonal(
         onPressed: selectable ? () => onSelected(result.verifiedPoint!) : null,
-        child: const Text('Usar destino'),
+        child: const Text('Seleccionar'),
       ),
       enabled: selectable,
     );

@@ -12,10 +12,11 @@ import 'package:geoguide_ai/features/location/domain/location_repository.dart';
 class StreamRepository implements LocationRepository, LocationStreamSource {
   final controller = StreamController<LocationSample>.broadcast();
   @override
-  Future<CurrentLocationResult> requestCurrentLocation() async =>
-      const CurrentLocationResult.available(
-        LocationPoint(latitude: -12, longitude: -77),
-      );
+  Future<CurrentLocationResult> requestCurrentLocation({
+    bool requestPermission = true,
+  }) async => const CurrentLocationResult.available(
+    LocationPoint(latitude: -12, longitude: -77),
+  );
   @override
   Stream<LocationSample> watchLocation() => controller.stream;
 }

@@ -158,7 +158,7 @@ void main() {
             isTrue,
           );
           for (final label in [
-            'Calcular ruta',
+            'Ver ruta',
             'Categorías',
             'Ver lista',
             'Conducción',

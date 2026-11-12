@@ -66,7 +66,9 @@ class FakeSession implements RouteSessionClient {
 class PendingLocation extends gps.StreamRepository {
   final pending = Completer<CurrentLocationResult>();
   @override
-  Future<CurrentLocationResult> requestCurrentLocation() => pending.future;
+  Future<CurrentLocationResult> requestCurrentLocation({
+    bool requestPermission = true,
+  }) => pending.future;
 }
 
 void main() {
