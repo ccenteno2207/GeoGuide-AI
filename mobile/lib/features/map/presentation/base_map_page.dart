@@ -77,10 +77,14 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   final MapController _mapController = MapController();
   final GPSCameraPolicy _cameraPolicy = GPSCameraPolicy();
   LocationPoint? _currentLocation;
+  DateTime? _currentLocationTimestamp;
   double? _currentAccuracyMeters;
   String _locationStatus = 'Ubicación no solicitada';
   bool _isRequestingLocation = false;
   bool _ownershipPending = true;
+  bool _initialLocationAttempted = false;
+  bool _initialCameraHasUserInteraction = false;
+  int _initialLocationRevision = 0;
   bool _destinationSelectionAwaitingSnapshot = false;
   int _refreshRevision = 0, _normalRevision = 0;
   Timer? _freshnessTimer;
@@ -278,6 +282,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         _ownershipPending = false;
         _followPausedByLifecycle = false;
       });
+      _scheduleInitialLocation();
       if (resumeNormal && !_b1Owned && !_b1Busy) {
         _followLocation = true;
         _subscribeToLocation();
@@ -289,6 +294,63 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
               'Estado GPS sin confirmar; vuelve a la app para comprobarlo',
         );
       }
+    }
+  }
+
+  void _scheduleInitialLocation() {
+    if (_initialLocationAttempted) return;
+    _initialLocationAttempted = true;
+    final revision = ++_initialLocationRevision;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || revision != _initialLocationRevision) return;
+      unawaited(_loadInitialLocation(revision));
+    });
+  }
+
+  Future<void> _loadInitialLocation(int revision) async {
+    if (!mounted || _ownershipPending || _b1Owned || _b1Busy) return;
+    try {
+      final result = await widget.requestCurrentLocation(
+        requestPermission: false,
+      );
+      if (!mounted ||
+          revision != _initialLocationRevision ||
+          _ownershipPending ||
+          _b1Owned ||
+          _b1Busy ||
+          _drivingReduced) {
+        return;
+      }
+      final position = result.position;
+      final timestamp = result.timestamp;
+      final accuracy = result.accuracyMeters;
+      final now = _now();
+      final valid =
+          result.availability == LocationAvailability.available &&
+          position != null &&
+          position.latitude.isFinite &&
+          position.longitude.isFinite &&
+          position.latitude.abs() <= 90 &&
+          position.longitude.abs() <= 180 &&
+          timestamp != null &&
+          now.difference(timestamp).abs() <= const Duration(minutes: 2) &&
+          accuracy != null &&
+          accuracy.isFinite &&
+          accuracy >= 0 &&
+          accuracy <= 100;
+      if (!valid) return;
+
+      setState(() {
+        _currentLocation = position;
+        _currentLocationTimestamp = timestamp;
+        _currentAccuracyMeters = _validAccuracy(accuracy);
+        _locationStatus = 'Ubicación actual visible';
+      });
+      if (!_initialCameraHasUserInteraction) {
+        _mapController.move(LatLng(position.latitude, position.longitude), 15);
+      }
+    } catch (_) {
+      // Startup location is best-effort; the existing manual control remains available.
     }
   }
 
@@ -531,6 +593,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     setState(() {
       _isRequestingLocation = false;
       _currentLocation = result.position;
+      _currentLocationTimestamp = result.timestamp;
       _currentAccuracyMeters = _validAccuracy(result.accuracyMeters);
       _locationStatus = switch (result.availability) {
         LocationAvailability.available => 'Ubicación actual visible',
@@ -573,6 +636,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     setState(() {
       _isRequestingLocation = false;
       _currentLocation = result.position;
+      _currentLocationTimestamp = result.timestamp;
       _currentAccuracyMeters = _validAccuracy(result.accuracyMeters);
       _locationStatus = result.availability == LocationAvailability.available
           ? 'Seguimiento de ubicación activo'
@@ -648,6 +712,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     _armFreshness(sample.timestamp);
     setState(() {
       _currentLocation = sample.position;
+      _currentLocationTimestamp = sample.timestamp;
       _currentAccuracyMeters = _validAccuracy(sample.accuracyMeters);
       _locationStatus = sample.accuracyMeters > _cameraPolicy.config.maxAccuracy
           ? 'Precisión de ubicación reducida'
@@ -721,6 +786,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         widget.offlineDiscovery?.saving == true) {
       return;
     }
+    _initialCameraHasUserInteraction = true;
     widget.offlineDiscovery?.invalidatePending();
     setState(() {
       if (widget.offlineDiscovery != null) _routeDiscovery.pois = const [];
@@ -750,6 +816,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         searchDestinations: search,
         onDestinationSelected: (point) {
           if (!point.isValid || !mounted) return;
+          _initialCameraHasUserInteraction = true;
           widget.offlineDiscovery?.invalidatePending();
           setState(() {
             _routePlanning.selectDestinationFromSearch(point);
@@ -770,6 +837,12 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   Future<void> _prepareSearchedDestinationOrigin(RoutePoint destination) async {
     if (_routePlanning.origin != null) {
       if (mounted) setState(() => _routeOriginLabel = 'Origen manual');
+      return;
+    }
+    final cachedOrigin = _freshCurrentLocationRoutePoint();
+    if (cachedOrigin != null) {
+      _routePlanning.setResolvedOrigin(cachedOrigin);
+      if (mounted) setState(() => _routeOriginLabel = 'Tu ubicación actual');
       return;
     }
     setState(() {
@@ -811,6 +884,29 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
             'Sin ubicación válida; selecciona el origen en el mapa';
       }
     });
+  }
+
+  RoutePoint? _freshCurrentLocationRoutePoint() {
+    final position = _currentLocation;
+    final timestamp = _currentLocationTimestamp;
+    final accuracy = _currentAccuracyMeters;
+    if (position == null ||
+        timestamp == null ||
+        accuracy == null ||
+        !position.latitude.isFinite ||
+        !position.longitude.isFinite ||
+        position.latitude.abs() > 90 ||
+        position.longitude.abs() > 180 ||
+        !accuracy.isFinite ||
+        accuracy < 0 ||
+        accuracy > 100 ||
+        _now().difference(timestamp).abs() > const Duration(minutes: 2)) {
+      return null;
+    }
+    return RoutePoint(
+      latitude: position.latitude,
+      longitude: position.longitude,
+    );
   }
 
   Future<void> _calculateRoute() async {
@@ -1475,6 +1571,9 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                           initialZoom: 12,
                           onTap: _selectRoutePoint,
                           onPositionChanged: (_, hasGesture) {
+                            if (hasGesture) {
+                              _initialCameraHasUserInteraction = true;
+                            }
                             if (hasGesture && _followCamera) {
                               setState(() => _followCamera = false);
                             }

@@ -129,7 +129,7 @@ void main() {
         (call) async => false,
       );
 
-  testWidgets('starts with a clean map and does not request location', (
+  testWidgets('starts with a clean map and makes one silent location check', (
     tester,
   ) async {
     final location = FakeLocationRepository(
@@ -160,7 +160,8 @@ void main() {
       find.text('No encontramos lugares de estas categorías para esta ruta.'),
       findsNothing,
     );
-    expect(location.calls, 0);
+    expect(location.calls, 1);
+    expect(location.permissionRequests, [false]);
     expect(location.watchCalls, 0);
   });
 
@@ -168,6 +169,7 @@ void main() {
     tester,
   ) async {
     final repository = FakeDestinationSearchRepository();
+    final routeRepository = FakeRoutePlanningRepository();
     final location = FakeLocationRepository(
       const CurrentLocationResult.withAvailability(
         LocationAvailability.unavailable,
@@ -177,6 +179,7 @@ void main() {
       GeoGuideApp(
         locationRepository: location,
         searchDestinations: SearchDestinations(repository),
+        planRoute: PlanRoute(routeRepository),
       ),
     );
     await tester.pumpAndSettle();
@@ -192,12 +195,21 @@ void main() {
       'Canta',
     );
     expect(repository.queries, isEmpty);
-    await tester.tap(find.byKey(const ValueKey('destination-search-submit')));
+    await tester.pump(const Duration(milliseconds: 299));
+    expect(repository.queries, isEmpty);
+    await tester.pump(const Duration(milliseconds: 1));
     await tester.pumpAndSettle();
 
     expect(repository.queries, ['Canta']);
     expect(find.text('Plaza de Armas de Canta'), findsOneWidget);
-    expect(location.calls, 0);
+    await tester.tap(find.text('Seleccionar'));
+    await tester.pumpAndSettle();
+    expect(routeRepository.requests, isEmpty);
+    expect(
+      find.textContaining('selecciona el origen en el mapa'),
+      findsOneWidget,
+    );
+    expect(location.permissionRequests.every((value) => !value), isTrue);
     await tester.pumpWidget(const SizedBox());
   });
 

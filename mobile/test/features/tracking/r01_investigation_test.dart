@@ -22,11 +22,13 @@ class CancellationGateRepository
     onCancel: () => gate.future,
   );
   int requests = 0;
+  final permissionRequests = <bool>[];
   @override
   Future<CurrentLocationResult> requestCurrentLocation({
     bool requestPermission = true,
   }) async {
     requests++;
+    permissionRequests.add(requestPermission);
     return const CurrentLocationResult.available(
       LocationPoint(latitude: -12, longitude: -77),
     );
@@ -500,7 +502,8 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Activar seguimiento de ubicación'));
       await tester.pumpAndSettle();
-      expect(source.requests, 1);
+      expect(source.requests, 2);
+      expect(source.permissionRequests, [false, true]);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
       tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
       await tester.pumpAndSettle();
@@ -520,7 +523,7 @@ void main() {
       expect(tester.widget<IconButton>(owned).onPressed, isNull);
       source.gate.complete();
       await tester.pumpAndSettle();
-      expect(source.requests, 1);
+      expect(source.requests, 2);
       expect(source.controller.hasListener, isFalse);
       expect(session.active, isTrue);
       await tester.pumpWidget(const SizedBox());
