@@ -4,10 +4,11 @@ import 'package:geoguide_ai/features/location/domain/location_repository.dart';
 
 class _StreamRepository implements LocationRepository, LocationStreamSource {
   @override
-  Future<CurrentLocationResult> requestCurrentLocation() async =>
-      const CurrentLocationResult.withAvailability(
-        LocationAvailability.available,
-      );
+  Future<CurrentLocationResult> requestCurrentLocation({
+    bool requestPermission = true,
+  }) async => const CurrentLocationResult.withAvailability(
+    LocationAvailability.available,
+  );
 
   @override
   Stream<LocationSample> watchLocation() => Stream.value(
@@ -45,8 +46,9 @@ void main() {
 
 class _OneShotRepository implements LocationRepository {
   @override
-  Future<CurrentLocationResult> requestCurrentLocation() async =>
-      const CurrentLocationResult.withAvailability(
-        LocationAvailability.unavailable,
-      );
+  Future<CurrentLocationResult> requestCurrentLocation({
+    bool requestPermission = true,
+  }) async => const CurrentLocationResult.withAvailability(
+    LocationAvailability.unavailable,
+  );
 }

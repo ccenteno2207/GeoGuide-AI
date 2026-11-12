@@ -49,7 +49,7 @@ PlannedRoute plannedRoute(RoutePoint origin, RoutePoint destination) =>
 void main() {
   test(
     'route calculation requires two valid points and a configured planner',
-    () {
+    () async {
       final controller = RoutePlanningController(
         planRoute: PlanRoute(FakeRoutePlanningRepository()),
       );
@@ -61,7 +61,9 @@ void main() {
 
       controller.origin = null;
       controller.destination = const RoutePoint(latitude: 11, longitude: 21);
-      expect(controller.canPlan, isFalse, reason: 'origin missing');
+      expect(controller.canPlan, isTrue, reason: 'GPS can resolve origin');
+      await controller.calculate();
+      expect(controller.route, isNull, reason: 'origin must be resolved first');
 
       controller.origin = const RoutePoint(latitude: 10, longitude: 20);
       expect(controller.canPlan, isTrue, reason: 'valid manual endpoints');
@@ -227,10 +229,7 @@ void main() {
       expect(controller.destination, nextDestination);
       expect(controller.route, isNull);
       expect(controller.hasError, isFalse);
-      expect(
-        controller.status,
-        'Destino seleccionado; puedes calcular la ruta',
-      );
+      expect(controller.status, 'Destino seleccionado');
     },
   );
 
@@ -255,7 +254,7 @@ void main() {
     expect(controller.destination, nextDestination);
     expect(controller.route, isNull);
     expect(controller.hasError, isFalse);
-    expect(controller.status, 'Destino seleccionado; puedes calcular la ruta');
+    expect(controller.status, 'Destino seleccionado');
     expect(controller.isCalculating, isFalse);
   });
 

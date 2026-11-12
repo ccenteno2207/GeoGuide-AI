@@ -18,8 +18,8 @@ class RoutePlanningController {
   String status = 'Selecciona el origen en el mapa';
 
   bool get canPlan =>
-      origin?.isValid == true &&
       destination?.isValid == true &&
+      (origin == null || origin!.isValid) &&
       !isCalculating &&
       planRoute != null;
 
@@ -54,9 +54,16 @@ class RoutePlanningController {
     route = null;
     destination = point;
     _preserveSearchDestinationForNextMapTap = origin == null;
-    status = origin == null
-        ? 'Destino seleccionado; elige el origen en el mapa'
-        : 'Destino seleccionado; puedes calcular la ruta';
+    status = 'Destino seleccionado';
+  }
+
+  void setResolvedOrigin(RoutePoint point) {
+    if (!point.isValid) return;
+    _selectionRevision++;
+    origin = point;
+    route = null;
+    hasError = false;
+    status = 'Origen listo';
   }
 
   Future<void> calculate() async {

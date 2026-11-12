@@ -124,7 +124,7 @@ void main() {
     await tester.tap(
       find.descendant(
         of: find.byKey(const ValueKey('destination-result-canta-plaza')),
-        matching: find.text('Usar destino'),
+        matching: find.text('Seleccionar'),
       ),
     );
     expect(selected?.latitude, -11.475);

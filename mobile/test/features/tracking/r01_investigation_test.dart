@@ -23,7 +23,9 @@ class CancellationGateRepository
   );
   int requests = 0;
   @override
-  Future<CurrentLocationResult> requestCurrentLocation() async {
+  Future<CurrentLocationResult> requestCurrentLocation({
+    bool requestPermission = true,
+  }) async {
     requests++;
     return const CurrentLocationResult.available(
       LocationPoint(latitude: -12, longitude: -77),

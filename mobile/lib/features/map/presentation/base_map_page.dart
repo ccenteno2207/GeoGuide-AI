@@ -190,6 +190,8 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   bool _followLocation = false;
   bool _followCamera = false;
   bool _followPausedByLifecycle = false;
+  bool _resolvingRouteOrigin = false;
+  String _routeOriginLabel = 'Selecciona el origen en el mapa';
   DateTime? _lastLocationTimestamp;
   StreamSubscription<LocationSample>? _locationSubscription;
   late final RoutePlanningController _routePlanning;
@@ -725,6 +727,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       _routePlanning.selectPoint(
         RoutePoint(latitude: point.latitude, longitude: point.longitude),
       );
+      _routeOriginLabel = 'Origen manual seleccionado';
       if (widget.offlineDiscovery != null) {
         _destinationSelectionAwaitingSnapshot = true;
       }
@@ -758,14 +761,102 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
           });
           _mapController.move(LatLng(point.latitude, point.longitude), 13);
           Navigator.of(sheetContext).pop();
+          unawaited(_prepareSearchedDestinationOrigin(point));
         },
       ),
     );
   }
 
+  Future<void> _prepareSearchedDestinationOrigin(RoutePoint destination) async {
+    if (_routePlanning.origin != null) {
+      if (mounted) setState(() => _routeOriginLabel = 'Origen manual');
+      return;
+    }
+    setState(() {
+      _resolvingRouteOrigin = true;
+      _routeOriginLabel = 'Comprobando ubicación actual…';
+    });
+    final result = await widget.requestCurrentLocation(
+      requestPermission: false,
+    );
+    if (!mounted ||
+        _routePlanning.destination != destination ||
+        _routePlanning.origin != null) {
+      return;
+    }
+    final timestamp = result.timestamp;
+    final fresh =
+        timestamp != null &&
+        DateTime.now().difference(timestamp).abs() <=
+            const Duration(minutes: 2);
+    final accurate =
+        result.accuracyMeters != null && result.accuracyMeters! <= 100;
+    final point = result.position;
+    setState(() {
+      _resolvingRouteOrigin = false;
+      if (result.availability == LocationAvailability.available &&
+          point != null &&
+          point.latitude.isFinite &&
+          point.longitude.isFinite &&
+          point.latitude.abs() <= 90 &&
+          point.longitude.abs() <= 180 &&
+          fresh &&
+          accurate) {
+        _routePlanning.setResolvedOrigin(
+          RoutePoint(latitude: point.latitude, longitude: point.longitude),
+        );
+        _routeOriginLabel = 'Tu ubicación actual';
+      } else {
+        _routeOriginLabel =
+            'Sin ubicación válida; selecciona el origen en el mapa';
+      }
+    });
+  }
+
   Future<void> _calculateRoute() async {
     if (_ownershipPending || _b1Owned || _b1Busy) return;
     if (_drivingReduced) return;
+    if (_routePlanning.isCalculating || _resolvingRouteOrigin) return;
+    if (_routePlanning.origin == null && _routePlanning.destination != null) {
+      _resolvingRouteOrigin = true;
+      final result = await widget.requestCurrentLocation(
+        requestPermission: false,
+      );
+      _resolvingRouteOrigin = false;
+      if (!mounted || _routePlanning.destination == null) return;
+      final timestamp = result.timestamp;
+      final fresh =
+          timestamp != null &&
+          DateTime.now().difference(timestamp).abs() <=
+              const Duration(minutes: 2);
+      final accurate =
+          result.accuracyMeters != null && result.accuracyMeters! <= 100;
+      if (result.availability == LocationAvailability.available &&
+          result.position != null &&
+          result.position!.latitude.isFinite &&
+          result.position!.longitude.isFinite &&
+          result.position!.latitude.abs() <= 90 &&
+          result.position!.longitude.abs() <= 180 &&
+          fresh &&
+          accurate) {
+        _routePlanning.setResolvedOrigin(
+          RoutePoint(
+            latitude: result.position!.latitude,
+            longitude: result.position!.longitude,
+          ),
+        );
+        _routeOriginLabel = 'Tu ubicación actual';
+      }
+    }
+    if (_routePlanning.origin == null || _routePlanning.destination == null) {
+      if (mounted) {
+        setState(() {});
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Selecciona el origen en el mapa')),
+        );
+      }
+      return;
+    }
     if (widget.offlineDiscovery case final offline?) {
       final origin = _routePlanning.origin,
           destination = _routePlanning.destination;
@@ -1010,8 +1101,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     final route = snapshotExpired
         ? null
         : snapshot?.route ?? _routePlanning.route;
-    final hasEndpoints =
-        _routePlanning.origin != null && _routePlanning.destination != null;
+    final hasEndpoints = _routePlanning.destination != null;
     final isLoading = offline?.busy == true || _routeDiscovery.isDiscovering;
     final discoveryError = offline != null
         ? offline.requested != null &&
@@ -1101,7 +1191,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.alt_route),
-          label: const Text('Calcular ruta'),
+          label: Text(_resolvingRouteOrigin ? 'Ubicando origen…' : 'Ver ruta'),
         ),
       if (route != null)
         Tooltip(
@@ -1141,6 +1231,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     final showContext =
         statusMessage != null ||
         locationStatus != null ||
+        (_routePlanning.destination != null && _routePlanning.route == null) ||
         showRetry ||
         isLoading;
     if (!showContext && actions.isEmpty) return const SizedBox.shrink();
@@ -1188,6 +1279,9 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          if (_routePlanning.destination != null &&
+                              _routePlanning.route == null)
+                            Text('Origen: $_routeOriginLabel'),
                           if (isLoading)
                             const Padding(
                               padding: EdgeInsets.only(bottom: 6),
