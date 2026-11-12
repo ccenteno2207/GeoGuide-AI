@@ -247,3 +247,52 @@ UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
 P12_5 = NOT_AUTHORIZED
 PRODUCTION_READINESS = NOT_DECLARED
 ```
+
+## UI2-SEARCH-006 — validación previa a integración (2026-11-12)
+
+La rama `codex/ui2-search-001`, preparada desde `origin/main` en
+`4003508f0e355de8fa003a7ce1898c5a8269fd4a`, se revisó para integración controlada.
+El alcance reúne la búsqueda explícita del catálogo MINCETUR, selección del destino,
+planificación manual, resumen persistente, POIs y la protección de respuestas
+obsoletas descritas arriba. El catálogo continúa limitado a nueve recursos verificados;
+no añade localidades independientes, geocodificadores externos ni cobertura nacional.
+
+### Validación en esta revisión
+
+- `dart format --output=none --set-exit-if-changed lib test`: PASS, 97 archivos,
+  0 cambios.
+- `flutter analyze`: PASS, sin incidencias.
+- `flutter test`: PASS, 271 aprobadas y 1 omitida; la omitida es la prueba opt-in
+  que requiere `UI2_SEARCH_LIVE_BACKEND_URL`.
+- `mvnw verify`: BUILD SUCCESS; 67 pruebas, 0 fallos y 8 pruebas PostGIS/Testcontainers
+  omitidas porque Docker no está disponible en este host. La evidencia previa
+  UI2-SEARCH-003 registra las ocho pruebas contra PostGIS real y Flyway V001–V005
+  aplicadas; el código backend cubierto por esa validación no cambió después.
+- JSON del catálogo válido, nueve registros; `git diff --check` PASS. El índice y
+  referencias locales se revisaron para esta integración.
+- GitHub no tiene workflows/checks configurados (`GITHUB_CHECKS = NOT_CONFIGURED`);
+  la ausencia de checks no se considera PASS de CI. La rama `main` no tiene protección
+  configurada en GitHub.
+
+Las validaciones físicas anteriores permanecen en SEARCH-004 y SEARCH-005; no se
+repitieron. La última sesión física demostró búsqueda real, selección explícita,
+planificación de ruta, POIs y resumen visible en HONOR. Driving no se ejecutó en
+SEARCH-005 debido a que el backend temporal HTTP no satisfacía el requisito HTTPS
+del flujo offline. La revisión visual posterior a la integración sigue pendiente.
+
+```ini
+UI2_SEARCH_006_PRE_MERGE = PASS
+UI2_SEARCH_006_BACKEND_LOCAL = PASS_67_TESTS_8_POSTGIS_SKIPPED
+UI2_SEARCH_006_POSTGIS_REAL_EVIDENCE = REUSED_UI2_SEARCH_003_8_OF_8
+UI2_SEARCH_006_FLUTTER_FORMAT = PASS_97_FILES
+UI2_SEARCH_006_FLUTTER_ANALYZE = PASS
+UI2_SEARCH_006_FLUTTER_TESTS = PASS_271_SKIP_1_LIVE_BACKEND_OPT_IN
+UI2_SEARCH_006_GITHUB_CHECKS = NOT_CONFIGURED
+UI2_POST_MERGE_VISUAL_REVIEW = PENDING
+UI2_SEARCH_006_PUSH_AT_PREMERGE_CHECKPOINT = NOT_YET_EXECUTED
+UI2_SEARCH_006_PR_AT_PREMERGE_CHECKPOINT = NOT_YET_CREATED
+UI2_SEARCH_006_MERGE_AT_PREMERGE_CHECKPOINT = NOT_YET_EXECUTED
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+P12_5 = NOT_AUTHORIZED
+PRODUCTION_READINESS = NOT_DECLARED
+```
