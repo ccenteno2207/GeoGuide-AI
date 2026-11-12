@@ -38,6 +38,70 @@ P12_5 = NOT_AUTHORIZED
 PRODUCTION_READINESS = NOT_DECLARED
 ```
 
+## UI2-SEARCH-003 — PostGIS, API y flujo Flutter real (2026-11-11/12)
+
+**Resultado global:** `PARTIALLY_VALIDATED`. Se acreditaron Flyway/PostGIS, el catálogo, búsquedas por HTTP y el flujo del cliente/controlador Flutter hasta `PlanRoute`. No se acreditó una sesión de la UI Android en emulador ni en dispositivo.
+
+### Entorno y aislamiento
+
+- Se mantuvo intacto el checkout principal de la VM (`main`, `d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca`) y sus servicios activos. La fuente se validó desde una copia temporal de backend derivada de `daae3fe3dcb547cc0b6cecf674ccd16bd9a4c84c`; no se cambió el checkout VM.
+- Compose usó el proyecto exclusivo `geoguide-ui2-search-test`, red Docker `internal`, PostgreSQL/PostGIS y volúmenes propios. API y PostGIS solo se comunicaron dentro de esa red; el PBF de GraphHopper se montó en solo lectura y su caché fue un volumen separado. La API se consultó desde Windows mediante SSH loopback hacia la IP privada de su contenedor, sin publicar el servicio en Internet ni tocar firewall/DNS.
+- La primera ejecución real de los ocho tests PostGIS reveló una consulta inválida (`SELECT DISTINCT` con expresiones `ORDER BY` no seleccionadas) y una aserción que mezclaba índices GIST de dos tablas. Se corrigió la consulta con `EXISTS` y se separó la verificación de índices por tabla. Una segunda pasada confirmó ambas correcciones y mostró que el test directo del puerto de repositorio debía pasar su `normalizedQuery` según el contrato; el caso se ajustó con el normalizador de dominio. La corrida final pasó los 67 tests.
+
+### Flyway, PostGIS y catálogo
+
+- PostgreSQL 16.4 con PostGIS 3.4.3. Flyway validó y aplicó las cinco migraciones, `V001`–`V005`, en la base temporal vacía; el API arrancó en estado `UP` y cargó el catálogo opt-in. Tras reiniciar el contenedor API, el catálogo persistió con nueve filas y un alias, sin duplicados.
+- El JAR usado por el API temporal se generó desde la corrida final verificada y tuvo SHA-256 `2ec40f4fea47409a2a40b11a807155784f091aa6dbc649f363e2ce3abc5b260c`.
+- `PostgisIntegrationTests`: **8/8 PASS**, 0 fallos, 0 omitidos. `mvn verify`: **67/67 PASS**, 0 fallos, 0 omitidos.
+- PostGIS verificó nueve geometrías válidas en SRID 4326; 0 geometrías inválidas. La carga idempotente y las búsquedas de integración se ejecutaron contra PostGIS real, no mocks.
+
+### Consultas HTTP al API temporal
+
+Todas las consultas respondieron HTTP 200 desde `POST /api/v1/destinations/search`. Los resultados con coincidencia incluyeron nombre, contexto, coordenadas, procedencia MINCETUR, URL de ficha, licencia y atribución:
+
+| Consulta | Resultado real |
+| --- | --- |
+| `Canta` | 1: Plaza De Armas De Canta — Lima, Canta, CANTA |
+| `Obrajillo` | 1: Plaza De Armas De Obrajillo — Lima, Canta, CANTA |
+| `Santa Rosa de Quives` | 1: Santuario De Santa Rosa De Quives — Lima, Canta, SANTA ROSA DE QUIVES |
+| `Huacachina` | 1: Laguna De Huacachina — Ica, Ica, ICA |
+| `Plaza de Armas` | 5 coincidencias diferenciadas por nombre/contexto: Arequipa, Canta, Ica, Obrajillo y Lima |
+| `Plaza de Armas de Lima` | 1: Plaza Mayor De Lima, usando el único alias respaldado por la ficha MINCETUR |
+| `Plaza de Armas de Ica` | 1: Plaza De Armas De Ica |
+| `Plaza de Armas de Arequipa` | 1: Plaza De Armas De Arequipa |
+| `Líneas de Nazca` | 0: respuesta vacía correcta para la cobertura actual; existe una ficha cuyo nombre canónico usa “Nasca”, pero no se inventó un alias “Nazca” |
+
+`POST /api/v1/routes/plan` también respondió HTTP 200 para Lima → Plaza De Armas De Canta mediante el GraphHopper temporal: 102.326,648 m, 6.372,52 s, geometría con extremos válidos. Esto comprueba el servicio real de planificación para esas coordenadas; no constituye validación de POIs descubiertos a lo largo de la ruta.
+
+### Integración Flutter y regresiones
+
+- Se añadió `mobile/test/integration/ui2_search_003_live_backend_test.dart`, prueba opt-in que usa el `GeoGuideHttpClient`, repositorio de búsqueda, `RoutePlanningController` y `DioRoutePlanningRepository` reales. Contra el API temporal obtuvo la ficha Canta, preservó el origen Lima, esperó la acción explícita de cálculo y recibió una ruta real con geometría. Resultado focalizado: **1/1 PASS**.
+- `dart format .`: PASS, 97 archivos, 0 cambios de formato. `flutter analyze`: PASS. `flutter test`: **263 PASS, 1 SKIP**; el skip es la prueba opt-in de API real cuando no se define `UI2_SEARCH_LIVE_BACKEND_URL`. Ejecutada separadamente con la URL del túnel SSH, esa prueba pasó. Las pruebas widget ordinarias siguen usando dobles y no se presentan como tráfico HTTP real.
+- Se intentó iniciar el AVD `P6_MapSpike_API36` en modo headless. El host no tiene Android Emulator Hypervisor Driver; el emulador x86_64 terminó con `x86_64 emulation currently requires hardware acceleration`. No se instaló APK ni se interactuó con el HONOR. Por ello queda pendiente comprobar la pantalla mapa completa conectada al API y el gesto visual de selección.
+- `flutter build apk --debug`: PASS. Artefacto `mobile/build/app/outputs/flutter-apk/app-debug.apk`, SHA-256 `03E36DA4A0E02893C25DB9DF942E8ECC5A176F5F87024073284815244256D4BC`, 194.267.822 bytes. Se compiló sin `BACKEND_BASE_URL`; es evidencia de compilación, no de conectividad Android.
+
+### Estados UI2-SEARCH-003
+
+```ini
+UI2_SEARCH_003_POSTGIS = PASS
+UI2_SEARCH_003_FLYWAY = PASS
+UI2_SEARCH_003_CATALOG = VERIFIED_9_RECORDS_1_SUPPORTED_ALIAS
+UI2_SEARCH_003_API = PASS_REAL_SEARCH_AND_PLAN_ROUTE
+UI2_SEARCH_003_FLUTTER_CLIENT_CONTROLLER = PASS_REAL_API
+UI2_SEARCH_003_ANDROID_UI_RUNTIME = PENDING_EMULATOR_ACCELERATION
+UI2_SEARCH_003_REGRESSION = PASS_BACKEND_67_FLUTTER_263_PLUS_1_OPT_IN_SKIP
+UI2_SEARCH_003_OVERALL = PARTIALLY_VALIDATED
+UI2_SEARCH_003_PUSH = NOT_AUTHORIZED
+UI2_SEARCH_003_PR = NOT_AUTHORIZED
+UI2_SEARCH_003_MERGE = NOT_AUTHORIZED
+UI2_SEARCH_003_PHYSICAL_VALIDATION = NOT_AUTHORIZED
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+P12_5 = NOT_AUTHORIZED
+PRODUCTION_READINESS = NOT_DECLARED
+```
+
+La validación no incluye ejecución visual de la UI completa en Android. El test opt-in demuestra el cliente y controlador Flutter con datos y ruta reales; el mapa renderizado, permisos/red en Android y selección desde el launcher/runtime quedan sin verificar. El catálogo sigue limitado a nueve fichas; “Líneas de Nazca” no tiene coincidencia bajo el criterio vigente.
+
 ## UI2-SEARCH-002 — validación local de integración (2026-11-11)
 
 **Resultado global:** `PARTIALLY_VALIDATED`. Esta ejecución no contó con una base PostGIS local aislada: Docker, Podman y psql/postgres no están instalados/disponibles, WSL no tiene distribuciones y no había listener local en el puerto 5432. No se usaron VM, base compartida, despliegue ni dispositivo físico.

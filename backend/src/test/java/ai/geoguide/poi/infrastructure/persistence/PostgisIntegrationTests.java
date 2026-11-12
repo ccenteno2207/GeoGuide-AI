@@ -100,7 +100,13 @@ class PostgisIntegrationTests {
                 """, Integer.class)).isEqualTo(3);
         assertThat(jdbcTemplate.queryForObject("""
                 SELECT COUNT(*) FROM pg_indexes
-                WHERE schemaname = 'geo' AND indexdef ILIKE '%USING gist (location)%'
+                WHERE schemaname = 'geo' AND tablename = 'point_of_interest'
+                  AND indexdef ILIKE '%USING gist (location)%'
+                """, Integer.class)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM pg_indexes
+                WHERE schemaname = 'geo' AND tablename = 'destination'
+                  AND indexdef ILIKE '%USING gist (location)%'
                 """, Integer.class)).isEqualTo(1);
         assertThat(jdbcTemplate.queryForObject("""
                 SELECT udt_name FROM information_schema.columns
@@ -125,7 +131,7 @@ class PostgisIntegrationTests {
         assertThat(destinationRepository.search("plaza de armas de lima", 10))
                 .extracting(Destination::canonicalName)
                 .containsExactly("Plaza Mayor De Lima");
-        assertThat(destinationRepository.search("PLAZA DE ARMAS", 1)).hasSize(1);
+        assertThat(destinationRepository.search(Destination.normalize("PLAZA DE ARMAS"), 1)).hasSize(1);
     }
 
     @Test

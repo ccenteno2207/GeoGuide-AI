@@ -21,14 +21,17 @@ public class JdbcDestinationRepository implements DestinationRepository {
     @Override
     public List<Destination> search(String query, int limit) {
         return jdbc.query("""
-                SELECT DISTINCT d.id, d.canonical_name, d.destination_type, d.administrative_context,
+                SELECT d.id, d.canonical_name, d.destination_type, d.administrative_context,
                        ST_Y(d.location) AS latitude, ST_X(d.location) AS longitude,
                        d.source_system, d.source_record_id, d.source_url, d.source_license, d.attribution
                 FROM geo.destination d
-                LEFT JOIN geo.destination_alias a ON a.destination_id = d.id
-                WHERE d.active = TRUE AND (d.normalized_name LIKE ? ESCAPE '!' OR a.normalized_alias LIKE ? ESCAPE '!')
-                ORDER BY CASE WHEN d.normalized_name = ? OR a.normalized_alias = ? THEN 0
-                              WHEN d.normalized_name LIKE ? ESCAPE '!' OR a.normalized_alias LIKE ? ESCAPE '!' THEN 1
+                WHERE d.active = TRUE AND (d.normalized_name LIKE ? ESCAPE '!'
+                    OR EXISTS (SELECT 1 FROM geo.destination_alias a
+                               WHERE a.destination_id = d.id AND a.normalized_alias LIKE ? ESCAPE '!'))
+                ORDER BY CASE WHEN d.normalized_name = ? OR EXISTS (SELECT 1 FROM geo.destination_alias a
+                                                                      WHERE a.destination_id = d.id AND a.normalized_alias = ?) THEN 0
+                              WHEN d.normalized_name LIKE ? ESCAPE '!' OR EXISTS (SELECT 1 FROM geo.destination_alias a
+                                                                                   WHERE a.destination_id = d.id AND a.normalized_alias LIKE ? ESCAPE '!') THEN 1
                               ELSE 2 END,
                          d.normalized_name, d.administrative_context, d.id
                 LIMIT ?
