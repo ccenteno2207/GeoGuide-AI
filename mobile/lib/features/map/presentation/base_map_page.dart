@@ -1043,6 +1043,11 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         !hasError &&
         ((snapshot != null && !snapshotExpired && snapshot.pois.isEmpty) ||
             (offline == null && _routeDiscovery.pois.isEmpty));
+    final showRouteSummary =
+        route != null &&
+        (offline == null ||
+            (offline.availability == DiscoveryAvailability.online &&
+                (offline.snapshot?.pois.isNotEmpty ?? false)));
     final statusMessage = snapshotExpired
         ? _unavailableResults
         : _routePlanning.hasError
@@ -1151,6 +1156,23 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (showRouteSummary)
+                Card(
+                  key: const ValueKey('route-summary-card'),
+                  margin: EdgeInsets.zero,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    child: Text(
+                      'Ruta: ${(route.distanceMeters / 1000).toStringAsFixed(1)} km · ${(route.durationSeconds / 60).round()} min',
+                      key: const ValueKey('route-summary'),
+                      style: Theme.of(context).textTheme.titleSmall
+                          ?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
               if (showContext)
                 Card(
                   key: const ValueKey('exploration-bottom-panel'),
@@ -1175,13 +1197,6 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                   strokeWidth: 2,
                                 ),
                               ),
-                            ),
-                          if (offline == null && route != null)
-                            Text(
-                              'Ruta: ${(route.distanceMeters / 1000).toStringAsFixed(1)} km · ${(route.durationSeconds / 60).round()} min',
-                              key: const ValueKey('route-summary'),
-                              style: Theme.of(context).textTheme.titleSmall
-                                  ?.copyWith(fontWeight: FontWeight.w700),
                             ),
                           if (statusMessage != null) Text(statusMessage),
                           if (locationStatus != null &&
