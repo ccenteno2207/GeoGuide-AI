@@ -38,6 +38,58 @@ P12_5 = NOT_AUTHORIZED
 PRODUCTION_READINESS = NOT_DECLARED
 ```
 
+## UI2-SEARCH-004 — validación física de búsqueda en HONOR (2026-11-12)
+
+**Resultado:** `PARTIALLY_VALIDATED`. La búsqueda consultó el API temporal real desde el HONOR, presentó fichas del catálogo, permitió seleccionar destinos y revisar POIs. El caso PlanRoute alcanzó GraphHopper desde la app, pero la última observación de pantalla no mostró un resumen de ruta persistente; Driving no pudo ejecutarse por ausencia del controlador/snapshot offline en esta configuración HTTP temporal. No se declara PASS global.
+
+### Dispositivo, APK y conectividad
+
+- ADB identificó un único HONOR LLY-NX3 autorizado, Android 16 / API 36, serial `AM4L6R5617005821`. Paquete instalado `com.geoguideai.geoguide_ai`, versión `1.0.0` (versionCode 1); se conservó la instalación/datos existentes mediante `adb install -r`.
+- APK debug de `codex/ui2-search-001` (`e16d1258d6d586321a22f26f5fcbed3783270e5d`), compilada con `BACKEND_BASE_URL=http://127.0.0.1:18082`; SHA-256 `D5ED87D5196521B2495E4EFC0690C0AFAD781062AC80621FB4C26B8D279D3006`. La firma de depuración coincidió con la aplicación instalada antes de actualizar. No se afirma identidad binaria con un APK histórico.
+- El API/PostGIS/GraphHopper se ejecutaron en el proyecto Compose temporal `geoguide-ui2-search-004`, en red Docker interna aislada, con volúmenes exclusivos y sin puertos públicos. El HONOR alcanzó el API por ADB reverse sobre loopback. No se cambiaron permisos, TLS global, firewall, DNS ni servicios compartidos.
+- Tras la limpieza autorizada, la APK permanece instalada para revisión, pero su URL loopback apunta al API temporal ya retirado; la búsqueda no estará disponible hasta configurar un backend de prueba activo.
+- Flyway aplicó V001–V005 en la base temporal; el catálogo MINCETUR cargó nueve destinos y un alias, con geometrías válidas. API `UP`. Una búsqueda de ruta del teléfono llegó a GraphHopper y recibió respuesta exitosa; una consulta Lima–Canta observada en logs produjo 101.255 km, 6.217 s (104 min) y 1.912 puntos. Una comprobación posterior desde un origen manual próximo a Canta produjo 1.269 m, 2 min y 28 puntos.
+- La primera consulta de descubrimiento posterior a la ruta devolvió HTTP 400 porque el stack temporal no tenía cargada la taxonomía P3. Se habilitó el cargador P3 únicamente en la base/servicio temporal; al reintentar, el API devolvió 3 POIs y los filtros operaron. Esto fue configuración incompleta del fixture, no una corrección de código del producto.
+
+### Casos físicos
+
+| Caso | Estado | Evidencia observada |
+| --- | --- | --- |
+| SEARCH-PHYS-01 Inicio | `PASS` | Rutea abrió sin crash; mapa, CEFI, controles y atribución OSM visibles; sin panel técnico persistente. |
+| SEARCH-PHYS-02 Buscador | `PASS` | Campo, teclado y envío explícito. Se ejercitaron loading, error contextual y reintento tras recuperar el API. |
+| SEARCH-PHYS-03 Canta | `PASS` | Resultado real «Plaza De Armas De Canta», contexto Lima/Canta; selección centró el mapa y conservó el origen; no calculó ruta automáticamente. |
+| SEARCH-PHYS-04 Huacachina | `PASS` | «Laguna De Huacachina» real, contexto Ica; selección utilizable en el mapa. |
+| SEARCH-PHYS-05 Desambiguación | `PASS` | «Plaza de Armas» mostró cinco fichas diferenciadas por contexto (Arequipa, Canta, Ica, Obrajillo y Lima); selección explícita. |
+| SEARCH-PHYS-06 Sin resultados | `PASS` | «Líneas de Nazca» mostró estado vacío correcto, sin resultados inventados y permitió continuar. |
+| SEARCH-PHYS-07 PlanRoute | `PARTIAL` | La sesión Lima–Canta llegó a GraphHopper y se informó una ruta de 97,7 km / 104 min. En una comprobación posterior apareció «Los puntos seleccionados no son válidos»; luego GraphHopper registró una respuesta válida para el origen manual próximo a Canta (1,269 km / 2 min / 28 puntos), pero la última pantalla no mostró resumen/estado de ruta y mantuvo «Calcular ruta». La secuencia documenta una inconsistencia UI reproducida en esa sesión; la evidencia no permite certificar render/persistencia completa ni atribuir causa raíz. |
+| SEARCH-PHYS-08 Selección manual | `PASS` | La interacción manual del mapa estableció el origen; la selección de destino desde búsqueda conservó ese origen. |
+| SEARCH-PHYS-09 POIs | `PASS` | Tras cargar P3 en el entorno temporal: 3 POIs reales en mapa/lista; filtros redujeron a 2 y «Restablecer» restauró 3. Preview y Detail mostraron ficha, categoría, distancia, fuente/URL y atribución; navegación de retorno operativa. No se exigieron POIs fuera de la cobertura del catálogo. |
+| SEARCH-PHYS-10 Driving | `NOT_EXECUTED_PRECONDITION_UNMET` | El árbol de accesibilidad no expuso «Gestionar copia offline» ni «Conducción». El contrato de `SnapshotCodec.backendContext` rechaza backends que no sean HTTPS, y la conectividad autorizada de esta sesión fue HTTP por ADB reverse; `GeoGuideApp._createOffline` captura esa incompatibilidad y deja el controlador nulo. No se cambió TLS ni se otorgó confianza a certificados, ni se creó una copia offline con datos de viaje. |
+
+### Validación automatizada y evidencia
+
+- Backend sobre la fuente derivada del commit de trabajo: `mvn verify` PASS, 67 pruebas; las 8 pruebas PostGIS/Testcontainers pasaron contra PostGIS real.
+- Flutter: `flutter pub get` PASS; `dart format .` PASS (97 archivos, 0 cambios); `flutter analyze` PASS; `flutter test` PASS (263 aprobadas, 1 omitida opt-in sin URL live). El APK debug configurado se compiló correctamente. No se volvió a ejecutar la suite después de la sesión física porque no hubo cambios de código.
+- Capturas UI limitadas a Rutea: [selección de Canta](UI2-SEARCH-004-Physical-Evidence/search-canta.png), [desambiguación de Plaza de Armas](UI2-SEARCH-004-Physical-Evidence/search-plaza-disambiguation.png), [estado vacío de Nazca](UI2-SEARCH-004-Physical-Evidence/search-empty-nazca.png), [Detail de POI](UI2-SEARCH-004-Physical-Evidence/poi-detail.png), [error intermedio de selección de ruta](UI2-SEARCH-004-Physical-Evidence/planroute-intermediate-validation-error.png) y [estado final del mapa](UI2-SEARCH-004-Physical-Evidence/final-map-state.png). La última captura documenta que no quedó un resumen de ruta visible. No se capturaron coordenadas deliberadamente ni datos personales.
+- No se modificó código de producción durante la sesión. No se usaron ubicación actual, seguimiento continuo, Driving, voz CEFI, TalkBack ni cambios de permisos.
+- El stack remoto, sus volúmenes/red y el ADB reverse quedaron retirados; el checkout VM `main` sigue limpio en `d50fb8e2d807dc97a16c81f4ffaa6fcfa89fbaca` y los seis servicios principales permanecen healthy. La carpeta local `%TEMP%\geoguide-ui2-search-004` sigue retenida: la operación de borrado recursivo fue bloqueada por la política de herramientas. Contiene artefactos temporales (incluido el `.env` de la prueba); requiere eliminación manual desde el equipo antes de considerar completa toda la limpieza local.
+
+```ini
+UI2_SEARCH_004_DEVICE = HONOR_LLY_NX3_ANDROID_16_API_36
+UI2_SEARCH_004_BACKEND = TEMPORARY_ISOLATED
+UI2_SEARCH_004_ANDROID_UI = PASS
+UI2_SEARCH_004_SEARCH = PASS_REAL_API
+UI2_SEARCH_004_DESTINATION_SELECTION = PASS
+UI2_SEARCH_004_PLAN_ROUTE = PARTIAL_UI_RESULT_NOT_PERSISTENT_AT_FINAL_OBSERVATION
+UI2_SEARCH_004_REGRESSION = PASS_AUTOMATED_WITH_PHYS_07_PARTIAL_PHYS_10_NOT_EXECUTED
+UI2_SEARCH_004_PHYSICAL_VALIDATION = PARTIALLY_VALIDATED
+UI2_SEARCH_004_TEMPORARY_STACK = REMOVED_AFTER_VALIDATION
+UI2_SEARCH_004_LOCAL_TEMP_ARTIFACTS = RETAINED_CLEANUP_BLOCKED
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+P12_5 = NOT_AUTHORIZED
+PRODUCTION_READINESS = NOT_DECLARED
+```
+
 ## UI2-SEARCH-003 — PostGIS, API y flujo Flutter real (2026-11-11/12)
 
 **Resultado global:** `PARTIALLY_VALIDATED`. Se acreditaron Flyway/PostGIS, el catálogo, búsquedas por HTTP y el flujo del cliente/controlador Flutter hasta `PlanRoute`. No se acreditó una sesión de la UI Android en emulador ni en dispositivo.
