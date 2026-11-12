@@ -21,7 +21,14 @@ class DestinationCatalogArtifactTests {
                 assertThat(entry.sourceUrl()).startsWith("https://");
                 assertThat(entry.latitude()).isBetween(-18.5, 0.0);
                 assertThat(entry.longitude()).isBetween(-82.0, -68.0);
+                assertThat(entry.aliases()).allSatisfy(alias -> {
+                    assertThat(alias.name()).isNotBlank();
+                    assertThat(alias.sourceReference()).contains("Ficha MINCETUR");
+                });
             });
+            assertThat(catalog.destinations().stream().flatMap(entry -> entry.aliases().stream())
+                    .map(DestinationCatalogLoader.AliasEntry::name))
+                    .containsExactly("Plaza de Armas de Lima");
         }
     }
 }

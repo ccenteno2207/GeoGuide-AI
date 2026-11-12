@@ -30,7 +30,7 @@ class SearchDestinationsTests {
     }
 
     @Test
-    void normalizesSupportedAliasText() {
-        assertThat(Destination.normalize("LÍNEAS   DE NAZCA")).isEqualTo("lineas de nazca");
+    void normalizesAccentsAndWhitespaceInQueryText() {
+        assertThat(Destination.normalize("LÍNEAS   Y GEÓGLIFOS")).isEqualTo("lineas y geoglifos");
     }
 }

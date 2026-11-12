@@ -37,3 +37,41 @@ UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
 P12_5 = NOT_AUTHORIZED
 PRODUCTION_READINESS = NOT_DECLARED
 ```
+
+## UI2-SEARCH-002 — validación local de integración (2026-11-11)
+
+**Resultado global:** `PARTIALLY_VALIDATED`. Esta ejecución no contó con una base PostGIS local aislada: Docker, Podman y psql/postgres no están instalados/disponibles, WSL no tiene distribuciones y no había listener local en el puerto 5432. No se usaron VM, base compartida, despliegue ni dispositivo físico.
+
+### Fuente y catálogo
+
+- Se descargó en memoria el CSV del recurso oficial MINCETUR; 6.341 filas. SHA-256 `F66AE874FAD26E899ABD023A47B96E980D194A563D7F0E7CB202A95D221D263E`, igual al corte versionado. Los nueve IDs `CODIGO DEL RECURSO` tuvieron una única fila y coincidieron exactamente nombre, contexto y coordenadas del JSON usando `latitude = LONGITUD` y `longitude = LATITUD` del CSV.
+- Se conserva el alcance de nueve registros en Lima, Ica y Arequipa. Se comprobó la licencia ODC-BY declarada en la Plataforma Nacional de Datos Abiertos. La ficha MINCETUR 3348 respalda explícitamente el único alias conservado, «Plaza de Armas de Lima» para «Plaza Mayor De Lima»; dos aliases no sustentados por las fichas MINCETUR del catálogo se retiraron. La cobertura sigue siendo limitada, no nacional ni de localidades independientes.
+
+### Validaciones ejecutadas
+
+- `mvn verify`: `BUILD SUCCESS`, 67 pruebas, 0 fallos, 8 omitidas en `PostgisIntegrationTests` porque no existe entorno Docker. Por ello no se ejecutaron contra PostGIS: migraciones Flyway reales, índices/restricciones/geometry, carga e idempotencia persistida, consulta JDBC ni endpoint con datos del catálogo.
+- `dart format --output=none --set-exit-if-changed lib test`: PASS, 96 archivos sin cambios.
+- `flutter analyze`: PASS.
+- `flutter test`: PASS, 263/263. Incluye pruebas de adaptador/widget con dobles, no prueba tráfico real Flutter→API→PostGIS.
+- La verificación HTTP del endpoint sigue limitada a pruebas MockMvc del controlador y su respuesta bajo mocks; no se ejecutó un servidor API con datos persistidos. Consultas reales de aceptación y flujo destino→`PlanRoute` contra esos resultados: no ejecutados.
+- APK debug configurada: `mobile/build/app/outputs/flutter-apk/app-debug.apk`; `BACKEND_BASE_URL=https://10.0.2.2:8443` (dirección reservada para Android Emulator hacia el host; no es una configuración para HONOR ni una URL de despliegue). Build PASS, SHA-256 `F53964E4B8AA335CB163E8B99C052CBDEA06EB1F21B5C83241F1822DC2B05797`, 194.269.483 bytes. La compilación no demuestra conectividad: no había servidor backend local ni certificado local disponible.
+- `git diff --check`: PASS. UTF-8/enlaces Markdown locales, JSON del catálogo y escaneo de secretos: PASS.
+
+```ini
+UI2_SEARCH_002_POSTGIS = NOT_EXECUTED_ENVIRONMENT_UNAVAILABLE
+UI2_SEARCH_002_FLYWAY = NOT_EXECUTED_AGAINST_POSTGIS
+UI2_SEARCH_002_CATALOG_SOURCE = VERIFIED_9_RECORDS
+UI2_SEARCH_002_CATALOG_DATABASE_LOAD = NOT_EXECUTED
+UI2_SEARCH_002_API = MOCKMVC_ONLY_NO_DATABASE
+UI2_SEARCH_002_FLUTTER_INTEGRATION = AUTOMATED_WITH_TEST_DOUBLES
+UI2_SEARCH_002_BACKEND_TESTS = PASS_67_WITH_8_POSTGIS_SKIPPED
+UI2_SEARCH_002_FLUTTER_TESTS = PASS_263
+UI2_SEARCH_002_END_TO_END = PARTIALLY_VALIDATED
+UI2_SEARCH_002_PUSH = NOT_AUTHORIZED
+UI2_SEARCH_002_PR = NOT_AUTHORIZED
+UI2_SEARCH_002_MERGE = NOT_AUTHORIZED
+UI2_SEARCH_002_PHYSICAL_VALIDATION = NOT_AUTHORIZED
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+P12_5 = NOT_AUTHORIZED
+PRODUCTION_READINESS = NOT_DECLARED
+```

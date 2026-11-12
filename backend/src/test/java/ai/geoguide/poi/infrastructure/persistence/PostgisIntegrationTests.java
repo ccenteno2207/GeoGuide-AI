@@ -115,16 +115,17 @@ class PostgisIntegrationTests {
     @Test
     void destinationCatalogSearchMatchesAccentInsensitiveNamesAndAliases() {
         UUID id = UUID.randomUUID();
-        Destination destination = new Destination(id, "Líneas Y Geoglifos De Nasca Y Palpa", null,
-                "ARCHAEOLOGICAL_SITE", "Ica, Nazca, NASCA", -14.73900594, -75.13001561,
-                "MINCETUR", "254", "https://example.test/254", "ODC-BY-1.0", "Fuente MINCETUR",
-                List.of(new Destination.Alias(UUID.randomUUID(), "Líneas de Nazca", null, "Ficha 254")));
+        Destination destination = new Destination(id, "Plaza Mayor De Lima", null,
+                "LANDMARK", "Lima, Lima, LIMA", -12.045947477780945, -77.03060082209015,
+                "MINCETUR", "3348", "https://example.test/3348", "ODC-BY-1.0", "Fuente MINCETUR",
+                List.of(new Destination.Alias(UUID.randomUUID(), "Plaza de Armas de Lima", null,
+                        "Ficha MINCETUR 3348: también llamada Plaza de Armas")));
         destinationRepository.saveCatalogEntry(destination, "test-v1", java.time.LocalDate.of(2026, 11, 10));
 
-        assertThat(destinationRepository.search("lineas de nazca", 10))
+        assertThat(destinationRepository.search("plaza de armas de lima", 10))
                 .extracting(Destination::canonicalName)
-                .containsExactly("Líneas Y Geoglifos De Nasca Y Palpa");
-        assertThat(destinationRepository.search("nazca", 1)).hasSize(1);
+                .containsExactly("Plaza Mayor De Lima");
+        assertThat(destinationRepository.search("PLAZA DE ARMAS", 1)).hasSize(1);
     }
 
     @Test
@@ -137,10 +138,10 @@ class PostgisIntegrationTests {
 
         mockMvc.perform(post("/api/v1/destinations/search")
                         .contentType("application/json")
-                        .content("{\"query\":\"canta\",\"limit\":20}"))
+                        .content("{\"query\":\"Plaza de Armas de Lima\",\"limit\":20}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.results[0].name").value("Plaza De Armas De Canta"))
-                .andExpect(jsonPath("$.results[0].latitude").value(-11.4669625))
+                .andExpect(jsonPath("$.results[0].name").value("Plaza Mayor De Lima"))
+                .andExpect(jsonPath("$.results[0].latitude").value(-12.045947477780945))
                 .andExpect(jsonPath("$.results[0].source").value("MINCETUR - Inventario Nacional de Recursos Turísticos"));
     }
 
