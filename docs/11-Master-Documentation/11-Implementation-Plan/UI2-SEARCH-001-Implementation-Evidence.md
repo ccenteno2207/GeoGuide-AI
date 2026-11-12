@@ -191,3 +191,42 @@ UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
 P12_5 = NOT_AUTHORIZED
 PRODUCTION_READINESS = NOT_DECLARED
 ```
+## UI2-SEARCH-005 — corrección focalizada del cálculo y resumen de ruta (2026-11-12)
+
+**Resultado actual:** `AUTOMATED_PASS_PHYSICAL_PENDING`. La solución y pruebas automatizadas están completas. La APK se instaló correctamente en el HONOR; la validación física aún no comenzó porque el dispositivo quedó bloqueado en AOD y requiere desbloqueo manual.
+
+### Hallazgos y correcciones
+
+- Se reprodujo con pruebas del controlador una carrera asíncrona: una respuesta tardía de una selección anterior podía sustituir la ruta de los extremos nuevos o marcarla erróneamente como fallida. La selección ahora incrementa una revisión; las respuestas obsoletas se descartan y los cálculos concurrentes duplicados se ignoran.
+- La prueba de widget reprodujo que una respuesta online válida de `PlanRoute` dibujaba la geometría, pero no mostraba un resumen persistente de distancia y duración. El panel ahora presenta `Ruta: X.X km · Y min` para una ruta online planificada y conserva los estados vacíos offline existentes.
+- No se modificaron backend, API, contratos, permisos, configuración TLS ni seguimiento de ubicación.
+
+### Evidencia automatizada y de servicio temporal
+
+- `dart format .`: PASS; 97 archivos inspeccionados, 0 cambios de formato.
+- `flutter analyze`: PASS, sin incidencias.
+- `flutter test`: PASS, 270 aprobadas y 1 omitida (prueba opt-in contra backend real).
+- Las pruebas focalizadas cubren selección manual y por búsqueda, invalidación de resultados tardíos exitosos y fallidos, prevención de doble cálculo y persistencia del resumen sobre la geometría de la ruta.
+- En stack aislado temporal, `POST /api/v1/routes/plan` Lima–Canta devolvió HTTP 200, 101.3 km, 104 min y 1,912 puntos de geometría; `POST /api/v1/routes/discover` devolvió cinco POIs. No se expusieron puertos de servicio ni se tocaron los seis servicios de la VM principal.
+
+### APK y dispositivo HONOR
+
+- Rama `codex/ui2-search-001`, fuente de trabajo basada en `origin/main` `4003508f0e355de8fa003a7ce1898c5a8269fd4a` y cambios locales aún no confirmados.
+- APK debug con `BACKEND_BASE_URL=http://127.0.0.1:18083`; SHA-256 `00AD119A9CA923279476FDE46DFC67C37BBB3C8E1A91D276887E7E47C8DA5A26`; paquete `com.geoguideai.geoguide_ai`, versión `1.0.0` / código `1`.
+- Dispositivo conectado: HONOR LLY-NX3, Android API 36. El certificado SHA-256 del APK candidato y el instalado coincidió (`894975b5bc6751da09b3d69923d4ae399192470d86c107106f65f6cb8d7eab7e`). `adb install -r` terminó en `Success`, conservando los datos.
+- El túnel local de prueba usa loopback TCP 18083 y `adb reverse`; no se usó GPS, Driving, CEFI, TalkBack ni se cambiaron permisos. Pendiente desbloquear manualmente el teléfono para observar Rutea y ejecutar SEARCH-005-PHYS-01–05. Hasta entonces no se declara PASS físico.
+
+```ini
+UI2_SEARCH_005_RACE_REMEDIATION = AUTOMATED_PASS
+UI2_SEARCH_005_ROUTE_SUMMARY = AUTOMATED_PASS
+UI2_SEARCH_005_BACKEND_PLAN = TEMP_STACK_PASS
+UI2_SEARCH_005_BACKEND_DISCOVERY = TEMP_STACK_PASS_5_POIS
+UI2_SEARCH_005_APK_INSTALL = PASS
+UI2_SEARCH_005_PHYSICAL = PENDING_DEVICE_UNLOCK
+UI2_SEARCH_005_PUSH = NOT_AUTHORIZED
+UI2_SEARCH_005_PR = NOT_AUTHORIZED
+UI2_SEARCH_005_MERGE = NOT_AUTHORIZED
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+P12_5 = NOT_AUTHORIZED
+PRODUCTION_READINESS = NOT_DECLARED
+```

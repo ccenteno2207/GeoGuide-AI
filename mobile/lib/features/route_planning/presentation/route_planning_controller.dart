@@ -14,6 +14,7 @@ class RoutePlanningController {
   bool isCalculating = false;
   bool hasError = false;
   bool _preserveSearchDestinationForNextMapTap = false;
+  int _selectionRevision = 0;
   String status = 'Selecciona el origen en el mapa';
 
   bool get canPlan =>
@@ -23,6 +24,7 @@ class RoutePlanningController {
       planRoute != null;
 
   void selectPoint(RoutePoint point) {
+    _selectionRevision++;
     hasError = false;
     route = null;
     if (_preserveSearchDestinationForNextMapTap && origin == null) {
@@ -47,6 +49,7 @@ class RoutePlanningController {
   }
 
   void selectDestinationFromSearch(RoutePoint point) {
+    _selectionRevision++;
     hasError = false;
     route = null;
     destination = point;
@@ -60,7 +63,8 @@ class RoutePlanningController {
     final origin = this.origin;
     final destination = this.destination;
     final routePlanner = planRoute;
-    if (origin == null ||
+    if (isCalculating ||
+        origin == null ||
         destination == null ||
         !origin.isValid ||
         !destination.isValid ||
@@ -68,17 +72,35 @@ class RoutePlanningController {
       return;
     }
 
+    final selectionRevision = _selectionRevision;
     isCalculating = true;
     hasError = false;
     status = 'Calculando ruta';
     try {
-      route = await routePlanner(origin: origin, destination: destination);
+      final plannedRoute = await routePlanner(
+        origin: origin,
+        destination: destination,
+      );
+      if (!_isCurrentSelection(selectionRevision, origin, destination)) return;
+      route = plannedRoute;
       status = 'Ruta visible';
     } on AppFailure catch (failure) {
+      if (!_isCurrentSelection(selectionRevision, origin, destination)) return;
       hasError = true;
       status = failure.userMessage;
     } finally {
       isCalculating = false;
     }
   }
+
+  bool _isCurrentSelection(
+    int revision,
+    RoutePoint origin,
+    RoutePoint destination,
+  ) =>
+      revision == _selectionRevision &&
+      this.origin?.latitude == origin.latitude &&
+      this.origin?.longitude == origin.longitude &&
+      this.destination?.latitude == destination.latitude &&
+      this.destination?.longitude == destination.longitude;
 }

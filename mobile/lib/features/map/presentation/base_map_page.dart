@@ -1176,6 +1176,13 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                 ),
                               ),
                             ),
+                          if (offline == null && route != null)
+                            Text(
+                              'Ruta: ${(route.distanceMeters / 1000).toStringAsFixed(1)} km · ${(route.durationSeconds / 60).round()} min',
+                              key: const ValueKey('route-summary'),
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
                           if (statusMessage != null) Text(statusMessage),
                           if (locationStatus != null &&
                               locationStatus != statusMessage)
