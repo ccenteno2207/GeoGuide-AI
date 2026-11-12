@@ -6,6 +6,23 @@ info:
 servers:
   - url: https://api.example.org/api/v1
 paths:
+  /destinations/search:
+    post:
+      summary: Buscar destinos del catálogo curado por nombre
+      description: La consulta se envía explícitamente. No se conserva historial de búsqueda.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DestinationSearchRequest' }
+      responses:
+        '200':
+          description: Coincidencias verificadas; lista vacía cuando no hay resultados.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DestinationSearchResponse' }
+        '400': { description: Consulta o límite inválido }
+        '500': { description: Error interno }
   /places/{id}:
     get:
       summary: Obtener detalle de un punto de interés
@@ -75,6 +92,34 @@ paths:
         '504': { description: Timeout del proveedor de rutas }
 components:
   schemas:
+    DestinationSearchRequest:
+      type: object
+      required: [query]
+      properties:
+        query: { type: string, minLength: 2, maxLength: 100 }
+        limit: { type: integer, minimum: 1, maximum: 20, default: 10 }
+    DestinationSearchResponse:
+      type: object
+      required: [results]
+      properties:
+        results:
+          type: array
+          maxItems: 20
+          items: { $ref: '#/components/schemas/DestinationSearchResult' }
+    DestinationSearchResult:
+      type: object
+      required: [id, name, type, administrativeContext, latitude, longitude, source, sourceUrl, license, attribution]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        type: { type: string }
+        administrativeContext: { type: string }
+        latitude: { type: number, format: double, minimum: -90, maximum: 90 }
+        longitude: { type: number, format: double, minimum: -180, maximum: 180 }
+        source: { type: string }
+        sourceUrl: { type: string, format: uri }
+        license: { type: string }
+        attribution: { type: string }
     GeoPoint:
       type: object
       required: [latitude, longitude]

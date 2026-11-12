@@ -1,0 +1,26 @@
+{
+  "version": "mincetur-pilot-v1",
+  "sourceSystem": "MINCETUR - Inventario Nacional de Recursos Turísticos",
+  "sourceLicense": "ODC-BY-1.0",
+  "attribution": "MINCETUR — Inventario Nacional de Recursos Turísticos (Datos Abiertos)",
+  "sourceResourceId": "227cb3d6-5aff-46a1-aa32-2069e875b040",
+  "sourceResourceUrl": "https://www.mincetur.gob.pe/Datos_abiertos/DGET/Inventario_recursos_turisticos.csv",
+  "sourceDatasetUrl": "https://www.datosabiertos.gob.pe/dataset/inventario-nacional-de-recursos-tur%C3%ADsticos",
+  "sourceSha256": "F66AE874FAD26E899ABD023A47B96E980D194A563D7F0E7CB202A95D221D263E",
+  "sourceCutoff": "2026-11-10",
+  "retrievedAt": "2026-11-10",
+  "coverage": "Nueve recursos turísticos con ficha y coordenadas verificables en Lima, Ica y Arequipa; no es cobertura nacional ni catálogo independiente de localidades.",
+  "coordinateMappingNote": "En el CSV de origen, las columnas LATITUD y LONGITUD contienen respectivamente valores de longitud y latitud; el catálogo coloca LONGITUD del origen en latitude y LATITUD del origen en longitude, verificado por rangos geográficos del Perú y fichas fuente.",
+  "coordinateConvention": "WGS84 / EPSG:4326",
+  "destinations": [
+    {"sourceRecordId":"237","canonicalName":"Laguna De Huacachina","type":"NATURAL_ATTRACTION","context":"Ica, Ica, ICA","latitude":-14.087854051458233,"longitude":-75.76291501522064,"sourceUrl":"https://consultasenlinea.mincetur.gob.pe/fichaInventario/index.aspx?cod_Ficha=237","aliases":[]},
+    {"sourceRecordId":"254","canonicalName":"Líneas Y Geoglifos De Nasca Y Palpa","type":"ARCHAEOLOGICAL_SITE","context":"Ica, Nazca, NASCA","latitude":-14.739005943231717,"longitude":-75.13001561164856,"sourceUrl":"https://consultasenlinea.mincetur.gob.pe/fichaInventario/index.aspx?cod_Ficha=254","aliases":[]},
+    {"sourceRecordId":"972","canonicalName":"Plaza De Armas De Arequipa","type":"LANDMARK","context":"Arequipa, Arequipa, AREQUIPA","latitude":-16.398876627591853,"longitude":-71.53694182634353,"sourceUrl":"https://consultasenlinea.mincetur.gob.pe/fichaInventario/index.aspx?cod_Ficha=972","aliases":[]},
+    {"sourceRecordId":"2725","canonicalName":"Petroglifos De Checta","type":"ARCHAEOLOGICAL_SITE","context":"Lima, Canta, SANTA ROSA DE QUIVES","latitude":-11.69289,"longitude":-76.81504,"sourceUrl":"https://consultasenlinea.mincetur.gob.pe/fichaInventario/index.aspx?cod_Ficha=2725","aliases":[]},
+    {"sourceRecordId":"3348","canonicalName":"Plaza Mayor De Lima","type":"LANDMARK","context":"Lima, Lima, LIMA","latitude":-12.045947477780945,"longitude":-77.03060082209015,"sourceUrl":"https://consultasenlinea.mincetur.gob.pe/fichaInventario/index.aspx?cod_Ficha=3348","aliases":[{"name":"Plaza de Armas de Lima","sourceReference":"Ficha MINCETUR 3348"}]},
+    {"sourceRecordId":"6009","canonicalName":"Santuario De Santa Rosa De Quives","type":"LANDMARK","context":"Lima, Canta, SANTA ROSA DE QUIVES","latitude":-11.668871,"longitude":-76.79021699999998,"sourceUrl":"https://consultasenlinea.mincetur.gob.pe/fichaInventario/index.aspx?cod_Ficha=6009","aliases":[]},
+    {"sourceRecordId":"11631","canonicalName":"Plaza De Armas De Ica","type":"LANDMARK","context":"Ica, Ica, ICA","latitude":-14.064002,"longitude":-75.729237,"sourceUrl":"https://consultasenlinea.mincetur.gob.pe/fichaInventario/index.aspx?cod_Ficha=11631","aliases":[]},
+    {"sourceRecordId":"14068","canonicalName":"Plaza De Armas De Canta","type":"LANDMARK","context":"Lima, Canta, CANTA","latitude":-11.4669625,"longitude":-76.6247746,"sourceUrl":"https://consultasenlinea.mincetur.gob.pe/fichaInventario/index.aspx?cod_Ficha=14068","aliases":[]},
+    {"sourceRecordId":"14060","canonicalName":"Plaza De Armas De Obrajillo","type":"LANDMARK","context":"Lima, Canta, CANTA","latitude":-11.4531255,"longitude":-76.6198348,"sourceUrl":"https://consultasenlinea.mincetur.gob.pe/fichaInventario/index.aspx?cod_Ficha=14060","aliases":[]}
+  ]
+}

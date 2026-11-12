@@ -152,6 +152,26 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
+  testWidgets('online route snapshot shows a persistent route summary', (
+    tester,
+  ) async {
+    final app = OfflineDiscovery(
+      source: fixtures.Source(),
+      store: MemoryStore(),
+      backendContext: fixtures.query().backendContext,
+      now: () => fixtures.captured,
+    );
+    await app.discover(fixtures.query());
+
+    await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ruta: 0.1 km · 1 min'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 2));
+    expect(find.text('Ruta: 0.1 km · 1 min'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets(
     'expiry removes visible cached detail without resurrecting stale POI',
     (tester) async {
