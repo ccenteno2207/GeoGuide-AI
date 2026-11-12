@@ -2,11 +2,16 @@ import 'package:flutter/material.dart';
 
 /// Rutea's location glyph, intentionally distinct from route and POI markers.
 class RuteaLocationMarker extends StatelessWidget {
-  const RuteaLocationMarker({super.key});
+  const RuteaLocationMarker({
+    super.key,
+    this.semanticsLabel = 'Ubicación actual',
+  });
+
+  final String semanticsLabel;
 
   @override
   Widget build(BuildContext context) => Semantics(
-    label: 'Ubicación actual',
+    label: semanticsLabel,
     image: true,
     child: ExcludeSemantics(
       child: CustomPaint(

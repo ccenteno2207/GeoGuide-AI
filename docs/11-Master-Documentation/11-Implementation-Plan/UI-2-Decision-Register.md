@@ -136,3 +136,27 @@ UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
 P12_5 = NOT_AUTHORIZED
 PRODUCTION_READINESS = NOT_DECLARED
 ```
+
+## 9. Adenda aprobada — UI2-EXPLORATION-UX-002 (2026-11-12)
+
+El propietario autorizó el refinamiento UX-01–UX-05 de la exploración Flutter. Esta adenda registra una excepción de implementación limitada; no modifica retrospectivamente el contrato UI-2 congelado ni sus antecedentes.
+
+- **UX-01 — Buscador:** superficie opaca, contraste y estilo del Design System; conserva accesibilidad y escalado.
+- **UX-02 — Resultados:** la fila completa es seleccionable; se omite el botón redundante y la provenance técnica en la lista. Se muestra solo el contexto geográfico confiable presente en el DTO, sin inventar localidades; la información disponible permanece en el detalle.
+- **UX-03 — Acción contextual:** «Ver ruta» solo aparece cuando hay destino y origen utilizable; representa carga de PlanRoute/Route Discovery, desaparece para la ruta vigente y se recupera ante cambios o error. No se calcula al seleccionar una sugerencia.
+- **UX-04 — Ancho:** el buscador usa la región completa cuando la acción de ruta no está pendiente y se adapta al ancho disponible cuando sí lo está.
+- **UX-05 — Calidad puntual:** la política del cliente clasifica como precisa una posición con precisión horizontal ≤50 m y edad ≤10 s; como aproximada, ≤100 m y ≤30 s; el resto no se presenta como ubicación actual utilizable. Son umbrales de aceptación del software, no garantía de exactitud física ni calibración del dispositivo. La UI expresa el estado aproximado/no confiable con datos del proveedor.
+
+La ubicación sigue siendo puntual y usa solo permiso previamente concedido (`requestPermission = false`); no agrega permiso, stream, seguimiento continuo, background, centrado repetido ni cambio de Driving. El timeout puntual de ocho segundos evita una espera indefinida. P9 y el aplazamiento GPS de Driving permanecen intactos. La validación de dispositivo físico queda pendiente.
+
+```ini
+UI2_EXPLORATION_UX_002_OWNER_DECISION = APPROVED
+UI2_EXPLORATION_UX_002_SCOPE = UX_01_UX_05
+UI2_EXPLORATION_UX_002_PHYSICAL = PENDING
+UI2_EXPLORATION_UX_002_MERGE = NOT_AUTHORIZED
+UI2_MAP_SEARCH_UX_001_PHYSICAL = PARTIAL
+UI2_ROUTE_UX_001_PHYSICAL = PARTIAL
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+P12_5 = NOT_AUTHORIZED
+PRODUCTION_READINESS = NOT_DECLARED
+```

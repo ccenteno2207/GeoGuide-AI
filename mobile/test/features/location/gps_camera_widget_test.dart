@@ -114,6 +114,61 @@ void main() {
     }
   });
 
+  testWidgets('usable approximate startup fix is labeled and less zoomed', (
+    tester,
+  ) async {
+    final source = StreamRepository(
+      result: CurrentLocationResult.available(
+        const LocationPoint(latitude: -11.47, longitude: -76.62),
+        accuracyMeters: 72,
+        timestamp: DateTime.now(),
+      ),
+    );
+    await tester.pumpWidget(GeoGuideApp(locationRepository: source));
+    await tester.pumpAndSettle();
+
+    final camera = tester
+        .widget<FlutterMap>(find.byType(FlutterMap))
+        .mapController!;
+    expect(find.byType(RuteaLocationMarker), findsOneWidget);
+    expect(find.text('Ubicación aproximada (±72 m)'), findsOneWidget);
+    expect(camera.camera.zoom, 14);
+    expect(source.permissionRequests, [false]);
+    expect(source.watchCalls, 0);
+    await tester.pumpWidget(const SizedBox());
+    await source.controller.close();
+  });
+
+  testWidgets('untrusted available startup fix is not drawn as current', (
+    tester,
+  ) async {
+    final source = StreamRepository(
+      result: CurrentLocationResult.available(
+        const LocationPoint(latitude: -11.47, longitude: -76.62),
+        accuracyMeters: 140,
+        timestamp: DateTime.now(),
+      ),
+    );
+    await tester.pumpWidget(GeoGuideApp(locationRepository: source));
+    await tester.pumpAndSettle();
+
+    final camera = tester
+        .widget<FlutterMap>(find.byType(FlutterMap))
+        .mapController!;
+    expect(find.byType(RuteaLocationMarker), findsNothing);
+    expect(
+      find.text(
+        'Ubicación no confiable; selecciona el origen en el mapa o reintenta',
+      ),
+      findsOneWidget,
+    );
+    expect(camera.camera.center.latitude, closeTo(-12.0464, .00001));
+    expect(source.permissionRequests, [false]);
+    expect(source.watchCalls, 0);
+    await tester.pumpWidget(const SizedBox());
+    await source.controller.close();
+  });
+
   testWidgets('user map gesture wins over a late initial GPS response', (
     tester,
   ) async {

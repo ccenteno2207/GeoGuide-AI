@@ -17,6 +17,7 @@ import '../../discovery/presentation/offline_cache_sheet.dart';
 
 import '../../location/application/request_current_location.dart';
 import '../../location/application/gps_camera_policy.dart';
+import '../../location/application/current_location_fix_policy.dart';
 import '../../location/domain/location_repository.dart';
 import 'rutea_location_marker.dart';
 import '../../discovery/application/discover_route.dart';
@@ -76,10 +77,12 @@ class BaseMapPage extends StatefulWidget {
 class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   final MapController _mapController = MapController();
   final GPSCameraPolicy _cameraPolicy = GPSCameraPolicy();
+  static const CurrentLocationFixPolicy _fixPolicy = CurrentLocationFixPolicy();
   LocationPoint? _currentLocation;
   DateTime? _currentLocationTimestamp;
   double? _currentAccuracyMeters;
   String _locationStatus = 'Ubicación no solicitada';
+  String? _locationQualityMessage;
   bool _isRequestingLocation = false;
   bool _ownershipPending = true;
   bool _initialLocationAttempted = false;
@@ -195,6 +198,8 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   bool _followCamera = false;
   bool _followPausedByLifecycle = false;
   bool _resolvingRouteOrigin = false;
+  int _routeOriginRevision = 0;
+  bool _manualOriginSelected = false;
   String _routeOriginLabel = 'Selecciona el origen en el mapa';
   DateTime? _lastLocationTimestamp;
   StreamSubscription<LocationSample>? _locationSubscription;
@@ -321,33 +326,32 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
           _drivingReduced) {
         return;
       }
-      final position = result.position;
-      final timestamp = result.timestamp;
-      final accuracy = result.accuracyMeters;
-      final now = _now();
-      final valid =
-          result.availability == LocationAvailability.available &&
-          position != null &&
-          position.latitude.isFinite &&
-          position.longitude.isFinite &&
-          position.latitude.abs() <= 90 &&
-          position.longitude.abs() <= 180 &&
-          timestamp != null &&
-          now.difference(timestamp).abs() <= const Duration(minutes: 2) &&
-          accuracy != null &&
-          accuracy.isFinite &&
-          accuracy >= 0 &&
-          accuracy <= 100;
-      if (!valid) return;
+      final fix = _fixPolicy.classify(result, _now());
+      if (!fix.isUsable) {
+        if (result.availability == LocationAvailability.available && mounted) {
+          setState(() {
+            _locationQualityMessage = fix.statusLabel;
+          });
+        }
+        return;
+      }
+      final position = fix.position!;
+      final accuracy = fix.accuracyMeters!;
 
       setState(() {
         _currentLocation = position;
-        _currentLocationTimestamp = timestamp;
+        _currentLocationTimestamp = fix.timestamp;
         _currentAccuracyMeters = _validAccuracy(accuracy);
-        _locationStatus = 'Ubicación actual visible';
+        _locationStatus = fix.statusLabel;
+        _locationQualityMessage = fix.quality == CurrentLocationQuality.precise
+            ? null
+            : fix.statusLabel;
       });
       if (!_initialCameraHasUserInteraction) {
-        _mapController.move(LatLng(position.latitude, position.longitude), 15);
+        _mapController.move(
+          LatLng(position.latitude, position.longitude),
+          fix.cameraZoom,
+        );
       }
     } catch (_) {
       // Startup location is best-effort; the existing manual control remains available.
@@ -580,7 +584,14 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     if (_drivingReduced) return;
     setState(() => _isRequestingLocation = true);
     final revision = ++_normalRevision;
-    final result = await widget.requestCurrentLocation();
+    CurrentLocationResult result;
+    try {
+      result = await widget.requestCurrentLocation();
+    } catch (_) {
+      result = const CurrentLocationResult.withAvailability(
+        LocationAvailability.unavailable,
+      );
+    }
     if (!mounted) return;
     if (revision != _normalRevision ||
         _ownershipPending ||
@@ -590,13 +601,24 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       return;
     }
 
+    final fix = _fixPolicy.classify(result, _now());
+    final position = fix.isUsable ? fix.position : null;
     setState(() {
       _isRequestingLocation = false;
-      _currentLocation = result.position;
-      _currentLocationTimestamp = result.timestamp;
-      _currentAccuracyMeters = _validAccuracy(result.accuracyMeters);
+      _currentLocation = position;
+      _currentLocationTimestamp = fix.isUsable ? fix.timestamp : null;
+      _currentAccuracyMeters = fix.isUsable
+          ? _validAccuracy(fix.accuracyMeters)
+          : null;
+      _locationQualityMessage =
+          fix.isUsable && fix.quality == CurrentLocationQuality.approximate
+          ? fix.statusLabel
+          : fix.quality == CurrentLocationQuality.untrusted &&
+                result.availability == LocationAvailability.available
+          ? fix.statusLabel
+          : null;
       _locationStatus = switch (result.availability) {
-        LocationAvailability.available => 'Ubicación actual visible',
+        LocationAvailability.available => fix.statusLabel,
         LocationAvailability.serviceDisabled =>
           'Servicio de ubicación no disponible',
         LocationAvailability.denied => 'Permiso de ubicación denegado',
@@ -606,9 +628,11 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       };
     });
 
-    final position = result.position;
     if (position != null) {
-      _mapController.move(LatLng(position.latitude, position.longitude), 15);
+      _mapController.move(
+        LatLng(position.latitude, position.longitude),
+        fix.cameraZoom,
+      );
     } else {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
@@ -787,13 +811,22 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       return;
     }
     _initialCameraHasUserInteraction = true;
+    final selectsOrigin =
+        _routePlanning.origin == null || _routePlanning.destination != null;
+    ++_routeOriginRevision;
     widget.offlineDiscovery?.invalidatePending();
     setState(() {
-      if (widget.offlineDiscovery != null) _routeDiscovery.pois = const [];
+      _routeDiscovery.pois = const [];
+      _showDiscoveryList = false;
+      _destinationSelectionAwaitingSnapshot = false;
+      _resolvingRouteOrigin = false;
       _routePlanning.selectPoint(
         RoutePoint(latitude: point.latitude, longitude: point.longitude),
       );
-      _routeOriginLabel = 'Origen manual seleccionado';
+      if (selectsOrigin) {
+        _manualOriginSelected = true;
+        _routeOriginLabel = 'Origen manual seleccionado';
+      }
       if (widget.offlineDiscovery != null) {
         _destinationSelectionAwaitingSnapshot = true;
       }
@@ -809,14 +842,23 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         _b1Busy) {
       return;
     }
+    final design = GeoGuideTheme.exploration;
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      backgroundColor: design.surface,
+      barrierColor: Colors.black54,
+      elevation: 8,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      clipBehavior: Clip.antiAlias,
       builder: (sheetContext) => DestinationSearchSheet(
         searchDestinations: search,
         onDestinationSelected: (point) {
           if (!point.isValid || !mounted) return;
           _initialCameraHasUserInteraction = true;
+          ++_routeOriginRevision;
           widget.offlineDiscovery?.invalidatePending();
           setState(() {
             _routePlanning.selectDestinationFromSearch(point);
@@ -835,74 +877,116 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
   }
 
   Future<void> _prepareSearchedDestinationOrigin(RoutePoint destination) async {
+    final revision = ++_routeOriginRevision;
     if (_routePlanning.origin != null) {
-      if (mounted) setState(() => _routeOriginLabel = 'Origen manual');
+      if (mounted) {
+        setState(() {
+          _resolvingRouteOrigin = false;
+          _routeOriginLabel = _manualOriginSelected
+              ? 'Origen manual seleccionado'
+              : _currentLocationStatusForRoute;
+        });
+      }
       return;
     }
     final cachedOrigin = _freshCurrentLocationRoutePoint();
     if (cachedOrigin != null) {
       _routePlanning.setResolvedOrigin(cachedOrigin);
-      if (mounted) setState(() => _routeOriginLabel = 'Tu ubicación actual');
+      if (mounted) {
+        setState(() {
+          _resolvingRouteOrigin = false;
+          _routeOriginLabel = _currentLocationStatusForRoute;
+          _manualOriginSelected = false;
+        });
+      }
       return;
     }
+    if (!mounted) return;
     setState(() {
       _resolvingRouteOrigin = true;
       _routeOriginLabel = 'Comprobando ubicación actual…';
     });
-    final result = await widget.requestCurrentLocation(
-      requestPermission: false,
-    );
-    if (!mounted ||
-        _routePlanning.destination != destination ||
-        _routePlanning.origin != null) {
-      return;
-    }
-    final timestamp = result.timestamp;
-    final fresh =
-        timestamp != null &&
-        DateTime.now().difference(timestamp).abs() <=
-            const Duration(minutes: 2);
-    final accurate =
-        result.accuracyMeters != null && result.accuracyMeters! <= 100;
-    final point = result.position;
-    setState(() {
-      _resolvingRouteOrigin = false;
-      if (result.availability == LocationAvailability.available &&
-          point != null &&
-          point.latitude.isFinite &&
-          point.longitude.isFinite &&
-          point.latitude.abs() <= 90 &&
-          point.longitude.abs() <= 180 &&
-          fresh &&
-          accurate) {
-        _routePlanning.setResolvedOrigin(
-          RoutePoint(latitude: point.latitude, longitude: point.longitude),
-        );
-        _routeOriginLabel = 'Tu ubicación actual';
-      } else {
-        _routeOriginLabel =
-            'Sin ubicación válida; selecciona el origen en el mapa';
+    try {
+      final result = await widget.requestCurrentLocation(
+        requestPermission: false,
+      );
+      if (!_isCurrentRouteOriginRequest(revision, destination)) return;
+      final fix = _fixPolicy.classify(result, _now());
+      final point = fix.position;
+      setState(() {
+        _resolvingRouteOrigin = false;
+        if (fix.isUsable && point != null) {
+          _routePlanning.setResolvedOrigin(
+            RoutePoint(latitude: point.latitude, longitude: point.longitude),
+          );
+          _manualOriginSelected = false;
+          _routeOriginLabel = fix.quality == CurrentLocationQuality.precise
+              ? 'Tu ubicación actual'
+              : 'Tu ubicación aproximada (±${fix.accuracyMeters!.round()} m)';
+          _locationQualityMessage =
+              fix.quality == CurrentLocationQuality.precise
+              ? null
+              : fix.statusLabel;
+        } else {
+          _routeOriginLabel =
+              'Sin ubicación válida; selecciona el origen en el mapa';
+        }
+      });
+    } catch (_) {
+      if (_isCurrentRouteOriginRequest(revision, destination)) {
+        setState(() {
+          _resolvingRouteOrigin = false;
+          _routeOriginLabel =
+              'Sin ubicación válida; selecciona el origen en el mapa';
+        });
       }
-    });
+    }
+  }
+
+  bool _isCurrentRouteOriginRequest(int revision, RoutePoint destination) =>
+      mounted &&
+      revision == _routeOriginRevision &&
+      _routePlanning.destination == destination &&
+      _routePlanning.origin == null;
+
+  String get _currentLocationStatusForRoute =>
+      _currentAccuracyMeters != null &&
+          (_currentAccuracyMeters! > 50 ||
+              (_currentLocationTimestamp != null &&
+                  _now().difference(_currentLocationTimestamp!) >
+                      const Duration(seconds: 10)))
+      ? 'Tu ubicación aproximada (±${_currentAccuracyMeters!.round()} m)'
+      : 'Tu ubicación actual';
+
+  String get _currentLocationSemanticsLabel {
+    final accuracy = _currentAccuracyMeters;
+    if (accuracy == null) return 'Ubicación actual';
+    final approximate =
+        accuracy > 50 ||
+        (_currentLocationTimestamp != null &&
+            _now().difference(_currentLocationTimestamp!) >
+                const Duration(seconds: 10));
+    return approximate
+        ? 'Ubicación aproximada, precisión estimada ±${accuracy.round()} metros'
+        : 'Ubicación actual, precisión estimada ±${accuracy.round()} metros';
   }
 
   RoutePoint? _freshCurrentLocationRoutePoint() {
     final position = _currentLocation;
     final timestamp = _currentLocationTimestamp;
     final accuracy = _currentAccuracyMeters;
-    if (position == null ||
-        timestamp == null ||
-        accuracy == null ||
-        !position.latitude.isFinite ||
-        !position.longitude.isFinite ||
-        position.latitude.abs() > 90 ||
-        position.longitude.abs() > 180 ||
-        !accuracy.isFinite ||
-        accuracy < 0 ||
-        accuracy > 100 ||
-        _now().difference(timestamp).abs() > const Duration(minutes: 2)) {
+    if (position == null || timestamp == null || accuracy == null) {
       return null;
     }
+    final fix = _fixPolicy.classify(
+      CurrentLocationResult.available(
+        position,
+        accuracyMeters: accuracy,
+        timestamp: timestamp,
+      ),
+      _now(),
+    );
+    if (!fix.isUsable) return null;
     return RoutePoint(
       latitude: position.latitude,
       longitude: position.longitude,
@@ -914,34 +998,15 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     if (_drivingReduced) return;
     if (_routePlanning.isCalculating || _resolvingRouteOrigin) return;
     if (_routePlanning.origin == null && _routePlanning.destination != null) {
-      _resolvingRouteOrigin = true;
-      final result = await widget.requestCurrentLocation(
-        requestPermission: false,
-      );
-      _resolvingRouteOrigin = false;
-      if (!mounted || _routePlanning.destination == null) return;
-      final timestamp = result.timestamp;
-      final fresh =
-          timestamp != null &&
-          DateTime.now().difference(timestamp).abs() <=
-              const Duration(minutes: 2);
-      final accurate =
-          result.accuracyMeters != null && result.accuracyMeters! <= 100;
-      if (result.availability == LocationAvailability.available &&
-          result.position != null &&
-          result.position!.latitude.isFinite &&
-          result.position!.longitude.isFinite &&
-          result.position!.latitude.abs() <= 90 &&
-          result.position!.longitude.abs() <= 180 &&
-          fresh &&
-          accurate) {
-        _routePlanning.setResolvedOrigin(
-          RoutePoint(
-            latitude: result.position!.latitude,
-            longitude: result.position!.longitude,
-          ),
-        );
-        _routeOriginLabel = 'Tu ubicación actual';
+      await _prepareSearchedDestinationOrigin(_routePlanning.destination!);
+      if (!mounted || _routePlanning.origin == null) {
+        if (mounted) {
+          setState(() {});
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Selecciona el origen en el mapa')),
+          );
+        }
+        return;
       }
     }
     if (_routePlanning.origin == null || _routePlanning.destination == null) {
@@ -1198,7 +1263,14 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         ? null
         : snapshot?.route ?? _routePlanning.route;
     final hasEndpoints = _routePlanning.destination != null;
-    final isLoading = offline?.busy == true || _routeDiscovery.isDiscovering;
+    final planBusy = _routePlanning.isCalculating || _resolvingRouteOrigin;
+    final discoveryBusy =
+        offline?.busy == true || _routeDiscovery.isDiscovering;
+    final isLoading = planBusy || discoveryBusy;
+    final hasCurrentRoute =
+        route != null &&
+        !snapshotExpired &&
+        !_destinationSelectionAwaitingSnapshot;
     final discoveryError = offline != null
         ? offline.requested != null &&
               (offline.availability == DiscoveryAvailability.error ||
@@ -1217,7 +1289,9 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         _locationStatus == 'Esperando una muestra de ubicación válida' ||
         _locationStatus ==
             'Estado GPS sin confirmar; vuelve a la app para comprobarlo';
-    final locationStatus = locationStatusIsOperational ? _locationStatus : null;
+    final locationStatus = locationStatusIsOperational
+        ? _locationStatus
+        : _locationQualityMessage;
     final hasError =
         snapshotExpired ||
         discoveryError ||
@@ -1242,8 +1316,10 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         ? offline?.message ?? _routeDiscovery.status
         : cacheError
         ? offline?.cacheMessage
-        : isLoading
-        ? 'Buscando lugares en la ruta'
+        : planBusy
+        ? 'Calculando ruta…'
+        : discoveryBusy
+        ? 'Buscando lugares…'
         : hasValidEmpty
         ? 'No se encontraron lugares con estos filtros para esta ruta.'
         : _b1Busy || _b1Owned || _b1Status == RouteSessionStatus.interrupted
@@ -1264,31 +1340,52 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       return const SizedBox.shrink();
     }
 
+    final searchAction = widget.searchDestinations == null
+        ? null
+        : FilledButton.icon(
+            key: const ValueKey('open-destination-search'),
+            onPressed: _ownershipPending || _b1Owned || _b1Busy
+                ? null
+                : _openDestinationSearch,
+            icon: const Icon(Icons.search),
+            label: const Text('¿Qué conoceremos hoy?'),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: GeoGuideTheme.exploration.primary,
+              elevation: 2,
+              minimumSize: const Size(48, 52),
+              side: const BorderSide(color: Color(0xFFB6CAC5)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+          );
+    final routeAction = hasEndpoints && !hasCurrentRoute
+        ? FilledButton.icon(
+            key: const ValueKey('calculate-route'),
+            onPressed:
+                _routePlanning.canPlan &&
+                    _routePlanning.origin?.isValid == true &&
+                    !isLoading
+                ? _calculateRoute
+                : null,
+            icon: isLoading
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.alt_route),
+            label: Text(
+              planBusy
+                  ? (_resolvingRouteOrigin ? 'Ubicando origen…' : 'Calculando…')
+                  : _routePlanning.hasError
+                  ? 'Reintentar ruta'
+                  : 'Ver ruta',
+            ),
+          )
+        : null;
     final actions = <Widget>[
-      if (widget.searchDestinations != null)
-        OutlinedButton.icon(
-          key: const ValueKey('open-destination-search'),
-          onPressed: _ownershipPending || _b1Owned || _b1Busy
-              ? null
-              : _openDestinationSearch,
-          icon: const Icon(Icons.search),
-          label: const Text('¿Qué conoceremos hoy?'),
-        ),
-      if (hasEndpoints)
-        FilledButton.icon(
-          key: const ValueKey('calculate-route'),
-          onPressed: _routePlanning.canPlan && !isLoading
-              ? _calculateRoute
-              : null,
-          icon: _routePlanning.isCalculating || isLoading
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : const Icon(Icons.alt_route),
-          label: Text(_resolvingRouteOrigin ? 'Ubicando origen…' : 'Ver ruta'),
-        ),
       if (route != null)
         Tooltip(
           message: 'Categorías: ${_filterSummary()}',
@@ -1327,10 +1424,12 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     final showContext =
         statusMessage != null ||
         locationStatus != null ||
-        (_routePlanning.destination != null && _routePlanning.route == null) ||
+        (_routePlanning.destination != null && !hasCurrentRoute) ||
         showRetry ||
         isLoading;
-    if (!showContext && actions.isEmpty) return const SizedBox.shrink();
+    if (!showContext && actions.isEmpty && searchAction == null) {
+      return const SizedBox.shrink();
+    }
 
     return Positioned(
       left: 12,
@@ -1376,9 +1475,9 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           if (_routePlanning.destination != null &&
-                              _routePlanning.route == null)
+                              !hasCurrentRoute)
                             Text('Origen: $_routeOriginLabel'),
-                          if (isLoading)
+                          if (isLoading && statusMessage == null)
                             const Padding(
                               padding: EdgeInsets.only(bottom: 6),
                               child: SizedBox.square(
@@ -1401,29 +1500,71 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                 label: const Text('Reintentar'),
                               ),
                             ),
-                          if (_routePlanning.hasError && hasEndpoints)
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton.icon(
-                                onPressed: _calculateRoute,
-                                icon: const Icon(Icons.refresh),
-                                label: const Text('Reintentar ruta'),
-                              ),
-                            ),
                         ],
                       ),
                     ),
                   ),
                 ),
-              if (actions.isNotEmpty)
+              if (searchAction != null ||
+                  routeAction != null ||
+                  actions.isNotEmpty)
                 Padding(
                   padding: EdgeInsets.only(top: showContext ? 8 : 0),
-                  child: Wrap(
-                    key: const ValueKey('exploration-bottom-actions'),
-                    alignment: WrapAlignment.center,
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: actions,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final controls = <Widget>[];
+                      if (routeAction == null) {
+                        if (searchAction != null) {
+                          controls.add(
+                            SizedBox(
+                              width: double.infinity,
+                              child: searchAction,
+                            ),
+                          );
+                        }
+                      } else if (searchAction == null ||
+                          constraints.maxWidth < 440) {
+                        if (searchAction != null) {
+                          controls.add(
+                            SizedBox(
+                              width: double.infinity,
+                              child: searchAction,
+                            ),
+                          );
+                          controls.add(const SizedBox(height: 8));
+                        }
+                        controls.add(
+                          SizedBox(width: double.infinity, child: routeAction),
+                        );
+                      } else {
+                        controls.add(
+                          Row(
+                            children: [
+                              Expanded(child: searchAction),
+                              const SizedBox(width: 8),
+                              routeAction,
+                            ],
+                          ),
+                        );
+                      }
+                      if (actions.isNotEmpty) {
+                        controls.add(const SizedBox(height: 8));
+                        controls.add(
+                          Wrap(
+                            alignment: WrapAlignment.center,
+                            spacing: 8,
+                            runSpacing: 4,
+                            children: actions,
+                          ),
+                        );
+                      }
+                      return Column(
+                        key: const ValueKey('exploration-bottom-actions'),
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: controls,
+                      );
+                    },
                   ),
                 ),
             ],
@@ -1612,7 +1753,10 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                   width: 36,
                                   height: 42,
                                   alignment: Alignment.bottomCenter,
-                                  child: const RuteaLocationMarker(),
+                                  child: RuteaLocationMarker(
+                                    semanticsLabel:
+                                        _currentLocationSemanticsLabel,
+                                  ),
                                 ),
                               ],
                             ),

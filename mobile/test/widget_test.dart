@@ -187,6 +187,13 @@ void main() {
       find.byKey(const ValueKey('open-destination-search')),
       findsOneWidget,
     );
+    expect(find.byKey(const ValueKey('calculate-route')), findsNothing);
+    expect(
+      tester
+          .getSize(find.byKey(const ValueKey('open-destination-search')))
+          .width,
+      greaterThanOrEqualTo(300),
+    );
 
     await tester.tap(find.byKey(const ValueKey('open-destination-search')));
     await tester.pumpAndSettle();
@@ -202,7 +209,7 @@ void main() {
 
     expect(repository.queries, ['Canta']);
     expect(find.text('Plaza de Armas de Canta'), findsOneWidget);
-    await tester.tap(find.text('Seleccionar'));
+    await tester.tap(find.text('Plaza de Armas de Canta'));
     await tester.pumpAndSettle();
     expect(routeRepository.requests, isEmpty);
     expect(
@@ -250,7 +257,7 @@ void main() {
       );
       await tester.tap(find.byKey(const ValueKey('destination-search-submit')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Seleccionar'));
+      await tester.tap(find.text('Plaza de Armas de Canta'));
       await tester.pumpAndSettle();
 
       expect(routeRepository.requests, isEmpty);
@@ -270,9 +277,38 @@ void main() {
       expect(destination.longitude, -76.6247746);
       expect(find.byType(PolylineLayer), findsOneWidget);
       expect(find.text('Ruta: 12.3 km · 60 min'), findsOneWidget);
+      expect(find.byKey(const ValueKey('calculate-route')), findsNothing);
+      expect(
+        tester
+            .getSize(find.byKey(const ValueKey('open-destination-search')))
+            .width,
+        greaterThanOrEqualTo(300),
+      );
       await tester.tap(find.byKey(const ValueKey('toggle-discovery-list')));
       await tester.pumpAndSettle();
       expect(find.text('POI de prueba de Canta'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('close-discovery-list')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('open-destination-search')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('destination-search-query')),
+        'Canta',
+      );
+      await tester.tap(find.byKey(const ValueKey('destination-search-submit')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Plaza de Armas de Canta'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('calculate-route')), findsOneWidget);
+      expect(find.byKey(const ValueKey('route-summary')), findsNothing);
+      expect(find.text('POI de prueba de Canta'), findsNothing);
+      expect(find.text('Origen: Tu ubicación actual'), findsOneWidget);
+
+      await tester.tap(find.text('Ver ruta'));
+      await tester.pumpAndSettle();
+      expect(routeRepository.requests, hasLength(2));
+      expect(discoveryRepository.requests, hasLength(2));
       await tester.pumpWidget(const SizedBox());
     },
   );
@@ -301,8 +337,10 @@ void main() {
       await tester.pumpWidget(
         GeoGuideApp(
           locationRepository: FakeLocationRepository(
-            const CurrentLocationResult.available(
+            CurrentLocationResult.available(
               LocationPoint(latitude: -12.05, longitude: -77.04),
+              accuracyMeters: 8,
+              timestamp: DateTime.now(),
             ),
           ),
         ),
@@ -314,7 +352,15 @@ void main() {
 
       expect(find.byType(RuteaLocationMarker), findsOneWidget);
       expect(find.byIcon(Icons.my_location), findsOneWidget);
-      expect(find.byType(CircleLayer), findsNothing);
+      expect(find.byType(CircleLayer), findsOneWidget);
+      expect(
+        tester
+            .widget<CircleLayer>(find.byType(CircleLayer))
+            .circles
+            .single
+            .radius,
+        8,
+      );
     },
   );
 
@@ -324,9 +370,10 @@ void main() {
     await tester.pumpWidget(
       GeoGuideApp(
         locationRepository: FakeLocationRepository(
-          const CurrentLocationResult.available(
+          CurrentLocationResult.available(
             LocationPoint(latitude: -12.05, longitude: -77.04),
             accuracyMeters: 42,
+            timestamp: DateTime.now(),
           ),
         ),
       ),
@@ -343,7 +390,7 @@ void main() {
     final semantics = tester.ensureSemantics();
     expect(
       tester.getSemantics(find.byType(RuteaLocationMarker)).label,
-      'Ubicación actual',
+      'Ubicación actual, precisión estimada ±42 metros',
     );
     semantics.dispose();
   });

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../core/network/app_failure.dart';
+import '../../../app/theme/geoguide_theme.dart';
 
 import '../../route_planning/domain/route_point.dart';
 import '../application/search_destinations.dart';
@@ -152,82 +153,113 @@ class _DestinationSearchSheetState extends State<DestinationSearchSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          16,
-          20,
-          16 + MediaQuery.viewInsetsOf(context).bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              '¿Qué conoceremos hoy?',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    key: const ValueKey('destination-search-query'),
-                    controller: _controller,
-                    textInputAction: TextInputAction.search,
-                    onChanged: _queryChanged,
-                    onSubmitted: (_) => _submit(force: true),
-                    decoration: const InputDecoration(
-                      hintText: '¿Qué conoceremos hoy?',
-                      border: OutlineInputBorder(),
+    final tokens = GeoGuideTheme.exploration;
+    return Material(
+      key: const ValueKey('destination-search-surface'),
+      color: tokens.surface,
+      child: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            16,
+            20,
+            16 + MediaQuery.viewInsetsOf(context).bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                '¿Qué conoceremos hoy?',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: tokens.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      key: const ValueKey('destination-search-query'),
+                      controller: _controller,
+                      textInputAction: TextInputAction.search,
+                      onChanged: _queryChanged,
+                      onSubmitted: (_) => _submit(force: true),
+                      decoration: InputDecoration(
+                        hintText: '¿Qué conoceremos hoy?',
+                        filled: true,
+                        fillColor: Colors.white,
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF72817E),
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF72817E),
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: BorderSide(
+                            color: tokens.primary,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  IconButton.filled(
+                    key: const ValueKey('destination-search-submit'),
+                    tooltip: 'Buscar destinos',
+                    onPressed: () => _submit(force: true),
+                    icon: const Icon(Icons.search),
+                    constraints: const BoxConstraints.tightFor(
+                      width: 48,
+                      height: 48,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (_state == _SearchState.loading)
+                _status(
+                  'Buscando destinos',
+                  child: const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(12),
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+                )
+              else if (_state == _SearchState.empty)
+                _status('No encontramos destinos con ese nombre.')
+              else if (_state == _SearchState.error)
+                _retryState(_message ?? 'No se pudo buscar destinos.')
+              else if (_state == _SearchState.offline)
+                _retryState(
+                  _message ?? 'Sin conexión o servicio no disponible.',
+                )
+              else if (_state == _SearchState.results)
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 360),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: _results.length,
+                    separatorBuilder: (_, _) => const Divider(height: 1),
+                    itemBuilder: (context, index) => _DestinationResultTile(
+                      result: _results[index],
+                      onSelected: widget.onDestinationSelected,
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                IconButton.filled(
-                  key: const ValueKey('destination-search-submit'),
-                  tooltip: 'Buscar destinos',
-                  onPressed: () => _submit(force: true),
-                  icon: const Icon(Icons.search),
-                  constraints: const BoxConstraints.tightFor(
-                    width: 48,
-                    height: 48,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (_state == _SearchState.loading)
-              _status(
-                'Buscando destinos',
-                child: const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(12),
-                    child: CircularProgressIndicator(),
-                  ),
-                ),
-              )
-            else if (_state == _SearchState.empty)
-              _status('No encontramos destinos con ese nombre.')
-            else if (_state == _SearchState.error)
-              _retryState(_message ?? 'No se pudo buscar destinos.')
-            else if (_state == _SearchState.offline)
-              _retryState(_message ?? 'Sin conexión o servicio no disponible.')
-            else if (_state == _SearchState.results)
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 360),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  itemCount: _results.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
-                  itemBuilder: (context, index) => _DestinationResultTile(
-                    result: _results[index],
-                    onSelected: widget.onDestinationSelected,
-                  ),
-                ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -246,26 +278,23 @@ class _DestinationResultTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final selectable = result.isRouteable;
-    final subtitle = [
-      result.typeLabel,
-      result.geographicContext,
-      if (result.provenanceLabel.trim().isNotEmpty)
-        'Fuente: ${result.provenanceLabel}',
-      if (result.attribution.trim().isNotEmpty)
-        'Atribución: ${result.attribution}',
-      if (result.license.trim().isNotEmpty) 'Licencia: ${result.license}',
-    ].where((part) => part.trim().isNotEmpty).join(' · ');
+    final geographicContext = result.geographicContext.trim();
 
     return ListTile(
       key: ValueKey('destination-result-${result.id}'),
       title: Text(result.name),
-      subtitle: Text(subtitle, maxLines: 3, overflow: TextOverflow.ellipsis),
-      isThreeLine: subtitle.contains(' · '),
-      trailing: FilledButton.tonal(
-        onPressed: selectable ? () => onSelected(result.verifiedPoint!) : null,
-        child: const Text('Seleccionar'),
-      ),
+      subtitle: geographicContext.isEmpty
+          ? null
+          : Text(
+              geographicContext,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+      onTap: selectable ? () => onSelected(result.verifiedPoint!) : null,
+      minVerticalPadding: 12,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       enabled: selectable,
+      minTileHeight: 64,
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geoguide_ai/core/network/app_failure.dart';
 import 'package:geoguide_ai/core/network/backend_configuration.dart';
@@ -173,7 +174,7 @@ void main() {
     expect(find.text('Resultado obsoleto'), findsNothing);
   });
 
-  testWidgets('keeps ambiguous results separate until explicit selection', (
+  testWidgets('whole result row selects an ambiguous routeable destination', (
     tester,
   ) async {
     final repository = _FakeDestinationRepository(
@@ -208,13 +209,32 @@ void main() {
     );
     expect(find.textContaining('Canta, Lima'), findsOneWidget);
     expect(selected, isNull);
-    await tester.tap(
-      find.descendant(
-        of: find.byKey(const ValueKey('destination-result-canta-plaza')),
-        matching: find.text('Seleccionar'),
-      ),
-    );
+    expect(find.text('Seleccionar'), findsNothing);
+    expect(find.text('Catálogo de prueba'), findsNothing);
+    final row = find.byKey(const ValueKey('destination-result-canta-plaza'));
+    final tile = tester.widget<ListTile>(row);
+    expect(tile.onTap, isNotNull);
+    expect(tile.minTileHeight, greaterThanOrEqualTo(48));
+    final semantics = tester.getSemantics(row);
+    expect(semantics.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+    await tester.tap(row);
     expect(selected?.latitude, -11.475);
+  });
+
+  testWidgets('search surface and query field use opaque design surfaces', (
+    tester,
+  ) async {
+    await _showSearch(tester, _FakeDestinationRepository());
+
+    final surface = tester.widget<Material>(
+      find.byKey(const ValueKey('destination-search-surface')),
+    );
+    final field = tester.widget<TextField>(
+      find.byKey(const ValueKey('destination-search-query')),
+    );
+    expect(surface.color, const Color(0xFFF6F9F8));
+    expect(field.decoration?.filled, isTrue);
+    expect(field.decoration?.fillColor, Colors.white);
   });
 
   testWidgets('does not enable route selection without verified coordinates', (
@@ -236,13 +256,10 @@ void main() {
     await _showSearch(tester, repository, onSelected: (_) => selected = true);
     await _submit(tester, 'Canta');
 
-    final button = tester.widget<FilledButton>(
-      find.descendant(
-        of: find.byKey(const ValueKey('destination-result-unresolved')),
-        matching: find.byType(FilledButton),
-      ),
+    final row = tester.widget<ListTile>(
+      find.byKey(const ValueKey('destination-result-unresolved')),
     );
-    expect(button.onPressed, isNull);
+    expect(row.onTap, isNull);
     expect(selected, isFalse);
   });
 
