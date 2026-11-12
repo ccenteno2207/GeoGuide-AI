@@ -1,7 +1,6 @@
 # UI2-MAP-SEARCH-UX-001 — Evidencia de implementación
 
-**Fecha de ejecución:** 2026-11-12  
-**Rama:** `codex/ui2-map-search-ux-001`  
+**Fecha de ejecución:** 2026-11-12`n**Rama:** `codex/ui2-map-search-ux-001`
 **Baseline:** `origin/main` `0f114e320043da90d949b79ab0ab4fea5084c66b`, con dependencia local `codex/ui2-route-ux-001` incorporada en el merge de preparación `1b4d85cc91307f887a1b67d3f1d562f3f7eac0dc`.
 
 ## Decisión aplicable
