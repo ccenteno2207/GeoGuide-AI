@@ -191,38 +191,55 @@ UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
 P12_5 = NOT_AUTHORIZED
 PRODUCTION_READINESS = NOT_DECLARED
 ```
+
 ## UI2-SEARCH-005 — corrección focalizada del cálculo y resumen de ruta (2026-11-12)
 
-**Resultado actual:** `AUTOMATED_PASS_PHYSICAL_PENDING`. La solución y pruebas automatizadas están completas. La APK se instaló correctamente en el HONOR; la validación física aún no comenzó porque el dispositivo quedó bloqueado en AOD y requiere desbloqueo manual.
+**Resultado:** `VALIDATED`. La primera APK física reprodujo que el resumen no aparecía tras una ruta online con cinco POIs; se corrigió el renderizado y la APK actualizada pasó la repetición en HONOR.
 
 ### Hallazgos y correcciones
 
-- Se reprodujo con pruebas del controlador una carrera asíncrona: una respuesta tardía de una selección anterior podía sustituir la ruta de los extremos nuevos o marcarla erróneamente como fallida. La selección ahora incrementa una revisión; las respuestas obsoletas se descartan y los cálculos concurrentes duplicados se ignoran.
-- La prueba de widget reprodujo que una respuesta online válida de `PlanRoute` dibujaba la geometría, pero no mostraba un resumen persistente de distancia y duración. El panel ahora presenta `Ruta: X.X km · Y min` para una ruta online planificada y conserva los estados vacíos offline existentes.
+- **Carrera confirmada:** las pruebas del controlador reprodujeron que una respuesta tardía de una selección anterior podía sustituir la ruta de extremos nuevos o marcarla erróneamente como fallida. La selección ahora incrementa una revisión; se descartan respuestas obsoletas y cálculos concurrentes duplicados.
+- **Resumen ausente confirmado en HONOR:** el resumen estaba dentro de la tarjeta contextual, visible solo durante carga o ante estado/error. Tras una respuesta online correcta con POIs, la tarjeta desaparecía. El resumen ahora se presenta en una tarjeta independiente para rutas online con resultados; se conserva el estado vacío offline.
 - No se modificaron backend, API, contratos, permisos, configuración TLS ni seguimiento de ubicación.
 
-### Evidencia automatizada y de servicio temporal
+### Evidencia automatizada y backend temporal
 
 - `dart format .`: PASS; 97 archivos inspeccionados, 0 cambios de formato.
 - `flutter analyze`: PASS, sin incidencias.
-- `flutter test`: PASS, 270 aprobadas y 1 omitida (prueba opt-in contra backend real).
-- Las pruebas focalizadas cubren selección manual y por búsqueda, invalidación de resultados tardíos exitosos y fallidos, prevención de doble cálculo y persistencia del resumen sobre la geometría de la ruta.
-- En stack aislado temporal, `POST /api/v1/routes/plan` Lima–Canta devolvió HTTP 200, 101.3 km, 104 min y 1,912 puntos de geometría; `POST /api/v1/routes/discover` devolvió cinco POIs. No se expusieron puertos de servicio ni se tocaron los seis servicios de la VM principal.
+- `flutter test`: PASS, 271 aprobadas y 1 omitida (prueba opt-in contra backend real).
+- Las pruebas cubren selección manual y por búsqueda, invalidación de respuestas tardías exitosas y fallidas, prevención de doble cálculo, resumen persistente para resultados online y estado vacío offline.
+- En stack aislado temporal, `POST /api/v1/routes/plan` Lima–Canta devolvió HTTP 200, 101.3 km, 104 min y 1,912 puntos de geometría; `POST /api/v1/routes/discover` devolvió cinco POIs. No se expusieron puertos de servicio ni se tocaron los seis servicios principales de la VM.
 
-### APK y dispositivo HONOR
+### APK y HONOR
 
-- Rama `codex/ui2-search-001`, fuente de trabajo basada en `origin/main` `4003508f0e355de8fa003a7ce1898c5a8269fd4a` y cambios locales aún no confirmados.
-- APK debug con `BACKEND_BASE_URL=http://127.0.0.1:18083`; SHA-256 `00AD119A9CA923279476FDE46DFC67C37BBB3C8E1A91D276887E7E47C8DA5A26`; paquete `com.geoguideai.geoguide_ai`, versión `1.0.0` / código `1`.
-- Dispositivo conectado: HONOR LLY-NX3, Android API 36. El certificado SHA-256 del APK candidato y el instalado coincidió (`894975b5bc6751da09b3d69923d4ae399192470d86c107106f65f6cb8d7eab7e`). `adb install -r` terminó en `Success`, conservando los datos.
-- El túnel local de prueba usa loopback TCP 18083 y `adb reverse`; no se usó GPS, Driving, CEFI, TalkBack ni se cambiaron permisos. Pendiente desbloquear manualmente el teléfono para observar Rutea y ejecutar SEARCH-005-PHYS-01–05. Hasta entonces no se declara PASS físico.
+- Dispositivo: HONOR LLY-NX3, Android API 36. APK `com.geoguideai.geoguide_ai`, versión `1.0.0` / código `1`; certificado SHA-256 `894975b5bc6751da09b3d69923d4ae399192470d86c107106f65f6cb8d7eab7e` coincide con la instalación existente. Las dos actualizaciones `adb install -r` terminaron en `Success`, conservando los datos.
+- APK final con `BACKEND_BASE_URL=http://127.0.0.1:18083`; SHA-256 `BBCA6B5F400D17BCFD57D652C37F275B3982055BFAF0FB39483F3FFDFEFE645C`.
+- El stack temporal y ADB reverse operaron por red interna/loopback. No se usó ubicación, GPS, Driving, CEFI ni TalkBack; no se cambiaron permisos.
+
+### SEARCH-005-PHYS-01–05
+
+| Caso | Estado | Resultado observado |
+| --- | --- | --- |
+| 01 Lima–Canta | `PASS` | Origen manual en Lima y Plaza de Armas de Canta desde búsqueda; no planificó automáticamente. Tras «Calcular ruta», se vio geometría, cinco POIs y resumen `Ruta: 102.2 km · 106 min`, estable tras 10 s. |
+| 02 Origen manual | `PASS` | El origen manual se conservó al buscar/seleccionar Canta; llegaron la ruta, POIs y resumen. |
+| 03 Cambio de destino | `PASS` | Desde una ruta válida se cambió a Plaza de Armas de Obrajillo y se recalculó: `101.5 km · 109 min`, geometría y cinco POIs; el resumen previo no permaneció al cambiar destino. |
+| 04 Estado de error | `PASS` | Para Huacachina apareció `No hay una ruta disponible para estos puntos` y no quedó visible el resumen previo. Al recuperar un destino válido, el cálculo volvió a funcionar. La causa de indisponibilidad de esa ruta no se atribuye a un defecto Flutter. |
+| 05 Regresión mínima | `PASS` | Búsqueda real, selección manual, lista con 5 POIs, Preview, Detail y retorno al mapa funcionaron; no se observó crash. |
+
+Capturas limitadas a Rutea: [01 ruta Canta](UI2-SEARCH-005-Physical-Evidence/01-route-summary-lima-canta.png), [02 lista Canta](UI2-SEARCH-005-Physical-Evidence/02-route-poi-list.png), [03 ruta Obrajillo](UI2-SEARCH-005-Physical-Evidence/03-route-summary-obrajillo.png), [04 error recuperable](UI2-SEARCH-005-Physical-Evidence/04-route-unavailable-recoverable.png), [05 mapa final](UI2-SEARCH-005-Physical-Evidence/05-final-map-route-summary.png).
+
+Driving no se ejecutó porque el backend temporal HTTP no satisface la precondición HTTPS del flujo offline; esa restricción se conservó. La alerta anterior «Los puntos seleccionados no son válidos» no se reprodujo en esta sesión y no se le atribuye retrospectivamente una causa no comprobada.
 
 ```ini
+UI2_SEARCH_005_ROOT_CAUSE = IDENTIFIED
 UI2_SEARCH_005_RACE_REMEDIATION = AUTOMATED_PASS
-UI2_SEARCH_005_ROUTE_SUMMARY = AUTOMATED_PASS
+UI2_SEARCH_005_ROUTE_SUMMARY = AUTOMATED_AND_PHYSICAL_PASS
 UI2_SEARCH_005_BACKEND_PLAN = TEMP_STACK_PASS
 UI2_SEARCH_005_BACKEND_DISCOVERY = TEMP_STACK_PASS_5_POIS
 UI2_SEARCH_005_APK_INSTALL = PASS
-UI2_SEARCH_005_PHYSICAL = PENDING_DEVICE_UNLOCK
+UI2_SEARCH_005_PHYSICAL_PLAN_ROUTE = PASS
+UI2_SEARCH_005_REGRESSION = PASS
+UI2_SEARCH_005_OVERALL = VALIDATED
 UI2_SEARCH_005_PUSH = NOT_AUTHORIZED
 UI2_SEARCH_005_PR = NOT_AUTHORIZED
 UI2_SEARCH_005_MERGE = NOT_AUTHORIZED
