@@ -112,7 +112,7 @@ Fecha: 2026-11-12. Fuente: `b68761c731f16a0c060bd584c5192c5dd570f9ef`.
 | ADB reverse | `adb reverse --list` vacío; la validación no dependió de un reverse ni túnel temporal. |
 | Inicio visual | Propietario confirmó mapa estable, atribución OSM y controles visibles, sin panel técnico persistente ni solicitud nueva de permisos. |
 | Búsqueda/selección | Al escribir `Obra` apareció la sugerencia de Obrajillo. Tras seleccionarla, se mostró el destino y «Ver ruta» sin cálculo automático. |
-| Cálculo explícito | El propietario pulsó «Ver ruta» y observó `Ruta: 97.7 km · 104 min`. Esta línea de resumen no presenta conteo de lugares ni estado Online; no se infiere un defecto por esa ausencia. La geometría y el conteo/lista de POIs aún no tienen confirmación detallada en esta sesión. |
+| Cálculo explícito y POIs | El propietario pulsó «Ver ruta» y observó `Ruta: 97.7 km · 104 min`; confirmó la geometría de ruta y marcadores visibles, cinco POIs en «Ver lista», información del POI y fuente MINCETUR en Detail, y retorno al mapa sin error. La línea compacta de resumen no presenta conteo de lugares ni estado Online; no se infiere defecto por esa ausencia. La apertura independiente de Preview queda pendiente de confirmación explícita. |
 
 ```ini
 UI2_PR_101_PREMERGE = PASS
@@ -127,4 +127,4 @@ P12_5 = NOT_AUTHORIZED
 PRODUCTION_READINESS = NOT_DECLARED
 ```
 
-Pendiente de esta sesión física: confirmar geometría y POIs en mapa/lista y navegación Preview/Detail; comprobar la ubicación puntual sin conceder permisos nuevos; observar que el desplazamiento manual de cámara se conserva y que Driving permanece cerrado. No se afirma la prueba de TalkBack. La ausencia de checks remotos configurados y de revisiones registradas se mantiene como se documentó arriba; no equivale a CI PASS ni a aprobación de merge.
+Pendiente de esta sesión física: confirmar explícitamente Preview, comprobar la ubicación puntual sin conceder permisos nuevos y observar que el desplazamiento manual de cámara se conserva. Driving no se abrió automáticamente durante el flujo reportado. No se afirma la prueba de TalkBack. La ausencia de checks remotos configurados y de revisiones registradas se mantiene como se documentó arriba; no equivale a CI PASS ni a aprobación de merge.
