@@ -26,7 +26,9 @@ class GeolocatorLocationRepository
       );
 
   @override
-  Future<CurrentLocationResult> requestCurrentLocation() async {
+  Future<CurrentLocationResult> requestCurrentLocation({
+    bool requestPermission = true,
+  }) async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       return const CurrentLocationResult.withAvailability(
@@ -35,7 +37,7 @@ class GeolocatorLocationRepository
     }
 
     var permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
+    if (permission == LocationPermission.denied && requestPermission) {
       permission = await Geolocator.requestPermission();
     }
 
@@ -54,6 +56,7 @@ class GeolocatorLocationRepository
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 8),
         ),
       );
       return CurrentLocationResult.available(
@@ -62,6 +65,7 @@ class GeolocatorLocationRepository
           longitude: position.longitude,
         ),
         accuracyMeters: position.accuracy,
+        timestamp: position.timestamp,
       );
     } on LocationServiceDisabledException {
       return const CurrentLocationResult.withAvailability(

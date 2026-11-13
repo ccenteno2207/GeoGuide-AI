@@ -102,3 +102,61 @@ DRIVING_FUNCTIONAL_PACKAGE = NOT_AUTHORIZED
 PRODUCTION_READINESS = NOT_DECLARED
 VERDICT = UI_2_CONTRACT_FREEZE_DOCUMENTED
 ```
+
+## 8. Adenda aprobada — UI2-MAP-SEARCH-UX-001 (2026-11-12)
+
+El propietario aprobó una excepción de alcance limitada para centrar una sola vez el mapa de Exploración al abrirlo y mostrar sugerencias incrementales de destinos. Esta adenda registra la decisión posterior; no reescribe el freeze ni altera retrospectivamente sus antecedentes.
+
+### MAP-001 — centrado inicial de ubicación puntual
+
+- Tras confirmar el estado de ownership de la sesión, Flutter puede hacer una única consulta puntual con `requestPermission = false`, exclusivamente mediante permisos ya concedidos y mecanismos existentes.
+- Solo una posición válida, con coordenadas finitas/rango válido, marca temporal dentro de dos minutos y precisión conocida de hasta 100 m, se muestra como ubicación actual y puede centrar la cámara una vez a zoom local.
+- Si la persona mueve el mapa o elige un punto/destino antes de la respuesta, se conserva su encuadre. Una respuesta tardía no recentra. No se repite al reanudar la app, no se activa un stream, tracking, background o Driving y el fallo conserva el mapa inicial y sus controles.
+- Esta autorización sustituye únicamente el diferimiento del centrado inicial de Exploración asociado a MAP-002. En la matriz P9, el control «Usar ubicación actual / recenter por GPS» permanece `DEFERRED_UNTIL_EXIT` dentro de Driving; esa restricción no se cambia. P9 §7 y las reglas de ownership, consentimiento, lifecycle, permisos y no persistencia permanecen vigentes.
+
+### SEARCH-001 — sugerencias incrementales de destinos
+
+- Para la superficie de destino ya aprobada por UI2-SEARCH-001, la consulta al catálogo/API de primera parte existente se dispara tras aproximadamente 300 ms de pausa de escritura. Se conservan deduplicación, invalidación de respuesta obsoleta, estados de carga/vacío/error/sin conexión y reintento.
+- Esta adenda sustituye solo la frase de consulta exclusivamente explícita de UI2-SEARCH-001 §§2 y 6, y la exclusión de autocomplete remoto de U2-D04, para estas sugerencias turísticas basadas en el catálogo y endpoint ya aprobados. El envío explícito mediante tecla/botón puede seguir disponible.
+- No se añade proveedor, endpoint, API, esquema, geocodificación general ni direcciones postales. Resultados limitados a localidades y destinos/POIs turísticos existentes, con coordenadas verificadas y elección explícita. Seleccionar solo establece el destino; «Ver ruta» continúa siendo la única confirmación de cálculo.
+
+### Alcance que permanece intacto
+
+No cambia el filtro local U2-D01, el snapshot, los contratos congelados, permisos Android, tracking continuo, ubicación background, Driving, CEFI, P12 o la declaración de Production Readiness. El centrado MAP-001 y las sugerencias SEARCH-001 solo pueden considerarse completados contra evidencia de implementación y pruebas separada.
+
+```ini
+UI2_MAP_SEARCH_UX_001_OWNER_DECISION = APPROVED
+UI2_MAP_001_STARTUP_LOCATION = ONE_SHOT_PREVIOUS_PERMISSION_ONLY
+UI2_SEARCH_001_INCREMENTAL_SUGGESTIONS = APPROVED_EXISTING_CATALOG_AND_ENDPOINT
+UI2_SEARCH_001_SELECTION_CALCULATES_ROUTE = NO
+P9_DRIVING_GPS_RECENTER = DEFERRED_UNTIL_EXIT
+UI2_MAP_SEARCH_UX_001_PHYSICAL = PENDING
+UI2_MAP_SEARCH_UX_001_MERGE = NOT_AUTHORIZED
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+P12_5 = NOT_AUTHORIZED
+PRODUCTION_READINESS = NOT_DECLARED
+```
+
+## 9. Adenda aprobada — UI2-EXPLORATION-UX-002 (2026-11-12)
+
+El propietario autorizó el refinamiento UX-01–UX-05 de la exploración Flutter. Esta adenda registra una excepción de implementación limitada; no modifica retrospectivamente el contrato UI-2 congelado ni sus antecedentes.
+
+- **UX-01 — Buscador:** superficie opaca, contraste y estilo del Design System; conserva accesibilidad y escalado.
+- **UX-02 — Resultados:** la fila completa es seleccionable; se omite el botón redundante y la provenance técnica en la lista. Se muestra solo el contexto geográfico confiable presente en el DTO, sin inventar localidades; la información disponible permanece en el detalle.
+- **UX-03 — Acción contextual:** «Ver ruta» solo aparece cuando hay destino y origen utilizable; representa carga de PlanRoute/Route Discovery, desaparece para la ruta vigente y se recupera ante cambios o error. No se calcula al seleccionar una sugerencia.
+- **UX-04 — Ancho:** el buscador usa la región completa cuando la acción de ruta no está pendiente y se adapta al ancho disponible cuando sí lo está.
+- **UX-05 — Calidad puntual:** la política del cliente clasifica como precisa una posición con precisión horizontal ≤50 m y edad ≤10 s; como aproximada, ≤100 m y ≤30 s; el resto no se presenta como ubicación actual utilizable. Son umbrales de aceptación del software, no garantía de exactitud física ni calibración del dispositivo. La precisión aproximada utilizable se expresa mediante el halo proporcional y semantics accesibles del marcador, sin rótulo persistente; una posición no confiable conserva un aviso contextual basado en el proveedor.
+
+La ubicación sigue siendo puntual y usa solo permiso previamente concedido (`requestPermission = false`); no agrega permiso, stream, seguimiento continuo, background, centrado repetido ni cambio de Driving. El timeout puntual de ocho segundos evita una espera indefinida. P9 y el aplazamiento GPS de Driving permanecen intactos. La validación de dispositivo físico queda pendiente.
+
+```ini
+UI2_EXPLORATION_UX_002_OWNER_DECISION = APPROVED
+UI2_EXPLORATION_UX_002_SCOPE = UX_01_UX_05
+UI2_EXPLORATION_UX_002_PHYSICAL = PENDING
+UI2_EXPLORATION_UX_002_MERGE = NOT_AUTHORIZED
+UI2_MAP_SEARCH_UX_001_PHYSICAL = PARTIAL
+UI2_ROUTE_UX_001_PHYSICAL = PARTIAL
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+P12_5 = NOT_AUTHORIZED
+PRODUCTION_READINESS = NOT_DECLARED
+```

@@ -157,12 +157,7 @@ void main() {
                 ),
             isTrue,
           );
-          for (final label in [
-            'Calcular ruta',
-            'Categorías',
-            'Ver lista',
-            'Conducción',
-          ]) {
+          for (final label in ['Categorías', 'Ver lista', 'Conducción']) {
             final action = find.text(label);
             await tester.ensureVisible(action);
             await tester.pumpAndSettle();

@@ -239,8 +239,9 @@ OfflineDiscovery _offline() => OfflineDiscovery(
 
 class _LocationRepository implements LocationRepository {
   @override
-  Future<CurrentLocationResult> requestCurrentLocation() async =>
-      const CurrentLocationResult.withAvailability(
-        LocationAvailability.unavailable,
-      );
+  Future<CurrentLocationResult> requestCurrentLocation({
+    bool requestPermission = true,
+  }) async => const CurrentLocationResult.withAvailability(
+    LocationAvailability.unavailable,
+  );
 }

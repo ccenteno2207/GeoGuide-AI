@@ -44,15 +44,18 @@ class CurrentLocationResult {
     required this.availability,
     this.position,
     this.accuracyMeters,
+    this.timestamp,
   });
 
   const CurrentLocationResult.available(
     LocationPoint position, {
     double? accuracyMeters,
+    DateTime? timestamp,
   }) : this._(
          availability: LocationAvailability.available,
          position: position,
          accuracyMeters: accuracyMeters,
+         timestamp: timestamp,
        );
 
   const CurrentLocationResult.withAvailability(
@@ -62,10 +65,13 @@ class CurrentLocationResult {
   final LocationAvailability availability;
   final LocationPoint? position;
   final double? accuracyMeters;
+  final DateTime? timestamp;
 }
 
 abstract class LocationRepository {
-  Future<CurrentLocationResult> requestCurrentLocation();
+  Future<CurrentLocationResult> requestCurrentLocation({
+    bool requestPermission = true,
+  });
 }
 
 abstract interface class LocationStreamSource {

@@ -12,6 +12,9 @@ import 'package:geoguide_ai/features/route_planning/domain/planned_route.dart';
 import 'package:geoguide_ai/features/route_planning/domain/route_planning_repository.dart';
 import 'package:geoguide_ai/features/route_planning/domain/route_point.dart';
 import 'package:geoguide_ai/features/map/presentation/rutea_location_marker.dart';
+import 'package:geoguide_ai/features/discovery/application/discover_route.dart';
+import 'package:geoguide_ai/features/discovery/domain/discovery_poi.dart';
+import 'package:geoguide_ai/features/discovery/domain/route_discovery_repository.dart';
 
 class FakeLocationRepository
     implements LocationRepository, LocationStreamSource {
@@ -19,11 +22,15 @@ class FakeLocationRepository
 
   final CurrentLocationResult result;
   int calls = 0;
+  final permissionRequests = <bool>[];
   int watchCalls = 0;
 
   @override
-  Future<CurrentLocationResult> requestCurrentLocation() async {
+  Future<CurrentLocationResult> requestCurrentLocation({
+    bool requestPermission = true,
+  }) async {
     calls++;
+    permissionRequests.add(requestPermission);
     return result;
   }
 
@@ -60,6 +67,9 @@ class FakeDestinationSearchRepository implements DestinationSearchRepository {
 }
 
 class FakeRoutePlanningRepository implements RoutePlanningRepository {
+  FakeRoutePlanningRepository({this.failure});
+
+  final Object? failure;
   final requests = <(RoutePoint, RoutePoint)>[];
 
   @override
@@ -68,6 +78,7 @@ class FakeRoutePlanningRepository implements RoutePlanningRepository {
     required RoutePoint destination,
   }) async {
     requests.add((origin, destination));
+    if (failure != null) throw failure!;
     return PlannedRoute(
       origin: origin,
       destination: destination,
@@ -85,6 +96,30 @@ class FakeRoutePlanningRepository implements RoutePlanningRepository {
   }
 }
 
+class FakeRouteDiscoveryRepository implements RouteDiscoveryRepository {
+  final requests = <(RoutePoint, RoutePoint, Set<String>)>[];
+
+  @override
+  Future<List<DiscoveryPoi>> discover({
+    required RoutePoint origin,
+    required RoutePoint destination,
+    Set<String> categories = const {},
+  }) async {
+    requests.add((origin, destination, categories));
+    return [
+      DiscoveryPoi(
+        id: 'poi-test-1',
+        name: 'POI de prueba de Canta',
+        category: 'MONUMENT',
+        location: destination,
+        distanceToRouteMeters: 25,
+        routeProgress: 0.5,
+        reasonCodes: const ['NEAR_ROUTE'],
+      ),
+    ];
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   // These foreground tests explicitly model a resolved, inactive native owner.
@@ -94,7 +129,7 @@ void main() {
         (call) async => false,
       );
 
-  testWidgets('starts with a clean map and does not request location', (
+  testWidgets('starts with a clean map and makes one silent location check', (
     tester,
   ) async {
     final location = FakeLocationRepository(
@@ -125,7 +160,8 @@ void main() {
       find.text('No encontramos lugares de estas categorías para esta ruta.'),
       findsNothing,
     );
-    expect(location.calls, 0);
+    expect(location.calls, 1);
+    expect(location.permissionRequests, [false]);
     expect(location.watchCalls, 0);
   });
 
@@ -133,6 +169,7 @@ void main() {
     tester,
   ) async {
     final repository = FakeDestinationSearchRepository();
+    final routeRepository = FakeRoutePlanningRepository();
     final location = FakeLocationRepository(
       const CurrentLocationResult.withAvailability(
         LocationAvailability.unavailable,
@@ -142,12 +179,20 @@ void main() {
       GeoGuideApp(
         locationRepository: location,
         searchDestinations: SearchDestinations(repository),
+        planRoute: PlanRoute(routeRepository),
       ),
     );
     await tester.pumpAndSettle();
     expect(
       find.byKey(const ValueKey('open-destination-search')),
       findsOneWidget,
+    );
+    expect(find.byKey(const ValueKey('calculate-route')), findsNothing);
+    expect(
+      tester
+          .getSize(find.byKey(const ValueKey('open-destination-search')))
+          .width,
+      greaterThanOrEqualTo(300),
     );
 
     await tester.tap(find.byKey(const ValueKey('open-destination-search')));
@@ -157,12 +202,21 @@ void main() {
       'Canta',
     );
     expect(repository.queries, isEmpty);
-    await tester.tap(find.byKey(const ValueKey('destination-search-submit')));
+    await tester.pump(const Duration(milliseconds: 299));
+    expect(repository.queries, isEmpty);
+    await tester.pump(const Duration(milliseconds: 1));
     await tester.pumpAndSettle();
 
     expect(repository.queries, ['Canta']);
     expect(find.text('Plaza de Armas de Canta'), findsOneWidget);
-    expect(location.calls, 0);
+    await tester.tap(find.text('Plaza de Armas de Canta'));
+    await tester.pumpAndSettle();
+    expect(routeRepository.requests, isEmpty);
+    expect(
+      find.textContaining('selecciona el origen en el mapa'),
+      findsOneWidget,
+    );
+    expect(location.permissionRequests.every((value) => !value), isTrue);
     await tester.pumpWidget(const SizedBox());
   });
 
@@ -174,25 +228,27 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       final routeRepository = FakeRoutePlanningRepository();
+      final discoveryRepository = FakeRouteDiscoveryRepository();
+      final location = FakeLocationRepository(
+        CurrentLocationResult.available(
+          const LocationPoint(latitude: -12.05, longitude: -77.04),
+          accuracyMeters: 10,
+          timestamp: DateTime.now(),
+        ),
+      );
       await tester.pumpWidget(
         GeoGuideApp(
-          locationRepository: FakeLocationRepository(
-            const CurrentLocationResult.withAvailability(
-              LocationAvailability.unavailable,
-            ),
-          ),
+          locationRepository: location,
           searchDestinations: SearchDestinations(
             FakeDestinationSearchRepository(),
           ),
           planRoute: PlanRoute(routeRepository),
+          discoverRoute: DiscoverRoute(discoveryRepository),
           backendBaseUrl: '',
         ),
       );
       await tester.pumpAndSettle();
 
-      final map = tester.getRect(find.byType(FlutterMap));
-      await tester.tapAt(map.center);
-      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const ValueKey('open-destination-search')));
       await tester.pumpAndSettle();
       await tester.enterText(
@@ -201,22 +257,58 @@ void main() {
       );
       await tester.tap(find.byKey(const ValueKey('destination-search-submit')));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Usar destino'));
+      await tester.tap(find.text('Plaza de Armas de Canta'));
       await tester.pumpAndSettle();
 
       expect(routeRepository.requests, isEmpty);
-      await tester.tap(find.byKey(const ValueKey('calculate-route')));
+      expect(find.text('Origen: Tu ubicación actual'), findsOneWidget);
+      await tester.tap(find.text('Ver ruta'));
       await tester.pumpAndSettle();
 
       expect(routeRepository.requests, hasLength(1));
+      expect(discoveryRepository.requests, hasLength(1));
       final (origin, destination) = routeRepository.requests.single;
+      expect(discoveryRepository.requests.single.$1, origin);
+      expect(discoveryRepository.requests.single.$2, destination);
       expect(origin.isValid, isTrue);
+      expect(origin.latitude, -12.05);
+      expect(location.permissionRequests, [false]);
       expect(destination.latitude, -11.4669625);
       expect(destination.longitude, -76.6247746);
       expect(find.byType(PolylineLayer), findsOneWidget);
       expect(find.text('Ruta: 12.3 km · 60 min'), findsOneWidget);
-      await tester.pump(const Duration(seconds: 2));
-      expect(find.text('Ruta: 12.3 km · 60 min'), findsOneWidget);
+      expect(find.byKey(const ValueKey('calculate-route')), findsNothing);
+      expect(
+        tester
+            .getSize(find.byKey(const ValueKey('open-destination-search')))
+            .width,
+        greaterThanOrEqualTo(300),
+      );
+      await tester.tap(find.byKey(const ValueKey('toggle-discovery-list')));
+      await tester.pumpAndSettle();
+      expect(find.text('POI de prueba de Canta'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('close-discovery-list')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('open-destination-search')));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+        find.byKey(const ValueKey('destination-search-query')),
+        'Canta',
+      );
+      await tester.tap(find.byKey(const ValueKey('destination-search-submit')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Plaza de Armas de Canta'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('calculate-route')), findsOneWidget);
+      expect(find.byKey(const ValueKey('route-summary')), findsNothing);
+      expect(find.text('POI de prueba de Canta'), findsNothing);
+      expect(find.text('Origen: Tu ubicación actual'), findsOneWidget);
+
+      await tester.tap(find.text('Ver ruta'));
+      await tester.pumpAndSettle();
+      expect(routeRepository.requests, hasLength(2));
+      expect(discoveryRepository.requests, hasLength(2));
       await tester.pumpWidget(const SizedBox());
     },
   );
@@ -245,8 +337,10 @@ void main() {
       await tester.pumpWidget(
         GeoGuideApp(
           locationRepository: FakeLocationRepository(
-            const CurrentLocationResult.available(
+            CurrentLocationResult.available(
               LocationPoint(latitude: -12.05, longitude: -77.04),
+              accuracyMeters: 8,
+              timestamp: DateTime.now(),
             ),
           ),
         ),
@@ -258,7 +352,15 @@ void main() {
 
       expect(find.byType(RuteaLocationMarker), findsOneWidget);
       expect(find.byIcon(Icons.my_location), findsOneWidget);
-      expect(find.byType(CircleLayer), findsNothing);
+      expect(find.byType(CircleLayer), findsOneWidget);
+      expect(
+        tester
+            .widget<CircleLayer>(find.byType(CircleLayer))
+            .circles
+            .single
+            .radius,
+        8,
+      );
     },
   );
 
@@ -268,9 +370,10 @@ void main() {
     await tester.pumpWidget(
       GeoGuideApp(
         locationRepository: FakeLocationRepository(
-          const CurrentLocationResult.available(
+          CurrentLocationResult.available(
             LocationPoint(latitude: -12.05, longitude: -77.04),
             accuracyMeters: 42,
+            timestamp: DateTime.now(),
           ),
         ),
       ),
@@ -287,7 +390,7 @@ void main() {
     final semantics = tester.ensureSemantics();
     expect(
       tester.getSemantics(find.byType(RuteaLocationMarker)).label,
-      'Ubicación actual',
+      'Ubicación actual, precisión estimada ±42 metros',
     );
     semantics.dispose();
   });

@@ -1,6 +1,11 @@
 import 'package:dio/dio.dart';
+
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:geoguide_ai/core/network/app_failure.dart';
 import 'package:geoguide_ai/core/network/backend_configuration.dart';
 import 'package:geoguide_ai/core/network/geoguide_http_client.dart';
 import 'package:geoguide_ai/features/destination_search/application/search_destinations.dart';
@@ -65,7 +70,7 @@ void main() {
     },
   );
 
-  testWidgets('does not search while typing and trims submitted query', (
+  testWidgets('debounces typing and trims the incremental query', (
     tester,
   ) async {
     final repository = _FakeDestinationRepository();
@@ -76,8 +81,9 @@ void main() {
       '  Canta   Perú  ',
     );
     expect(repository.queries, isEmpty);
-
-    await tester.tap(find.byKey(const ValueKey('destination-search-submit')));
+    await tester.pump(const Duration(milliseconds: 299));
+    expect(repository.queries, isEmpty);
+    await tester.pump(const Duration(milliseconds: 1));
     await tester.pumpAndSettle();
     expect(repository.queries, ['Canta Perú']);
     expect(
@@ -86,7 +92,89 @@ void main() {
     );
   });
 
-  testWidgets('keeps ambiguous results separate until explicit selection', (
+  testWidgets('submit while debounce is pending does not duplicate request', (
+    tester,
+  ) async {
+    final repository = _FakeDestinationRepository();
+    await _showSearch(tester, repository);
+    await tester.enterText(
+      find.byKey(const ValueKey('destination-search-query')),
+      'Canta',
+    );
+    await tester.tap(find.byKey(const ValueKey('destination-search-submit')));
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
+    expect(repository.queries, ['Canta']);
+  });
+
+  testWidgets('normalized-equivalent edits do not dispatch another request', (
+    tester,
+  ) async {
+    final repository = _FakeDestinationRepository(
+      results: [
+        _result(
+          id: 'canta',
+          name: 'Canta',
+          context: 'Lima',
+          latitude: -11.475,
+          longitude: -76.624,
+        ),
+      ],
+    );
+    await _showSearch(tester, repository);
+    final field = find.byKey(const ValueKey('destination-search-query'));
+    await tester.enterText(field, 'Canta');
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pumpAndSettle();
+    await tester.enterText(field, '  Canta   ');
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(repository.queries, ['Canta']);
+    expect(find.text('Canta'), findsOneWidget);
+  });
+
+  testWidgets('debounce discards stale response from an older query', (
+    tester,
+  ) async {
+    final first = Completer<List<DestinationSearchResult>>();
+    final second = Completer<List<DestinationSearchResult>>();
+    final repository = _FakeDestinationRepository(
+      search: (query) => query == 'Can' ? first.future : second.future,
+    );
+    await _showSearch(tester, repository);
+    final field = find.byKey(const ValueKey('destination-search-query'));
+    await tester.enterText(field, 'Can');
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(repository.queries, ['Can']);
+    await tester.enterText(field, 'Canta');
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(repository.queries, ['Can', 'Canta']);
+    second.complete([
+      _result(
+        id: 'new-canta',
+        name: 'Plaza de Armas de Canta',
+        context: 'Canta, Lima',
+        latitude: -11.475,
+        longitude: -76.624,
+      ),
+    ]);
+    await tester.pump();
+    expect(find.text('Plaza de Armas de Canta'), findsOneWidget);
+    first.complete([
+      _result(
+        id: 'old-can',
+        name: 'Resultado obsoleto',
+        context: 'Perú',
+        latitude: -12,
+        longitude: -77,
+      ),
+    ]);
+    await tester.pump();
+    expect(find.text('Plaza de Armas de Canta'), findsOneWidget);
+    expect(find.text('Resultado obsoleto'), findsNothing);
+  });
+
+  testWidgets('whole result row selects an ambiguous routeable destination', (
     tester,
   ) async {
     final repository = _FakeDestinationRepository(
@@ -121,13 +209,32 @@ void main() {
     );
     expect(find.textContaining('Canta, Lima'), findsOneWidget);
     expect(selected, isNull);
-    await tester.tap(
-      find.descendant(
-        of: find.byKey(const ValueKey('destination-result-canta-plaza')),
-        matching: find.text('Usar destino'),
-      ),
-    );
+    expect(find.text('Seleccionar'), findsNothing);
+    expect(find.text('Catálogo de prueba'), findsNothing);
+    final row = find.byKey(const ValueKey('destination-result-canta-plaza'));
+    final tile = tester.widget<ListTile>(row);
+    expect(tile.onTap, isNotNull);
+    expect(tile.minTileHeight, greaterThanOrEqualTo(48));
+    final semantics = tester.getSemantics(row);
+    expect(semantics.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+    await tester.tap(row);
     expect(selected?.latitude, -11.475);
+  });
+
+  testWidgets('search surface and query field use opaque design surfaces', (
+    tester,
+  ) async {
+    await _showSearch(tester, _FakeDestinationRepository());
+
+    final surface = tester.widget<Material>(
+      find.byKey(const ValueKey('destination-search-surface')),
+    );
+    final field = tester.widget<TextField>(
+      find.byKey(const ValueKey('destination-search-query')),
+    );
+    expect(surface.color, const Color(0xFFF6F9F8));
+    expect(field.decoration?.filled, isTrue);
+    expect(field.decoration?.fillColor, Colors.white);
   });
 
   testWidgets('does not enable route selection without verified coordinates', (
@@ -149,13 +256,10 @@ void main() {
     await _showSearch(tester, repository, onSelected: (_) => selected = true);
     await _submit(tester, 'Canta');
 
-    final button = tester.widget<FilledButton>(
-      find.descendant(
-        of: find.byKey(const ValueKey('destination-result-unresolved')),
-        matching: find.byType(FilledButton),
-      ),
+    final row = tester.widget<ListTile>(
+      find.byKey(const ValueKey('destination-result-unresolved')),
     );
-    expect(button.onPressed, isNull);
+    expect(row.onTap, isNull);
     expect(selected, isFalse);
   });
 
@@ -180,6 +284,26 @@ void main() {
     expect(repository.queries, ['Huacachina', 'Huacachina']);
     expect(
       find.text('No encontramos destinos con ese nombre.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('shows an offline state with retry', (tester) async {
+    final repository = _FakeDestinationRepository(
+      failuresRemaining: 1,
+      failure: const AppFailure(AppFailureType.backendUnavailable),
+    );
+    await _showSearch(tester, repository);
+    await tester.enterText(
+      find.byKey(const ValueKey('destination-search-query')),
+      'Huacachina',
+    );
+    await tester.tap(find.byKey(const ValueKey('destination-search-submit')));
+    await tester.pumpAndSettle();
+    expect(
+      find.text(
+        'Sin conexión o servicio no disponible. Comprueba la conexión e inténtalo de nuevo.',
+      ),
       findsOneWidget,
     );
   });
@@ -243,18 +367,23 @@ class _FakeDestinationRepository implements DestinationSearchRepository {
   _FakeDestinationRepository({
     this.results = const [],
     this.failuresRemaining = 0,
+    this.failure,
+    this.search,
   });
 
   final List<DestinationSearchResult> results;
   int failuresRemaining;
+  final Object? failure;
+  final Future<List<DestinationSearchResult>> Function(String query)? search;
   final List<String> queries = [];
 
   @override
   Future<List<DestinationSearchResult>> searchByName(String query) async {
     queries.add(query);
+    if (search case final handler?) return handler(query);
     if (failuresRemaining > 0) {
       failuresRemaining--;
-      throw StateError('test-only failure');
+      throw failure ?? StateError('test-only failure');
     }
     return results;
   }
