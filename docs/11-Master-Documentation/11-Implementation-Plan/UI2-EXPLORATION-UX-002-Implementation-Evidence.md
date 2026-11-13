@@ -100,4 +100,5 @@ After testing, the owner considered the visible `Ubicación aproximada (±100 m)
 - `flutter analyze`: PASS; no issues found.
 - Rebuilt debug APK with the existing HTTPS endpoint: `mobile/build/app/outputs/flutter-apk/app-debug.apk`, 168,188,104 bytes, SHA-256 `EFB4FD81EDE82C69DDF44661BEB39358B2A2BD752D0A06AA16467599556B7BF5`.
 - Updated HONOR via `adb install -r`: `Success`; package/signature unchanged and `firstInstallTime` preserved. No uninstall, data clear, permission change or ADB reverse.
-- Physical confirmation that the visible banner is absent after the update remains pending while the owner returns Rutea to the foreground.
+- Owner returned Rutea to the foreground after the update. The accessible UI hierarchy contains the marker description `Ubicación aproximada, precisión estimada ±100 metros`, but no persistent visible `Ubicación aproximada (±100 m)` status banner was present. This confirms banner removal in the installed UI; it is not a physical TalkBack reading test.
+- UX-PHYS-05 remains PARTIAL: manual map-pan retention and absence of repeated recentering/continuous GPS remain physically unverified.
