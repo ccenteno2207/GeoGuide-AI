@@ -114,30 +114,37 @@ void main() {
     }
   });
 
-  testWidgets('usable approximate startup fix is labeled and less zoomed', (
-    tester,
-  ) async {
-    final source = StreamRepository(
-      result: CurrentLocationResult.available(
-        const LocationPoint(latitude: -11.47, longitude: -76.62),
-        accuracyMeters: 72,
-        timestamp: DateTime.now(),
-      ),
-    );
-    await tester.pumpWidget(GeoGuideApp(locationRepository: source));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'usable approximate fix uses marker semantics without a status banner',
+    (tester) async {
+      final source = StreamRepository(
+        result: CurrentLocationResult.available(
+          const LocationPoint(latitude: -11.47, longitude: -76.62),
+          accuracyMeters: 72,
+          timestamp: DateTime.now(),
+        ),
+      );
+      await tester.pumpWidget(GeoGuideApp(locationRepository: source));
+      await tester.pumpAndSettle();
 
-    final camera = tester
-        .widget<FlutterMap>(find.byType(FlutterMap))
-        .mapController!;
-    expect(find.byType(RuteaLocationMarker), findsOneWidget);
-    expect(find.text('Ubicación aproximada (±72 m)'), findsOneWidget);
-    expect(camera.camera.zoom, 14);
-    expect(source.permissionRequests, [false]);
-    expect(source.watchCalls, 0);
-    await tester.pumpWidget(const SizedBox());
-    await source.controller.close();
-  });
+      final camera = tester
+          .widget<FlutterMap>(find.byType(FlutterMap))
+          .mapController!;
+      expect(find.byType(RuteaLocationMarker), findsOneWidget);
+      expect(find.text('Ubicación aproximada (±72 m)'), findsNothing);
+      expect(
+        find.bySemanticsLabel(
+          'Ubicación aproximada, precisión estimada ±72 metros',
+        ),
+        findsOneWidget,
+      );
+      expect(camera.camera.zoom, 14);
+      expect(source.permissionRequests, [false]);
+      expect(source.watchCalls, 0);
+      await tester.pumpWidget(const SizedBox());
+      await source.controller.close();
+    },
+  );
 
   testWidgets('untrusted available startup fix is not drawn as current', (
     tester,

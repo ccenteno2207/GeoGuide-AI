@@ -90,3 +90,14 @@ UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
 P12_5 = NOT_AUTHORIZED
 PRODUCTION_READINESS = NOT_DECLARED
 ```
+
+### Owner feedback and correction — 2026-11-12
+
+After testing, the owner considered the visible `Ubicación aproximada (±100 m)` message unnecessary. The UI was adjusted so a usable approximate fix no longer produces a persistent visible status banner. Its accuracy halo and accessible marker semantics remain; the effective route-origin label remains explicit, and a non-usable/untrusted fix still receives a contextual warning.
+
+- Focused GPS/location policy tests after the change: **9/9 PASS**.
+- B1/R01 regression tests: **22/22 PASS**.
+- `flutter analyze`: PASS; no issues found.
+- Rebuilt debug APK with the existing HTTPS endpoint: `mobile/build/app/outputs/flutter-apk/app-debug.apk`, 168,188,104 bytes, SHA-256 `EFB4FD81EDE82C69DDF44661BEB39358B2A2BD752D0A06AA16467599556B7BF5`.
+- Updated HONOR via `adb install -r`: `Success`; package/signature unchanged and `firstInstallTime` preserved. No uninstall, data clear, permission change or ADB reverse.
+- Physical confirmation that the visible banner is absent after the update remains pending while the owner returns Rutea to the foreground.

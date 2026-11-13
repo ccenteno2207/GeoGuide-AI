@@ -343,9 +343,10 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         _currentLocationTimestamp = fix.timestamp;
         _currentAccuracyMeters = _validAccuracy(accuracy);
         _locationStatus = fix.statusLabel;
-        _locationQualityMessage = fix.quality == CurrentLocationQuality.precise
-            ? null
-            : fix.statusLabel;
+        _locationQualityMessage =
+            fix.quality == CurrentLocationQuality.untrusted
+            ? fix.statusLabel
+            : null;
       });
       if (!_initialCameraHasUserInteraction) {
         _mapController.move(
@@ -611,10 +612,8 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
           ? _validAccuracy(fix.accuracyMeters)
           : null;
       _locationQualityMessage =
-          fix.isUsable && fix.quality == CurrentLocationQuality.approximate
-          ? fix.statusLabel
-          : fix.quality == CurrentLocationQuality.untrusted &&
-                result.availability == LocationAvailability.available
+          fix.quality == CurrentLocationQuality.untrusted &&
+              result.availability == LocationAvailability.available
           ? fix.statusLabel
           : null;
       _locationStatus = switch (result.availability) {
@@ -923,10 +922,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
           _routeOriginLabel = fix.quality == CurrentLocationQuality.precise
               ? 'Tu ubicación actual'
               : 'Tu ubicación aproximada (±${fix.accuracyMeters!.round()} m)';
-          _locationQualityMessage =
-              fix.quality == CurrentLocationQuality.precise
-              ? null
-              : fix.statusLabel;
+          _locationQualityMessage = null;
         } else {
           _routeOriginLabel =
               'Sin ubicación válida; selecciona el origen en el mapa';
