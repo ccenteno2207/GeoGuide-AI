@@ -174,6 +174,37 @@ void main() {
     expect(find.text('Resultado obsoleto'), findsNothing);
   });
 
+  testWidgets('ignores a pending response after the search sheet closes', (
+    tester,
+  ) async {
+    final response = Completer<List<DestinationSearchResult>>();
+    final repository = _FakeDestinationRepository(
+      search: (_) => response.future,
+    );
+    await _showSearch(tester, repository);
+    await tester.enterText(
+      find.byKey(const ValueKey('destination-search-query')),
+      'Canta',
+    );
+    await tester.pump(const Duration(milliseconds: 300));
+    expect(repository.queries, ['Canta']);
+
+    await tester.pumpWidget(const SizedBox());
+    response.complete([
+      _result(
+        id: 'canta',
+        name: 'Plaza de Armas de Canta',
+        context: 'Lima, Canta',
+        latitude: -11.475,
+        longitude: -76.624,
+      ),
+    ]);
+    await tester.pump();
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Plaza de Armas de Canta'), findsNothing);
+  });
+
   testWidgets('whole result row selects an ambiguous routeable destination', (
     tester,
   ) async {

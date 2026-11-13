@@ -161,3 +161,39 @@ PRODUCTION_READINESS = NOT_DECLARED
 ```
 
 La validación física corresponde al APK previamente identificado y a la sesión estacionaria documentada arriba; no se recompiló ni reinstaló después del merge porque el cambio posterior al HEAD validado físicamente fue exclusivamente documental. Este cierre confirma integración técnica de PR #101, no cierre maestro UI-2 ni Production Readiness.
+
+## UI2 post-merge stabilization review — 2026-11-12
+
+Reviewed on branch `codex/ui2-postmerge-stabilization-001`, based on `origin/main` `04bae003dab11ad37e54dc5e6c53192d76662ba1`. PR #101 merge `62018b333f80674c8337719cab33d8e331cf9520` is contained in this baseline.
+
+### Confirmed and corrected
+
+A delayed direct Route Discovery response could replace discovery state after the selected route destination changed. `RouteDiscoveryController` now rejects stale responses, ignores duplicate calls while a request is active, and exposes invalidation used when a map endpoint or searched destination is selected. A deterministic widget regression confirms that a late POI response for Canta does not repopulate the UI after selection changes to Obrajillo. Controller tests cover invalidation and duplicate calls.
+
+### Additional focused coverage
+
+- A pending destination-search response is ignored after the search surface is disposed.
+- One-shot location provider exceptions are covered by the existing recoverable unavailable-location behavior.
+- Existing tests cover 300 ms debounce, out-of-order search responses, empty/error/offline/retry states, search-row semantics, one-shot startup GPS, manual camera interaction winning over a late fix, and the route-planning controller's invalidation and duplicate-request protection.
+
+### Validation
+
+- `dart format --output=none --set-exit-if-changed lib test`: PASS; 99 files, 0 changes.
+- Focused Discovery/search/location/route-planning/widget tests after the final test addition: PASS, 45/45.
+- `flutter analyze`: PASS; no issues found.
+- Full `flutter test --reporter compact`: PASS, 289 passed, 1 skipped, 0 failed. The skipped test is the existing live backend integration test. One deterministic stale-error controller test was added after this full-suite run and passed in both the final focused controller run (4/4) and the final focused five-file run above; production code was unchanged after the full-suite run.
+- Physical validation and TalkBack were not repeated; `TALKBACK = NOT_TESTED` remains. Historical physical states are unchanged.
+
+```ini
+UI2_STABILIZATION_AUDIT = PASS
+UI2_CONFIRMED_DEFECTS = 1
+UI2_FIXED_DEFECTS = 1
+UI2_REMAINING_DEFECTS = 0
+UI2_STABILIZATION_TESTS = PASS
+UI2_STABILIZATION_SCOPE = PASS
+UI2_STABILIZATION_PR = NOT_AUTHORIZED
+TALKBACK = NOT_TESTED
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+P12_5 = NOT_AUTHORIZED
+PRODUCTION_READINESS = NOT_DECLARED
+```
