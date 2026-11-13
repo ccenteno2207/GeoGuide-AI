@@ -113,6 +113,7 @@ Fecha: 2026-11-12. Fuente: `b68761c731f16a0c060bd584c5192c5dd570f9ef`.
 | Inicio visual | Propietario confirmó mapa estable, atribución OSM y controles visibles, sin panel técnico persistente ni solicitud nueva de permisos. |
 | Búsqueda/selección | Al escribir `Obra` apareció la sugerencia de Obrajillo. Tras seleccionarla, se mostró el destino y «Ver ruta» sin cálculo automático. |
 | Cálculo explícito y POIs | El propietario pulsó «Ver ruta» y observó `Ruta: 97.7 km · 104 min`; confirmó la geometría de ruta y marcadores visibles, cinco POIs en «Ver lista», apertura de Preview y Detail, información y fuente MINCETUR en Detail, y retorno al mapa sin error. La línea compacta de resumen no presenta conteo de lugares ni estado Online; no se infiere defecto por esa ausencia. |
+| GPS puntual | El propietario utilizó una vez el control de ubicación puntual; confirmó centrado/indicador correcto, sin solicitud de permisos nueva ni seguimiento continuo. No se registraron coordenadas. |
 | Cámara y Driving | Tras desplazar manualmente el mapa y esperar aproximadamente 60 segundos, la cámara permaneció en la zona elegida. Driving siguió cerrado y no se abrió automáticamente. |
 
 ```ini
@@ -121,11 +122,11 @@ UI2_PR_101_STATUS = OPEN
 UI2_PR_101_MERGE = NOT_AUTHORIZED
 UI2_APK_BUILD = PASS
 UI2_HONOR_INSTALL = PASS
-UI2_HONOR_PHYSICAL = PARTIAL
+UI2_HONOR_PHYSICAL = PASS
 TALKBACK = NOT_TESTED
 UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
 P12_5 = NOT_AUTHORIZED
 PRODUCTION_READINESS = NOT_DECLARED
 ```
 
-Pendiente de esta sesión física: comprobar la acción puntual de ubicación sin conceder permisos nuevos. No se afirma la prueba de TalkBack. La ausencia de checks remotos configurados y de revisiones registradas se mantiene como se documentó arriba; no equivale a CI PASS ni a aprobación de merge.
+La matriz física estacionaria de PR #101 pasó según las observaciones del propietario y consultas ADB: lanzamiento, búsqueda incremental/selección sin auto-cálculo, cálculo explícito, geometría, cinco POIs, Preview/Detail, ubicación puntual, retención de cámara, retorno y Driving cerrado. `TALKBACK = NOT_TESTED`; esto no certifica accesibilidad integral ni altera los estados históricos `UI2_MAP_SEARCH_UX_001_PHYSICAL = PARTIAL` y `UI2_ROUTE_UX_001_PHYSICAL = PARTIAL`. La ausencia de checks remotos configurados y de revisiones registradas no equivale a CI PASS ni a aprobación de merge.
