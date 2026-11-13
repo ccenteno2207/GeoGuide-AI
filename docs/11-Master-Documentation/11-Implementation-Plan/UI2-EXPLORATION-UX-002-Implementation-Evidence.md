@@ -106,14 +106,17 @@ After testing, the owner considered the visible `Ubicación aproximada (±100 m)
 ### Final camera, GPS and accessibility verification — 2026-11-12
 
 - Physical manual pan/recentering: **PASS for the observed interval**. The owner reported manually moving the map and, after waiting one minute, it remained at the chosen area without returning to GPS. This also records no recentering during that interval; it does not prove behavior under every session state.
-- Existing controls: **NOT RECHECKED** as part of this specific camera observation.
+- Search/route controls: **PASS for the focused check**. The owner confirmed the catalog options appeared and selected `Plaza de Armas de Obrajillo`; «Ver ruta» appeared on return to the map without calculating automatically. The UI tree showed an enabled «Ver ruta» action with `Origen: Tu ubicación actual`. One explicit ADB tap on that action produced `Ruta: 97.7 km · 104 min` and POI preview markers. The map summary, search/category/list controls, OSM attribution and `Entrar en modo conducción` remained present; Driving was not started automatically.
+- A later attempt to reopen search by coordinate tap did not yield a captured search sheet; the subsequent Back key returned to the HONOR launcher. Rutea's process remained alive, no fatal AndroidRuntime error was found, and the activity was brought back to foreground without clearing state. This attempt is inconclusive and is not counted as a search failure.
 - Focused Flutter regression: `flutter test test/features/location/gps_camera_widget_test.dart --reporter expanded` — **6/6 PASS**. This covers the one-shot startup fix without subscribing to tracking, denied/unavailable GPS, approximate marker semantics without a status banner, an untrusted fix, a manual map gesture winning over a late GPS response, and explicit camera-follow pause/resume behavior.
 - Source review: `BaseMapPage._scheduleInitialLocation` guards the startup attempt and `_loadInitialLocation` calls the one-shot request with `requestPermission: false`; `_initialCameraHasUserInteraction` prevents a late startup response from moving the camera after a user gesture. The stream subscription is invoked by the existing explicit follow control (`_toggleFollowLocation`) and by resuming a previously active follow session; it is not started by normal initial exploration. The stream and follow implementation predate this UX-002 branch (introduced in commit `11157954`).
 - Scope review: no manifest or native Android permission/service changes exist in this branch relative to its merge base. Existing foreground location service / follow behavior remains a separate, user-activated route-session capability; this review does not characterize that existing feature as absent.
 - Accessibility: `TALKBACK = NOT_TESTED`. The Flutter widget test verifies marker semantics, but no physical TalkBack announcement/repetition check was completed in this session.
 
 ```ini
-UX_PHYS_05 = PARTIAL
-UI2_EXPLORATION_UX_002_PHYSICAL = PARTIAL
+UX_PHYS_05 = PASS
+UI2_EXPLORATION_UX_002_PHYSICAL = PASS
 TALKBACK = NOT_TESTED
 ```
+
+TalkBack remains separate evidence under UI2-AC-12; its physical reading test is not claimed by this UX-01–UX-05 result. No overall accessibility certification or UI-2 master closure is implied.
