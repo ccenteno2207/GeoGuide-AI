@@ -99,3 +99,32 @@ UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
 P12_5 = NOT_AUTHORIZED
 PRODUCTION_READINESS = NOT_DECLARED
 ```
+
+## Validación de APK e instalación HONOR — PR #101
+
+Fecha: 2026-11-12. Fuente: `b68761c731f16a0c060bd584c5192c5dd570f9ef`.
+
+| Comprobación | Resultado y evidencia |
+|---|---|
+| APK debug HTTPS | Generada con `BACKEND_BASE_URL=https://geoguide.getcom.pe:5443`; `mobile/build/app/outputs/flutter-apk/app-debug.apk`, 168,188,104 bytes, SHA-256 `EFB4FD81EDE82C69DDF44661BEB39358B2A2BD752D0A06AA16467599556B7BF5`. El endpoint HTTPS está incluido en el kernel Flutter del APK. |
+| Identidad/firma | `com.geoguideai.geoguide_ai`, versión `1.0.0`, `versionCode=1`, target SDK 36. El certificado SHA-256 `894975b5bc6751da09b3d69923d4ae399192470d86c107106f65f6cb8d7eab7e` coincide con el APK instalado antes de la actualización. |
+| Dispositivo/instalación | HONOR LLY-NX3, Android API 36; `adb install -r` devolvió `Success`. No se desinstaló ni borró datos. Rutea quedó en primer plano en `MainActivity`; no se observó crash en la consulta de logcat realizada. |
+| ADB reverse | `adb reverse --list` vacío; la validación no dependió de un reverse ni túnel temporal. |
+| Inicio visual | Propietario confirmó mapa estable, atribución OSM y controles visibles, sin panel técnico persistente ni solicitud nueva de permisos. |
+| Búsqueda/selección | Al escribir `Obra` apareció la sugerencia de Obrajillo. Tras seleccionarla, se mostró el destino y «Ver ruta» sin cálculo automático. |
+| Cálculo explícito | El propietario pulsó «Ver ruta» y observó `Ruta: 97.7 km · 104 min`. Esta línea de resumen no presenta conteo de lugares ni estado Online; no se infiere un defecto por esa ausencia. La geometría y el conteo/lista de POIs aún no tienen confirmación detallada en esta sesión. |
+
+```ini
+UI2_PR_101_PREMERGE = PASS
+UI2_PR_101_STATUS = OPEN
+UI2_PR_101_MERGE = NOT_AUTHORIZED
+UI2_APK_BUILD = PASS
+UI2_HONOR_INSTALL = PASS
+UI2_HONOR_PHYSICAL = PARTIAL
+TALKBACK = NOT_TESTED
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+P12_5 = NOT_AUTHORIZED
+PRODUCTION_READINESS = NOT_DECLARED
+```
+
+Pendiente de esta sesión física: confirmar geometría y POIs en mapa/lista y navegación Preview/Detail; comprobar la ubicación puntual sin conceder permisos nuevos; observar que el desplazamiento manual de cámara se conserva y que Driving permanece cerrado. No se afirma la prueba de TalkBack. La ausencia de checks remotos configurados y de revisiones registradas se mantiene como se documentó arriba; no equivale a CI PASS ni a aprobación de merge.
