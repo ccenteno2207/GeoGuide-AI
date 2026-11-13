@@ -82,3 +82,20 @@ No se reconstruyó APK: no hubo cambios de código durante esta auditoría y cad
 ## Recomendación de integración
 
 Crear un único PR desde `codex/ui2-exploration-ux-002` hacia `main`, dado que la rama ya contiene las dos dependencias y el diff conjunto no deja cambios exclusivos por integrar desde las ramas ancestro. En el PR, conservar por separado los estados físicos parciales y `TALKBACK = NOT_TESTED`, ejecutar los controles remotos configurados y no solicitar cierre maestro UI-2. Esta recomendación no autoriza publicar, crear PR ni fusionar.
+
+## Publicación autorizada — UI2-INTEGRATION-PR-001
+
+- PR [#101](https://github.com/ccenteno2207/GeoGuide-AI/pull/101), título `UI2: integrate route, map search, and exploration UX`.
+- Estado al verificar: `OPEN`, no draft; base `main`, cabeza `codex/ui2-exploration-ux-002`.
+- En la creación: cabeza `46165800843e0a71c2bd7ce295be611a8972a6a7`, base `0f114e320043da90d949b79ab0ab4fea5084c66b`, 16 commits, 24 archivos.
+- GitHub reportó `mergeable = MERGEABLE` y `mergeStateStatus = CLEAN`.
+- `gh pr checks 101` respondió `no checks reported on the 'codex/ui2-exploration-ux-002' branch`; esto se registra como `NO_CHECKS_REPORTED`, no como validación CI PASS. No había decisión de revisión registrada al consultar.
+- No se ejecutó merge. La rama y PR permanecen abiertos a revisión humana.
+
+```ini
+UI2_INTEGRATION_PR = OPEN
+UI2_INTEGRATION_MERGE = NOT_AUTHORIZED
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+P12_5 = NOT_AUTHORIZED
+PRODUCTION_READINESS = NOT_DECLARED
+```
