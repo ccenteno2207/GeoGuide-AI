@@ -130,3 +130,34 @@ PRODUCTION_READINESS = NOT_DECLARED
 ```
 
 La matriz física estacionaria de PR #101 pasó según las observaciones del propietario y consultas ADB: lanzamiento, búsqueda incremental/selección sin auto-cálculo, cálculo explícito, geometría, cinco POIs, Preview/Detail, ubicación puntual, retención de cámara, retorno y Driving cerrado. `TALKBACK = NOT_TESTED`; esto no certifica accesibilidad integral ni altera los estados históricos `UI2_MAP_SEARCH_UX_001_PHYSICAL = PARTIAL` y `UI2_ROUTE_UX_001_PHYSICAL = PARTIAL`. La ausencia de checks remotos configurados y de revisiones registradas no equivale a CI PASS ni a aprobación de merge.
+
+## Integración y validación post-merge — PR #101
+
+Fecha: 2026-11-12 (hora local de Bogotá).
+
+| Control | Resultado |
+|---|---|
+| PR | [#101](https://github.com/ccenteno2207/GeoGuide-AI/pull/101) quedó `MERGED`; cabeza final `51f4fc5049c5de0df1096e81af1f857ec1c6c97b`. |
+| Integración | Merge commit `62018b333f80674c8337719cab33d8e331cf9520`; `origin/main` resultante apunta a ese mismo SHA y contiene el HEAD completo del PR. |
+| Git/alcance | `git diff --check 0f114e320043da90d949b79ab0ab4fea5084c66b..origin/main` PASS. El rango integrado contiene 24 archivos de las tres iniciativas aprobadas y evidencia; no incluye backend/API/DB, migraciones, permisos Android ni infraestructura. Los tres registros de implementación y la decisión UI-2 están presentes. |
+| Analyze | `flutter analyze` PASS; `No issues found`. |
+| Tests focalizados | PASS, 55/55 en búsqueda de destinos, política de ubicación puntual, cámara GPS, ubicación, exploración y planificación de ruta/widget. No se repitió la suite completa porque el código no cambió después de su evidencia previa (284 PASS, 1 SKIP). |
+| CI/revisión | GitHub no reportó checks configurados ni revisiones registradas; no se presentan como PASS. La rama `main` no tenía protección configurada en la consulta. |
+
+```ini
+UI2_PR_101_MERGE = PASS
+UI2_PR_101_STATUS = MERGED
+UI2_POSTMERGE_GIT = PASS
+UI2_POSTMERGE_ANALYZE = PASS
+UI2_POSTMERGE_TESTS = PASS
+UI2_POSTMERGE_SCOPE = PASS
+UI2_POSTMERGE = PASS
+TALKBACK = NOT_TESTED
+UI2_MAP_SEARCH_UX_001_PHYSICAL = PARTIAL
+UI2_ROUTE_UX_001_PHYSICAL = PARTIAL
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+P12_5 = NOT_AUTHORIZED
+PRODUCTION_READINESS = NOT_DECLARED
+```
+
+La validación física corresponde al APK previamente identificado y a la sesión estacionaria documentada arriba; no se recompiló ni reinstaló después del merge porque el cambio posterior al HEAD validado físicamente fue exclusivamente documental. Este cierre confirma integración técnica de PR #101, no cierre maestro UI-2 ni Production Readiness.
