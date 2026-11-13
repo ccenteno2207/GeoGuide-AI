@@ -102,3 +102,17 @@ After testing, the owner considered the visible `Ubicación aproximada (±100 m)
 - Updated HONOR via `adb install -r`: `Success`; package/signature unchanged and `firstInstallTime` preserved. No uninstall, data clear, permission change or ADB reverse.
 - Owner returned Rutea to the foreground after the update. The accessible UI hierarchy contains the marker description `Ubicación aproximada, precisión estimada ±100 metros`, but no persistent visible `Ubicación aproximada (±100 m)` status banner was present. This confirms banner removal in the installed UI; it is not a physical TalkBack reading test.
 - UX-PHYS-05 remains PARTIAL: manual map-pan retention and absence of repeated recentering/continuous GPS remain physically unverified.
+
+### Final camera, GPS and accessibility verification — 2026-11-12
+
+- Physical camera movement/recentering: **NOT VERIFIED** in this check. ADB reported `mCurrentFocus=Window{... AOD}` when the device was inspected, so Rutea was not in the foreground for an objective on-device observation. No automated gesture was injected. Owner observation of a manual pan followed by a one-minute wait is pending.
+- Focused Flutter regression: `flutter test test/features/location/gps_camera_widget_test.dart --reporter expanded` — **6/6 PASS**. This covers the one-shot startup fix without subscribing to tracking, denied/unavailable GPS, approximate marker semantics without a status banner, an untrusted fix, a manual map gesture winning over a late GPS response, and explicit camera-follow pause/resume behavior.
+- Source review: `BaseMapPage._scheduleInitialLocation` guards the startup attempt and `_loadInitialLocation` calls the one-shot request with `requestPermission: false`; `_initialCameraHasUserInteraction` prevents a late startup response from moving the camera after a user gesture. The stream subscription is invoked by the existing explicit follow control (`_toggleFollowLocation`) and by resuming a previously active follow session; it is not started by normal initial exploration. The stream and follow implementation predate this UX-002 branch (introduced in commit `11157954`).
+- Scope review: no manifest or native Android permission/service changes exist in this branch relative to its merge base. Existing foreground location service / follow behavior remains a separate, user-activated route-session capability; this review does not characterize that existing feature as absent.
+- Accessibility: `TALKBACK = NOT_TESTED`. The Flutter widget test verifies marker semantics, but no physical TalkBack announcement/repetition check was completed in this session.
+
+```ini
+UX_PHYS_05 = PARTIAL
+UI2_EXPLORATION_UX_002_PHYSICAL = PARTIAL
+TALKBACK = NOT_TESTED
+```
