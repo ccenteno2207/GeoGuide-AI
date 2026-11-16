@@ -146,11 +146,11 @@ TalkBack remains separate evidence under UI2-AC-12; its physical reading test is
 |---|---|---|
 | PV-01 — Inicio y mapa | PARTIAL | El propietario observó mapa visible sin errores, atribución `© OpenStreetMap contributors` visible y ninguna nueva solicitud de permisos; TalkBack estaba apagado. Luego confirmó que los controles flotantes responden. La presencia/ausencia de panel técnico persistente no quedó confirmada para esta instalación. Logcat consultado sin crash fatal reciente. |
 | PV-02 — Búsqueda turística | PASS | El propietario buscó `Obra`; apareció Plaza de Armas de Obrajillo, seleccionó la sugerencia y volvió al mapa con destino marcado y «Ver ruta» visible, sin cálculo automático. Reabrió la búsqueda, leyó el título/campo, la cerró con Atrás y confirmó que el destino permanecía marcado. Mientras la superficie de búsqueda está abierta queda delante del contenido previo y bloquea controles subyacentes hasta cerrarla; la observación no indica recorte ni bloqueo después del cierre. |
-| PV-03 — Cálculo explícito | PARTIAL | El propietario pulsó «Ver ruta»; no percibió indicador de carga ni apareció error. El resumen visible fue `Ruta: 97.7 km - 104 min`; reportó cinco iconos POI en el mapa y que «Ver ruta» desapareció tras el cálculo. Pendiente confirmar la línea geométrica, conteo/contenido en «Ver lista» y la prueba de pulsación repetida; no se forzó error. |
-| PV-04 — Respuestas obsoletas PR #103 | NOT_TESTED físicamente | La protección y regresiones deterministas están cubiertas en automatización integrada por PR #103; no se provocó una carrera física en esta sesión. |
+| PV-03 — Cálculo explícito | PARTIAL | «Ver ruta» calculó sin error observado; resumen `Ruta: 97.7 km - 104 min`, línea de ruta visible, cinco iconos POI en mapa y cinco registros en «Ver lista». «Ver ruta» desapareció tras el cálculo. Se abrió Detail de un POI y se volvió al mapa sin problemas. El propietario no percibió indicador de carga; la comprobación de pulsación repetida no se realizó, por lo que no se afirma resultado físico de cálculo duplicado. |
+| PV-04 — Respuestas obsoletas PR #103 | INCONCLUSIVE | No se intentó provocar una carrera física por no existir una forma determinista de controlar la latencia sin alterar red/backend. La protección y las pruebas deterministas correspondientes permanecen integradas por PR #103; no se afirma PASS físico. |
 | PV-05 — GPS puntual | NOT_TESTED | Pendiente observar ubicación inicial, control puntual, gesto manual y ausencia de seguimiento nuevo sin registrar coordenadas. |
-| PV-06 — POIs | NOT_TESTED | Pendiente lista, Preview, Detail, procedencia disponible y retorno. |
-| PV-07 — Driving | NOT_TESTED | Solo se comprobará que no se active automáticamente y que no haya regresión evidente; no se amplía P9. |
+| PV-06 — POIs | PARTIAL | La lista mostró cinco POIs; se abrió el Detail de uno y se regresó al mapa sin error. No se confirmó explícitamente Preview ni la presencia de categoría/fuente en el Detail. No se abrieron enlaces externos. |
+| PV-07 — Driving | PARTIAL | Tras calcular la ruta, el propietario confirmó que el control «Conducción» seguía visible y no se había activado automáticamente. No se entró a Driving; no se amplió P9 ni se probó el aislamiento interno de ese modo. |
 | PV-08 — UX general | NOT_TESTED | Pendiente observación de paneles, teclado, legibilidad, controles y navegación en HONOR. |
 
 TalkBack no se probó por decisión del propietario. El aplazamiento es deuda técnica de accesibilidad y no bloquea esta validación funcional; no se declara accesibilidad integral PASS.
@@ -160,7 +160,7 @@ UI2_HONOR_BUILD = PASS
 UI2_HONOR_INSTALL = PASS
 UI2_PHYSICAL_VALIDATION = PARTIAL
 UI2_FUNCTIONAL_REGRESSION = PARTIAL
-UI2_PR103_PHYSICAL = NOT_TESTED
+UI2_PR103_PHYSICAL = INCONCLUSIVE
 TALKBACK = NOT_TESTED
 TALKBACK_REMEDIATION = DEFERRED_TECH_DEBT
 UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
