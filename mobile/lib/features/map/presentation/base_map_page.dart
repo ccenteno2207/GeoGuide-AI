@@ -813,6 +813,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     final selectsOrigin =
         _routePlanning.origin == null || _routePlanning.destination != null;
     ++_routeOriginRevision;
+    _routeDiscovery.invalidatePending();
     widget.offlineDiscovery?.invalidatePending();
     setState(() {
       _routeDiscovery.pois = const [];
@@ -858,6 +859,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
           if (!point.isValid || !mounted) return;
           _initialCameraHasUserInteraction = true;
           ++_routeOriginRevision;
+          _routeDiscovery.invalidatePending();
           widget.offlineDiscovery?.invalidatePending();
           setState(() {
             _routePlanning.selectDestinationFromSearch(point);

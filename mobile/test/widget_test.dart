@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,9 +20,10 @@ import 'package:geoguide_ai/features/discovery/domain/route_discovery_repository
 
 class FakeLocationRepository
     implements LocationRepository, LocationStreamSource {
-  FakeLocationRepository(this.result);
+  FakeLocationRepository(this.result, {this.failure});
 
   final CurrentLocationResult result;
+  final Object? failure;
   int calls = 0;
   final permissionRequests = <bool>[];
   int watchCalls = 0;
@@ -31,6 +34,7 @@ class FakeLocationRepository
   }) async {
     calls++;
     permissionRequests.add(requestPermission);
+    if (failure case final failure?) throw failure;
     return result;
   }
 
@@ -42,27 +46,31 @@ class FakeLocationRepository
 }
 
 class FakeDestinationSearchRepository implements DestinationSearchRepository {
+  FakeDestinationSearchRepository({this.results});
+
   final queries = <String>[];
+  final List<DestinationSearchResult>? results;
 
   @override
   Future<List<DestinationSearchResult>> searchByName(String query) async {
     queries.add(query);
-    return const [
-      DestinationSearchResult(
-        id: 'catalog-fixture-canta',
-        name: 'Plaza de Armas de Canta',
-        typeLabel: 'Plaza',
-        geographicContext: 'Lima, Canta',
-        provenanceLabel: 'MINCETUR',
-        verifiedPoint: RoutePoint(
-          latitude: -11.4669625,
-          longitude: -76.6247746,
-        ),
-        sourceUrl: 'https://example.test/canta',
-        license: 'ODC-BY-1.0',
-        attribution: 'MINCETUR test fixture',
-      ),
-    ];
+    return results ??
+        const [
+          DestinationSearchResult(
+            id: 'catalog-fixture-canta',
+            name: 'Plaza de Armas de Canta',
+            typeLabel: 'Plaza',
+            geographicContext: 'Lima, Canta',
+            provenanceLabel: 'MINCETUR',
+            verifiedPoint: RoutePoint(
+              latitude: -11.4669625,
+              longitude: -76.6247746,
+            ),
+            sourceUrl: 'https://example.test/canta',
+            license: 'ODC-BY-1.0',
+            attribution: 'MINCETUR test fixture',
+          ),
+        ];
   }
 }
 
@@ -97,7 +105,10 @@ class FakeRoutePlanningRepository implements RoutePlanningRepository {
 }
 
 class FakeRouteDiscoveryRepository implements RouteDiscoveryRepository {
+  FakeRouteDiscoveryRepository({this.pendingResponse});
+
   final requests = <(RoutePoint, RoutePoint, Set<String>)>[];
+  final Completer<List<DiscoveryPoi>>? pendingResponse;
 
   @override
   Future<List<DiscoveryPoi>> discover({
@@ -106,6 +117,7 @@ class FakeRouteDiscoveryRepository implements RouteDiscoveryRepository {
     Set<String> categories = const {},
   }) async {
     requests.add((origin, destination, categories));
+    if (pendingResponse case final response?) return response.future;
     return [
       DiscoveryPoi(
         id: 'poi-test-1',
@@ -313,6 +325,105 @@ void main() {
     },
   );
 
+  testWidgets(
+    'does not apply route POIs after search changes destination in flight',
+    (tester) async {
+      final routeRepository = FakeRoutePlanningRepository();
+      final pendingPois = Completer<List<DiscoveryPoi>>();
+      final discoveryRepository = FakeRouteDiscoveryRepository(
+        pendingResponse: pendingPois,
+      );
+      final searchRepository = FakeDestinationSearchRepository(
+        results: [
+          const DestinationSearchResult(
+            id: 'canta',
+            name: 'Plaza de Armas de Canta',
+            typeLabel: 'Plaza',
+            geographicContext: 'Lima, Canta',
+            provenanceLabel: 'MINCETUR',
+            verifiedPoint: RoutePoint(
+              latitude: -11.4669625,
+              longitude: -76.6247746,
+            ),
+            sourceUrl: 'https://example.test/canta',
+            license: 'ODC-BY-1.0',
+            attribution: 'MINCETUR test fixture',
+          ),
+          const DestinationSearchResult(
+            id: 'obrajillo',
+            name: 'Plaza de Armas de Obrajillo',
+            typeLabel: 'Plaza',
+            geographicContext: 'Lima, Canta',
+            provenanceLabel: 'MINCETUR',
+            verifiedPoint: RoutePoint(latitude: -11.5001, longitude: -76.6332),
+            sourceUrl: 'https://example.test/obrajillo',
+            license: 'ODC-BY-1.0',
+            attribution: 'MINCETUR test fixture',
+          ),
+        ],
+      );
+      final location = FakeLocationRepository(
+        CurrentLocationResult.available(
+          const LocationPoint(latitude: -12.05, longitude: -77.04),
+          accuracyMeters: 10,
+          timestamp: DateTime.now(),
+        ),
+      );
+      await tester.pumpWidget(
+        GeoGuideApp(
+          locationRepository: location,
+          searchDestinations: SearchDestinations(searchRepository),
+          planRoute: PlanRoute(routeRepository),
+          discoverRoute: DiscoverRoute(discoveryRepository),
+          backendBaseUrl: '',
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      Future<void> selectDestination(String query, String name) async {
+        await tester.tap(find.byKey(const ValueKey('open-destination-search')));
+        await tester.pumpAndSettle();
+        await tester.enterText(
+          find.byKey(const ValueKey('destination-search-query')),
+          query,
+        );
+        await tester.tap(
+          find.byKey(const ValueKey('destination-search-submit')),
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(name));
+        await tester.pumpAndSettle();
+      }
+
+      await selectDestination('Canta', 'Plaza de Armas de Canta');
+      await tester.tap(find.text('Ver ruta'));
+      await tester.pump();
+      expect(discoveryRepository.requests, hasLength(1));
+      expect(find.byKey(const ValueKey('route-summary')), findsOneWidget);
+
+      await selectDestination('Obrajillo', 'Plaza de Armas de Obrajillo');
+      pendingPois.complete([
+        DiscoveryPoi(
+          id: 'stale-canta-poi',
+          name: 'POI obsoleto de Canta',
+          category: 'MONUMENT',
+          location: discoveryRepository.requests.single.$2,
+          distanceToRouteMeters: 25,
+          routeProgress: 0.5,
+          reasonCodes: const ['NEAR_ROUTE'],
+        ),
+      ]);
+      await tester.pumpAndSettle();
+
+      expect(find.text('POI obsoleto de Canta'), findsNothing);
+      expect(find.byKey(const ValueKey('route-summary')), findsNothing);
+      expect(find.byKey(const ValueKey('calculate-route')), findsOneWidget);
+      expect(routeRepository.requests, hasLength(1));
+      expect(searchRepository.queries, ['Canta', 'Obrajillo']);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
   testWidgets('represents denied location permission', (tester) async {
     await tester.pumpWidget(
       GeoGuideApp(
@@ -434,5 +545,35 @@ void main() {
       find.text('Permiso de ubicación bloqueado en ajustes'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('recovers when a one-shot location request throws', (
+    tester,
+  ) async {
+    final location = FakeLocationRepository(
+      const CurrentLocationResult.withAvailability(
+        LocationAvailability.unavailable,
+      ),
+      failure: StateError('temporary provider failure'),
+    );
+    await tester.pumpWidget(GeoGuideApp(locationRepository: location));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Usar ubicación actual'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Ubicación no disponible'), findsOneWidget);
+    expect(
+      tester
+          .widget<IconButton>(
+            find.ancestor(
+              of: find.byIcon(Icons.my_location),
+              matching: find.byType(IconButton),
+            ),
+          )
+          .onPressed,
+      isNotNull,
+    );
+    expect(tester.takeException(), isNull);
   });
 }
