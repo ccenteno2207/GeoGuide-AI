@@ -167,3 +167,16 @@ UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
 P12_5 = NOT_AUTHORIZED
 PRODUCTION_READINESS = NOT_DECLARED
 ```
+
+### Evidencia automatizada relacionada — PR #103
+
+La carrera física de PV-04 permanece `INCONCLUSIVE`; la corrección de respuestas obsoletas está respaldada por automatización integrada en PR #103 (merge commit `25493eb55e659b90bb0e5321d953c28b07cf7c81`). La [evidencia de integración UI2](UI2-INTEGRATION-AUDIT-001.md) registra el alcance, las validaciones y la ausencia de checks remotos configurados.
+
+Pruebas deterministas relevantes:
+
+- `route_discovery_controller_test.dart`: `ignores discovery responses invalidated by a route change` y `ignores failures from discovery invalidated by a route change`.
+- `route_discovery_controller_test.dart`: `does not start duplicate discovery while a request is pending`.
+- `widget_test.dart`: `does not apply route POIs after search changes destination in flight`.
+- Validación post-merge de esta iniciativa: 27 tests de Discovery/Route Planning/widget y 12 de búsqueda, 39/39 PASS; `flutter analyze --no-pub`: PASS, sin issues.
+
+Esta evidencia automatizada no se contabiliza como reproducción física del race ni altera PV-04.
