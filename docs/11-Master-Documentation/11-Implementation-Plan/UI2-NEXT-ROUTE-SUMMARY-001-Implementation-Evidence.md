@@ -80,3 +80,60 @@ PRODUCTION_READINESS = NOT_DECLARED
 ```
 
 La corrección cuenta con evidencia automatizada. H-04 todavía requiere revalidación física en HONOR; no se interpretan estos resultados como aprobación física.
+
+## Actualización — UI2-H04 integración y revalidación HONOR (2026-11-16)
+
+### Integración y validación posterior al merge
+
+- PR #106: [fix(ui2): preserve route summary on filters and improve floating controls](https://github.com/ccenteno2207/GeoGuide-AI/pull/106), MERGED mediante merge normal.
+- Merge commit y baseline de `origin/main`: `f9b8d9d3fe6e6e528cff88f27f52cc5cd9db078d`.
+- PR #104 y PR #105 ya estaban integrados. GitHub no reportó checks configurados para PR #106 (`NO_CHECKS_REPORTED`); esto no se presenta como PASS de CI.
+- Post-merge: `git diff --check` PASS; `flutter analyze --no-pub` PASS; suite focalizada relacionada PASS, 131/131.
+- Se confirmó que la prueba `new full discovery clears the old total while loading` está incluida.
+
+### APK instalada
+
+- Build debug HTTPS con `BACKEND_BASE_URL=https://geoguide.getcom.pe:5443`: PASS.
+- APK: `mobile/build/app/outputs/flutter-apk/app-debug.apk`; 168,187,764 bytes; SHA-256 `2CB8B891DFB2B54002E7F944E521F61EE0BF8ACD377F72BDB9F7456E59126A05`.
+- Paquete `com.geoguideai.geoguide_ai`, versionCode `1`, versionName `1.0.0`; certificado SHA-256 `894975b5bc6751da09b3d69923d4ae399192470d86c107106f65f6cb8d7eab7e`.
+- Dispositivo: HONOR LLY-NX3, Android API 36, ADB autorizado. `adb install -r` terminó con `Success`; se conservaron datos. El APK instalado tenía la misma identidad de firma; no se afirma igualdad binaria del paquete instalado. Rutea permaneció en primer plano y no se encontraron entradas `FATAL EXCEPTION` en la consulta acotada de logcat.
+
+### Pruebas físicas estacionarias
+
+| Caso | Resultado observado | Estado |
+| --- | --- | --- |
+| H04-01 Inicio | Rutea abre; mapa, buscador, controles flotantes y atribución OSM visibles; sin panel técnico persistente. | PASS |
+| H04-02 Ruta | Sugerencia incremental `Plaza de Armas de Obrajillo`; selección no calcula automáticamente. Al pulsar `Ver ruta`: `Ruta: 97.7 km · 104 min · 5 lugares`; geometría y cinco POIs visibles. La vista no expone una etiqueta explícita Online/Offline. | PASS |
+| H04-03 Filtro | `Museo` desactivado y aplicado. Resumen conservó 97.7 km, 104 min y el total de cinco lugares; `Ver lista` mostró `5 de 5`. No había un POI Museo entre los cinco resultados visibles, por lo que el conteo permaneció igual. Sin error observado. | PASS |
+| H04-04 Restauración | `Restablecer` y `Aplicar` devolvieron el selector a `Categorías: Todas`; resumen y ruta permanecieron visibles. | PASS |
+| H04-05 Controles opacos | `Ver lista` y `Categorías` respondieron; los botones `Ver lista` y `Conducción` se ven con superficie sólida, texto/iconos legibles y OSM visible. No se inició Driving; su comportamiento interno no se probó más allá de la inspección superficial autorizada. | PASS, alcance visual |
+| H04-06 Cambio de destino | Con una ruta válida de Obrajillo (97.7 km, 104 min, cinco lugares), selección posterior de Plaza de Armas de Canta quitó el resumen anterior y los POIs obsoletos; `Ver ruta` quedó disponible y no se calculó otra ruta automáticamente. Otra consulta de ruta a Canta terminó en 98.4 km, 101 min y cinco lugares. | PASS |
+
+La indicación de origen mostrada fue `Tu ubicación aproximada (±100 m)`; no se registraron coordenadas. Los estados y resultados se verificaron mediante ADB/UIAutomator y capturas reales. Las capturas con mapa se mantuvieron fuera del repositorio; el caso H04-06 se conserva como recorte de la zona inferior para excluir el mapa. Los archivos están en `D:\Codex\ui2-h04-evidence`:
+
+- `01-route.png` — ruta antes del filtro.
+- `02-filter-museum-off.png` — categorías con Museo desactivado.
+- `03-route-filtered.png` — resumen conservado después del filtro y controles.
+- `03-list.png` — lista 5/5, tarjetas y atribución OSM.
+- `04-route-restored.png` — ruta tras restaurar todas las categorías.
+- `05-search-destination.png` — panel de búsqueda.
+- `06-destination-invalidated-redacted.png` — resumen anterior invalidado y `Ver ruta` visible, con el área del mapa excluida.
+
+No se activó Driving, seguimiento GPS, CEFI ni TalkBack. TalkBack permanece `NOT_TESTED`. La indicación aproximada de origen se observó como parte de la UI y no se investigó como defecto en este H-04.
+
+### Estado actualizado
+
+```ini
+UI2_H04_PR = MERGED
+UI2_H04_POSTMERGE = PASS
+UI2_H04_HONOR_BUILD = PASS
+UI2_H04_HONOR_INSTALL = PASS
+UI2_H04_PHYSICAL_REVALIDATION = PASS
+UI2_FLOATING_CONTROLS_HONOR = PASS
+TALKBACK = NOT_TESTED
+TALKBACK_REMEDIATION = DEFERRED_TECH_DEBT
+UI2_PR = NOT_AUTHORIZED
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+P12_5 = NOT_AUTHORIZED
+PRODUCTION_READINESS = NOT_DECLARED
+```
