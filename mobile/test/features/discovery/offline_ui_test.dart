@@ -87,7 +87,10 @@ void main() {
           button.style?.foregroundColor?.resolve(const {}),
           GeoGuideTheme.exploration.primary,
         );
-        expect(button.style?.minimumSize?.resolve(const {}), const Size(48, 48));
+        expect(
+          button.style?.minimumSize?.resolve(const {}),
+          const Size(48, 48),
+        );
         expect(button.onPressed, isNotNull);
       }
       await tester.tap(find.byKey(const ValueKey('toggle-discovery-list')));
