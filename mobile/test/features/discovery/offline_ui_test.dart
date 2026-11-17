@@ -72,6 +72,31 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Conducción'), findsOneWidget);
+      final listButton = tester.widget<FilledButton>(
+        find.byKey(const ValueKey('toggle-discovery-list')),
+      );
+      final drivingButton = tester.widget<FilledButton>(
+        find.byKey(const ValueKey('enter-driving')),
+      );
+      for (final button in [listButton, drivingButton]) {
+        expect(
+          button.style?.backgroundColor?.resolve(const {}),
+          GeoGuideTheme.exploration.surface,
+        );
+        expect(
+          button.style?.foregroundColor?.resolve(const {}),
+          GeoGuideTheme.exploration.primary,
+        );
+        expect(button.style?.minimumSize?.resolve(const {}), const Size(48, 48));
+        expect(button.onPressed, isNotNull);
+      }
+      await tester.tap(find.byKey(const ValueKey('toggle-discovery-list')));
+      await tester.pumpAndSettle();
+      expect(find.text('Buscar en estos resultados'), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('close-discovery-list')),
+        findsOneWidget,
+      );
       await tester.pumpWidget(const SizedBox());
     },
   );
