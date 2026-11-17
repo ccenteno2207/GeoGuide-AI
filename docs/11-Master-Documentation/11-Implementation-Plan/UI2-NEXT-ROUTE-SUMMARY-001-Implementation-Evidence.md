@@ -79,7 +79,7 @@ P12_5 = NOT_AUTHORIZED
 PRODUCTION_READINESS = NOT_DECLARED
 ```
 
-La corrección cuenta con evidencia automatizada. H-04 todavía requiere revalidación física en HONOR; no se interpretan estos resultados como aprobación física.
+En el corte original de este registro, la corrección contaba con evidencia automatizada y H-04 todavía requería revalidación física en HONOR; esos resultados no se interpretaban entonces como aprobación física. La actualización posterior registra la revalidación.
 
 ## Actualización — UI2-H04 integración y revalidación HONOR (2026-11-16)
 
@@ -132,7 +132,7 @@ UI2_H04_PHYSICAL_REVALIDATION = PASS
 UI2_FLOATING_CONTROLS_HONOR = PASS
 TALKBACK = NOT_TESTED
 TALKBACK_REMEDIATION = DEFERRED_TECH_DEBT
-UI2_PR = NOT_AUTHORIZED
+UI2_FOLLOWUP_PR = NOT_AUTHORIZED
 UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
 P12_5 = NOT_AUTHORIZED
 PRODUCTION_READINESS = NOT_DECLARED
