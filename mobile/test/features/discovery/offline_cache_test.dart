@@ -8,6 +8,7 @@ import 'package:sqlite3/sqlite3.dart';
 import 'package:drift/isolate.dart' show DriftRemoteException;
 import 'package:geoguide_ai/core/network/app_failure.dart';
 import 'package:geoguide_ai/features/discovery/application/offline_discovery.dart';
+import 'package:geoguide_ai/features/discovery/domain/discovery_poi.dart';
 import 'package:geoguide_ai/features/discovery/domain/route_snapshot.dart';
 import 'package:geoguide_ai/features/discovery/infrastructure/offline/snapshot_codec.dart';
 import 'package:geoguide_ai/features/discovery/infrastructure/offline/sqlite_snapshot_store.dart';
@@ -459,6 +460,87 @@ void main() {
     await call;
     expect(app.snapshot, isNull);
     expect(await store.readEligible(), isNull);
+    await app.dispose();
+  });
+  test(
+    'complete route total survives filters and clears for a new route',
+    () async {
+      final allCategories = discoveryCategoryCodes.toSet();
+      final app = OfflineDiscovery(
+        source: Source(),
+        store: store,
+        backendContext: query().backendContext,
+        now: () => time,
+      );
+
+      await app.discover(query(categories: allCategories));
+      expect(
+        app.completeRouteSnapshot?.query.categories.toSet(),
+        allCategories,
+      );
+
+      await app.discover(query(categories: {'MONUMENT'}));
+      expect(app.snapshot!.query.categories, ['MONUMENT']);
+      expect(app.completeRouteSnapshot?.pois.length, 1);
+
+      final nextRoute = DiscoveryQuery(
+        backendContext: query().backendContext,
+        origin: const RoutePoint(latitude: 12, longitude: 22),
+        destination: const RoutePoint(latitude: 13, longitude: 23),
+        categories: {'MONUMENT'},
+      );
+      await app.discover(nextRoute);
+      expect(app.completeRouteSnapshot, isNull);
+      await app.dispose();
+    },
+  );
+  test(
+    'invalidated complete discovery cannot restore a stale route total',
+    () async {
+      final pending = Completer<RouteSnapshot>();
+      final allCategories = discoveryCategoryCodes.toSet();
+      final completeQuery = query(categories: allCategories);
+      final source = Source()..response = (_) => pending.future;
+      final app = OfflineDiscovery(
+        source: source,
+        store: store,
+        backendContext: query().backendContext,
+        now: () => time,
+      );
+
+      final request = app.discover(completeQuery);
+      app.invalidatePending();
+      pending.complete(snapshot(q: completeQuery));
+      await request;
+
+      expect(app.snapshot, isNull);
+      expect(app.completeRouteSnapshot, isNull);
+      await app.dispose();
+    },
+  );
+  test('new full discovery clears the old total while loading', () async {
+    final allCategories = discoveryCategoryCodes.toSet();
+    final completeQuery = query(categories: allCategories);
+    final source = Source();
+    final app = OfflineDiscovery(
+      source: source,
+      store: store,
+      backendContext: query().backendContext,
+      now: () => time,
+    );
+
+    await app.discover(completeQuery);
+    expect(app.completeRouteSnapshot, isNotNull);
+
+    final pending = Completer<RouteSnapshot>();
+    source.response = (_) => pending.future;
+    final refresh = app.discover(completeQuery);
+    expect(app.busy, isTrue);
+    expect(app.completeRouteSnapshot, isNull);
+    pending.complete(snapshot(q: completeQuery));
+    await refresh;
+
+    expect(app.completeRouteSnapshot, isNotNull);
     await app.dispose();
   });
   test(

@@ -1304,9 +1304,19 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     final snapshotMatchesRoute =
         snapshot != null &&
         _samePoint(snapshot.query.origin, _routePlanning.origin) &&
-        _samePoint(snapshot.query.destination, _routePlanning.destination) &&
+        _samePoint(snapshot.query.destination, _routePlanning.destination);
+    final snapshotHasAllCategories =
+        snapshotMatchesRoute &&
         snapshot.query.categories.length == discoveryCategoryCodes.length &&
         snapshot.query.categories.toSet().containsAll(discoveryCategoryCodes);
+    final completeSnapshot = offline?.completeRouteSnapshot;
+    final completeSnapshotMatchesRoute =
+        completeSnapshot != null &&
+        _samePoint(completeSnapshot.query.origin, _routePlanning.origin) &&
+        _samePoint(
+          completeSnapshot.query.destination,
+          _routePlanning.destination,
+        );
     final onlineCountMatchesRoute =
         _samePoint(_routeDiscovery.origin, _routePlanning.origin) &&
         _samePoint(_routeDiscovery.destination, _routePlanning.destination);
@@ -1314,19 +1324,20 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         ? onlineCountMatchesRoute
               ? _routeDiscovery.totalPoiCount
               : null
-        : snapshotMatchesRoute &&
+        : (snapshotHasAllCategories &&
+              (offline.availability == DiscoveryAvailability.online ||
+                  offline.availability == DiscoveryAvailability.cached))
+        ? snapshot.pois.length
+        : completeSnapshotMatchesRoute &&
               (offline.availability == DiscoveryAvailability.online ||
                   offline.availability == DiscoveryAvailability.cached)
-        ? snapshot.pois.length
+        ? completeSnapshot.pois.length
         : null;
     final showRouteSummary =
         route != null &&
         !snapshotExpired &&
         !_destinationSelectionAwaitingSnapshot &&
-        (offline == null ||
-            (snapshotMatchesRoute &&
-                (offline.availability == DiscoveryAvailability.online ||
-                    offline.availability == DiscoveryAvailability.cached)));
+        (offline == null || snapshotMatchesRoute);
     final statusMessage = snapshotExpired
         ? _unavailableResults
         : _routePlanning.hasError

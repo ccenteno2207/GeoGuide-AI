@@ -181,23 +181,120 @@ void main() {
     await tester.pumpWidget(const SizedBox());
   });
 
-  testWidgets('filtered offline snapshot does not claim a route-wide total', (
+  testWidgets(
+    'full discovery total remains while route categories are filtered and restored',
+    (tester) async {
+      final allCategories = discoveryCategoryCodes.toSet();
+      final source = fixtures.Source();
+      source.response = (query) async {
+        final base = fixtures.snapshot(q: query);
+        final hasAllCategories = query.categories.toSet().containsAll(
+          allCategories,
+        );
+        final pois = hasAllCategories
+            ? List.generate(
+                5,
+                (index) => DiscoveryPoi(
+                  id: 'full-$index',
+                  name: 'Lugar $index',
+                  category: const [
+                    'MUSEUM',
+                    'MONUMENT',
+                    'WATERFALL',
+                    'BEACH',
+                    'VIEWPOINT',
+                  ][index],
+                  location: base.pois.single.location,
+                  distanceToRouteMeters: 10 + index.toDouble(),
+                  routeProgress: 0.1 * index,
+                  reasonCodes: const ['NEAR_ROUTE'],
+                ),
+              )
+            : <DiscoveryPoi>[];
+        return RouteSnapshot(
+          query: query,
+          route: base.route,
+          pois: pois,
+          algorithmVersion: base.algorithmVersion,
+          generatedAt: base.generatedAt,
+          capturedAtUtcMs: base.capturedAtUtcMs,
+        );
+      };
+      final app = OfflineDiscovery(
+        source: source,
+        store: MemoryStore(),
+        backendContext: fixtures.query().backendContext,
+        now: () => fixtures.captured,
+      );
+      await app.discover(fixtures.query(categories: allCategories));
+
+      await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
+      await tester.pumpAndSettle();
+      expect(find.text('Ruta: 0.1 km · 1 min · 5 lugares'), findsOneWidget);
+
+      await app.discover(fixtures.query(categories: {'MONUMENT'}));
+      await tester.pumpAndSettle();
+      expect(
+        find.text(
+          'No se encontraron lugares con estos filtros para esta ruta.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Ruta: 0.1 km · 1 min · 5 lugares'), findsOneWidget);
+
+      await app.discover(fixtures.query(categories: allCategories));
+      await tester.pumpAndSettle();
+      expect(find.text('Ruta: 0.1 km · 1 min · 5 lugares'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
+  testWidgets('filtered discovery failure retains eligible full route copy', (
     tester,
   ) async {
+    final source = fixtures.Source();
     final app = OfflineDiscovery(
-      source: fixtures.Source(),
+      source: source,
       store: MemoryStore(),
       backendContext: fixtures.query().backendContext,
       now: () => fixtures.captured,
     );
-    await app.discover(fixtures.query(categories: {'MONUMENT'}));
+    await app.discover(
+      fixtures.query(categories: discoveryCategoryCodes.toSet()),
+    );
 
     await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
     await tester.pumpAndSettle();
+    source.response = (_) async =>
+        throw const AppFailure(AppFailureType.backendUnavailable);
+    await app.discover(fixtures.query(categories: {'MONUMENT'}));
+    await tester.pumpAndSettle();
 
-    expect(find.byKey(const ValueKey('route-summary')), findsNothing);
+    expect(app.availability, DiscoveryAvailability.cached);
+    expect(find.text('Ruta: 0.1 km · 1 min · 1 lugar'), findsOneWidget);
+    expect(app.snapshot!.pois.single.name, 'Fixture');
     await tester.pumpWidget(const SizedBox());
   });
+
+  testWidgets(
+    'filtered offline snapshot shows route without an unverified total',
+    (tester) async {
+      final app = OfflineDiscovery(
+        source: fixtures.Source(),
+        store: MemoryStore(),
+        backendContext: fixtures.query().backendContext,
+        now: () => fixtures.captured,
+      );
+      await app.discover(fixtures.query(categories: {'MONUMENT'}));
+
+      await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Ruta: 0.1 km · 1 min'), findsOneWidget);
+      expect(find.textContaining('lugares'), findsNothing);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
   testWidgets(
     'expiry removes visible cached detail without resurrecting stale POI',
