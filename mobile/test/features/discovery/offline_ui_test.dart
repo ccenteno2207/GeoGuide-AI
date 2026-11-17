@@ -9,6 +9,7 @@ import 'package:geoguide_ai/features/discovery/domain/route_snapshot.dart';
 import 'package:geoguide_ai/features/discovery/presentation/offline_cache_sheet.dart';
 import 'package:geoguide_ai/features/discovery/presentation/poi_preview_sheet.dart';
 import 'package:geoguide_ai/features/discovery/presentation/poi_detail_sheet.dart';
+import 'package:geoguide_ai/features/discovery/domain/discovery_poi.dart';
 
 import 'offline_cache_test.dart' as fixtures;
 
@@ -45,7 +46,10 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
       final app = OfflineDiscovery(
         source: fixtures.Source(),
-        store: MemoryStore()..value = fixtures.snapshot(),
+        store: MemoryStore()
+          ..value = fixtures.snapshot(
+            q: fixtures.query(categories: discoveryCategoryCodes.toSet()),
+          ),
         backendContext: fixtures.query().backendContext,
         now: () => fixtures.captured,
       );
@@ -58,6 +62,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       expect(find.byKey(const ValueKey('exploration-status')), findsNothing);
+      expect(find.text('Ruta: 0.1 km · 1 min · 1 lugar'), findsOneWidget);
       expect(
         find.byKey(const ValueKey('exploration-bottom-panel')),
         findsNothing,
@@ -138,7 +143,9 @@ void main() {
       backendContext: fixtures.query().backendContext,
       now: () => fixtures.captured,
     );
-    await app.discover(fixtures.query());
+    await app.discover(
+      fixtures.query(categories: discoveryCategoryCodes.toSet()),
+    );
 
     await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
     await tester.pumpAndSettle();
@@ -148,7 +155,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Online'), findsNothing);
-    expect(find.textContaining('Ruta:'), findsNothing);
+    expect(find.text('Ruta: 0.1 km · 1 min · 0 lugares'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
   });
 
@@ -161,14 +168,34 @@ void main() {
       backendContext: fixtures.query().backendContext,
       now: () => fixtures.captured,
     );
-    await app.discover(fixtures.query());
+    await app.discover(
+      fixtures.query(categories: discoveryCategoryCodes.toSet()),
+    );
 
     await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
     await tester.pumpAndSettle();
 
-    expect(find.text('Ruta: 0.1 km · 1 min'), findsOneWidget);
+    expect(find.text('Ruta: 0.1 km · 1 min · 1 lugar'), findsOneWidget);
     await tester.pump(const Duration(seconds: 2));
-    expect(find.text('Ruta: 0.1 km · 1 min'), findsOneWidget);
+    expect(find.text('Ruta: 0.1 km · 1 min · 1 lugar'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox());
+  });
+
+  testWidgets('filtered offline snapshot does not claim a route-wide total', (
+    tester,
+  ) async {
+    final app = OfflineDiscovery(
+      source: fixtures.Source(),
+      store: MemoryStore(),
+      backendContext: fixtures.query().backendContext,
+      now: () => fixtures.captured,
+    );
+    await app.discover(fixtures.query(categories: {'MONUMENT'}));
+
+    await tester.pumpWidget(GeoGuideApp(offlineDiscovery: app));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('route-summary')), findsNothing);
     await tester.pumpWidget(const SizedBox());
   });
 
@@ -199,6 +226,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.byType(PoiDetailSheet), findsNothing);
       expect(app.snapshot, isNull);
+      expect(find.byKey(const ValueKey('route-summary')), findsNothing);
       expect(find.textContaining('Copia vencida'), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
     },

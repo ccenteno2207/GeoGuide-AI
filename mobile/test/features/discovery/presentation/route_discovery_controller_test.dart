@@ -9,22 +9,28 @@ import 'package:geoguide_ai/features/discovery/presentation/route_discovery_cont
 import 'package:geoguide_ai/features/route_planning/domain/route_point.dart';
 
 class FakeRouteDiscoveryRepository implements RouteDiscoveryRepository {
+  FakeRouteDiscoveryRepository({this.poisForCategories});
+
+  final List<DiscoveryPoi> Function(Set<String>)? poisForCategories;
+
   @override
   Future<List<DiscoveryPoi>> discover({
     required RoutePoint origin,
     required RoutePoint destination,
     Set<String> categories = const {},
-  }) async => [
-    DiscoveryPoi(
-      id: 'poi-1',
-      name: 'Museum',
-      category: 'CULTURE',
-      location: origin,
-      distanceToRouteMeters: 10,
-      routeProgress: 0.5,
-      reasonCodes: const ['NEAR_ROUTE'],
-    ),
-  ];
+  }) async =>
+      poisForCategories?.call(categories) ??
+      [
+        DiscoveryPoi(
+          id: 'poi-1',
+          name: 'Museum',
+          category: 'CULTURE',
+          location: origin,
+          distanceToRouteMeters: 10,
+          routeProgress: 0.5,
+          reasonCodes: const ['NEAR_ROUTE'],
+        ),
+      ];
 }
 
 class ControlledRouteDiscoveryRepository implements RouteDiscoveryRepository {
@@ -55,6 +61,105 @@ DiscoveryPoi poi(String id) => DiscoveryPoi(
 );
 
 void main() {
+  test('retains all-category total while filtered results change', () async {
+    final controller = RouteDiscoveryController(
+      discoverRoute: DiscoverRoute(
+        FakeRouteDiscoveryRepository(
+          poisForCategories: (categories) =>
+              categories.length == discoveryCategoryCodes.length
+              ? [poi('one'), poi('two'), poi('three')]
+              : [poi('filtered')],
+        ),
+      ),
+    );
+    const origin = RoutePoint(latitude: 10, longitude: 20);
+    const destination = RoutePoint(latitude: 11, longitude: 21);
+
+    await controller.discover(
+      origin: origin,
+      destination: destination,
+      categories: discoveryCategoryCodes.toSet(),
+    );
+    expect(controller.totalPoiCount, 3);
+
+    await controller.discover(
+      origin: origin,
+      destination: destination,
+      categories: {'MONUMENT'},
+    );
+
+    expect(controller.pois, hasLength(1));
+    expect(controller.totalPoiCount, 3);
+  });
+
+  test('records zero as a successful all-category count', () async {
+    final controller = RouteDiscoveryController(
+      discoverRoute: DiscoverRoute(
+        FakeRouteDiscoveryRepository(poisForCategories: (_) => const []),
+      ),
+    );
+
+    await controller.discover(
+      origin: const RoutePoint(latitude: 10, longitude: 20),
+      destination: const RoutePoint(latitude: 11, longitude: 21),
+      categories: discoveryCategoryCodes.toSet(),
+    );
+
+    expect(controller.totalPoiCount, 0);
+    expect(controller.hasError, isFalse);
+  });
+
+  test('all-category discovery error does not leave a valid count', () async {
+    var shouldFail = false;
+    final controller = RouteDiscoveryController(
+      discoverRoute: DiscoverRoute(
+        FakeRouteDiscoveryRepository(
+          poisForCategories: (_) {
+            if (shouldFail) {
+              throw const AppFailure(AppFailureType.backendUnavailable);
+            }
+            return [poi('existing')];
+          },
+        ),
+      ),
+    );
+    const origin = RoutePoint(latitude: 10, longitude: 20);
+    const destination = RoutePoint(latitude: 11, longitude: 21);
+    final allCategories = discoveryCategoryCodes.toSet();
+    await controller.discover(
+      origin: origin,
+      destination: destination,
+      categories: allCategories,
+    );
+    expect(controller.totalPoiCount, 1);
+
+    shouldFail = true;
+    await controller.discover(
+      origin: origin,
+      destination: destination,
+      categories: allCategories,
+    );
+
+    expect(controller.hasError, isTrue);
+    expect(controller.totalPoiCount, isNull);
+  });
+
+  test('route invalidation clears the total count', () async {
+    final controller = RouteDiscoveryController(
+      discoverRoute: DiscoverRoute(FakeRouteDiscoveryRepository()),
+    );
+    await controller.discover(
+      origin: const RoutePoint(latitude: 10, longitude: 20),
+      destination: const RoutePoint(latitude: 11, longitude: 21),
+      categories: discoveryCategoryCodes.toSet(),
+    );
+    expect(controller.totalPoiCount, 1);
+
+    controller.invalidatePending();
+
+    expect(controller.totalPoiCount, isNull);
+  });
+
   test(
     'represents usable POIs returned for the selected route points',
     () async {

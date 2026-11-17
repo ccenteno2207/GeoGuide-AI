@@ -105,10 +105,17 @@ class FakeRoutePlanningRepository implements RoutePlanningRepository {
 }
 
 class FakeRouteDiscoveryRepository implements RouteDiscoveryRepository {
-  FakeRouteDiscoveryRepository({this.pendingResponse});
+  FakeRouteDiscoveryRepository({
+    this.pendingResponse,
+    this.poisForCategories,
+    this.emptyAllCategoriesOnRequest,
+  });
 
   final requests = <(RoutePoint, RoutePoint, Set<String>)>[];
   final Completer<List<DiscoveryPoi>>? pendingResponse;
+  final List<DiscoveryPoi> Function(Set<String>)? poisForCategories;
+  final int? emptyAllCategoriesOnRequest;
+  int _allCategoryRequests = 0;
 
   @override
   Future<List<DiscoveryPoi>> discover({
@@ -118,6 +125,14 @@ class FakeRouteDiscoveryRepository implements RouteDiscoveryRepository {
   }) async {
     requests.add((origin, destination, categories));
     if (pendingResponse case final response?) return response.future;
+    if (poisForCategories case final resolve?) return resolve(categories);
+    if (categories.length == discoveryCategoryCodes.length) {
+      _allCategoryRequests++;
+      if (_allCategoryRequests == emptyAllCategoriesOnRequest) {
+        return const [];
+      }
+    }
+    if (categories.length != discoveryCategoryCodes.length) return const [];
     return [
       DiscoveryPoi(
         id: 'poi-test-1',
@@ -240,7 +255,9 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       final routeRepository = FakeRoutePlanningRepository();
-      final discoveryRepository = FakeRouteDiscoveryRepository();
+      final discoveryRepository = FakeRouteDiscoveryRepository(
+        emptyAllCategoriesOnRequest: 3,
+      );
       final location = FakeLocationRepository(
         CurrentLocationResult.available(
           const LocationPoint(latitude: -12.05, longitude: -77.04),
@@ -288,7 +305,7 @@ void main() {
       expect(destination.latitude, -11.4669625);
       expect(destination.longitude, -76.6247746);
       expect(find.byType(PolylineLayer), findsOneWidget);
-      expect(find.text('Ruta: 12.3 km · 60 min'), findsOneWidget);
+      expect(find.text('Ruta: 12.3 km · 60 min · 1 lugar'), findsOneWidget);
       expect(find.byKey(const ValueKey('calculate-route')), findsNothing);
       expect(
         tester
@@ -301,6 +318,21 @@ void main() {
       expect(find.text('POI de prueba de Canta'), findsOneWidget);
       await tester.tap(find.byKey(const ValueKey('close-discovery-list')));
       await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const ValueKey('route-category-filter')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Catarata'));
+      await tester.tap(find.text('Aplicar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Ruta: 12.3 km · 60 min · 1 lugar'), findsOneWidget);
+      expect(find.text('POI de prueba de Canta'), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('route-category-filter')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Restablecer'));
+      await tester.tap(find.text('Aplicar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Ruta: 12.3 km · 60 min · 1 lugar'), findsOneWidget);
 
       await tester.tap(find.byKey(const ValueKey('open-destination-search')));
       await tester.pumpAndSettle();
@@ -320,7 +352,8 @@ void main() {
       await tester.tap(find.text('Ver ruta'));
       await tester.pumpAndSettle();
       expect(routeRepository.requests, hasLength(2));
-      expect(discoveryRepository.requests, hasLength(2));
+      expect(discoveryRepository.requests, hasLength(4));
+      expect(find.text('Ruta: 12.3 km · 60 min · 0 lugares'), findsOneWidget);
       await tester.pumpWidget(const SizedBox());
     },
   );
@@ -399,7 +432,7 @@ void main() {
       await tester.tap(find.text('Ver ruta'));
       await tester.pump();
       expect(discoveryRepository.requests, hasLength(1));
-      expect(find.byKey(const ValueKey('route-summary')), findsOneWidget);
+      expect(find.text('Ruta: 12.3 km · 60 min'), findsOneWidget);
 
       await selectDestination('Obrajillo', 'Plaza de Armas de Obrajillo');
       pendingPois.complete([
