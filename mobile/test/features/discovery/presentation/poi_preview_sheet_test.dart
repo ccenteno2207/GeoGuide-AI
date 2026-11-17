@@ -36,6 +36,14 @@ void main() {
     await pumpPreview(tester, _poi());
     expect(find.text('Catarata de prueba'), findsOneWidget);
     expect(find.text('Categoría: Catarata'), findsOneWidget);
+    expect(
+      tester
+          .widget<Icon>(
+            find.byKey(const ValueKey('poi-category-preview-icon-WATERFALL')),
+          )
+          .icon,
+      Icons.water_drop,
+    );
     expect(find.text('A 320 m del trazado'), findsOneWidget);
     expect(find.text('Cerca del trazado'), findsOneWidget);
     expect(find.text('poi-123'), findsNothing);

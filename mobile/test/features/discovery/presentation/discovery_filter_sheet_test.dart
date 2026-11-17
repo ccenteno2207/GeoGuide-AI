@@ -19,7 +19,19 @@ void main() {
     expect(find.text('Catarata'), findsOneWidget);
     expect(find.text('Combustible'), findsNothing);
     expect(find.text('Otros'), findsNothing);
+    final categories = find.byType(Scrollable).last;
     await tester.tap(find.text('Catarata'));
+    for (final code in discoveryCategoryCodes) {
+      await tester.scrollUntilVisible(
+        find.byKey(ValueKey('poi-category-filter-row-$code')),
+        120,
+        scrollable: categories,
+      );
+      expect(
+        find.byKey(ValueKey('poi-category-filter-icon-$code')),
+        findsOneWidget,
+      );
+    }
     await tester.tap(find.text('Aplicar'));
     await tester.pumpAndSettle();
   });

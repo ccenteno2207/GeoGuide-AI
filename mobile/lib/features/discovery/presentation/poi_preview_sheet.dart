@@ -50,8 +50,21 @@ class PoiPreviewSheet extends StatelessWidget {
                       horizontal: 10,
                       vertical: 5,
                     ),
-                    child: Text(
-                      'Categoría: ${friendlyPoiCategory(poi.category)}',
+                    child: Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 6,
+                      children: [
+                        ExcludeSemantics(
+                          child: Icon(
+                            poiCategoryIcon(poi.category),
+                            key: ValueKey(
+                              'poi-category-preview-icon-${poi.category}',
+                            ),
+                            size: 18,
+                          ),
+                        ),
+                        Text('Categoría: ${friendlyPoiCategory(poi.category)}'),
+                      ],
                     ),
                   ),
                 ),

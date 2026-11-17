@@ -41,8 +41,21 @@ class _DiscoveryFilterSheetState extends State<DiscoveryFilterSheet> {
                   children: [
                     for (final code in discoveryCategoryCodes)
                       CheckboxListTile(
+                        key: ValueKey('poi-category-filter-row-$code'),
                         value: _draft.contains(code),
-                        title: Text(friendlyPoiCategory(code)),
+                        title: Row(
+                          children: [
+                            ExcludeSemantics(
+                              child: Icon(
+                                poiCategoryIcon(code),
+                                key: ValueKey('poi-category-filter-icon-$code'),
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(child: Text(friendlyPoiCategory(code))),
+                          ],
+                        ),
                         onChanged: (selected) => setState(() {
                           if (selected == true) {
                             _draft.add(code);

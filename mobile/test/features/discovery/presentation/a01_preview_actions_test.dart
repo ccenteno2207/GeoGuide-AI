@@ -10,6 +10,7 @@ import 'package:geoguide_ai/features/discovery/application/offline_discovery.dar
 import 'package:geoguide_ai/features/discovery/domain/discovery_poi.dart';
 import 'package:geoguide_ai/features/discovery/presentation/poi_detail_sheet.dart';
 import 'package:geoguide_ai/features/discovery/presentation/poi_preview_sheet.dart';
+import 'package:geoguide_ai/features/discovery/presentation/poi_presentation.dart';
 import 'package:geoguide_ai/features/discovery/presentation/poi_result_card.dart';
 import 'package:geoguide_ai/features/route_planning/domain/route_point.dart';
 
@@ -240,6 +241,14 @@ void main() {
       );
       await tester.pumpAndSettle();
       final marker = find.byTooltip('Vista previa de Museo Ámbar');
+      expect(
+        tester
+            .widget<Icon>(
+              find.byKey(const ValueKey('poi-category-map-icon-MUSEUM')),
+            )
+            .icon,
+        poiCategoryIcon('MUSEUM'),
+      );
       final before = tester.getSemantics(marker).getSemanticsData();
       await tester.tap(marker);
       await tester.pumpAndSettle();

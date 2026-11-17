@@ -27,6 +27,7 @@ import '../../discovery/presentation/poi_detail_sheet.dart';
 import '../../discovery/presentation/discovery_filter_sheet.dart';
 import '../../discovery/presentation/poi_result_card.dart';
 import '../../discovery/presentation/poi_result_filter.dart';
+import '../../discovery/presentation/poi_presentation.dart';
 import '../../discovery/presentation/route_discovery_controller.dart';
 import '../../route_planning/application/plan_route.dart';
 import '../../route_planning/domain/route_point.dart';
@@ -1889,7 +1890,13 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                           shape: const CircleBorder(),
                                         ),
                                         onPressed: () => _showPoiPreview(poi),
-                                        icon: const Icon(Icons.place, size: 28),
+                                        icon: Icon(
+                                          poiCategoryIcon(poi.category),
+                                          key: ValueKey(
+                                            'poi-category-map-icon-${poi.category}',
+                                          ),
+                                          size: 28,
+                                        ),
                                       ),
                                     ),
                                   )

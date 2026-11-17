@@ -27,7 +27,7 @@ class PoiResultCard extends StatelessWidget {
           runSpacing: 4,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            _poiTag(context, friendlyPoiCategory(poi.category)),
+            _poiTag(context, poi.category),
             if (poiDistanceLabel(poi) case final distance?)
               Text(
                 distance,
@@ -92,17 +92,30 @@ class PoiResultCard extends StatelessWidget {
     );
   }
 
-  Widget _poiTag(BuildContext context, String label) => DecoratedBox(
+  Widget _poiTag(BuildContext context, String code) => DecoratedBox(
     decoration: BoxDecoration(
       color: Theme.of(context).colorScheme.primaryContainer,
       borderRadius: BorderRadius.circular(12),
     ),
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      child: Text(
-        label,
-        locale: spanishPoiUiLocale,
-        style: Theme.of(context).textTheme.labelMedium,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ExcludeSemantics(
+            child: Icon(
+              poiCategoryIcon(code),
+              key: ValueKey('poi-category-card-icon-$code'),
+              size: 16,
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            friendlyPoiCategory(code),
+            locale: spanishPoiUiLocale,
+            style: Theme.of(context).textTheme.labelMedium,
+          ),
+        ],
       ),
     ),
   );
