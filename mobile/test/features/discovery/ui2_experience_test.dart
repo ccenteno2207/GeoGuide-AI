@@ -464,6 +464,76 @@ void main() {
     },
   );
 
+  testWidgets(
+    'list Ver detalles opens the same POI Detail directly without selection mutation',
+    (tester) async {
+      tester.view.physicalSize = const Size(360, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final snapshot = syntheticSnapshot();
+      final source = CountingSource();
+      final session = FakeSession();
+      final offline = OfflineDiscovery(
+        source: source,
+        store: MemoryStore()..value = snapshot,
+        backendContext: snapshot.query.backendContext,
+        now: () => fixtures.captured,
+      );
+      await pump(tester, offline, session: session);
+      await openList(tester);
+
+      await tester.tap(find.byKey(const ValueKey('close-discovery-list')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Vista previa de Museo Ámbar'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Elegir para este recorrido'));
+      await tester.pumpAndSettle();
+      expect(find.text('Quitar de este recorrido'), findsOneWidget);
+      await tester.tap(find.text('Cerrar'));
+      await tester.pumpAndSettle();
+      await openList(tester);
+
+      final card = find.byKey(const ValueKey('discovery-list-synthetic-1'));
+      tester.testTextInput.hide();
+      await tester.pumpAndSettle();
+      await tester.ensureVisible(card);
+      final viewDetails = find.descendant(
+        of: card,
+        matching: find.text('Ver detalles'),
+      );
+      await tester.ensureVisible(viewDetails);
+      await tester.tap(viewDetails);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PoiPreviewSheet), findsNothing);
+      expect(find.byType(PoiDetailSheet), findsOneWidget);
+      expect(
+        tester.widget<PoiDetailSheet>(find.byType(PoiDetailSheet)).poi.id,
+        'synthetic-1',
+      );
+      expect(
+        find.descendant(
+          of: find.byType(PoiDetailSheet),
+          matching: find.text('Descripción sintética para probar la ficha.'),
+        ),
+        findsOneWidget,
+      );
+      expect(session.lastChosen, isEmpty);
+      expect(source.calls, 0);
+      expect(offline.snapshot, same(snapshot));
+
+      await tester.tap(find.text('Volver'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('close-discovery-list')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byTooltip('Vista previa de Museo Ámbar'));
+      await tester.pumpAndSettle();
+      expect(find.text('Quitar de este recorrido'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
+
   for (final keyboardSize in const [Size(360, 640), Size(640, 360)]) {
     testWidgets(
       'keyboard $keyboardSize keeps editing and dismissal reachable; query does not persist after disposal',

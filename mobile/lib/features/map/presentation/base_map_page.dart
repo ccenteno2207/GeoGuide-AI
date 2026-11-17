@@ -2070,6 +2070,8 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                                               poi: poi,
                                               onPressed: () =>
                                                   _showPoiPreview(poi),
+                                              onViewDetails: () =>
+                                                  _showPoiDetail(poi),
                                             ),
                                         ],
                                       ),
