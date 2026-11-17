@@ -119,7 +119,7 @@ La indicación de origen mostrada fue `Tu ubicación aproximada (±100 m)`; no s
 - `05-search-destination.png` — panel de búsqueda.
 - `06-destination-invalidated-redacted.png` — resumen anterior invalidado y `Ver ruta` visible, con el área del mapa excluida.
 
-Se excluyeron del inventario y de cualquier publicación `06-changed-destination.png` (captura auxiliar con una notificación de otra aplicación) y `state-current.png` (vista auxiliar del mapa centrada en la ubicación actual). Permanecen como capturas locales no versionadas en el directorio de evidencia; el intento de retirarlas fue rechazado por el entorno de ejecución. No forman parte de la evidencia conservada ni se compartieron.
+Se excluyeron del inventario y de cualquier publicación `06-changed-destination.png` (captura auxiliar con una notificación de otra aplicación), `06-changed-destination-full.png` y `state-current.png` (vistas auxiliares del mapa que pueden exponer la zona de ubicación actual). Permanecen como capturas locales no versionadas en el directorio de evidencia; el intento de retirarlas fue rechazado por el entorno de ejecución. No forman parte de la evidencia conservada ni se compartieron.
 
 No se activó Driving, seguimiento GPS, CEFI ni TalkBack. TalkBack permanece `NOT_TESTED`. La indicación aproximada de origen se observó como parte de la UI y no se investigó como defecto en este H-04.
 
