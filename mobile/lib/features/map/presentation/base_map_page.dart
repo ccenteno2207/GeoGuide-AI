@@ -1301,11 +1301,32 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         !hasError &&
         ((snapshot != null && !snapshotExpired && snapshot.pois.isEmpty) ||
             (offline == null && _routeDiscovery.pois.isEmpty));
+    final snapshotMatchesRoute =
+        snapshot != null &&
+        _samePoint(snapshot.query.origin, _routePlanning.origin) &&
+        _samePoint(snapshot.query.destination, _routePlanning.destination) &&
+        snapshot.query.categories.length == discoveryCategoryCodes.length &&
+        snapshot.query.categories.toSet().containsAll(discoveryCategoryCodes);
+    final onlineCountMatchesRoute =
+        _samePoint(_routeDiscovery.origin, _routePlanning.origin) &&
+        _samePoint(_routeDiscovery.destination, _routePlanning.destination);
+    final summaryPoiCount = offline == null
+        ? onlineCountMatchesRoute
+              ? _routeDiscovery.totalPoiCount
+              : null
+        : snapshotMatchesRoute &&
+              (offline.availability == DiscoveryAvailability.online ||
+                  offline.availability == DiscoveryAvailability.cached)
+        ? snapshot.pois.length
+        : null;
     final showRouteSummary =
         route != null &&
+        !snapshotExpired &&
+        !_destinationSelectionAwaitingSnapshot &&
         (offline == null ||
-            (offline.availability == DiscoveryAvailability.online &&
-                (offline.snapshot?.pois.isNotEmpty ?? false)));
+            (snapshotMatchesRoute &&
+                (offline.availability == DiscoveryAvailability.online ||
+                    offline.availability == DiscoveryAvailability.cached)));
     final statusMessage = snapshotExpired
         ? _unavailableResults
         : _routePlanning.hasError
@@ -1450,7 +1471,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
                       vertical: 8,
                     ),
                     child: Text(
-                      'Ruta: ${(route.distanceMeters / 1000).toStringAsFixed(1)} km · ${(route.durationSeconds / 60).round()} min',
+                      'Ruta: ${(route.distanceMeters / 1000).toStringAsFixed(1)} km · ${(route.durationSeconds / 60).round()} min${!isLoading && !hasError && summaryPoiCount != null ? ' · $summaryPoiCount ${summaryPoiCount == 1 ? 'lugar' : 'lugares'}' : ''}',
                       key: const ValueKey('route-summary'),
                       style: Theme.of(context).textTheme.titleSmall
                           ?.copyWith(fontWeight: FontWeight.w700),

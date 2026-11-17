@@ -10,6 +10,9 @@ class RouteDiscoveryController {
   int _revision = 0;
 
   List<DiscoveryPoi> pois = const [];
+  int? totalPoiCount;
+  RoutePoint? _totalCountOrigin;
+  RoutePoint? _totalCountDestination;
   bool isDiscovering = false;
   bool hasError = false;
   String? status;
@@ -27,6 +30,15 @@ class RouteDiscoveryController {
     final discoverRoute = this.discoverRoute;
     if (discoverRoute == null || isDiscovering) return;
 
+    final sameCountedRoute =
+        _samePoint(_totalCountOrigin, origin) &&
+        _samePoint(_totalCountDestination, destination);
+    if (!sameCountedRoute || _hasAllCategories(categories)) {
+      totalPoiCount = null;
+      _totalCountOrigin = null;
+      _totalCountDestination = null;
+    }
+
     final revision = ++_revision;
     isDiscovering = true;
     hasError = false;
@@ -42,6 +54,11 @@ class RouteDiscoveryController {
       );
       if (revision != _revision) return;
       pois = result;
+      if (_hasAllCategories(categories)) {
+        totalPoiCount = result.length;
+        _totalCountOrigin = origin;
+        _totalCountDestination = destination;
+      }
       status = pois.isEmpty
           ? 'No se encontraron lugares utilizables en la ruta'
           : '${pois.length} lugares visibles en la ruta';
@@ -62,5 +79,17 @@ class RouteDiscoveryController {
     status = null;
     origin = null;
     destination = null;
+    totalPoiCount = null;
+    _totalCountOrigin = null;
+    _totalCountDestination = null;
   }
+
+  bool _hasAllCategories(Set<String> categories) =>
+      categories.length == discoveryCategoryCodes.length &&
+      categories.containsAll(discoveryCategoryCodes);
+
+  bool _samePoint(RoutePoint? first, RoutePoint second) =>
+      first != null &&
+      first.latitude == second.latitude &&
+      first.longitude == second.longitude;
 }
