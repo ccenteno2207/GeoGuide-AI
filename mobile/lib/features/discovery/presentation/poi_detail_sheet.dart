@@ -23,7 +23,7 @@ class PoiDetailSheet extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const PoiThumbnail(detail: true),
+                PoiThumbnail(poi: poi, detail: true),
                 const SizedBox(height: 12),
                 Text(poi.name, style: Theme.of(context).textTheme.titleLarge),
                 const SizedBox(height: 8),

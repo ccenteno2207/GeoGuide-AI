@@ -85,7 +85,7 @@ class PoiResultCard extends StatelessWidget {
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const PoiThumbnail(),
+                          PoiThumbnail(poi: poi),
                           const SizedBox(height: 8),
                           details,
                         ],
@@ -94,7 +94,7 @@ class PoiResultCard extends StatelessWidget {
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const PoiThumbnail(),
+                        PoiThumbnail(poi: poi),
                         const SizedBox(width: 12),
                         Expanded(child: details),
                       ],
