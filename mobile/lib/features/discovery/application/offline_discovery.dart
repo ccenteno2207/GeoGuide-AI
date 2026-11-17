@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import '../../../core/network/app_failure.dart';
+import '../domain/discovery_poi.dart';
 import '../domain/route_snapshot.dart';
 import '../../route_planning/application/plan_route.dart';
 
@@ -22,6 +23,12 @@ class OfflineDiscovery {
   final int Function() now;
   void Function()? onChanged;
   RouteSnapshot? snapshot;
+  RouteSnapshot? _completeRouteSnapshot;
+  RouteSnapshot? get completeRouteSnapshot {
+    final value = _completeRouteSnapshot;
+    return value != null && value.eligible(now()) ? value : null;
+  }
+
   DiscoveryQuery? requested;
   DiscoveryAvailability availability = DiscoveryAvailability.unavailable;
   bool captureEnabled = false, busy = false, saving = false;
@@ -72,6 +79,9 @@ class OfflineDiscovery {
       if (generation != _generation || _disposed) return;
       if (cached != null && cached.query.backendContext == backendContext) {
         _present(cached, DiscoveryAvailability.cached);
+        if (_isCompleteQuery(cached.query)) {
+          _completeRouteSnapshot = cached;
+        }
         requested = cached.query;
         message = 'Copia offline: puede estar desactualizada. Vigencia máxima 24 horas.';
       }
@@ -83,10 +93,25 @@ class OfflineDiscovery {
 
   void invalidatePending() {
     _generation++;
+    _completeRouteSnapshot = null;
   }
 
   Future<void> discover(DiscoveryQuery query, {bool planFirst = false}) async {
     if (busy || _disposed) return;
+    final isCompleteQuery = _isCompleteQuery(query);
+    final previousComplete = _completeRouteSnapshot;
+    if (isCompleteQuery ||
+        (previousComplete != null &&
+            (!DiscoveryQuery.samePoint(
+                  previousComplete.query.origin,
+                  query.origin,
+                ) ||
+                !DiscoveryQuery.samePoint(
+                  previousComplete.query.destination,
+                  query.destination,
+                )))) {
+      _completeRouteSnapshot = null;
+    }
     requested = query;
     final generation = ++_generation;
     busy = true;
@@ -103,6 +128,7 @@ class OfflineDiscovery {
         throw const AppFailure(AppFailureType.invalidResponse);
       }
       _present(result, DiscoveryAvailability.online);
+      if (isCompleteQuery) _completeRouteSnapshot = result;
       message = result.pois.isEmpty
           ? 'Online: no se encontraron lugares'
           : 'Online: ${result.pois.length} lugares';
@@ -124,6 +150,7 @@ class OfflineDiscovery {
         final previous = snapshot;
         if (cached != null && cached.query.sameAs(query)) {
           _present(cached, DiscoveryAvailability.cached);
+          if (isCompleteQuery) _completeRouteSnapshot = cached;
           message = 'Copia offline; no se pudo actualizar. Puede estar desactualizada (máximo 24 horas).';
         } else if (previous != null &&
             previous.eligible(now()) &&
@@ -132,6 +159,9 @@ class OfflineDiscovery {
                 RouteSnapshot.ttlMs) {
           // Retain its original query; never label it as the failed new query.
           _present(previous, DiscoveryAvailability.cached);
+          if (_isCompleteQuery(previous.query)) {
+            _completeRouteSnapshot = previous;
+          }
           message = 'No se pudo actualizar. Se conserva la consulta anterior como copia temporal (máximo 24 horas).';
         } else {
           snapshot = null;
@@ -140,7 +170,12 @@ class OfflineDiscovery {
         }
       } else {
         final previous = snapshot;
-        if (previous != null) _present(previous, DiscoveryAvailability.cached);
+        if (previous != null) {
+          _present(previous, DiscoveryAvailability.cached);
+          if (_isCompleteQuery(previous.query)) {
+            _completeRouteSnapshot = previous;
+          }
+        }
         availability = DiscoveryAvailability.error;
         message = 'Error: ${failure.userMessage}. No se actualizó la consulta.';
         await revalidate();
@@ -148,7 +183,12 @@ class OfflineDiscovery {
     } catch (_) {
       if (generation == _generation) {
         final previous = snapshot;
-        if (previous != null) _present(previous, DiscoveryAvailability.cached);
+        if (previous != null) {
+          _present(previous, DiscoveryAvailability.cached);
+          if (_isCompleteQuery(previous.query)) {
+            _completeRouteSnapshot = previous;
+          }
+        }
         availability = DiscoveryAvailability.error;
         message = 'Error: no se pudieron validar los datos recibidos';
         await revalidate();
@@ -226,8 +266,11 @@ class OfflineDiscovery {
 
   Future<void> revalidate() async {
     final s = snapshot;
-    if (s == null || availability == DiscoveryAvailability.online) return;
     final time = now();
+    if (_completeRouteSnapshot?.eligible(time) != true) {
+      _completeRouteSnapshot = null;
+    }
+    if (s == null || availability == DiscoveryAvailability.online) return;
     if (!s.eligible(time) ||
         time < _lastObserved ||
         _ageAtPresentation + _elapsed.elapsedMilliseconds >=
@@ -247,9 +290,14 @@ class OfflineDiscovery {
     }
   }
 
+  bool _isCompleteQuery(DiscoveryQuery query) =>
+      query.categories.length == discoveryCategoryCodes.length &&
+      query.categories.toSet().containsAll(discoveryCategoryCodes);
+
   Future<void> dispose() async {
     _disposed = true;
     _generation++;
+    _completeRouteSnapshot = null;
     _expiry?.cancel();
     onChanged = null;
     await store.close();

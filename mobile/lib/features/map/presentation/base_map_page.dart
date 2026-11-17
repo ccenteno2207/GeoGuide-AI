@@ -1304,9 +1304,19 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
     final snapshotMatchesRoute =
         snapshot != null &&
         _samePoint(snapshot.query.origin, _routePlanning.origin) &&
-        _samePoint(snapshot.query.destination, _routePlanning.destination) &&
+        _samePoint(snapshot.query.destination, _routePlanning.destination);
+    final snapshotHasAllCategories =
+        snapshotMatchesRoute &&
         snapshot.query.categories.length == discoveryCategoryCodes.length &&
         snapshot.query.categories.toSet().containsAll(discoveryCategoryCodes);
+    final completeSnapshot = offline?.completeRouteSnapshot;
+    final completeSnapshotMatchesRoute =
+        completeSnapshot != null &&
+        _samePoint(completeSnapshot.query.origin, _routePlanning.origin) &&
+        _samePoint(
+          completeSnapshot.query.destination,
+          _routePlanning.destination,
+        );
     final onlineCountMatchesRoute =
         _samePoint(_routeDiscovery.origin, _routePlanning.origin) &&
         _samePoint(_routeDiscovery.destination, _routePlanning.destination);
@@ -1314,19 +1324,20 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
         ? onlineCountMatchesRoute
               ? _routeDiscovery.totalPoiCount
               : null
-        : snapshotMatchesRoute &&
+        : (snapshotHasAllCategories &&
+              (offline.availability == DiscoveryAvailability.online ||
+                  offline.availability == DiscoveryAvailability.cached))
+        ? snapshot.pois.length
+        : completeSnapshotMatchesRoute &&
               (offline.availability == DiscoveryAvailability.online ||
                   offline.availability == DiscoveryAvailability.cached)
-        ? snapshot.pois.length
+        ? completeSnapshot.pois.length
         : null;
     final showRouteSummary =
         route != null &&
         !snapshotExpired &&
         !_destinationSelectionAwaitingSnapshot &&
-        (offline == null ||
-            (snapshotMatchesRoute &&
-                (offline.availability == DiscoveryAvailability.online ||
-                    offline.availability == DiscoveryAvailability.cached)));
+        (offline == null || snapshotMatchesRoute);
     final statusMessage = snapshotExpired
         ? _unavailableResults
         : _routePlanning.hasError
@@ -1420,21 +1431,24 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       if (_routeDiscovery.pois.isNotEmpty && !snapshotExpired)
         Semantics(
           localeForSubtree: const Locale('es', 'PE'),
-          child: OutlinedButton.icon(
+          child: FilledButton.icon(
             key: const ValueKey('toggle-discovery-list'),
             onPressed: () =>
                 setState(() => _showDiscoveryList = !_showDiscoveryList),
             icon: Icon(_showDiscoveryList ? Icons.map : Icons.list),
             label: Text(_showDiscoveryList ? 'Ver mapa' : 'Ver lista'),
+            style: _floatingControlStyle(context),
           ),
         ),
       if (snapshot != null && !isLoading)
         Tooltip(
           message: 'Entrar en modo conducción',
-          child: OutlinedButton.icon(
+          child: FilledButton.icon(
+            key: const ValueKey('enter-driving'),
             onPressed: _enterDriving,
             icon: const Icon(Icons.directions_car),
             label: const Text('Conducción'),
+            style: _floatingControlStyle(context),
           ),
         ),
     ];
@@ -1589,6 +1603,21 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  ButtonStyle _floatingControlStyle(BuildContext context) {
+    final design = GeoGuideTheme.exploration;
+    return FilledButton.styleFrom(
+      backgroundColor: design.surface,
+      foregroundColor: design.primary,
+      disabledBackgroundColor: design.surface,
+      disabledForegroundColor: design.primary,
+      side: BorderSide(color: Theme.of(context).colorScheme.outline),
+      minimumSize: const Size(48, 48),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(design.controlRadius),
       ),
     );
   }
