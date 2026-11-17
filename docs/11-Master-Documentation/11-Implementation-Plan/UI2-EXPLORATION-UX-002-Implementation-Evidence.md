@@ -120,3 +120,64 @@ TALKBACK = NOT_TESTED
 ```
 
 TalkBack remains separate evidence under UI2-AC-12; its physical reading test is not claimed by this UX-01–UX-05 result. No overall accessibility certification or UI-2 master closure is implied.
+
+## UI2-PHYSICAL-VALIDATION-001 — HONOR build, instalación y checkpoint parcial (2026-11-16)
+
+### Baseline y artefacto
+
+- `origin/main` y baseline de validación: `25493eb55e659b90bb0e5321d953c28b07cf7c81` (PR #103 integrado).
+- Commit correctivo contenido: `eda5119aef1e18200818e39f757db785aaf19134`.
+- Build ejecutado desde ese baseline en worktree aislado `codex/ui2-physical-validation-001`.
+- Comando: `flutter build apk --debug --dart-define=BACKEND_BASE_URL=https://geoguide.getcom.pe:5443` — PASS.
+- APK: `mobile/build/app/outputs/flutter-apk/app-debug.apk`; 168,188,512 bytes; SHA-256 `A7DC8D0033143E9C0558B88D50214EF34DA0FA15F42B14739A8D4057D6597DBA`.
+- Package `com.geoguideai.geoguide_ai`; versionCode `1`, versionName `1.0.0`, target SDK 36, etiqueta `Rutea`.
+- Certificado APK SHA-256 `894975b5bc6751da09b3d69923d4ae399192470d86c107106f65f6cb8d7eab7e`, igual al certificado de la APK instalada antes de actualizar.
+
+### Preflight e instalación
+
+- HONOR LLY-NX3, modelo `LLY-NX3`, serial `AM4L6R5617005821`, Android API 36; ADB `device`, pantalla despierta y `mDreamingLockscreen=false`.
+- Paquete instalado antes de actualizar: versión 1.0.0; espacio `/data` disponible 109,464,004 KiB. No había sesión Rutea/GPS/Driving/voz que preservar, según confirmación del propietario.
+- `adb install -r`: `Success`. `firstInstallTime` permaneció `2026-10-05 20:08:37`; `lastUpdateTime` avanzó a `2026-11-16 17:47:39`. No se ejecutó uninstall, `pm clear`, ni cambio de permisos.
+- Rutea se abrió en primer plano. `adb reverse --list` no reportó reglas. No se encontró `FATAL EXCEPTION` en las últimas 1,500 líneas de logcat consultadas.
+
+### Observación física recibida
+
+| Control | Estado | Evidencia / límite |
+|---|---|---|
+| PV-01 — Inicio y mapa | PASS | El propietario observó mapa visible sin errores, atribución `© OpenStreetMap contributors`, controles flotantes funcionales, ninguna solicitud nueva de permisos y confirmó que no apareció mensaje técnico persistente. TalkBack estaba apagado. Logcat consultado sin crash fatal reciente. |
+| PV-02 — Búsqueda turística | PASS | El propietario buscó `Obra`; apareció Plaza de Armas de Obrajillo, seleccionó la sugerencia y volvió al mapa con destino marcado y «Ver ruta» visible, sin cálculo automático. Reabrió la búsqueda, leyó el título/campo, la cerró con Atrás y confirmó que el destino permanecía marcado. Mientras la superficie de búsqueda está abierta queda delante del contenido previo y bloquea controles subyacentes hasta cerrarla; la observación no indica recorte ni bloqueo después del cierre. |
+| PV-03 — Cálculo explícito | PARTIAL | «Ver ruta» calculó sin error observado; resumen `Ruta: 97.7 km - 104 min`, línea de ruta visible, cinco iconos POI en mapa y cinco registros en «Ver lista». «Ver ruta» desapareció tras el cálculo. Se abrió Detail de un POI y se volvió al mapa sin problemas. El propietario no percibió indicador de carga; la comprobación de pulsación repetida no se realizó, por lo que no se afirma resultado físico de cálculo duplicado. |
+| PV-04 — Respuestas obsoletas PR #103 | INCONCLUSIVE | No se intentó provocar una carrera física por no existir una forma determinista de controlar la latencia sin alterar red/backend. La protección y las pruebas deterministas correspondientes permanecen integradas por PR #103; no se afirma PASS físico. |
+| PV-05 — GPS puntual | PASS | El propietario pulsó el control puntual: el mapa se centró en ubicación actual, no pidió permiso nuevo y no inició tracking. Después movió manualmente el mapa y esperó 60 s o más; no recentró y la línea de ruta permaneció visible. No se registraron coordenadas. |
+| PV-06 — POIs | PARTIAL | «Ver lista» mostró cinco POIs; el propietario confirmó que Preview precedió al Detail de uno y regresó al mapa sin error. La fuente MINCETUR aparece solo en Detail; no se confirmó una categoría concreta durante esta observación. No se abrieron enlaces externos. |
+| PV-07 — Driving | PARTIAL | Tras calcular la ruta, el propietario confirmó que el control «Conducción» seguía visible y no se había activado automáticamente. No se entró a Driving; no se amplió P9 ni se probó el aislamiento interno de ese modo. |
+| PV-08 — UX general | PARTIAL | El propietario confirmó visibles los controles Categorías, Ver lista y Conducción junto a la ruta; la búsqueda se presenta como superficie temporal y al cerrarla retorna al mapa con el destino. Faltan observaciones sobre teclado, legibilidad general y superposición fuera de la superficie de búsqueda. |
+
+TalkBack no se probó por decisión del propietario. El aplazamiento es deuda técnica de accesibilidad y no bloquea esta validación funcional; no se declara accesibilidad integral PASS.
+
+```ini
+UI2_HONOR_BUILD = PASS
+UI2_HONOR_INSTALL = PASS
+UI2_PHYSICAL_VALIDATION = PARTIAL
+UI2_PHYSICAL_EVIDENCE_CONSOLIDATION = PASS
+UI2_FUNCTIONAL_REGRESSION = PARTIAL
+UI2_PR103_PHYSICAL = INCONCLUSIVE
+TALKBACK = NOT_TESTED
+TALKBACK_REMEDIATION = DEFERRED_TECH_DEBT
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+P12_5 = NOT_AUTHORIZED
+PRODUCTION_READINESS = NOT_DECLARED
+```
+
+### Evidencia automatizada relacionada — PR #103
+
+La carrera física de PV-04 permanece `INCONCLUSIVE`; la corrección de respuestas obsoletas está respaldada por automatización integrada en PR #103 (merge commit `25493eb55e659b90bb0e5321d953c28b07cf7c81`). La [evidencia de integración UI2](UI2-INTEGRATION-AUDIT-001.md) registra el alcance, las validaciones y la ausencia de checks remotos configurados.
+
+Pruebas deterministas relevantes:
+
+- `route_discovery_controller_test.dart`: `ignores discovery responses invalidated by a route change` y `ignores failures from discovery invalidated by a route change`.
+- `route_discovery_controller_test.dart`: `does not start duplicate discovery while a request is pending`.
+- `widget_test.dart`: `does not apply route POIs after search changes destination in flight`.
+- Validación post-merge de esta iniciativa: 27 tests de Discovery/Route Planning/widget y 12 de búsqueda, 39/39 PASS; `flutter analyze --no-pub`: PASS, sin issues.
+
+Esta evidencia automatizada no se contabiliza como reproducción física del race ni altera PV-04.
