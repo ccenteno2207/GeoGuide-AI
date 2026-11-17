@@ -26,6 +26,14 @@ void main() {
 
     expect(find.text('Museum'), findsOneWidget);
     expect(find.text('Categoría: Lugar de interés'), findsOneWidget);
+    expect(
+      tester
+          .widget<Icon>(
+            find.byKey(const ValueKey('poi-category-detail-icon-CULTURE')),
+          )
+          .icon,
+      Icons.category,
+    );
     expect(find.textContaining('CULTURE'), findsNothing);
     expect(find.text('A 150 m del trazado'), findsOneWidget);
     expect(find.text('Cerca del trazado'), findsOneWidget);
@@ -58,6 +66,14 @@ void main() {
       ),
     );
     expect(find.text('Factual text'), findsOneWidget);
+    expect(
+      tester
+          .widget<Icon>(
+            find.byKey(const ValueKey('poi-category-detail-icon-MUSEUM')),
+          )
+          .icon,
+      Icons.museum,
+    );
     expect(find.text('Fuente'), findsOneWidget);
     expect(find.text('MINCETUR'), findsOneWidget);
     expect(find.text('Mincetur'), findsOneWidget);

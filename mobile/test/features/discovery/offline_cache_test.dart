@@ -335,6 +335,13 @@ void main() {
       () => codec.fromEnvelope(invalid, query(), captured),
       throwsA(anything),
     );
+    final unsupportedCategory = envelope();
+    ((unsupportedCategory['results'] as List).single as Map)['category'] =
+        'FUEL';
+    expect(
+      () => codec.fromEnvelope(unsupportedCategory, query(), captured),
+      throwsA(anything),
+    );
   });
   test(
     'no cache plus network failure is unavailable, valid empty is online',

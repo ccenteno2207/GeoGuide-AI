@@ -35,6 +35,14 @@ void main() {
         ),
       );
       expect(find.text('Lugar de interés'), findsOneWidget);
+      expect(
+        tester
+            .widget<Icon>(
+              find.byKey(const ValueKey('poi-category-card-icon-UNKNOWN_CODE')),
+            )
+            .icon,
+        Icons.category,
+      );
       expect(find.textContaining('Fuente:'), findsNothing);
       expect(find.textContaining('m del trazado'), findsNothing);
       expect(find.textContaining('UNKNOWN_CODE'), findsNothing);

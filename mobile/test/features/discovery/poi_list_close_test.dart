@@ -51,7 +51,7 @@ void main() {
     const Size(360, 640),
     const Size(640, 360),
   ]) {
-    testWidgets('long POI list closes at $size without changing route', (
+    testWidgets('overlapping POIs remain available in the list at $size', (
       tester,
     ) async {
       tester.view.physicalSize = size;
