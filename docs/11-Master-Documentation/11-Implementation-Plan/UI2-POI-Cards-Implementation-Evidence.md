@@ -11,7 +11,7 @@
 | Incremento B — implementación | `IMPLEMENTED_PENDING_REVIEW` |
 | Incremento B — validación física | `NOT_AUTHORIZED` |
 | TalkBack | `NOT_TESTED`; remediación permanece como deuda técnica diferida |
-| Publicación | `NOT_AUTHORIZED` (sin push, PR ni merge) |
+| Integración GitHub | PR [#110](https://github.com/ccenteno2207/GeoGuide-AI/pull/110) creado el 2026-11-17; este registro refleja la apertura del PR, no el resultado post-merge |
 
 Esta entrega modifica únicamente la presentación de las tarjetas de lista y su acción de acceso a Detail. No cambia modelos, filtros, selección, snapshots, fuentes de datos ni contratos.
 
