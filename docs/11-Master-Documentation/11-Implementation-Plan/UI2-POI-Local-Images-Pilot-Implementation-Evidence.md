@@ -66,3 +66,19 @@ UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
 P12_5 = NOT_AUTHORIZED
 PRODUCTION_READINESS = NOT_DECLARED
 ```
+
+## Endurecimiento previo a integración — 2026-11-17
+
+Se corrigió la reutilización de `standard-mobile` bajo un `BuildRoot` persistente. Cada invocación crea un subdirectorio `run-<GUID>` exclusivo y copias nuevas para el build estándar y el demo; si una ruta de staging ya existe, la ejecución falla en vez de sobrescribirla. No se elimina ningún directorio ni archivo.
+
+El `BuildRoot` se canonicaliza resolviendo junctions/symlinks y se rechaza si se solapa con el worktree o con la carpeta de originales. Se rechazaron con exit code 1: el worktree, su alias por `C:\Users\CC_Laptop\Documents\Codex`, la carpeta de originales y los directorios ancestros que los contienen. `-ValidateOnly` con un `BuildRoot` seguro no creó subdirectorios de ejecución. Una ejecución completa de Flutter/Gradle, con un `BuildRoot` preexistente que contenía un marcador y un APK señuelo legado, creó `run-c66a5d87c6874ae7b85818c1eff60971`, conservó ambos y construyó staging nuevo. Los APK reales de esa ejecución fueron inspeccionados después de descomprimir su contenido:
+
+| Artefacto | Bytes | SHA-256 | Resultado |
+|---|---:|---|---|
+| Estándar debug | 168189064 | `D0B9B8847C7C30016FACD6C6666B1948FA2DC8A7F41A43E0EDABA99FF08AF274` | Sin recursos demo, nombres de originales ni hashes de fotos. |
+| Estándar release | 61142397 | `62C50104160F6C3688832FB7E5E4F23880040773943539AAD1AF0654AD47FF87` | Sin recursos demo, nombres de originales ni hashes de fotos. |
+| Demo interno debug | 175212791 | `A1E20113114EEF9CA5230556ECAC73FB6A6A34FE5031478A886A51BAD9BB533A` | Exactamente cinco recursos esperados; cada entrada coincide con el SHA-256 original. |
+
+Se volvió a invocar el script con el mismo `BuildRoot` usando un Flutter shim determinista para probar la ruta de reuso sin recompilar Flutter: creó un GUID distinto (`run-430af89fb2274b919eb95e98201ce02d`), generó fixtures de APK que pasaron las comprobaciones de inclusión/exclusión y confirmó cuatro directorios de ejecución distintos sin alterar el marcador ni el APK señuelo legado. Esos fixtures son evidencia de la prueba de reuso, no APK de producto. Una prueba negativa alteró una copia temporal de una foto: `-ValidateOnly` terminó con exit code 1 por `SHA-256 mismatch`, antes de iniciar cualquier build.
+
+Las rutas de salida son locales y temporales bajo `%TEMP%`. Los APK no se instalaron ni distribuyeron; no se borraron archivos ni directorios durante las pruebas.

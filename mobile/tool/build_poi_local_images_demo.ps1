@@ -13,11 +13,69 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 $mobileSource = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $repoRoot = (Resolve-Path (Join-Path $mobileSource '..')).Path
 $sourceRoot = (Resolve-Path $SourceDirectory).Path
-if ([string]::IsNullOrWhiteSpace($BuildRoot)) {
-  $buildRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("rutea-poi-local-demo-" + [guid]::NewGuid().ToString('N'))
-} else {
-  $buildRoot = [System.IO.Path]::GetFullPath($BuildRoot)
+function Normalize-Path([string]$path) {
+  $fullPath = [System.IO.Path]::GetFullPath($path)
+  $root = [System.IO.Path]::GetPathRoot($fullPath)
+  if ($fullPath.Length -gt $root.Length) { return $fullPath.TrimEnd('\', '/') }
+  return $fullPath
 }
+
+function Resolve-ExistingPath([string]$path) {
+  $candidate = Normalize-Path $path
+  $current = [System.IO.Path]::GetPathRoot($candidate)
+  $relative = $candidate.Substring($current.Length)
+  foreach ($part in ($relative -split '[\\/]+' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })) {
+    $next = Join-Path $current $part
+    if (Test-Path -LiteralPath $next) {
+      $item = Get-Item -LiteralPath $next -Force
+      if (($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+        $target = $item.ResolveLinkTarget($true)
+        if ($null -eq $target) { throw "Cannot resolve filesystem link while checking protected paths: $next" }
+        $next = $target.FullName
+      }
+    }
+    $current = Normalize-Path $next
+  }
+  return $current
+}
+
+function Test-PathsOverlap([string]$left, [string]$right) {
+  $leftPath = Normalize-Path $left
+  $rightPath = Normalize-Path $right
+  $leftPrefix = $leftPath.TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
+  $rightPrefix = $rightPath.TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
+  return $leftPath.Equals($rightPath, [System.StringComparison]::OrdinalIgnoreCase) -or
+    $leftPath.StartsWith($rightPrefix, [System.StringComparison]::OrdinalIgnoreCase) -or
+    $rightPath.StartsWith($leftPrefix, [System.StringComparison]::OrdinalIgnoreCase)
+}
+
+function Assert-SafeBuildRoot([string]$path) {
+  $resolved = Resolve-ExistingPath $path
+  foreach ($protectedPath in @($repoRoot, $sourceRoot)) {
+    if (Test-PathsOverlap $resolved $protectedPath) {
+      throw "BuildRoot overlaps protected repository/source path '$protectedPath': $resolved"
+    }
+  }
+  return $resolved
+}
+
+$repoRoot = Resolve-ExistingPath $repoRoot
+$sourceRoot = Resolve-ExistingPath $sourceRoot
+if ([string]::IsNullOrWhiteSpace($BuildRoot)) {
+  $buildBase = Join-Path ([System.IO.Path]::GetTempPath()) 'rutea-poi-local-demo'
+} else {
+  $buildBase = [System.IO.Path]::GetFullPath($BuildRoot)
+}
+$buildBase = Assert-SafeBuildRoot $buildBase
+if (Test-Path -LiteralPath $buildBase -PathType Leaf) {
+  throw "BuildRoot must be a directory, not a file: $buildBase"
+}
+if (-not (Test-Path -LiteralPath $buildBase -PathType Container)) {
+  New-Item -ItemType Directory -Path $buildBase -Force | Out-Null
+  $buildBase = Assert-SafeBuildRoot $buildBase
+}
+$buildRoot = Join-Path $buildBase ("run-" + [guid]::NewGuid().ToString('N'))
+if (Test-Path -LiteralPath $buildRoot) { throw "Refusing to reuse an existing run directory: $buildRoot" }
 $expected = @(
   @{ Id='02000000-0000-0000-0000-000000000001'; File='Santa rosa de quives.png'; Sha='0EE69A45559A9E4A715F7B4193930EAFB79145D277A9A18D8543D57E4DC592C5' },
   @{ Id='02000000-0000-0000-0000-000000000002'; File='petroglifos de checta.png'; Sha='3B2940F2AD8EC60F0CF877F74F82DC3E307E8843250AF4E55140ED6DCDAB74BE' },
@@ -41,7 +99,8 @@ function Assert-SourceImage($item) {
 }
 
 function Copy-MobileProject([string]$destination) {
-  New-Item -ItemType Directory -Path $destination -Force | Out-Null
+  if (Test-Path -LiteralPath $destination) { throw "Refusing to reuse an existing staging project: $destination" }
+  New-Item -ItemType Directory -Path $destination | Out-Null
   & robocopy $mobileSource $destination /E /XD .dart_tool build .idea .vscode /NFL /NDL /NJH /NJS /NP | Out-Null
   if ($LASTEXITCODE -ge 8) { throw "robocopy failed with exit code $LASTEXITCODE" }
 }
@@ -103,7 +162,7 @@ function Assert-DemoApk([string]$apkPath) {
   Write-Output "DEMO_APK_ISOLATION_PASS $apkPath SIZE=$apkSize SHA256=$apkHash"
 }
 
-# Validate the closed source inventory before copying the project or starting any build.
+# Validate the closed source inventory before creating any staging directory or starting a build.
 $validatedSources = @{}
 foreach ($item in $expected) { $validatedSources[$item.Id] = Assert-SourceImage $item }
 if ($ValidateOnly) {
@@ -111,15 +170,14 @@ if ($ValidateOnly) {
   exit 0
 }
 
-New-Item -ItemType Directory -Path $buildRoot -Force | Out-Null
+New-Item -ItemType Directory -Path $buildRoot | Out-Null
 Write-Output "STAGING_ROOT $buildRoot"
 
-# Standard debug and release artifacts are built from a clean copy without any photo files.
+# Every invocation receives a unique run directory. Never reuse project copies or build outputs.
+# Standard debug and release artifacts are built from a fresh copy without any photo files.
 $standardRoot = Join-Path $buildRoot 'standard-mobile'
-if (-not (Test-Path -LiteralPath $standardRoot -PathType Container)) {
-  Copy-MobileProject $standardRoot
-  Invoke-Flutter $standardRoot @('pub', 'get')
-}
+Copy-MobileProject $standardRoot
+Invoke-Flutter $standardRoot @('pub', 'get')
 $standardDebug = Join-Path $standardRoot 'build\app\outputs\flutter-apk\app-debug.apk'
 $standardRelease = Join-Path $standardRoot 'build\app\outputs\flutter-apk\app-release.apk'
 Invoke-Flutter $standardRoot @('build', 'apk', '--debug')
