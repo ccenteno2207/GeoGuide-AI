@@ -80,7 +80,7 @@ void main() {
         final semantics = tester.ensureSemantics();
         final poi = factualPoi(name, description);
         for (final surface in <Widget>[
-          PoiResultCard(poi: poi, onPressed: () {}),
+          PoiResultCard(poi: poi, onPressed: () {}, onViewDetails: () {}),
           PoiDetailSheet(poi: poi),
         ]) {
           await tester.pumpWidget(MaterialApp(home: Scaffold(body: surface)));
@@ -162,7 +162,11 @@ void main() {
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
-              body: PoiResultCard(poi: poi, onPressed: () {}),
+              body: PoiResultCard(
+                poi: poi,
+                onPressed: () {},
+                onViewDetails: () {},
+              ),
             ),
           ),
         );

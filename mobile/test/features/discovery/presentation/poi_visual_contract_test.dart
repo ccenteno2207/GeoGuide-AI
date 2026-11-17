@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geoguide_ai/app/theme/geoguide_theme.dart';
 import 'package:geoguide_ai/features/discovery/domain/discovery_poi.dart';
@@ -22,6 +23,95 @@ void main() {
     attribution: '\n',
   );
 
+  testWidgets('card keeps factual fields compact without changing source data', (
+    tester,
+  ) async {
+    const name =
+        'Nombre largo del atractivo turístico que supera dos líneas visibles';
+    const description =
+        'Descripción turística existente que debe acortarse visualmente en la tarjeta sin modificar el texto original.';
+    const poi = DiscoveryPoi(
+      id: 'compact-card-test',
+      name: name,
+      category: 'MUSEUM',
+      location: RoutePoint(latitude: -12, longitude: -77),
+      distanceToRouteMeters: 140,
+      routeProgress: .5,
+      reasonCodes: [],
+      description: description,
+      sourceLabel: 'Fuente disponible',
+      sourceUrl: 'https://example.test/source',
+      attribution: 'Atribución disponible',
+    );
+    tester.view.physicalSize = const Size(360, 640);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: PoiResultCard(poi: poi, onPressed: () {}, onViewDetails: () {}),
+        ),
+      ),
+    );
+
+    final title = tester.widget<Text>(find.text(name));
+    final descriptionText = tester.widget<Text>(find.text(description));
+    expect(title.maxLines, 2);
+    expect(title.overflow, TextOverflow.ellipsis);
+    expect(descriptionText.maxLines, 2);
+    expect(find.text('Museo'), findsOneWidget);
+    expect(find.text('A 140 m del trazado'), findsOneWidget);
+    expect(find.textContaining('Fuente: Fuente disponible'), findsOneWidget);
+    expect(find.text('Atribución disponible'), findsOneWidget);
+    expect(poi.name, name);
+    expect(poi.description, description);
+  });
+
+  testWidgets(
+    'card Preview and Ver detalles are independent and keyboard accessible',
+    (tester) async {
+      final semantics = tester.ensureSemantics();
+      var previews = 0;
+      var details = 0;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PoiResultCard(
+              poi: minimal,
+              onPressed: () => previews++,
+              onViewDetails: () => details++,
+            ),
+          ),
+        ),
+      );
+
+      final button = find.byKey(const ValueKey('poi-card-view-details'));
+      expect(find.text('Ver detalles'), findsOneWidget);
+      expect(tester.getSize(button).height, greaterThanOrEqualTo(48));
+      final detailSemantics = tester
+          .getSemantics(find.text('Ver detalles'))
+          .getSemanticsData();
+      expect(detailSemantics.flagsCollection.isButton, isTrue);
+      expect(detailSemantics.locale, const Locale('es', 'PE'));
+      await tester.tap(find.text('Nombre de prueba'));
+      await tester.pump();
+      expect(previews, 1);
+      expect(details, 0);
+
+      final focus = Focus.of(tester.element(find.text('Ver detalles')));
+      focus.requestFocus();
+      await tester.pump();
+      expect(focus.hasPrimaryFocus, isTrue);
+      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+      await tester.pump();
+      expect(details, 1);
+      expect(previews, 1);
+      semantics.dispose();
+    },
+  );
+
   testWidgets(
     'optional fields and internal codes are absent; placeholder is stable and informative',
     (tester) async {
@@ -30,7 +120,11 @@ void main() {
         MaterialApp(
           theme: GeoGuideTheme.explorationShell(),
           home: Scaffold(
-            body: PoiResultCard(poi: minimal, onPressed: () {}),
+            body: PoiResultCard(
+              poi: minimal,
+              onPressed: () {},
+              onViewDetails: () {},
+            ),
           ),
         ),
       );

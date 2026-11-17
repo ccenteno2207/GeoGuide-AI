@@ -175,7 +175,7 @@ void main() {
       final semantics = tester.ensureSemantics();
       final poi = factualPoi(name, description);
       for (final surface in <Widget>[
-        PoiResultCard(poi: poi, onPressed: () {}),
+        PoiResultCard(poi: poi, onPressed: () {}, onViewDetails: () {}),
         PoiPreviewSheet(poi: poi, onViewDetail: () {}),
         PoiDetailSheet(poi: poi),
       ]) {
