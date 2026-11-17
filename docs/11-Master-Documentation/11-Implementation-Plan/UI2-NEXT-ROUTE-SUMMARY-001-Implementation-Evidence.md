@@ -13,9 +13,9 @@ No se modificaron API, backend, base de datos, permisos, GPS, Driving, contratos
 ## Validación local
 
 - `dart format --output=none --set-exit-if-changed` en los cinco archivos afectados: PASS.
-- `flutter test --no-pub test/features/discovery/presentation/route_discovery_controller_test.dart test/widget_test.dart test/features/discovery/offline_ui_test.dart`: 33 PASS, 0 FAIL.
+- `flutter test --no-pub test/features/discovery/presentation/route_discovery_controller_test.dart test/widget_test.dart test/features/discovery/offline_ui_test.dart`: 34 PASS, 0 FAIL.
 - El test `searched destination plan renders route geometry and a persistent summary` verifica el conteo bajo todas las categorías, conservación durante filtro, restauración y resultado exitoso vacío.
-- Pruebas de controlador: total preservado ante filtro, cero exitoso, error sin conteo válido e invalidación por cambio de ruta.
+- Pruebas de controlador: total preservado ante filtro, cero exitoso, error sin conteo válido, cambios de origen/destino e ignorado de respuestas tardías tras cambiar ruta.
 - Pruebas offline: conteo de snapshot completo, resultado vacío, snapshot filtrado sin conteo de ruta y expiración que oculta el resumen.
 - `flutter analyze --no-pub`: PASS, no issues found.
 - `git diff --check`: PASS.

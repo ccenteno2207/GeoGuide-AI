@@ -161,6 +161,48 @@ void main() {
   });
 
   test(
+    'changed origin or destination never reuses the previous total',
+    () async {
+      final controller = RouteDiscoveryController(
+        discoverRoute: DiscoverRoute(FakeRouteDiscoveryRepository()),
+      );
+      const origin = RoutePoint(latitude: 10, longitude: 20);
+      const changedOrigin = RoutePoint(latitude: 10.5, longitude: 20.5);
+      const destination = RoutePoint(latitude: 11, longitude: 21);
+      const changedDestination = RoutePoint(latitude: 11.5, longitude: 21.5);
+      final allCategories = discoveryCategoryCodes.toSet();
+
+      await controller.discover(
+        origin: origin,
+        destination: destination,
+        categories: allCategories,
+      );
+      expect(controller.totalPoiCount, 1);
+
+      await controller.discover(
+        origin: changedOrigin,
+        destination: destination,
+        categories: {'MONUMENT'},
+      );
+      expect(controller.totalPoiCount, isNull);
+
+      await controller.discover(
+        origin: changedOrigin,
+        destination: destination,
+        categories: allCategories,
+      );
+      expect(controller.totalPoiCount, 1);
+
+      await controller.discover(
+        origin: changedOrigin,
+        destination: changedDestination,
+        categories: {'MONUMENT'},
+      );
+      expect(controller.totalPoiCount, isNull);
+    },
+  );
+
+  test(
     'represents usable POIs returned for the selected route points',
     () async {
       final controller = RouteDiscoveryController(
@@ -188,11 +230,13 @@ void main() {
     final oldRequest = controller.discover(
       origin: origin,
       destination: oldDestination,
+      categories: discoveryCategoryCodes.toSet(),
     );
     controller.invalidatePending();
     final newRequest = controller.discover(
       origin: origin,
       destination: newDestination,
+      categories: discoveryCategoryCodes.toSet(),
     );
 
     expect(repository.requests, hasLength(2));
@@ -203,6 +247,7 @@ void main() {
     await oldRequest;
 
     expect(controller.destination, newDestination);
+    expect(controller.totalPoiCount, 1);
     expect(controller.pois.map((item) => item.id), ['new-route-poi']);
     expect(controller.status, '1 lugares visibles en la ruta');
     expect(controller.isDiscovering, isFalse);
