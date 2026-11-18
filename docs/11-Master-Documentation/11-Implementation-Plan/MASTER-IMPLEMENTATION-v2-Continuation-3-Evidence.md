@@ -167,3 +167,38 @@ Se ejecutaron las comprobaciones que quedaron pendientes en VALIDATION-4B, usand
 - Limpieza de VM completada: Compose removió exclusivamente los cuatro contenedores, la red y los tres volúmenes etiquetados `geoguide-v4c-20261118`; se eliminaron el proyecto temporal y los SQL/OSM temporales. Se verificó cero contenedores, redes, volúmenes y archivos remotos de VALIDATION-4C. Los seis servicios preexistentes continúan con los mismos estados `running`/`healthy` que al inicio.
 - Limpieza local incompleta: la herramienta de ejecución rechazó explícitamente la operación `Remove-Item -Recurse -Force` bajo su política. Permanecen fuera del repositorio `D:\Codex\validation4c-browser`, `D:\Codex\validation4c-stack`, el recorte OSM, los SQL/log temporales bajo `D:\Codex` y el directorio de build ignorado `admin-portal\dist`. No quedan procesos ni listeners locales de VALIDATION-4C. No se intentó otro método de eliminación.
 - Resultado: las tres comprobaciones técnicas pendientes de VALIDATION-4B quedaron cubiertas, pero `VALIDATION_4C = PARTIAL` hasta completar la limpieza local autorizada; por la misma limitación, `MASTER_V2_READY_FOR_PR_REVIEW = NO` en este cierre.
+
+## VALIDATION-4C — Revalidación de limpieza y PR readiness (2026-11-18)
+
+Esta actualización conserva el resultado e historial PARTIAL anteriores y registra una nueva comprobación de solo lectura después de la limpieza manual informada. No repite pruebas de GraphHopper, navegador, multipart, Flyway, MINCETUR, OIDC/RBAC, MinIO ni Flutter.
+
+### Limpieza local verificada
+
+- No existen `D:\Codex\validation4c-stack` ni `D:\Codex\validation4c-browser`.
+- Aún existen fuera del repositorio: `D:\Codex\validation4c-lima-roads.osm`, `D:\Codex\validation4c-synthetic.sql`, `D:\Codex\validation4c-update.sql` y `D:\Codex\validation4c-multipart.log`. La comprobación de solo lectura no encontró en estos SQL/log las cadenas conocidas de credenciales sintéticas (`KC_BOOTSTRAP_ADMIN_PASSWORD`, `MINIO_ROOT_PASSWORD` ni contraseñas de prueba buscadas); esto no constituye una afirmación forense general sobre todo el disco.
+- `admin-portal\dist` aún existe como salida de build ignorada localmente; no aparece en el diff ni en el estado Git.
+- No se encontraron listeners en los puertos locales 5173, 8080, 55432, 58080, 58989 o 59000. La consulta de procesos, excluyendo la sesión PowerShell que ejecutó la propia inspección, no encontró procesos con los identificadores de VALIDATION-4C.
+- La limpieza remota del proyecto temporal V4C y la conservación de los seis servicios preexistentes quedaron verificadas en la sección anterior. En esta actualización no se modificaron servicios ni worktrees.
+- No se borraron archivos ni directorios: los artefactos que siguen presentes requieren limpieza manual posterior.
+
+### Estado de integración revisado
+
+- Rama `codex/master-implementation-v2`; HEAD `6896213b6b17c52d609dc891a953a0fcc50ad109`.
+- `origin/main` actualizado mediante `git fetch`: `0d76dcf740e3558c4b7308dbb19139a6e9a1071e`. La rama contiene 7 commits por delante y ninguno por detrás. El worktree está limpio antes de esta actualización documental.
+- El rango de integración contiene 72 archivos: migraciones aditivas V006/V007, backend MINCETUR/admin/media, pruebas, OpenAPI, portal y ajustes Flutter de media/snapshot. No hay PNG originales del piloto ni APK en el diff; `.env.example` contiene solo referencias a variables, no valores de secretos. Los contratos congelados P8/P9 no están modificados. El snapshot offline no persiste URL ni bytes multimedia y el cambio Flutter conserva placeholder/fallback.
+- La evidencia existente registra V001–V007 y staging en PostGIS aislado, conteos 6.341/6.331/10, idempotencia, cero publicaciones automáticas y preservación de P3; OIDC/RBAC, MinIO, portal en navegador y Route Discovery real con GraphHopper quedaron probados en entorno aislado. HTTP multipart 413, manejo de JWT sin `aud`, pruebas de portal y `npm run build` se acreditan en el commit `6896213`. No se repitieron esas pruebas porque esta revalidación solo cambió documentación.
+- La revisión del diff no encontró cambios de backend/infraestructura compartida, derechos de imágenes reales ni contratos P8/P9 fuera del alcance descrito. Las 6.331 ubicaciones continúan pendientes de revisión y las 10 filas permanecen en cuarentena; no hay publicación automática. Derechos de las cinco fotografías reales siguen sin acreditarse y no se utilizaron.
+- `git diff --check origin/main...HEAD` pasó antes de esta actualización. La revalidación no ejecutó nuevas pruebas funcionales. Después de editar documentación se vuelve a ejecutar `git diff --check`.
+
+### Veredicto
+
+- `GRAPHOPPER_REAL = PASS`
+- `ADMIN_PORTAL_BROWSER = PASS`
+- `MULTIPART_HTTP_413 = PASS`
+- `VM_CLEANUP = PASS`
+- `WINDOWS_CLEANUP = INCOMPLETE`
+- `PREEXISTING_SERVICES = UNCHANGED`
+- `VALIDATION_4C = PARTIAL`
+- `MASTER_V2_READY_FOR_PR_REVIEW = NO`
+
+La única causa del estado PARTIAL de VALIDATION-4C es que persisten los cuatro archivos OSM/SQL/log enumerados arriba y la salida ignorada `admin-portal\dist`. La revisión de código/diff no encontró un bloqueo funcional adicional para revisión de PR; sin embargo, el gate solicitado de limpieza no está satisfecho. Próximo paso: completar manualmente la limpieza de esos temporales, volver a verificar existencia, procesos/listeners y estado de Git, y reevaluar readiness sin repetir pruebas técnicas.
