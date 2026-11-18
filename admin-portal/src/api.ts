@@ -1,7 +1,7 @@
 export type ApiConfig = { baseUrl: string; getToken: () => Promise<string | null> };
 export type EditorialState = 'DRAFT' | 'PENDING_REVIEW' | 'PUBLISHED' | 'REJECTED' | 'ARCHIVED';
 export type ImportBatch = { id: string; fileName: string; sha256: string; cutoff: string | null; total: number; candidates: number; quarantined: number };
-export type PageResult<T> = { content: T[]; page: number; size: number; totalElements: number; totalPages: number };
+export type PageResult<T> = { content: T[]; page: number; size: number; totalElements: number; totalPages?: number };
 export type ImportRecord = { id: string; sourceRecordId: string; rowNumber: number; name: string; sourceCategory: string; region: string; province: string; district: string; sourceUrl: string; rawLatitude: string; rawLongitude: string; normalizedLatitude: number | null; normalizedLongitude: number | null; normalizationRule: string; validationEvidence: string; status: string; quarantineReason: string | null; hasEditorialRecord: boolean };
 export type EditorialRecord = { id: string; importRecordId: string | null; sourceRecordId: string | null; name: string; description: string | null; administrativeContext: string | null; categoryCode: string; latitude: number | null; longitude: number | null; rawLatitude: string | null; rawLongitude: string | null; normalizationRule: string | null; coordinateEvidence: string | null; geographicReviewStatus: string; identityReviewStatus: string; state: EditorialState; sourceLicense: string | null; sourceAttribution: string | null; sourceUrl: string | null; publishedPoiId: string | null; version: number };
 export type DuplicateCandidate = { entityType: 'POI' | 'DESTINATION'; entityId: string; name: string; distanceMeters: number | null };

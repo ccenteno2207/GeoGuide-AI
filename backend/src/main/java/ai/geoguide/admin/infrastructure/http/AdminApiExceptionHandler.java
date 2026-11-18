@@ -8,6 +8,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 /** Stable admin/media error responses that do not disclose internal exception details. */
 @RestControllerAdvice(basePackages = {
@@ -18,6 +19,11 @@ public class AdminApiExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     ResponseEntity<ProblemDetail> invalidRequest(IllegalArgumentException ignored) {
         return problem(HttpStatus.BAD_REQUEST, "La solicitud contiene datos inválidos.");
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    ResponseEntity<ProblemDetail> uploadTooLarge(MaxUploadSizeExceededException ignored) {
+        return problem(HttpStatus.PAYLOAD_TOO_LARGE, "El archivo supera el tamaño máximo permitido.");
     }
 
     @ExceptionHandler({EditorialWorkflowConflictException.class, PoiMediaWorkflowConflictException.class,

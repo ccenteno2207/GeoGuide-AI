@@ -5,6 +5,7 @@ spring:
     multipart:
       max-file-size: ${GEOGUIDE_MEDIA_MAX_BYTES:10MB}
       max-request-size: ${GEOGUIDE_MEDIA_MAX_BYTES:10MB}
+      resolve-lazily: true
   flyway:
     enabled: true
     locations: classpath:db/migration

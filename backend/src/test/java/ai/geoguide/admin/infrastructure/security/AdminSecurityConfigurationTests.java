@@ -48,8 +48,12 @@ class AdminSecurityConfigurationTests {
         var wrong = new Jwt("test-token", Instant.parse("2026-11-17T12:00:00Z"),
                 Instant.parse("2026-11-17T12:05:00Z"), Map.of("alg", "none"),
                 Map.of("sub", "reviewer", "aud", List.of("other-api")));
+        var missing = new Jwt("test-token", Instant.parse("2026-11-17T12:00:00Z"),
+                Instant.parse("2026-11-17T12:05:00Z"), Map.of("alg", "none"),
+                Map.of("sub", "reviewer"));
         assertThat(validator.validate(good)).isEqualTo(OAuth2TokenValidatorResult.success());
         assertThat(validator.validate(wrong).hasErrors()).isTrue();
+        assertThat(validator.validate(missing).hasErrors()).isTrue();
     }
 
     @Test

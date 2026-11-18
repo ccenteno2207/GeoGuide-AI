@@ -26,4 +26,16 @@ class AdminApiExceptionHandlerTests {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getDetail()).doesNotContain("SQL fragments");
     }
+
+    @Test
+    void oversizedMultipartReturnsPayloadTooLargeWithoutLeakingParserDetails() {
+        var response = handler.uploadTooLarge(
+                new org.springframework.web.multipart.MaxUploadSizeExceededException(10_485_760));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getDetail())
+                .isEqualTo("El archivo supera el tamaño máximo permitido.")
+                .doesNotContain("MaxUploadSizeExceededException", "10_485_760");
+    }
 }

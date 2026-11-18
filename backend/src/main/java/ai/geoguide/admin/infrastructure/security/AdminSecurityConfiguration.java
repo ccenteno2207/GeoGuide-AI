@@ -49,7 +49,7 @@ public class AdminSecurityConfiguration {
 
     static OAuth2TokenValidator<Jwt> audienceValidator(String expectedAudience) {
         if (expectedAudience == null || expectedAudience.isBlank()) throw new IllegalArgumentException("API audience is required.");
-        return token -> token.getAudience().contains(expectedAudience)
+        return token -> token.getAudience() != null && token.getAudience().contains(expectedAudience)
                 ? OAuth2TokenValidatorResult.success()
                 : OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token", "Required API audience is missing.", null));
     }
