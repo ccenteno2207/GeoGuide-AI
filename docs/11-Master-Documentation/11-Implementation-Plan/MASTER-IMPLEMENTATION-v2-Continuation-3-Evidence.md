@@ -202,3 +202,28 @@ Esta actualización conserva el resultado e historial PARTIAL anteriores y regis
 - `MASTER_V2_READY_FOR_PR_REVIEW = NO`
 
 La única causa del estado PARTIAL de VALIDATION-4C es que persisten los cuatro archivos OSM/SQL/log enumerados arriba y la salida ignorada `admin-portal\dist`. La revisión de código/diff no encontró un bloqueo funcional adicional para revisión de PR; sin embargo, el gate solicitado de limpieza no está satisfecho. Próximo paso: completar manualmente la limpieza de esos temporales, volver a verificar existencia, procesos/listeners y estado de Git, y reevaluar readiness sin repetir pruebas técnicas.
+
+## VALIDATION-4C — Cierre tras limpieza manual (2026-11-18)
+
+Se volvió a comprobar solo la limpieza, Git y el diff; se conservaron todos los resultados de prueba previos sin repetirlos.
+
+- No existen los cuatro archivos pendientes (`D:\Codex\validation4c-lima-roads.osm`, `validation4c-synthetic.sql`, `validation4c-update.sql`, `validation4c-multipart.log`), los directorios `D:\Codex\validation4c-stack` / `validation4c-browser` ni `admin-portal\dist`.
+- La regla `.gitignore:26` excluye `dist/`; la ruta no existe actualmente, no está rastreada y es una salida reproducible del build, no un artefacto sensible.
+- No se encontraron procesos o listeners locales de VALIDATION-4C en la consulta focalizada. No hay archivos temporales de la ejecución en el diff. Escaneo focalizado del diff para claves privadas, tokens y contraseñas: sin coincidencias.
+- `git fetch origin` finalizó. `origin/main = 0d76dcf740e3558c4b7308dbb19139a6e9a1071e`; en esta revisión la rama de referencia estaba en `59f7b070d06b7e7a68f4f05f4b0d240fe593b4dc`, 8 commits adelante y 0 detrás. Worktree limpio antes de este cambio documental.
+- V006/V007 son migraciones nuevas y aditivas en el diff. Las pruebas de integración previas registran V001–V007 aplicadas contra PostgreSQL/PostGIS aislado. P8/P9 no tienen modificaciones contractuales. La evidencia vigente cubre importación, idempotencia, cero publicaciones automáticas, P3 sin cambios, OIDC/RBAC, MinIO privado, portal, GraphHopper real y HTTP 413.
+- El diff de 72 archivos no contiene fotografías, APK, datos OSM/SQL/log temporales ni `.env` con credenciales. `.env.example` solo declara nombres de variables. No se usan las cinco fotos originales sin derechos acreditados. Los 6.331 candidatos continúan pendientes de revisión y 10 registros en cuarentena.
+- Validación documental posterior: `git diff --check` PASS. No se repitieron las pruebas técnicas previamente aprobadas, al no existir cambios funcionales posteriores.
+
+Estados consolidados:
+
+- `WINDOWS_CLEANUP = PASS`
+- `VM_CLEANUP = PASS`
+- `GRAPHOPPER_REAL = PASS`
+- `ADMIN_PORTAL_BROWSER = PASS`
+- `MULTIPART_HTTP_413 = PASS`
+- `PREEXISTING_SERVICES = UNCHANGED`
+- `VALIDATION_4C = PASS`
+- `MASTER_V2_READY_FOR_PR_REVIEW = YES`
+
+El readiness se limita a preparar la revisión de PR. No aprueba automáticamente las coordenadas pendientes, no acredita derechos sobre fotografías reales y no implica push, PR, merge, despliegue ni Production Readiness. El siguiente paso es preparar la revisión del PR autorizado posteriormente; hasta una autorización expresa, no publicar la rama.
