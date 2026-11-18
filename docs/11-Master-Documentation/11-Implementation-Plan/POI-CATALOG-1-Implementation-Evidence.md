@@ -61,6 +61,7 @@ La tabla anterior funciona como cola de priorización, no como selección editor
 | OpenAPI | PASS — YAML 1.2 parseado con SnakeYAML; 33 rutas y sin referencias a esquemas inexistentes |
 | Flutter | PASS — 314 pruebas aprobadas, 3 omitidas; suite completa reutilizada. No hubo cambios Flutter. |
 | Backend `mvn verify -q` | PASS — exit code 0; 103 pruebas reportadas, 0 failures, 0 errors, 16 skipped |
+| Perfil del CSV local | PASS — 9 pruebas de parser/normalizador sin omisiones con `-Dgeoguide.test.minceturCsv=...Inventario_recursos_turisticos.csv`; entrada solo lectura con SHA-256 documentado arriba |
 | Testcontainers / PostGIS | NOT RUN — 14 pruebas de `PostgisIntegrationTests` omitidas porque no hay entorno Docker válido; no se ejecutó V008 sobre PostgreSQL/PostGIS real |
 | Importación real, idempotencia DB, publicación y relación sobre PostGIS | Pendiente por el mismo bloqueo; las pruebas de integración están codificadas para base Testcontainers aislada, pero no cuentan como resultado ejecutado |
 | GraphHopper/Search/Route Discovery end-to-end | Pendiente de stack aislado con backend/PostGIS/routing provider; no se consultaron servicios compartidos. |
