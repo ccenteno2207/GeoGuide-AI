@@ -26,6 +26,7 @@ class DiscoveryPoi {
     this.sourceLabel,
     this.sourceUrl,
     this.attribution,
+    this.primaryMediaUrl,
   });
 
   final String id;
@@ -39,4 +40,5 @@ class DiscoveryPoi {
   final String? sourceLabel;
   final String? sourceUrl;
   final String? attribution;
+  final String? primaryMediaUrl;
 }

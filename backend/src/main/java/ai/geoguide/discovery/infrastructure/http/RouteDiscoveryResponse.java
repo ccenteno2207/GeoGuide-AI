@@ -17,10 +17,10 @@ public record RouteDiscoveryResponse(RouteResponse route, List<Result> results, 
                     item.reasonCodes().stream().map(Enum::name).toList(), candidate.description(),
                     provenance == null ? null : provenance.sourceLabel(),
                     provenance == null ? null : provenance.sourceUrl(),
-                    provenance == null ? null : provenance.attribution());
+                    provenance == null ? null : provenance.attribution(), candidate.primaryMediaPath());
         }).toList(), result.algorithmVersion(), result.generatedAt());
     }
     public record RouteResponse(DiscoveryRequest.Point origin, DiscoveryRequest.Point destination, double distanceMeters, double durationSeconds, Geometry geometry) { }
     public record Geometry(String type, List<List<Double>> coordinates) { }
-    public record Result(java.util.UUID id, String name, String category, DiscoveryRequest.Point location, double distanceToRouteMeters, double routeProgress, double score, List<String> reasonCodes, String description, String sourceLabel, String sourceUrl, String attribution) { }
+    public record Result(java.util.UUID id, String name, String category, DiscoveryRequest.Point location, double distanceToRouteMeters, double routeProgress, double score, List<String> reasonCodes, String description, String sourceLabel, String sourceUrl, String attribution, String primaryMediaPath) { }
 }

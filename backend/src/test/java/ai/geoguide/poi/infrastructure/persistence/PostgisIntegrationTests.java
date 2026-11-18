@@ -12,6 +12,10 @@ import ai.geoguide.destination.application.port.DestinationRepository;
 import ai.geoguide.destination.domain.Destination;
 import ai.geoguide.destination.infrastructure.dataset.DestinationCatalogLoader;
 import ai.geoguide.poi.infrastructure.dataset.P3DatasetLoader;
+import ai.geoguide.poi.infrastructure.dataset.mincetur.JdbcMinceturSnapshotStagingRepository;
+import ai.geoguide.poi.infrastructure.dataset.mincetur.MinceturSnapshotParser;
+import ai.geoguide.admin.infrastructure.persistence.AdminEditorialRepository;
+import ai.geoguide.admin.infrastructure.persistence.AdminImportReadRepository;
 import ai.geoguide.discovery.domain.DiscoveryCriteria;
 import ai.geoguide.discovery.infrastructure.persistence.JdbcRoutePoiCandidateQuery;
 import ai.geoguide.routing.domain.RouteGeometry;
@@ -44,7 +48,8 @@ import org.testcontainers.utility.DockerImageName;
 @Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import({JdbcPoiRepository.class, JdbcCategoryRepository.class, JdbcRoutePoiCandidateQuery.class})
+@Import({JdbcPoiRepository.class, JdbcCategoryRepository.class, JdbcRoutePoiCandidateQuery.class,
+        JdbcMinceturSnapshotStagingRepository.class})
 class PostgisIntegrationTests {
 
     @Container
@@ -78,10 +83,20 @@ class PostgisIntegrationTests {
     ObjectMapper objectMapper;
 
     @Autowired
+    JdbcMinceturSnapshotStagingRepository minceturStagingRepository;
+
+    @Autowired
+    AdminEditorialRepository adminEditorialRepository;
+
+    @Autowired
+    AdminImportReadRepository adminImportReadRepository;
+
+    @Autowired
     MockMvc mockMvc;
 
     @BeforeEach
     void cleanP3Data() {
+        jdbcTemplate.execute("TRUNCATE geo.mincetur_import_record, geo.mincetur_import_batch CASCADE");
         jdbcTemplate.execute("TRUNCATE geo.poi_provenance, geo.point_of_interest, geo.category CASCADE");
         jdbcTemplate.execute("TRUNCATE geo.destination_alias, geo.destination CASCADE");
     }
@@ -92,7 +107,7 @@ class PostgisIntegrationTests {
 
         assertThat(jdbcTemplate.queryForObject("SELECT PostGIS_Version()", String.class)).isNotBlank();
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM flyway_schema_history", Integer.class))
-                .isEqualTo(5);
+                .isEqualTo(7);
         assertThat(jdbcTemplate.queryForObject("""
                 SELECT COUNT(*) FROM information_schema.tables
                 WHERE table_schema = 'geo'
@@ -116,6 +131,116 @@ class PostgisIntegrationTests {
                 SELECT data_type FROM information_schema.columns
                 WHERE table_schema = 'geo' AND table_name = 'point_of_interest' AND column_name = 'created_at'
                 """, String.class)).isEqualTo("timestamp with time zone");
+    }
+
+    @Test
+    void stagingSnapshotIsIdempotentAndDoesNotPublishOrCreateGeometry() throws Exception {
+        String csv = String.join("\r\n",
+                "REGIÓN;PROVINCIA;DISTRITO;CODIGO DEL RECURSO;NOMBRE DEL RECURSO;CATEGORÍA;TIPO DE CATEGORÍA;SUB TIPO CATEGORÍA;URL;LATITUD;LONGITUD;FECHA_DE_CORTE",
+                "Ica;Ica;ICA;237;Laguna De Huacachina;1. SITIOS NATURALES;g. Cuerpo de Agua;Lagunas;https://example.test/237;-7.576.291.501.522.060;-14.087.854.051.458.200;20261110",
+                "");
+        var snapshot = new MinceturSnapshotParser().parse("sample.csv", csv.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        var firstBatchId = minceturStagingRepository.stage(snapshot);
+        var secondBatchId = minceturStagingRepository.stage(snapshot);
+
+        assertThat(secondBatchId).isEqualTo(firstBatchId);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.mincetur_import_batch", Integer.class))
+                .isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.mincetur_import_record", Integer.class))
+                .isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT record_status FROM geo.mincetur_import_record WHERE batch_id = ?
+                """, String.class, firstBatchId)).isEqualTo("COORDINATE_FORMAT_AMBIGUOUS");
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT normalized_latitude IS NULL AND normalized_longitude IS NULL
+                FROM geo.mincetur_import_record WHERE batch_id = ?
+                """, Boolean.class, firstBatchId)).isTrue();
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.destination", Integer.class)).isZero();
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest", Integer.class)).isZero();
+    }
+
+    @Test
+    void administrativeReadQueriesAcceptOmittedOptionalFilters() {
+        assertThat(adminEditorialRepository.list(null, null, 0, 50)).isNotNull();
+
+        UUID batchId = UUID.randomUUID();
+        jdbcTemplate.update("""
+                INSERT INTO geo.mincetur_import_batch(id,source_system,source_file_name,source_sha256,source_cutoff,
+                    detected_encoding,delimiter,parser_version,record_count,quarantined_count,batch_status)
+                VALUES (?, 'MINCETUR', 'filters.csv', ?, DATE '2026-11-10', 'UTF-8', ';', 'filters-test', 0, 0,
+                    'STAGED_REQUIRES_REVIEW')
+                """, batchId, UUID.randomUUID().toString().replace("-", "").repeat(2));
+
+        assertThat(adminImportReadRepository.records(batchId, null, null, 0, 50).totalElements()).isZero();
+        assertThat(adminImportReadRepository.records(batchId, "NORMALIZED_PENDING_REVIEW", "", 0, 50)
+                .totalElements()).isZero();
+    }
+
+    @Test
+    void editorialPublicationRequiresIndependentGeographicAndIdentityReviewAndPreservesExistingPoi() {
+        UUID categoryId=UUID.randomUUID(), existingId=UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO geo.category(id,code,name,active) VALUES (?,?,?,true)",categoryId,"MONUMENT","Monument");
+        jdbcTemplate.update("""
+                INSERT INTO geo.point_of_interest(id,category_id,name,description,location,active,created_at,updated_at)
+                VALUES (?,?,?, ?,ST_SetSRID(ST_MakePoint(-75,-14),4326),true,now(),now())
+                """,existingId,categoryId,"Existing P3 record","Preserved");
+        var candidate=adminEditorialRepository.create(new AdminEditorialRepository.CreateEditorial(null,
+                "Synthetic MINCETUR candidate","Candidate description","MONUMENT",
+                new java.math.BigDecimal("-14.1"),new java.math.BigDecimal("-75.1"),
+                "-14.1","-75.1","SYNTHETIC_TEST_COORDINATE","Synthetic fixture coordinates generated for this test",
+                "Synthetic test terms","Synthetic fixture attribution"),"editor-test");
+
+        assertThat(candidate.state()).isEqualTo("DRAFT");
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest",Integer.class)).isEqualTo(1);
+        var geographic=adminEditorialRepository.reviewGeography(candidate.id(),0,true,"reviewer-test","Coordinates manually checked against isolated fixture evidence");
+        var identity=adminEditorialRepository.reviewIdentity(candidate.id(),geographic.version(),true,"reviewer-test","No matching P3 or destination entry in isolated fixture");
+        var submitted=adminEditorialRepository.transition(candidate.id(),identity.version(),"SUBMIT_FOR_REVIEW","editor-test","Ready for independent editorial review");
+        var published=adminEditorialRepository.transition(candidate.id(),submitted.version(),"APPROVE","reviewer-test","Approved synthetic fixture for local integration test");
+
+        assertThat(published.state()).isEqualTo("PUBLISHED");
+        assertThat(published.publishedPoiId()).isEqualTo(candidate.id());
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest",Integer.class)).isEqualTo(2);
+        assertThat(jdbcTemplate.queryForObject("SELECT name FROM geo.point_of_interest WHERE id=?",String.class,existingId))
+                .isEqualTo("Existing P3 record");
+        assertThat(jdbcTemplate.queryForObject("SELECT ST_X(location) FROM geo.point_of_interest WHERE id=?",Double.class,existingId))
+                .isEqualTo(-75.0);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.poi_provenance WHERE poi_id=?",Integer.class,candidate.id())).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM admin.poi_editorial_audit WHERE editorial_id=?",Integer.class,candidate.id())).isEqualTo(5);
+    }
+
+    @Test
+    void editorialDraftPreservesFullPrecisionOfStagedCoordinateCandidate() {
+        UUID batchId = UUID.randomUUID();
+        UUID importRecordId = UUID.randomUUID();
+        jdbcTemplate.update("""
+                INSERT INTO geo.mincetur_import_batch(id,source_system,source_file_name,source_sha256,source_cutoff,
+                    detected_encoding,delimiter,parser_version,record_count,quarantined_count,batch_status)
+                VALUES (?, 'MINCETUR', 'synthetic.csv', ?, DATE '2026-11-10', 'UTF-8', ';', 'precision-test', 1, 0,
+                    'STAGED_REQUIRES_REVIEW')
+                """, batchId, "A".repeat(64));
+        jdbcTemplate.update("""
+                INSERT INTO geo.mincetur_import_record(id,batch_id,row_number,source_record_id,raw_fields,
+                    raw_latitude,raw_longitude,normalized_latitude,normalized_longitude,normalization_rule,
+                    validation_evidence,record_status)
+                VALUES (?,?,1,'237',?::jsonb,?,?,?,?,'synthetic-precision-rule',
+                    'synthetic test evidence; candidate is not published', 'NORMALIZED_PENDING_REVIEW')
+                """, importRecordId,
+                batchId,
+                "{\"NOMBRE DEL RECURSO\":\"Laguna de Huacachina\",\"URL\":\"https://example.test/237\"}",
+                "-7.576.291.501.522.060", "-14.087.854.051.458.200",
+                new java.math.BigDecimal("-14.087854051458200"),
+                new java.math.BigDecimal("-75.76291501522060"));
+
+        var draft = adminEditorialRepository.create(new AdminEditorialRepository.CreateEditorial(
+                importRecordId, null, null, "NATURAL_SITE", null, null, null, null, null, null, null, null), "editor-test");
+
+        assertThat(draft.latitude()).isEqualByComparingTo("-14.087854051458200");
+        assertThat(draft.longitude()).isEqualByComparingTo("-75.76291501522060");
+        assertThat(draft.rawLatitude()).isEqualTo("-7.576.291.501.522.060");
+        assertThat(draft.rawLongitude()).isEqualTo("-14.087.854.051.458.200");
+        assertThat(draft.state()).isEqualTo("DRAFT");
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest", Integer.class)).isZero();
     }
 
     @Test

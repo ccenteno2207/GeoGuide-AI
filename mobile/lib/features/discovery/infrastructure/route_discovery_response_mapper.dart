@@ -54,6 +54,7 @@ class RouteDiscoveryResponseMapper {
       sourceLabel: _optionalString(value['sourceLabel']),
       sourceUrl: _optionalString(value['sourceUrl']),
       attribution: _optionalString(value['attribution']),
+      primaryMediaUrl: _optionalString(value['primaryMediaUrl']),
     );
   }
 

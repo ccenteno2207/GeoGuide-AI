@@ -23,6 +23,348 @@ paths:
               schema: { $ref: '#/components/schemas/DestinationSearchResponse' }
         '400': { description: Consulta o límite inválido }
         '500': { description: Error interno }
+  /admin/imports:
+    get:
+      summary: Consultar lotes de importación MINCETUR
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Lotes con recuentos de candidatos y cuarentena
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/AdminImportBatch' } }
+        '401': { description: Token OIDC requerido }
+        '403': { description: Rol administrativo requerido }
+  /admin/imports/{batchId}/records:
+    get:
+      summary: Consultar registros raw y candidatos normalizados de un snapshot
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: batchId
+          required: true
+          schema: { type: string, format: uuid }
+        - in: query
+          name: status
+          required: false
+          schema: { type: string }
+        - in: query
+          name: q
+          required: false
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 0, default: 0 }
+        - in: query
+          name: size
+          schema: { type: integer, minimum: 1, maximum: 500, default: 100 }
+      responses:
+        '200':
+          description: Registros de staging; la respuesta no publica coordenadas
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminImportRecordPage' }
+        '401': { description: Token OIDC requerido }
+        '403': { description: Rol administrativo requerido }
+  /admin/records:
+    get:
+      summary: Listar candidatos editoriales
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: query
+          name: state
+          schema: { type: string, enum: [DRAFT, PENDING_REVIEW, PUBLISHED, REJECTED, ARCHIVED] }
+        - in: query
+          name: q
+          schema: { type: string }
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 0, default: 0 }
+        - in: query
+          name: size
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+      responses:
+        '200':
+          description: Lista de candidatos editoriales
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminEditorialPage' }
+        '401': { description: Token OIDC requerido }
+        '403': { description: Rol administrativo requerido }
+    post:
+      summary: Crear un candidato curado o derivado de una fila importada elegible
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminEditorialCreate' }
+      responses:
+        '201': { description: Candidato DRAFT; no altera el catálogo público }
+        '400': { description: Fila en cuarentena o datos inválidos }
+        '401': { description: Token OIDC requerido }
+        '403': { description: Rol editor o administrador requerido }
+  /admin/records/{id}:
+    get:
+      summary: Consultar detalle editorial y trazabilidad
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Detalle del candidato editorial
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminEditorialRecord' }
+        '404': { description: Candidato no encontrado }
+    put:
+      summary: Editar un borrador editorial con control de versión
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminEditorialUpdate' }
+      responses:
+        '200': { description: Candidato actualizado y revisiones geográfica/identidad reiniciadas }
+        '409': { description: Versión obsoleta o candidato no editable }
+  /admin/records/{id}/duplicates:
+    get:
+      summary: Buscar coincidencias por identidad o proximidad; nunca fusiona automáticamente
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Coincidencias con POIs o destinos actuales }
+  /admin/records/{id}/geographic-review:
+    post:
+      summary: Registrar aprobación geográfica explícita con motivo
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminReviewDecision' }
+      responses:
+        '200': { description: Estado geográfico actualizado; no publica el POI }
+        '403': { description: Revisor o administrador requerido }
+  /admin/records/{id}/identity-review:
+    post:
+      summary: Resolver explícitamente revisión de identidad/duplicados
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminIdentityDecision' }
+      responses:
+        '200': { description: Revisión de identidad registrada }
+        '403': { description: Revisor o administrador requerido }
+  /admin/records/{id}/submit:
+    post:
+      summary: Enviar candidato a revisión editorial
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminVersionedAction' }
+      responses:
+        '200': { description: Candidato PENDING_REVIEW }
+  /admin/records/{id}/approve:
+    post:
+      summary: Aprobar y publicar un candidato revisado como POI nuevo
+      description: Requiere revisión geográfica aprobada, revisión de identidad sin duplicado, licencia y atribución. No actualiza POIs existentes.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminVersionedAction' }
+      responses:
+        '200': { description: POI publicado mediante acción explícita del revisor }
+        '409': { description: Faltan controles previos o la versión cambió }
+  /admin/records/{id}/reject:
+    post:
+      summary: Rechazar candidato editorial
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminVersionedAction' }
+      responses:
+        '200': { description: Candidato REJECTED }
+  /admin/records/{id}/archive:
+    post:
+      summary: Archivar candidato; desactiva solo el POI creado por su publicación explícita
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminVersionedAction' }
+      responses:
+        '200': { description: Candidato ARCHIVED }
+  /admin/pois/{poiId}/media:
+    get:
+      summary: Listar media privada de un POI
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: poiId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Metadatos internos de assets
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/AdminMediaAsset' } }
+    post:
+      summary: Subir una imagen JPEG/PNG privada como borrador
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: poiId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, author, sourceUrl]
+              properties:
+                file: { type: string, format: binary }
+                author: { type: string }
+                sourceUrl: { type: string }
+      responses:
+        '200':
+          description: Asset validado por contenido, re-encoded, hashed y no publicado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AdminMediaAsset' }
+        '413': { description: Se superó el límite de tamaño configurado }
+        '415': { description: Solo se aceptan JPEG y PNG decodificables }
+  /admin/media/{id}/rights:
+    patch:
+      summary: Registrar licencia, atribución y evidencia documental de derechos
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminMediaRights' }
+      responses:
+        '200': { description: Metadatos de derechos guardados en borrador }
+        '409': { description: Versión obsoleta o asset no editable }
+  /admin/media/{id}/submit:
+    post:
+      summary: Enviar media privada para revisión
+      security: [{ bearerAuth: [] }]
+      parameters: [{ in: path, name: id, required: true, schema: { type: string, format: uuid } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminVersionedAction' }
+      responses: { '200': { description: Asset PENDING_REVIEW } }
+  /admin/media/{id}/publish:
+    post:
+      summary: Publicar imagen con derechos documentados y decisión de revisor
+      security: [{ bearerAuth: [] }]
+      parameters: [{ in: path, name: id, required: true, schema: { type: string, format: uuid } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminMediaPublish' }
+      responses: { '200': { description: Asset publicado; puede convertirse en imagen principal } }
+  /admin/media/{id}/withdraw:
+    post:
+      summary: Retirar imagen publicada
+      security: [{ bearerAuth: [] }]
+      parameters: [{ in: path, name: id, required: true, schema: { type: string, format: uuid } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminVersionedAction' }
+      responses: { '200': { description: Asset retirado y sin imagen principal } }
+  /admin/media/{id}/reject:
+    post:
+      summary: Rechazar media pendiente de revisión
+      security: [{ bearerAuth: [] }]
+      parameters: [{ in: path, name: id, required: true, schema: { type: string, format: uuid } }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AdminVersionedAction' }
+      responses: { '200': { description: Asset rechazado sin publicarse } }
+  /pois/{poiId}/media/primary:
+    get:
+      summary: Obtener la imagen principal si el POI y el asset están publicados
+      parameters:
+        - in: path
+          name: poiId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Bytes JPEG/PNG servidos desde almacenamiento privado con Cache-Control no-store
+          content:
+            image/jpeg: { schema: { type: string, format: binary } }
+            image/png: { schema: { type: string, format: binary } }
+        '404': { description: No existe media publicada para el POI }
   /places/{id}:
     get:
       summary: Obtener detalle de un punto de interés
@@ -167,5 +509,175 @@ components:
               routeProgress: { type: number, minimum: 0, maximum: 1 }
               score: { type: number, minimum: 0 }
               reasonCodes: { type: array, items: { type: string, enum: [NEAR_ROUTE, CATEGORY_MATCH] } }
+              primaryMediaPath: { type: string, nullable: true, description: API-relative path for the published primary image; absent while no licensed image is published }
         algorithmVersion: { type: string, enum: [DISCOVERY_V1] }
         generatedAt: { type: string, format: date-time }
+    AdminImportBatch:
+      type: object
+      required: [id, fileName, sha256, total, candidates, quarantined]
+      properties:
+        id: { type: string, format: uuid }
+        fileName: { type: string }
+        sha256: { type: string }
+        cutoff: { type: string, format: date, nullable: true }
+        total: { type: integer }
+        candidates: { type: integer }
+        quarantined: { type: integer }
+    AdminImportRecord:
+      type: object
+      required: [id, rowNumber, status, hasEditorialRecord]
+      properties:
+        id: { type: string, format: uuid }
+        sourceRecordId: { type: string, nullable: true }
+        rowNumber: { type: integer }
+        name: { type: string, nullable: true }
+        sourceCategory: { type: string, nullable: true }
+        region: { type: string, nullable: true }
+        province: { type: string, nullable: true }
+        district: { type: string, nullable: true }
+        sourceUrl: { type: string, nullable: true }
+        rawLatitude: { type: string, nullable: true }
+        rawLongitude: { type: string, nullable: true }
+        normalizedLatitude: { type: number, nullable: true }
+        normalizedLongitude: { type: number, nullable: true }
+        normalizationRule: { type: string, nullable: true }
+        validationEvidence: { type: string, nullable: true }
+        status: { type: string }
+        quarantineReason: { type: string, nullable: true }
+        hasEditorialRecord: { type: boolean }
+    AdminImportRecordPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMetadata'
+        - type: object
+          properties:
+            content: { type: array, items: { $ref: '#/components/schemas/AdminImportRecord' } }
+    AdminEditorialPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMetadata'
+        - type: object
+          properties:
+            content: { type: array, items: { $ref: '#/components/schemas/AdminEditorialRecord' } }
+    PageMetadata:
+      type: object
+      required: [page, size, totalElements, totalPages]
+      properties:
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        totalPages: { type: integer }
+    AdminEditorialRecord:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        importRecordId: { type: string, format: uuid, nullable: true }
+        sourceRecordId: { type: string, nullable: true }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        administrativeContext: { type: string, nullable: true }
+        categoryCode: { type: string }
+        latitude: { type: number, nullable: true }
+        longitude: { type: number, nullable: true }
+        rawLatitude: { type: string, nullable: true }
+        rawLongitude: { type: string, nullable: true }
+        normalizationRule: { type: string, nullable: true }
+        coordinateEvidence: { type: string, nullable: true }
+        geographicReviewStatus: { type: string }
+        identityReviewStatus: { type: string }
+        state: { type: string }
+        sourceLicense: { type: string, nullable: true }
+        sourceAttribution: { type: string, nullable: true }
+        sourceUrl: { type: string, nullable: true }
+        publishedPoiId: { type: string, format: uuid, nullable: true }
+        version: { type: integer, format: int64 }
+    AdminEditorialCreate:
+      type: object
+      required: [categoryCode]
+      properties:
+        importRecordId: { type: string, format: uuid, nullable: true }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        categoryCode: { type: string, enum: [WATERFALL, LAGOON, MOUNTAIN, FOREST, BEACH, MUSEUM, ARCHAEOLOGICAL_SITE, MONUMENT, HISTORIC_CHURCH, VIEWPOINT] }
+        latitude: { type: number, nullable: true }
+        longitude: { type: number, nullable: true }
+        rawLatitude: { type: string, nullable: true }
+        rawLongitude: { type: string, nullable: true }
+        normalizationRule: { type: string, nullable: true }
+        coordinateEvidence: { type: string, nullable: true }
+        sourceLicense: { type: string, nullable: true }
+        sourceAttribution: { type: string, nullable: true }
+    AdminEditorialUpdate:
+      type: object
+      required: [expectedVersion, reason, name, categoryCode]
+      properties:
+        expectedVersion: { type: integer, format: int64 }
+        reason: { type: string }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        categoryCode: { type: string }
+        latitude: { type: number, nullable: true }
+        longitude: { type: number, nullable: true }
+        normalizationRule: { type: string, nullable: true }
+        coordinateEvidence: { type: string, nullable: true }
+        sourceLicense: { type: string, nullable: true }
+        sourceAttribution: { type: string, nullable: true }
+    AdminVersionedAction:
+      type: object
+      required: [expectedVersion, reason]
+      properties:
+        expectedVersion: { type: integer, format: int64 }
+        reason: { type: string }
+    AdminMediaRights:
+      allOf:
+        - $ref: '#/components/schemas/AdminVersionedAction'
+        - type: object
+          required: [license, attribution, evidenceReference]
+          properties:
+            license: { type: string }
+            attribution: { type: string }
+            evidenceReference: { type: string }
+    AdminMediaPublish:
+      allOf:
+        - $ref: '#/components/schemas/AdminVersionedAction'
+        - type: object
+          required: [makePrimary]
+          properties:
+            makePrimary: { type: boolean }
+    AdminMediaAsset:
+      type: object
+      required: [id, poiId, contentType, sha256, sizeBytes, width, height, author, sourceUrl, rightsStatus, state, primary, version]
+      properties:
+        id: { type: string, format: uuid }
+        poiId: { type: string, format: uuid }
+        contentType: { type: string, enum: [image/jpeg, image/png] }
+        sha256: { type: string, pattern: '^[A-Fa-f0-9]{64}$' }
+        sizeBytes: { type: integer, format: int64 }
+        width: { type: integer }
+        height: { type: integer }
+        author: { type: string }
+        sourceUrl: { type: string }
+        license: { type: string, nullable: true }
+        attribution: { type: string, nullable: true }
+        rightsEvidence: { type: string, nullable: true }
+        rightsStatus: { type: string, enum: [UNVERIFIED, DOCUMENTED] }
+        state: { type: string, enum: [DRAFT, PENDING_REVIEW, PUBLISHED, REJECTED, WITHDRAWN] }
+        primary: { type: boolean }
+        version: { type: integer, format: int64 }
+    AdminReviewDecision:
+      allOf:
+        - $ref: '#/components/schemas/AdminVersionedAction'
+        - type: object
+          required: [approve]
+          properties:
+            approve: { type: boolean }
+    AdminIdentityDecision:
+      allOf:
+        - $ref: '#/components/schemas/AdminVersionedAction'
+        - type: object
+          required: [noDuplicate]
+          properties:
+            noDuplicate: { type: boolean }
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

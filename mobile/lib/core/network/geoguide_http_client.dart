@@ -7,7 +7,8 @@ import 'backend_configuration.dart';
 
 class GeoGuideHttpClient {
   GeoGuideHttpClient({required BackendConfiguration configuration, Dio? dio})
-    : _dio =
+    : baseUri = configuration.baseUrl,
+      _dio =
           dio ??
           Dio(
             BaseOptions(
@@ -19,6 +20,18 @@ class GeoGuideHttpClient {
           );
 
   final Dio _dio;
+  final Uri baseUri;
+
+  Uri resolveApiPath(String path) {
+    if (!path.startsWith('/api/v1/') || path.startsWith('//')) {
+      throw ArgumentError.value(
+        path,
+        'path',
+        'Only API-relative media paths are allowed.',
+      );
+    }
+    return baseUri.resolve(path);
+  }
 
   Future<Map<String, Object?>> postJson({
     required String path,

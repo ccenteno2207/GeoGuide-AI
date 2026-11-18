@@ -296,6 +296,23 @@ void main() {
     time++;
     expect(await store.readEligible(), isNull);
   });
+  test(
+    'published media URL is intentionally excluded from offline snapshots',
+    () {
+      const codec = SnapshotCodec();
+      final response = envelope();
+      ((response['results'] as List).single as Map)['primaryMediaUrl'] = 'https://api.example.test/api/v1/pois/00000000-0000-4000-8000-000000000001/media/primary';
+      ((response['results'] as List).single as Map)['primaryMediaPath'] =
+          '/api/v1/pois/00000000-0000-4000-8000-000000000001/media/primary';
+
+      final decoded = codec.fromEnvelope(response, query(), captured);
+      final stored = codec.envelope(decoded);
+
+      expect(decoded.pois.single.primaryMediaUrl, isNull);
+      expect(stored.toString(), isNot(contains('primaryMediaUrl')));
+      expect(stored.toString(), isNot(contains('/media/primary')));
+    },
+  );
   test('late consent cannot renew expired online response', () async {
     final app = OfflineDiscovery(
       source: Source(),
