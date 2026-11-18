@@ -47,16 +47,20 @@ public class AdminEditorialRepository {
     }
 
     @Transactional
-    public EditorialView reviewIdentity(UUID id, long expectedVersion, boolean noDuplicate, String actor, String reason) {
+    public EditorialView reviewIdentity(UUID id, long expectedVersion, boolean noDuplicate,
+            String actor, String reason, String evidence) {
+        if (evidence == null || evidence.isBlank()) throw new IllegalArgumentException("Identity review evidence is required.");
         int changed = jdbc.update("""
                 UPDATE admin.poi_editorial_record SET identity_review_status=?,
-                identity_review_actor=?,identity_reviewed_at=now(),identity_review_reason=?,version=version+1,updated_at=now()
+                identity_review_actor=?,identity_reviewed_at=now(),identity_review_reason=?,identity_review_evidence=?,
+                version=version+1,updated_at=now()
                 WHERE id=? AND version=? AND editorial_state IN ('DRAFT','REJECTED')""",
-                noDuplicate ? "NO_DUPLICATE" : "MATCH_FOUND", actor, reason, id, expectedVersion);
+                noDuplicate ? "NO_DUPLICATE" : "MATCH_FOUND", actor, reason, evidence.trim(), id, expectedVersion);
         if (changed != 1) throw new EditorialWorkflowConflictException("Identity review failed because the record is stale or not editable.");
         EditorialView after=find(id).orElseThrow();
         audit(id, actor, noDuplicate ? "NO_DUPLICATE_CONFIRMED" : "POTENTIAL_DUPLICATE_FOUND", reason,
-                null, null, expectedVersion + 1, json(java.util.Map.of("identityReviewStatus",after.identityReviewStatus())));
+                null, null, expectedVersion + 1, json(java.util.Map.of("identityReviewStatus",after.identityReviewStatus(),
+                        "evidence", evidence.trim())));
         return after;
     }
 
@@ -100,7 +104,8 @@ public class AdminEditorialRepository {
                 UPDATE admin.poi_editorial_record SET name=?, description=?, category_code=?, latitude=?, longitude=?,
                     coordinate_normalization_rule=?,coordinate_validation_evidence=?,source_license=?, source_attribution=?, geographic_review_status='PENDING',
                     geographic_review_actor=NULL, geographic_reviewed_at=NULL, geographic_review_reason=NULL,
-                    identity_review_status='PENDING',identity_review_actor=NULL,identity_reviewed_at=NULL,identity_review_reason=NULL,
+                    identity_review_status='PENDING',identity_review_actor=NULL,identity_reviewed_at=NULL,
+                    identity_review_reason=NULL,identity_review_evidence=NULL,
                     version=version+1, updated_at=now()
                 WHERE id=? AND version=? AND editorial_state IN ('DRAFT','REJECTED')
                 """, command.name().trim(), command.description(), command.categoryCode().trim(), command.latitude(),
@@ -129,17 +134,29 @@ public class AdminEditorialRepository {
     }
 
     @Transactional
-    public EditorialView transition(UUID id, long expectedVersion, String action, String actor, String reason) {
+    public EditorialView transition(UUID id, long expectedVersion, String action, String actor, String reason,
+            String evidence) {
+        if (evidence == null || evidence.isBlank()) throw new IllegalArgumentException("Editorial decision evidence is required.");
         EditorialView before = find(id).orElseThrow(() -> new IllegalArgumentException("Editorial record not found."));
         if (before.version() != expectedVersion) throw new EditorialWorkflowConflictException("Editorial record version is stale.");
         String next = switch (action) {
             case "SUBMIT_FOR_REVIEW" -> {
                 if (!(before.state().equals("DRAFT") || before.state().equals("REJECTED"))) throw new EditorialWorkflowConflictException("Only draft or rejected records can be submitted.");
+                if (!before.geographicReviewStatus().equals("APPROVED")
+                        || !before.identityReviewStatus().equals("NO_DUPLICATE")
+                        || before.identityReviewEvidence() == null || before.identityReviewEvidence().isBlank()) {
+                    throw new EditorialWorkflowConflictException("Geographic and evidenced identity reviews are required before submission.");
+                }
+                if (before.sourceLicense() == null || before.sourceAttribution() == null
+                        || before.sourceLicense().isBlank() || before.sourceAttribution().isBlank()) {
+                    throw new EditorialWorkflowConflictException("Source license and attribution are required before submission.");
+                }
                 yield "PENDING_REVIEW";
             }
             case "APPROVE" -> {
                 if (!before.state().equals("PENDING_REVIEW") || !before.geographicReviewStatus().equals("APPROVED")) throw new EditorialWorkflowConflictException("Explicit geographic approval is required before publication.");
                 if (!before.identityReviewStatus().equals("NO_DUPLICATE")) throw new EditorialWorkflowConflictException("An explicit identity/duplicate review is required before publication.");
+                if (before.identityReviewEvidence() == null || before.identityReviewEvidence().isBlank()) throw new EditorialWorkflowConflictException("Evidenced identity review is required before publication.");
                 if (before.sourceLicense() == null || before.sourceAttribution() == null || before.sourceLicense().isBlank() || before.sourceAttribution().isBlank()) throw new EditorialWorkflowConflictException("Documented source license and attribution are required before publication.");
                 publish(before);
                 yield "PUBLISHED";
@@ -160,7 +177,8 @@ public class AdminEditorialRepository {
         if (changed != 1) throw new EditorialWorkflowConflictException("Editorial record changed concurrently.");
         EditorialView after=find(id).orElseThrow();
         audit(id, actor, action, reason, before.state(), next, expectedVersion + 1,
-                json(java.util.Map.of("publishedPoiId",after.publishedPoiId()==null?"":after.publishedPoiId().toString())));
+                json(java.util.Map.of("decisionEvidence", evidence.trim(),
+                        "publishedPoiId",after.publishedPoiId()==null?"":after.publishedPoiId().toString())));
         return after;
     }
 
@@ -223,7 +241,7 @@ public class AdminEditorialRepository {
                 rs.getString("administrative_context"),rs.getString("category_code"),
                 rs.getBigDecimal("latitude"), rs.getBigDecimal("longitude"),rs.getString("raw_latitude"),rs.getString("raw_longitude"),
                 rs.getString("coordinate_normalization_rule"),rs.getString("coordinate_validation_evidence"), rs.getString("geographic_review_status"),
-                rs.getString("identity_review_status"),
+                rs.getString("identity_review_status"), rs.getString("identity_review_evidence"),
                 rs.getString("editorial_state"), rs.getString("source_license"), rs.getString("source_attribution"),
                 rs.getString("source_url"), rs.getObject("published_poi_id", UUID.class), rs.getLong("version"));
     }
@@ -235,7 +253,8 @@ public class AdminEditorialRepository {
             BigDecimal longitude,String normalizationRule,String coordinateEvidence, String sourceLicense, String sourceAttribution) {}
     public record EditorialView(UUID id, UUID importRecordId, String sourceRecordId, String name, String description,String administrativeContext,
             String categoryCode, BigDecimal latitude, BigDecimal longitude,String rawLatitude,String rawLongitude,
-            String normalizationRule,String coordinateEvidence,String geographicReviewStatus,String identityReviewStatus,
+             String normalizationRule,String coordinateEvidence,String geographicReviewStatus,String identityReviewStatus,
+             String identityReviewEvidence,
             String state, String sourceLicense, String sourceAttribution, String sourceUrl, UUID publishedPoiId, long version) {}
     public record DuplicateCandidate(String entityType,UUID entityId, String name, Double distanceMeters) {}
     public record Page<T>(List<T> content,int page,int size,long totalElements){public int totalPages(){return (int)Math.ceil((double)totalElements/size);}}

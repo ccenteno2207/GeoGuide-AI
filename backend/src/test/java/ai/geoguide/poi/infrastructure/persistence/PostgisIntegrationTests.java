@@ -16,6 +16,8 @@ import ai.geoguide.poi.infrastructure.dataset.mincetur.JdbcMinceturSnapshotStagi
 import ai.geoguide.poi.infrastructure.dataset.mincetur.MinceturSnapshotParser;
 import ai.geoguide.admin.infrastructure.persistence.AdminEditorialRepository;
 import ai.geoguide.admin.infrastructure.persistence.AdminImportReadRepository;
+import ai.geoguide.admin.infrastructure.persistence.AdminDestinationRepository;
+import ai.geoguide.admin.infrastructure.persistence.AdminDestinationPoiRelationshipRepository;
 import ai.geoguide.discovery.domain.DiscoveryCriteria;
 import ai.geoguide.discovery.infrastructure.persistence.JdbcRoutePoiCandidateQuery;
 import ai.geoguide.routing.domain.RouteGeometry;
@@ -92,6 +94,12 @@ class PostgisIntegrationTests {
     AdminImportReadRepository adminImportReadRepository;
 
     @Autowired
+    AdminDestinationRepository adminDestinationRepository;
+
+    @Autowired
+    AdminDestinationPoiRelationshipRepository adminDestinationPoiRelationshipRepository;
+
+    @Autowired
     MockMvc mockMvc;
 
     @BeforeEach
@@ -107,7 +115,7 @@ class PostgisIntegrationTests {
 
         assertThat(jdbcTemplate.queryForObject("SELECT PostGIS_Version()", String.class)).isNotBlank();
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM flyway_schema_history", Integer.class))
-                .isEqualTo(7);
+                .isEqualTo(8);
         assertThat(jdbcTemplate.queryForObject("""
                 SELECT COUNT(*) FROM information_schema.tables
                 WHERE table_schema = 'geo'
@@ -131,6 +139,77 @@ class PostgisIntegrationTests {
                 SELECT data_type FROM information_schema.columns
                 WHERE table_schema = 'geo' AND table_name = 'point_of_interest' AND column_name = 'created_at'
                 """, String.class)).isEqualTo("timestamp with time zone");
+    }
+
+    @Test
+    void destinationPublicationRequiresIndependentGeoIdentityAndAccessReviewsAndDoesNotPublishPoi() {
+        var draft = adminDestinationRepository.create(new AdminDestinationRepository.CreateDestination(
+                "Recurso sintético Lima Canta", "REALIZACION_TECNICA", "Canta — Lima — Lima",
+                new java.math.BigDecimal("-11.45"), new java.math.BigDecimal("-76.62"),
+                "raw-lat", "raw-lon", "synthetic-test-rule", "synthetic map evidence",
+                "https://example.invalid/test-source", "TEST_ONLY", "Synthetic fixture attribution", "test-dest-1"),
+                "editor-1");
+
+        var geo = adminDestinationRepository.reviewGeography(draft.id(), draft.version(), true,
+                "reviewer-1", "synthetic coordinate verified");
+        var identity = adminDestinationRepository.reviewIdentity(geo.id(), geo.version(), true,
+                "reviewer-1", "synthetic unique fixture", "No matching destination in synthetic database.");
+        assertThatThrownBy(() -> adminDestinationRepository.transition(identity.id(), identity.version(),
+                "SUBMIT_FOR_REVIEW", "editor-1", "access review missing", "Synthetic test proves access review gate is incomplete."))
+                .isInstanceOf(RuntimeException.class);
+        var access = adminDestinationRepository.reviewAccess(identity.id(), identity.version(), true,
+                "reviewer-1", "access checked in synthetic test map", "fixture route point is on test road segment");
+        var pending = adminDestinationRepository.transition(access.id(), access.version(),
+                "SUBMIT_FOR_REVIEW", "editor-1", "all independent reviews recorded", "All required synthetic review evidence is attached.");
+        var published = adminDestinationRepository.transition(pending.id(), pending.version(),
+                "APPROVE", "reviewer-1", "publish isolated synthetic destination", "Approved synthetic destination record.");
+
+        assertThat(published.publishedDestinationId()).isEqualTo(published.id());
+        assertThat(destinationRepository.search(Destination.normalize("Recurso sintético"), 10))
+                .extracting(Destination::id).contains(published.id());
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest", Integer.class)).isZero();
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM admin.destination_editorial_audit WHERE destination_editorial_id=?", Integer.class,
+                published.id())).isEqualTo(6);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT details->>'evidence' FROM admin.destination_editorial_audit
+                WHERE destination_editorial_id=? AND action='NO_DUPLICATE_CONFIRMED'
+                """, String.class, published.id())).isEqualTo("No matching destination in synthetic database.");
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT details->>'evidence' FROM admin.destination_editorial_audit
+                WHERE destination_editorial_id=? AND action='APPROVE'
+                """, String.class, published.id())).isEqualTo("Approved synthetic destination record.");
+    }
+
+    @Test
+    void destinationPoiRelationshipIsPendingAndAuditedWithoutChangingEitherGeometry() {
+        UUID destinationId = UUID.randomUUID();
+        UUID poiId = UUID.randomUUID();
+        UUID categoryId = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO geo.category(id,code,name,active) VALUES (?,?,?,true)", categoryId, "OTHER", "Other");
+        jdbcTemplate.update("""
+                INSERT INTO geo.destination(id,canonical_name,normalized_name,destination_type,administrative_context,
+                    location,source_system,source_record_id,source_url,source_license,attribution,verified_at,catalog_version,active)
+                VALUES (?,?,?,? ,?,ST_SetSRID(ST_MakePoint(?,?),4326),?,?,?,?,?,CURRENT_DATE,?,true)
+                """, destinationId,"Destination test","destination test","TEST","Canta, Lima",-76.620000,-11.450000,
+                "TEST","dest-link-1","https://example.invalid","TEST_ONLY","synthetic", "test-v1");
+        jdbcTemplate.update("""
+                INSERT INTO geo.point_of_interest(id,category_id,name,description,location,active,created_at,updated_at)
+                VALUES (?,?,?,NULL,ST_SetSRID(ST_MakePoint(?,?),4326),true,now(),now())
+                """, poiId,categoryId,"POI test",-76.619000,-11.451000);
+
+        var pending = adminDestinationPoiRelationshipRepository.create(
+                new AdminDestinationPoiRelationshipRepository.CreateRelationship(destinationId, poiId,
+                        "RELATED_RESOURCE", "synthetic relationship review", "Fixture says these are related only."), "editor-1");
+        assertThat(pending.status()).isEqualTo("PENDING");
+        var approved = adminDestinationPoiRelationshipRepository.review(pending.id(), pending.version(), true,
+                "reviewer-1", "relationship confirmed", "synthetic test evidence");
+        assertThat(approved.status()).isEqualTo("APPROVED");
+        assertThat(jdbcTemplate.queryForObject("SELECT ST_X(location) FROM geo.destination WHERE id=?", Double.class,
+                destinationId)).isEqualTo(-76.62);
+        assertThat(jdbcTemplate.queryForObject("SELECT ST_X(location) FROM geo.point_of_interest WHERE id=?", Double.class,
+                poiId)).isEqualTo(-76.619);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM admin.destination_poi_relationship_audit WHERE relationship_id=?",
+                Integer.class, pending.id())).isEqualTo(2);
     }
 
     @Test
@@ -194,9 +273,10 @@ class PostgisIntegrationTests {
         assertThat(candidate.state()).isEqualTo("DRAFT");
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest",Integer.class)).isEqualTo(1);
         var geographic=adminEditorialRepository.reviewGeography(candidate.id(),0,true,"reviewer-test","Coordinates manually checked against isolated fixture evidence");
-        var identity=adminEditorialRepository.reviewIdentity(candidate.id(),geographic.version(),true,"reviewer-test","No matching P3 or destination entry in isolated fixture");
-        var submitted=adminEditorialRepository.transition(candidate.id(),identity.version(),"SUBMIT_FOR_REVIEW","editor-test","Ready for independent editorial review");
-        var published=adminEditorialRepository.transition(candidate.id(),submitted.version(),"APPROVE","reviewer-test","Approved synthetic fixture for local integration test");
+        var identity=adminEditorialRepository.reviewIdentity(candidate.id(),geographic.version(),true,"reviewer-test",
+                "No matching P3 or destination entry in isolated fixture", "Synthetic identity comparison returned no exact match.");
+        var submitted=adminEditorialRepository.transition(candidate.id(),identity.version(),"SUBMIT_FOR_REVIEW","editor-test","Ready for independent editorial review","Synthetic review packet is complete.");
+        var published=adminEditorialRepository.transition(candidate.id(),submitted.version(),"APPROVE","reviewer-test","Approved synthetic fixture for local integration test","Synthetic publication evidence validated.");
 
         assertThat(published.state()).isEqualTo("PUBLISHED");
         assertThat(published.publishedPoiId()).isEqualTo(candidate.id());
@@ -207,6 +287,14 @@ class PostgisIntegrationTests {
                 .isEqualTo(-75.0);
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.poi_provenance WHERE poi_id=?",Integer.class,candidate.id())).isEqualTo(1);
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM admin.poi_editorial_audit WHERE editorial_id=?",Integer.class,candidate.id())).isEqualTo(5);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT details->>'evidence' FROM admin.poi_editorial_audit
+                WHERE editorial_id=? AND action='NO_DUPLICATE_CONFIRMED'
+                """, String.class, candidate.id())).isEqualTo("Synthetic identity comparison returned no exact match.");
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT details->>'decisionEvidence' FROM admin.poi_editorial_audit
+                WHERE editorial_id=? AND action='APPROVE'
+                """, String.class, candidate.id())).isEqualTo("Synthetic publication evidence validated.");
     }
 
     @Test

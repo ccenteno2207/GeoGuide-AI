@@ -38,4 +38,25 @@ class FlywayMigrationTests {
                 .doesNotContain("UPDATE geo.point_of_interest SET location")
                 .doesNotContain("UPDATE geo.destination SET location");
     }
+
+    @Test
+    void v008AddsIndependentDestinationReviewAndAuditableCrossDomainLinks() throws IOException {
+        var migration = new ClassPathResource("db/migration/V008__poi_catalog_destination_review_and_links.sql");
+        assertThat(migration.exists()).isTrue();
+        String sql = migration.getContentAsString(StandardCharsets.UTF_8);
+        assertThat(sql).contains("CREATE TABLE admin.destination_editorial_record")
+                .contains("ALTER TABLE admin.poi_editorial_record")
+                .contains("identity_review_evidence")
+                .contains("access_review_status")
+                .contains("published_destination_id UUID UNIQUE REFERENCES geo.destination(id)")
+                .contains("CREATE TABLE admin.destination_poi_relationship")
+                .contains("SAME_RESOURCE")
+                .contains("RELATED_RESOURCE")
+                .contains("relationship_status IN ('PENDING','APPROVED','REJECTED')")
+                .contains("CREATE TABLE admin.destination_poi_relationship_audit")
+                .contains("BEFORE UPDATE OR DELETE ON admin.destination_editorial_audit")
+                .contains("BEFORE UPDATE OR DELETE ON admin.destination_poi_relationship_audit")
+                .doesNotContain("UPDATE geo.destination SET location")
+                .doesNotContain("UPDATE geo.point_of_interest SET location");
+    }
 }

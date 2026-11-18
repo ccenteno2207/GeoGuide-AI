@@ -16,7 +16,8 @@ describe('POI media audit controls', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL) => {
       const url = String(input);
-      const body = url.includes('/api/v1/admin/records')
+      const body = url.includes('/api/v1/admin/records') || url.includes('/api/v1/admin/destination-records')
+        || url.includes('/api/v1/admin/destination-poi-relationships')
         ? { content: [], page: 0, size: 50, totalElements: 0 }
         : [];
       return new Response(JSON.stringify(body), { status: 200, headers: { 'Content-Type': 'application/json' } });
