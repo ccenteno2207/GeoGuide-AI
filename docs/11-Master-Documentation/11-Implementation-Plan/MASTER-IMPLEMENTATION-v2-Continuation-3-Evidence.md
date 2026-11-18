@@ -88,3 +88,49 @@ Estado de esta continuación: `LOCAL_IMPLEMENTATION = PARTIAL_PENDING_INFRASTRUC
 `ADMIN_SECURITY_WITHOUT_OIDC = DENY_BY_DEFAULT`
 `REAL_MINIO_VALIDATION = NOT_EXECUTED`
 `P9_OFFLINE_MEDIA = EXCLUDED`
+
+## VALIDATION-4B — Integración aislada en VM (2026-11-18)
+
+Esta sección actualiza los pendientes de infraestructura registrados arriba para la ejecución aprobada VALIDATION-4B. No modifica los contratos P8/P9 ni declara cierre de producto.
+
+### Entorno y aislamiento
+
+- Baseline local: rama `codex/master-implementation-v2`, HEAD inicial `f1ce88ec38fb24d8122f3759892b5fc22be6f761`; se conservaron intactos los commits locales previos.
+- VM de desarrollo: `/home/manager/geoguide-ai`; checkout `main` en `0f114e320043da90d949b79ab0ab4fea5084c66b` sin cambios.
+- Proyecto Compose exclusivo: `geoguide-v4b-20261118-0a11d241`, con red interna y volúmenes propios. Límites efectivos verificados con `docker inspect`: PostGIS 1.280 MiB / 0,75 CPU, MinIO 512 MiB / 0,25 CPU y Keycloak 1.536 MiB / 1 CPU; total 3.328 MiB y 2 CPU.
+- Keycloak de prueba fijado a `quay.io/keycloak/keycloak:26.8.2`, digest `sha256:c68e286cacd87b942ac1939a0a1481461109d6acd3a57dc496969a319a76bbf0`. Los usuarios, realm, roles, claves y datos fueron sintéticos.
+- Backend y portal se ejecutaron localmente en Windows. Los únicos túneles SSH fueron loopback local hacia servicios aislados de la VM; no se publicaron puertos externos.
+- Los seis contenedores existentes del proyecto `geoguide-ai` se observaron antes y durante la validación: conservaron su estado `healthy`/`running`. No se accedió ni modificó su base, buckets, redes, volúmenes o credenciales.
+
+### POI-DATA-1 / V006–V007
+
+- V001–V007 se aplicaron sin error a una base PostgreSQL 16.4/PostGIS 3.4 vacía; Flyway reportó siete migraciones exitosas. Se comprobaron 86 constraints validadas y los índices/triggers de auditoría previstos.
+- El CSV local de solo lectura mantuvo SHA-256 `29351B0BAEA9E68AC1D50CFA2B5BF6273594FEC4A8CE112D2E63271F2D08FD66`. El staging contiene 6.341 filas: 6.331 `NORMALIZED_PENDING_REVIEW` y 10 `COORDINATE_FORMAT_AMBIGUOUS` en cuarentena.
+- Reiniciar el importador reutilizó el mismo batch; la base conserva un solo lote y el mismo total de 6.341 filas. El registro 237 conserva como raw `-7.576.291.501.522.060` y `-14.087.854.051.458.200`; continúa pendiente de revisión y no se normalizó ni publicó durante esta validación.
+- Los cinco UUID P3 permanecen activos con las coordenadas originales del dataset. Se creó un borrador enlazado a una fila MINCETUR para probar el paso importación→edición; se dejó sin aprobar. El conteo de registros importados publicados es cero.
+- V007 conserva latitud/longitud como `NUMERIC` sin escala fija; la inserción/publicación sintética con coordenadas decimales fue aceptada sin truncamiento. No se cambió la migración.
+
+### ADMIN-1 / OIDC y publicación
+
+- Se ejecutó Authorization Code + PKCE real contra Keycloak sintético para administrador, editor y revisor. Los tokens válidos incluyeron issuer, audience `geoguide-admin-api` y rol esperado; el backend aceptó el token válido y devolvió 401 para acceso anónimo, JWT de firma inválida y token vencido, y 403 para una operación prohibida al rol revisor.
+- La suite backend cubre validador de audiencia incorrecta, conversión de roles y deny-by-default; la API en vivo confirmó los permisos aplicados.
+- Lecturas paginadas con filtros opcionales omitidos para importaciones y catálogo pasaron tras corregir el tipado de parámetros nulos de PostgreSQL. La API permitió un borrador enlazado a un registro importado, rechazó un segundo borrador duplicado y preservó el candidato en `DRAFT`.
+- El flujo sintético pasó edición optimista (actualización válida y 409 para versión obsoleta), revisión geográfica, comprobación de duplicados, revisión de identidad, submit y publicación explícita. Una aprobación sin revisiones fue rechazada con 409.
+- Una falla inducida solo en la transacción temporal al insertar provenance devolvió error; la transacción dejó el registro en `PENDING_REVIEW`, sin `published_poi_id` y sin POI público. El trigger de prueba se eliminó después. Las auditorías no permitieron UPDATE ni DELETE y conservaron seis entradas.
+- Route Discovery consultó PostGIS y devolvió el POI sintético publicado sobre una geometría de prueba. Para aislar este flujo se usó un stub local de GraphHopper; **no** se valida el GraphHopper real ni una ruta vial real.
+
+### POI-MEDIA-1 / Flutter y P9
+
+- MinIO usó un bucket privado exclusivo. Una carga JPEG sintética con marcador EXIF de prueba se re-encodeó; el backend entregó bytes sin el marcador. La lista y acciones administrativas no exponen la clave de objeto; el acceso anónimo al bucket respondió 403.
+- La secuencia de derechos→submit→aprobación revisora→imagen principal→lectura autenticada por API→retiro funcionó. Sin imagen publicada, el endpoint devolvió 404 para que Flutter use placeholder. SVG fue rechazado con 400. El límite de bytes está cubierto por una prueba unitaria nueva y el límite HTTP multipart produjo `MaxUploadSizeExceededException`; el cliente local recibió reset de conexión, por lo que no se verificó el código HTTP de esa respuesta.
+- Se corrigió un defecto: respuestas administrativas serializaban `objectKey` pese a que la API debía conservarlo dentro del backend. Ahora devuelven `MediaAssetResponse`, que omite la clave; una prueba de serialización y la llamada en vivo lo confirman.
+- Portal: `npm test -- --reporter=verbose` pasó 2/2 y `npm run build` pasó TypeScript/Vite; el servidor local respondió HTTP 200. No se hizo recorrido de interfaz en navegador.
+- Flutter: `flutter test` pasó 314 pruebas con 3 omitidas; `flutter analyze` no encontró issues; `dart format --output=none --set-exit-if-changed lib test` no detectó cambios de formato. `offline_cache_test.dart` pasó 34 pruebas, incluida la exclusión de URI multimedia del snapshot. No se instaló ni validó una APK físicamente.
+- Backend: `mvn verify` pasó con 97 pruebas, 0 fallos, 0 errores y 14 omitidas. Doce `PostgisIntegrationTests` usan Testcontainers y se omitieron al no haber Docker local; dos pruebas opcionales dependen del fixture CSV. La migración y los flujos centrales sí se validaron contra el PostGIS temporal en la VM.
+
+### Defectos, limitaciones y limpieza
+
+- Defectos corregidos localmente: consultas administrativas con filtros nulos no tipados en PostgreSQL y exposición de claves privadas de MinIO en DTO administrativos.
+- No se utilizaron fotografías reales del piloto, no se instalaron APK, no se hicieron cambios en servicios compartidos ni se desplegó nada.
+- Resultado: `VALIDATION_4B = PARTIAL`. Persisten la falta de validación contra GraphHopper real, la inspección de portal en navegador y la imposibilidad de observar el código HTTP del rechazo por tamaño; no hay evidencia de regresión de servicios existentes.
+- Limpieza completada: duración del token sintético restaurada a 300 segundos; procesos locales y túnel loopback detenidos; contenedores, red, volúmenes y directorios temporales exclusivos eliminados. Se verificó que no quedan listeners de VALIDATION-4B en los puertos locales usados. Los seis servicios preexistentes siguen `running` y con la misma salud observada al inicio; la memoria disponible de la VM pasó de aproximadamente 4,8 GiB durante la prueba a 5,6 GiB después.

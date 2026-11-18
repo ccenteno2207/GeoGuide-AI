@@ -50,38 +50,42 @@ public class PoiMediaController {
 
     @GetMapping("/api/v1/admin/pois/{poiId}/media")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','EDITOR','REVIEWER')")
-    public List<Asset> list(@PathVariable UUID poiId){return repository.byPoi(poiId);}
+    public List<MediaAssetResponse> list(@PathVariable UUID poiId){return repository.byPoi(poiId).stream().map(PoiMediaController::toResponse).toList();}
 
     @PostMapping(value="/api/v1/admin/pois/{poiId}/media",consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','EDITOR')")
-    public Asset upload(@PathVariable UUID poiId,@RequestParam("file") MultipartFile file,
+    public MediaAssetResponse upload(@PathVariable UUID poiId,@RequestParam("file") MultipartFile file,
             @RequestParam String author,@RequestParam String sourceUrl,Authentication auth){
-        return service.upload(poiId,file,author,sourceUrl,actor(auth));
+        return toResponse(service.upload(poiId,file,author,sourceUrl,actor(auth)));
     }
 
     @PatchMapping("/api/v1/admin/media/{id}/rights")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','EDITOR')")
-    public Asset rights(@PathVariable UUID id,@Valid @RequestBody RightsRequest request,Authentication auth){
-        return repository.updateRights(id,request.expectedVersion(),request.license(),request.attribution(),request.evidenceReference(),actor(auth),request.reason());
+    public MediaAssetResponse rights(@PathVariable UUID id,@Valid @RequestBody RightsRequest request,Authentication auth){
+        return toResponse(repository.updateRights(id,request.expectedVersion(),request.license(),request.attribution(),request.evidenceReference(),actor(auth),request.reason()));
     }
 
     @PostMapping("/api/v1/admin/media/{id}/submit")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','EDITOR')")
-    public Asset submit(@PathVariable UUID id,@Valid @RequestBody ActionRequest request,Authentication auth){return repository.action(id,request.expectedVersion(),"SUBMIT",actor(auth),request.reason(),false);}
+    public MediaAssetResponse submit(@PathVariable UUID id,@Valid @RequestBody ActionRequest request,Authentication auth){return toResponse(repository.action(id,request.expectedVersion(),"SUBMIT",actor(auth),request.reason(),false));}
 
     @PostMapping("/api/v1/admin/media/{id}/publish")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','REVIEWER')")
-    public Asset publish(@PathVariable UUID id,@Valid @RequestBody PublishRequest request,Authentication auth){return repository.action(id,request.expectedVersion(),"PUBLISH",actor(auth),request.reason(),request.makePrimary());}
+    public MediaAssetResponse publish(@PathVariable UUID id,@Valid @RequestBody PublishRequest request,Authentication auth){return toResponse(repository.action(id,request.expectedVersion(),"PUBLISH",actor(auth),request.reason(),request.makePrimary()));}
 
     @PostMapping("/api/v1/admin/media/{id}/reject")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','REVIEWER')")
-    public Asset reject(@PathVariable UUID id,@Valid @RequestBody ActionRequest request,Authentication auth){return repository.action(id,request.expectedVersion(),"REJECT",actor(auth),request.reason(),false);}
+    public MediaAssetResponse reject(@PathVariable UUID id,@Valid @RequestBody ActionRequest request,Authentication auth){return toResponse(repository.action(id,request.expectedVersion(),"REJECT",actor(auth),request.reason(),false));}
 
     @PostMapping("/api/v1/admin/media/{id}/withdraw")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','REVIEWER')")
-    public Asset withdraw(@PathVariable UUID id,@Valid @RequestBody ActionRequest request,Authentication auth){return repository.action(id,request.expectedVersion(),"WITHDRAW",actor(auth),request.reason(),false);}
+    public MediaAssetResponse withdraw(@PathVariable UUID id,@Valid @RequestBody ActionRequest request,Authentication auth){return toResponse(repository.action(id,request.expectedVersion(),"WITHDRAW",actor(auth),request.reason(),false));}
 
     private static String actor(Authentication auth){if(auth==null||auth.getName()==null||auth.getName().isBlank())throw new IllegalStateException("Authenticated actor is required.");return auth.getName();}
+    static MediaAssetResponse toResponse(Asset asset){return new MediaAssetResponse(asset.id(),asset.poiId(),asset.contentType(),asset.sha256(),asset.sizeBytes(),asset.width(),asset.height(),asset.author(),asset.sourceUrl(),asset.license(),asset.attribution(),asset.rightsEvidence(),asset.rightsStatus(),asset.state(),asset.primary(),asset.version());}
+    public record MediaAssetResponse(UUID id,UUID poiId,String contentType,String sha256,long sizeBytes,int width,int height,
+            String author,String sourceUrl,String license,String attribution,String evidenceReference,String rightsStatus,
+            String state,boolean primary,long version){}
     public record RightsRequest(@PositiveOrZero long expectedVersion,@NotBlank String license,@NotBlank String attribution,
             @NotBlank String evidenceReference,@NotBlank String reason){}
     public record ActionRequest(@PositiveOrZero long expectedVersion,@NotBlank String reason){}

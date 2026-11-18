@@ -28,13 +28,13 @@ public class AdminEditorialRepository {
         int safePage=Math.max(0,Math.min(page,1_000_000)),safeSize=Math.max(1,Math.min(size,100)),offset=safePage*safeSize;
         long total=jdbc.queryForObject("""
                 SELECT count(*) FROM admin.poi_editorial_record
-                WHERE (? IS NULL OR editorial_state = ?) AND (? IS NULL OR name ILIKE '%' || ? || '%' OR source_record_id = ?)
+                WHERE (CAST(? AS VARCHAR) IS NULL OR editorial_state = ?) AND (CAST(? AS TEXT) IS NULL OR name ILIKE '%' || ? || '%' OR source_record_id = ?)
                 """,
                 Long.class,state,state,query,query,query);
         List<EditorialView> content=jdbc.query("""
                 SELECT * FROM admin.poi_editorial_record
-                WHERE (? IS NULL OR editorial_state = ?)
-                  AND (? IS NULL OR name ILIKE '%' || ? || '%' OR source_record_id = ?)
+                WHERE (CAST(? AS VARCHAR) IS NULL OR editorial_state = ?)
+                  AND (CAST(? AS TEXT) IS NULL OR name ILIKE '%' || ? || '%' OR source_record_id = ?)
                 ORDER BY updated_at DESC, id
                 LIMIT ? OFFSET ?
                 """, this::map, state, state, query, query, query,safeSize,offset);

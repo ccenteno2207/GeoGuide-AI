@@ -59,6 +59,17 @@ class PoiMediaServiceTests {
                 .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("pixel limit");
     }
 
+    @Test
+    void rejectsImagesExceedingConfiguredByteLimitBeforeStorage() {
+        var sizeLimitedService = new PoiMediaService(storage, repository, 1024, 100_000);
+        var oversized = new MockMultipartFile("file", "oversized.jpg", "image/jpeg", new byte[1025]);
+
+        assertThatThrownBy(() -> sizeLimitedService.upload(UUID.randomUUID(), oversized,
+                "synthetic fixture", "fixture:oversized", "editor-test"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("size limit");
+    }
+
     private static byte[] png(int width,int height)throws Exception{
         BufferedImage image=new BufferedImage(width,height,BufferedImage.TYPE_INT_RGB);
         ByteArrayOutputStream bytes=new ByteArrayOutputStream();ImageIO.write(image,"png",bytes);return bytes.toByteArray();

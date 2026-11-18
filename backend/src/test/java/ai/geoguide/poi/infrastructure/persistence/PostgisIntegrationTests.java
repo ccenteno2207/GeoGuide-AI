@@ -15,6 +15,7 @@ import ai.geoguide.poi.infrastructure.dataset.P3DatasetLoader;
 import ai.geoguide.poi.infrastructure.dataset.mincetur.JdbcMinceturSnapshotStagingRepository;
 import ai.geoguide.poi.infrastructure.dataset.mincetur.MinceturSnapshotParser;
 import ai.geoguide.admin.infrastructure.persistence.AdminEditorialRepository;
+import ai.geoguide.admin.infrastructure.persistence.AdminImportReadRepository;
 import ai.geoguide.discovery.domain.DiscoveryCriteria;
 import ai.geoguide.discovery.infrastructure.persistence.JdbcRoutePoiCandidateQuery;
 import ai.geoguide.routing.domain.RouteGeometry;
@@ -88,6 +89,9 @@ class PostgisIntegrationTests {
     AdminEditorialRepository adminEditorialRepository;
 
     @Autowired
+    AdminImportReadRepository adminImportReadRepository;
+
+    @Autowired
     MockMvc mockMvc;
 
     @BeforeEach
@@ -154,6 +158,23 @@ class PostgisIntegrationTests {
                 """, Boolean.class, firstBatchId)).isTrue();
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.destination", Integer.class)).isZero();
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest", Integer.class)).isZero();
+    }
+
+    @Test
+    void administrativeReadQueriesAcceptOmittedOptionalFilters() {
+        assertThat(adminEditorialRepository.list(null, null, 0, 50)).isNotNull();
+
+        UUID batchId = UUID.randomUUID();
+        jdbcTemplate.update("""
+                INSERT INTO geo.mincetur_import_batch(id,source_system,source_file_name,source_sha256,source_cutoff,
+                    detected_encoding,delimiter,parser_version,record_count,quarantined_count,batch_status)
+                VALUES (?, 'MINCETUR', 'filters.csv', ?, DATE '2026-11-10', 'UTF-8', ';', 'filters-test', 0, 0,
+                    'STAGED_REQUIRES_REVIEW')
+                """, batchId, UUID.randomUUID().toString().replace("-", "").repeat(2));
+
+        assertThat(adminImportReadRepository.records(batchId, null, null, 0, 50).totalElements()).isZero();
+        assertThat(adminImportReadRepository.records(batchId, "NORMALIZED_PENDING_REVIEW", "", 0, 50)
+                .totalElements()).isZero();
     }
 
     @Test

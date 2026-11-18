@@ -32,8 +32,8 @@ public class AdminImportReadRepository {
         int safePage=Math.max(0,Math.min(page,1_000_000)),safeSize=Math.max(1,Math.min(size,500)),offset=safePage*safeSize;
         long total=jdbc.queryForObject("""
                 SELECT count(*) FROM geo.mincetur_import_record r
-                WHERE r.batch_id=? AND (? IS NULL OR r.record_status=?)
-                  AND (? IS NULL OR r.source_record_id=? OR r.raw_fields->>'NOMBRE DEL RECURSO' ILIKE '%'||?||'%')
+                WHERE r.batch_id=? AND (CAST(? AS VARCHAR) IS NULL OR r.record_status=?)
+                  AND (CAST(? AS TEXT) IS NULL OR r.source_record_id=? OR r.raw_fields->>'NOMBRE DEL RECURSO' ILIKE '%'||?||'%')
                 """,
                 Long.class,batchId,status,status,query,query,query);
         List<ImportRecordView> content=jdbc.query("""
@@ -44,8 +44,8 @@ public class AdminImportReadRepository {
                        r.normalized_latitude,r.normalized_longitude,r.normalization_rule,r.validation_evidence,
                        r.record_status,r.quarantine_reason,(e.id IS NOT NULL) AS has_editorial_record
                 FROM geo.mincetur_import_record r LEFT JOIN admin.poi_editorial_record e ON e.import_record_id=r.id
-                WHERE r.batch_id=? AND (? IS NULL OR r.record_status=?)
-                  AND (? IS NULL OR r.source_record_id=? OR r.raw_fields->>'NOMBRE DEL RECURSO' ILIKE '%'||?||'%')
+                WHERE r.batch_id=? AND (CAST(? AS VARCHAR) IS NULL OR r.record_status=?)
+                  AND (CAST(? AS TEXT) IS NULL OR r.source_record_id=? OR r.raw_fields->>'NOMBRE DEL RECURSO' ILIKE '%'||?||'%')
                 ORDER BY r.row_number LIMIT ? OFFSET ?
                 """, (rs, n) -> new ImportRecordView(rs.getObject("id", UUID.class),rs.getString("source_record_id"),
                 rs.getInt("row_number"),rs.getString("name"),rs.getString("source_category"),rs.getString("region"),
