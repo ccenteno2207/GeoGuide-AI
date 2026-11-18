@@ -9,8 +9,9 @@ CREATE TABLE admin.poi_editorial_record (
     description TEXT,
     administrative_context VARCHAR(600),
     category_code VARCHAR(80) NOT NULL,
-    latitude NUMERIC(10,7),
-    longitude NUMERIC(10,7),
+    -- Keep the full staging candidate precision; the curated raw token is also retained separately.
+    latitude NUMERIC,
+    longitude NUMERIC,
     raw_latitude TEXT,
     raw_longitude TEXT,
     coordinate_normalization_rule VARCHAR(160),

@@ -189,6 +189,40 @@ class PostgisIntegrationTests {
     }
 
     @Test
+    void editorialDraftPreservesFullPrecisionOfStagedCoordinateCandidate() {
+        UUID batchId = UUID.randomUUID();
+        UUID importRecordId = UUID.randomUUID();
+        jdbcTemplate.update("""
+                INSERT INTO geo.mincetur_import_batch(id,source_system,source_file_name,source_sha256,source_cutoff,
+                    detected_encoding,delimiter,parser_version,record_count,quarantined_count,batch_status)
+                VALUES (?, 'MINCETUR', 'synthetic.csv', ?, DATE '2026-11-10', 'UTF-8', ';', 'precision-test', 1, 0,
+                    'STAGED_REQUIRES_REVIEW')
+                """, batchId, "A".repeat(64));
+        jdbcTemplate.update("""
+                INSERT INTO geo.mincetur_import_record(id,batch_id,row_number,source_record_id,raw_fields,
+                    raw_latitude,raw_longitude,normalized_latitude,normalized_longitude,normalization_rule,
+                    validation_evidence,record_status)
+                VALUES (?,?,1,'237',?::jsonb,?,?,?,?,'synthetic-precision-rule',
+                    'synthetic test evidence; candidate is not published', 'NORMALIZED_PENDING_REVIEW')
+                """, importRecordId,
+                batchId,
+                "{\"NOMBRE DEL RECURSO\":\"Laguna de Huacachina\",\"URL\":\"https://example.test/237\"}",
+                "-7.576.291.501.522.060", "-14.087.854.051.458.200",
+                new java.math.BigDecimal("-14.087854051458200"),
+                new java.math.BigDecimal("-75.76291501522060"));
+
+        var draft = adminEditorialRepository.create(new AdminEditorialRepository.CreateEditorial(
+                importRecordId, null, null, "NATURAL_SITE", null, null, null, null, null, null, null, null), "editor-test");
+
+        assertThat(draft.latitude()).isEqualByComparingTo("-14.087854051458200");
+        assertThat(draft.longitude()).isEqualByComparingTo("-75.76291501522060");
+        assertThat(draft.rawLatitude()).isEqualTo("-7.576.291.501.522.060");
+        assertThat(draft.rawLongitude()).isEqualTo("-14.087.854.051.458.200");
+        assertThat(draft.state()).isEqualTo("DRAFT");
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest", Integer.class)).isZero();
+    }
+
+    @Test
     void destinationCatalogSearchMatchesAccentInsensitiveNamesAndAliases() {
         UUID id = UUID.randomUUID();
         Destination destination = new Destination(id, "Plaza Mayor De Lima", null,

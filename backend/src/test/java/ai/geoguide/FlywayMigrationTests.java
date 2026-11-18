@@ -31,6 +31,10 @@ class FlywayMigrationTests {
                 .contains("BEFORE UPDATE OR DELETE ON media.poi_asset_audit")
                 .contains("admin_editorial_geo_approval_evidence")
                 .contains("admin_editorial_identity_evidence")
+                .contains("latitude NUMERIC,")
+                .contains("longitude NUMERIC,")
+                .doesNotContain("latitude NUMERIC(10,7)")
+                .doesNotContain("longitude NUMERIC(10,7)")
                 .doesNotContain("UPDATE geo.point_of_interest SET location")
                 .doesNotContain("UPDATE geo.destination SET location");
     }
