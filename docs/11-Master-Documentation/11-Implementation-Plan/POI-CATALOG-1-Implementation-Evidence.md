@@ -97,3 +97,54 @@ P12_5 = NOT_AUTHORIZED
 UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
 PRODUCTION_READINESS = NOT_DECLARED
 ```
+
+## Validación integral aislada — 2026-11-18
+
+Esta actualización conserva los resultados `PARTIAL` históricos anteriores y registra la ejecución integral autorizada sobre una base temporal nueva. El worktree inició en `codex/poi-catalog-1-discovery`, HEAD `e7e5480744298c4176dbc6287949433e61f51691`, seis commits delante de `origin/main` `7b7fb9c9aec8efe4076a048fb224e4ec92681155`. No se conectó el stack temporal a redes, bases, volúmenes ni secretos del proyecto compartido.
+
+### PostGIS, Flyway y staging MINCETUR
+
+- `mvn -B -q verify` se ejecutó en Maven 3.9.16 / Java 21 contra PostgreSQL 16 + PostGIS 3.4 aislado, con V001–V008 validadas/aplicadas. Resultado: 104 pruebas, 0 fallos, 0 errores, 0 omitidas; `PostgisIntegrationTests`: 15/15 PASS.
+- La prueba del CSV de solo lectura verificó su SHA-256 `29351B0BAEA9E68AC1D50CFA2B5BF6273594FEC4A8CE112D2E63271F2D08FD66`, 6.341 registros, 6.331 `NORMALIZED_PENDING_REVIEW` y 10 `COORDINATE_FORMAT_AMBIGUOUS`. La segunda importación devolvió el mismo lote y no creó otro lote ni duplicó sus 6.341 filas.
+- Los cinco POIs P3 y nueve destinos curados conservaron ID, nombre, geometría y estado antes/después del staging. No se crearon borradores editoriales a partir del CSV; publicaciones reales: cero.
+- Las pruebas PostGIS incluyeron revisión/publicación sintética, rechazo de versión obsoleta y de publicación sin las revisiones/evidencias requeridas, relación destino↔POI auditada y preservación de geometrías independientes.
+
+### OIDC/RBAC y portal
+
+- Se reutiliza la evidencia vigente de VALIDATION-4C para navegador, Authorization Code + PKCE, tokens válido/inválido/vencido, roles, portal y estados de error/permiso; esas pruebas no se repitieron porque no hubo cambios en portal, seguridad ni su configuración de producción.
+- En el stack OIDC aislado de esta ejecución se volvieron a comprobar tokens firmados por Keycloak sintético y issuer/audience/roles: anónimo `401`, editor en lectura `200`, administrador en lectura `200`, audience incorrecta `401` y operación administrativa prohibida al editor `403`.
+- La ejecución de este re-chequeo no configuró identidad productiva ni cambió la política deny-by-default.
+
+### GraphHopper y Route Discovery
+
+- Se repitió la prueba con el PBF de Perú de solo lectura, SHA-256 `a6d7eb406f83ac801327c3d53ca62ddad2facf39be46e5743923a49053a82ec0`, GraphHopper 11.0 y backend conectados únicamente al PostGIS/Compose temporal.
+- La búsqueda `Canta` obtuvo el destino curado; PlanRoute Canta→Obrajillo devolvió 2 683,071 m, 320,004 s y 107 coordenadas de geometría vial. Route Discovery devolvió cuatro POIs dentro del corredor, incluido un POI sintético activo a 19,47 m y POIs P3 cercanos.
+- Prueba de filtros real: categoría `OTHER` devolvió solo el fixture activo cercano; excluyó el fixture inactivo y el activo fuera del corredor de 1.000 m. Categoría `WATERFALL` no devolvió resultados. Los errores de cobertura del proveedor y la respuesta segura `NO_ROUTE_FOUND` se conservan en la evidencia previa de esta ejecución.
+
+### Límites, aislamiento y cierre
+
+- Rechequeo de recursos: límites efectivos para PostGIS 1.0 GiB/0,50 CPU, GraphHopper 1,25 GiB/0,95 CPU y backend 0,50 GiB/0,40 CPU: máximo agregado simultáneo 2,75 GiB/1,85 CPU, bajo el tope de 3,5 GiB/2 CPU. El uso observado fue inferior a los límites. El runner Maven y Keycloak se ejecutaron en etapas separadas para respetar el mismo presupuesto agregado.
+- Los seis servicios preexistentes `geoguide-ai-*` conservaron sus estados; antes y después de la validación estaban activos, y backend, GraphHopper, Redis, MinIO y PostgreSQL reportaron `healthy` cuando tienen healthcheck. No se modificaron ni reiniciaron.
+- Se retiraron los contenedores, la red, los volúmenes y el directorio temporal exclusivos `poicat1-fca48c38`. La verificación posterior encontró cero recursos etiquetados de ese proyecto; el directorio temporal VM y el script auxiliar de limpieza ya no existen.
+- La limpieza del staging Windows local quedó pendiente: la ruta exacta `D:\Codex\poi-catalog-1-validation-20261118-fca48c38` contiene archivos temporales de esta prueba, incluido `.env` con valores sintéticos. PowerShell verificó que el directorio no contiene subdirectorios y que la ruta resuelta coincide exactamente, pero la revisión automática bloqueó la operación de borrado. No se intentó un método alternativo. El archivo puntero `%TEMP%\poicat1_validation_path.txt` también permanece. Ninguno de estos archivos pertenece al worktree ni al diff Git.
+- En el harness de integración, el modo externo permite ejecutar PostGIS con una URL explícita aislada y mantiene Testcontainers como ruta habitual. La suite también permite activar el caso de snapshot completo mediante propiedad opt-in. Se corrigió el fixture de hash para ajustarse al formato uppercase exigido por V006. No hubo cambios de producción.
+- No hubo instalación física, despliegue, publicación de candidatos MINCETUR, incorporación de fotografías reales, push, PR ni merge. Se mantienen los límites de P8/P9, `P12_5 = NOT_AUTHORIZED`, `UI_2_MASTER_CLOSURE = NOT_AUTHORIZED` y `PRODUCTION_READINESS = NOT_DECLARED`.
+
+```ini
+POI_CATALOG_1_VALIDATION = PARTIAL
+POI_CATALOG_1_READY_FOR_PR_REVIEW = NO
+V001_V008_POSTGIS = PASS
+MINCETUR_STAGING = PASS_6341_6331_10_IDEMPOTENT
+P3_AND_CURATED_DESTINATIONS = PRESERVED
+EDITORIAL_SYNTHETIC_FLOW = PASS
+OIDC_RBAC = PASS
+REAL_GRAPHHOPPER_ROUTE_DISCOVERY = PASS
+TEMPORARY_VM_STACK_CLEANUP = PASS
+TEMPORARY_WINDOWS_STAGING_CLEANUP = BLOCKED_AUTOMATIC_REVIEW
+MINCETUR_PUBLICATION = NONE
+REAL_PHOTOS = EXCLUDED
+P9_OFFLINE_MEDIA = EXCLUDED
+P12_5 = NOT_AUTHORIZED
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+PRODUCTION_READINESS = NOT_DECLARED
+```

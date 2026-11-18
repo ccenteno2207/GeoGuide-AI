@@ -8,10 +8,12 @@ import ai.geoguide.poi.domain.GeoPoint;
 import ai.geoguide.poi.domain.PoiId;
 import ai.geoguide.poi.domain.PointOfInterest;
 import ai.geoguide.poi.domain.SourceReference;
+import ai.geoguide.poi.application.port.CategoryRepository;
 import ai.geoguide.destination.application.port.DestinationRepository;
 import ai.geoguide.destination.domain.Destination;
 import ai.geoguide.destination.infrastructure.dataset.DestinationCatalogLoader;
 import ai.geoguide.poi.infrastructure.dataset.P3DatasetLoader;
+import ai.geoguide.poi.infrastructure.dataset.mincetur.MinceturSnapshotCoordinateNormalizer;
 import ai.geoguide.poi.infrastructure.dataset.mincetur.JdbcMinceturSnapshotStagingRepository;
 import ai.geoguide.poi.infrastructure.dataset.mincetur.MinceturSnapshotParser;
 import ai.geoguide.admin.infrastructure.persistence.AdminEditorialRepository;
@@ -24,11 +26,15 @@ import ai.geoguide.routing.domain.RouteGeometry;
 import ai.geoguide.routing.domain.RoutePoint;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -42,32 +48,71 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ConditionEvaluationResult;
+import org.junit.jupiter.api.extension.ExecutionCondition;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.utility.DockerImageName;
 
-@Testcontainers(disabledWithoutDocker = true)
+@ExtendWith(PostgisIntegrationTests.PostgisEnvironmentCondition.class)
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import({JdbcPoiRepository.class, JdbcCategoryRepository.class, JdbcRoutePoiCandidateQuery.class,
         JdbcMinceturSnapshotStagingRepository.class})
 class PostgisIntegrationTests {
 
-    @Container
     static final PostgreSQLContainer<?> POSTGIS = new PostgreSQLContainer<>(
             DockerImageName.parse("postgis/postgis:16-3.4")
                     .asCompatibleSubstituteFor("postgres"));
 
+    static final String EXTERNAL_DATABASE_PROPERTY = "geoguide.test.postgis.external";
+
+    public static final class PostgisEnvironmentCondition implements ExecutionCondition {
+        @Override
+        public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
+            if (Boolean.getBoolean(EXTERNAL_DATABASE_PROPERTY)) {
+                return ConditionEvaluationResult.enabled("Using explicitly configured isolated PostGIS database.");
+            }
+            return DockerClientFactory.instance().isDockerAvailable()
+                    ? ConditionEvaluationResult.enabled("Docker is available for Testcontainers.")
+                    : ConditionEvaluationResult.disabled("Docker is unavailable and no external PostGIS was configured.");
+        }
+    }
+
     @DynamicPropertySource
     static void databaseProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", POSTGIS::getJdbcUrl);
-        registry.add("spring.datasource.username", POSTGIS::getUsername);
-        registry.add("spring.datasource.password", POSTGIS::getPassword);
+        if (Boolean.getBoolean(EXTERNAL_DATABASE_PROPERTY)) {
+            registry.add("spring.datasource.url", () -> requiredSystemProperty("geoguide.test.postgis.url"));
+            registry.add("spring.datasource.username", () -> requiredSystemProperty("geoguide.test.postgis.username"));
+            registry.add("spring.datasource.password", () -> requiredSystemProperty("geoguide.test.postgis.password"));
+        } else {
+            POSTGIS.start();
+            registry.add("spring.datasource.url", POSTGIS::getJdbcUrl);
+            registry.add("spring.datasource.username", POSTGIS::getUsername);
+            registry.add("spring.datasource.password", POSTGIS::getPassword);
+        }
+    }
+
+    @AfterAll
+    static void stopPostgisContainer() {
+        if (!Boolean.getBoolean(EXTERNAL_DATABASE_PROPERTY) && POSTGIS.isRunning()) {
+            POSTGIS.stop();
+        }
+    }
+
+    private static String requiredSystemProperty(String name) {
+        String value = System.getProperty(name);
+        if (value == null || value.isBlank()) throw new IllegalStateException(name + " is required.");
+        return value;
     }
 
     @Autowired
     JdbcPoiRepository repository;
+
+    @Autowired
+    CategoryRepository categoryRepository;
 
     @Autowired
     JdbcTemplate jdbcTemplate;
@@ -240,6 +285,72 @@ class PostgisIntegrationTests {
     }
 
     @Test
+    void fullMinceturSnapshotStagesExpectedCountsIdempotentlyAndPreservesP3AndCuratedDestinations() throws Exception {
+        String csvPath = System.getProperty("geoguide.test.minceturCsv");
+        Assumptions.assumeTrue(csvPath != null && !csvPath.isBlank(),
+                "Set geoguide.test.minceturCsv to stage the owner-provided source snapshot.");
+
+        var p3 = new P3DatasetLoader(objectMapper, categoryRepository, repository,
+                new ClassPathResource("data/p3/taxonomy-v1.json"),
+                new ClassPathResource("data/p3/lima-obrajillo-v1.json")).load();
+        int destinations = new DestinationCatalogLoader(objectMapper, destinationRepository,
+                new ClassPathResource("data/destination-search/mincetur-pilot-v1.json")).load();
+        assertThat(p3.poiCount()).isEqualTo(5);
+        assertThat(destinations).isEqualTo(9);
+
+        var p3Before = jdbcTemplate.queryForList("""
+                SELECT id::text AS id, name, ST_AsText(location) AS geometry, active
+                FROM geo.point_of_interest ORDER BY id
+                """);
+        var destinationsBefore = jdbcTemplate.queryForList("""
+                SELECT id::text AS id, canonical_name, ST_AsText(location) AS geometry, active
+                FROM geo.destination ORDER BY id
+                """);
+
+        byte[] source = Files.readAllBytes(Path.of(csvPath));
+        var parsed = new MinceturSnapshotParser().parse(Path.of(csvPath).getFileName().toString(), source);
+        var normalizer = new MinceturSnapshotCoordinateNormalizer(objectMapper);
+        var manifest = new ClassPathResource(
+                "data/destination-search/mincetur-20261110-coordinate-recovery-v1.json");
+        var snapshot = normalizer.normalize(parsed, manifest.getInputStream());
+
+        assertThat(snapshot.sha256()).isEqualToIgnoringCase(
+                "29351B0BAEA9E68AC1D50CFA2B5BF6273594FEC4A8CE112D2E63271F2D08FD66");
+        assertThat(snapshot.records()).hasSize(6_341);
+        assertThat(snapshot.records().stream().filter(r -> r.status()
+                == MinceturSnapshotParser.RecordStatus.NORMALIZED_PENDING_REVIEW)).hasSize(6_331);
+        assertThat(snapshot.records().stream().filter(r -> r.status()
+                == MinceturSnapshotParser.RecordStatus.COORDINATE_FORMAT_AMBIGUOUS)).hasSize(10);
+
+        UUID firstBatch = minceturStagingRepository.stage(snapshot);
+        UUID secondBatch = minceturStagingRepository.stage(snapshot);
+
+        assertThat(secondBatch).isEqualTo(firstBatch);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.mincetur_import_batch", Integer.class))
+                .isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.mincetur_import_record", Integer.class))
+                .isEqualTo(6_341);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM geo.mincetur_import_record
+                WHERE record_status='NORMALIZED_PENDING_REVIEW'
+                """, Integer.class)).isEqualTo(6_331);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM geo.mincetur_import_record
+                WHERE record_status='COORDINATE_FORMAT_AMBIGUOUS'
+                """, Integer.class)).isEqualTo(10);
+        assertThat(jdbcTemplate.queryForList("""
+                SELECT id::text AS id, name, ST_AsText(location) AS geometry, active
+                FROM geo.point_of_interest ORDER BY id
+                """)).isEqualTo(p3Before);
+        assertThat(jdbcTemplate.queryForList("""
+                SELECT id::text AS id, canonical_name, ST_AsText(location) AS geometry, active
+                FROM geo.destination ORDER BY id
+                """)).isEqualTo(destinationsBefore);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM admin.poi_editorial_record", Integer.class)).isZero();
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM admin.destination_editorial_record", Integer.class)).isZero();
+    }
+
+    @Test
     void administrativeReadQueriesAcceptOmittedOptionalFilters() {
         assertThat(adminEditorialRepository.list(null, null, 0, 50)).isNotNull();
 
@@ -249,7 +360,7 @@ class PostgisIntegrationTests {
                     detected_encoding,delimiter,parser_version,record_count,quarantined_count,batch_status)
                 VALUES (?, 'MINCETUR', 'filters.csv', ?, DATE '2026-11-10', 'UTF-8', ';', 'filters-test', 0, 0,
                     'STAGED_REQUIRES_REVIEW')
-                """, batchId, UUID.randomUUID().toString().replace("-", "").repeat(2));
+                """, batchId, UUID.randomUUID().toString().replace("-", "").repeat(2).toUpperCase(java.util.Locale.ROOT));
 
         assertThat(adminImportReadRepository.records(batchId, null, null, 0, 50).totalElements()).isZero();
         assertThat(adminImportReadRepository.records(batchId, "NORMALIZED_PENDING_REVIEW", "", 0, 50)

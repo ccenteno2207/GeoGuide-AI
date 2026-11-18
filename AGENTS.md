@@ -20,6 +20,16 @@ Documentation is in Spanish where practical; code is in English. Use OpenAPI for
 
 Roadmap placement does not authorize implementation. Future architecture does not automatically belong to the current phase. Proposal does not equal approval. Before implementing a major phase: audit documentation -> identify contradictions -> define and freeze scope -> obtain approval -> implement -> validate -> integrate -> validate post-merge -> formally close. A merged PR does not by itself close a phase.
 
+### Validation environments
+
+- Windows with VS Code/Codex is the normal environment for development, static analysis, builds, unit tests, and local commits.
+- The existing authorized Ubuntu integration VM on Proxmox is the preferred environment for real Docker, PostgreSQL/PostGIS, GraphHopper, and integrated validation when the phase scope authorizes it. Inspect its current state before use; do not assume historical configuration or resource availability.
+- Android physical validation requires explicit authorization for the applicable device and activity.
+- Before reporting a Docker/PostGIS validation blocker due to the Windows host, check the approved project documentation and the availability of the integration VM.
+- Do not install additional infrastructure on Windows without a justified need and explicit approval.
+- Isolated validation does not authorize changes to shared services, databases, volumes, Compose projects, networks, DNS, TLS, firewall, or public endpoints. Use uniquely named temporary resources and an isolated network/volume set; never borrow persistent resources from the shared project.
+- `CONTINUE_BY_DEFAULT` means continue ordinary, reversible technical work within the approved objective. It does not authorize infrastructure changes outside that objective. Reserve `STOP_AND_REPORT` for material blockers, scope or contract changes, security risks, destructive actions, or operations lacking authorization.
+
 ### Ubicación de worktrees auxiliares de Codex
 
 La ubicación obligatoria para nuevos worktrees auxiliares de GeoGuide AI es
