@@ -14,6 +14,7 @@ import ai.geoguide.destination.infrastructure.dataset.DestinationCatalogLoader;
 import ai.geoguide.poi.infrastructure.dataset.P3DatasetLoader;
 import ai.geoguide.poi.infrastructure.dataset.mincetur.JdbcMinceturSnapshotStagingRepository;
 import ai.geoguide.poi.infrastructure.dataset.mincetur.MinceturSnapshotParser;
+import ai.geoguide.admin.infrastructure.persistence.AdminEditorialRepository;
 import ai.geoguide.discovery.domain.DiscoveryCriteria;
 import ai.geoguide.discovery.infrastructure.persistence.JdbcRoutePoiCandidateQuery;
 import ai.geoguide.routing.domain.RouteGeometry;
@@ -84,6 +85,9 @@ class PostgisIntegrationTests {
     JdbcMinceturSnapshotStagingRepository minceturStagingRepository;
 
     @Autowired
+    AdminEditorialRepository adminEditorialRepository;
+
+    @Autowired
     MockMvc mockMvc;
 
     @BeforeEach
@@ -99,7 +103,7 @@ class PostgisIntegrationTests {
 
         assertThat(jdbcTemplate.queryForObject("SELECT PostGIS_Version()", String.class)).isNotBlank();
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM flyway_schema_history", Integer.class))
-                .isEqualTo(6);
+                .isEqualTo(7);
         assertThat(jdbcTemplate.queryForObject("""
                 SELECT COUNT(*) FROM information_schema.tables
                 WHERE table_schema = 'geo'
@@ -150,6 +154,38 @@ class PostgisIntegrationTests {
                 """, Boolean.class, firstBatchId)).isTrue();
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.destination", Integer.class)).isZero();
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest", Integer.class)).isZero();
+    }
+
+    @Test
+    void editorialPublicationRequiresIndependentGeographicAndIdentityReviewAndPreservesExistingPoi() {
+        UUID categoryId=UUID.randomUUID(), existingId=UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO geo.category(id,code,name,active) VALUES (?,?,?,true)",categoryId,"MONUMENT","Monument");
+        jdbcTemplate.update("""
+                INSERT INTO geo.point_of_interest(id,category_id,name,description,location,active,created_at,updated_at)
+                VALUES (?,?,?, ?,ST_SetSRID(ST_MakePoint(-75,-14),4326),true,now(),now())
+                """,existingId,categoryId,"Existing P3 record","Preserved");
+        var candidate=adminEditorialRepository.create(new AdminEditorialRepository.CreateEditorial(null,
+                "Synthetic MINCETUR candidate","Candidate description","MONUMENT",
+                new java.math.BigDecimal("-14.1"),new java.math.BigDecimal("-75.1"),
+                "-14.1","-75.1","SYNTHETIC_TEST_COORDINATE","Synthetic fixture coordinates generated for this test",
+                "Synthetic test terms","Synthetic fixture attribution"),"editor-test");
+
+        assertThat(candidate.state()).isEqualTo("DRAFT");
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest",Integer.class)).isEqualTo(1);
+        var geographic=adminEditorialRepository.reviewGeography(candidate.id(),0,true,"reviewer-test","Coordinates manually checked against isolated fixture evidence");
+        var identity=adminEditorialRepository.reviewIdentity(candidate.id(),geographic.version(),true,"reviewer-test","No matching P3 or destination entry in isolated fixture");
+        var submitted=adminEditorialRepository.transition(candidate.id(),identity.version(),"SUBMIT_FOR_REVIEW","editor-test","Ready for independent editorial review");
+        var published=adminEditorialRepository.transition(candidate.id(),submitted.version(),"APPROVE","reviewer-test","Approved synthetic fixture for local integration test");
+
+        assertThat(published.state()).isEqualTo("PUBLISHED");
+        assertThat(published.publishedPoiId()).isEqualTo(candidate.id());
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest",Integer.class)).isEqualTo(2);
+        assertThat(jdbcTemplate.queryForObject("SELECT name FROM geo.point_of_interest WHERE id=?",String.class,existingId))
+                .isEqualTo("Existing P3 record");
+        assertThat(jdbcTemplate.queryForObject("SELECT ST_X(location) FROM geo.point_of_interest WHERE id=?",Double.class,existingId))
+                .isEqualTo(-75.0);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.poi_provenance WHERE poi_id=?",Integer.class,candidate.id())).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM admin.poi_editorial_audit WHERE editorial_id=?",Integer.class,candidate.id())).isEqualTo(5);
     }
 
     @Test

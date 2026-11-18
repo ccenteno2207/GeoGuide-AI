@@ -17,4 +17,21 @@ class FlywayMigrationTests {
         assertThat(migration.getContentAsString(StandardCharsets.UTF_8).trim())
                 .isEqualTo("CREATE EXTENSION IF NOT EXISTS postgis;");
     }
+
+    @Test
+    void v007DefinesSeparateEditorialAndPrivateMediaLedgersWithoutPublishingImportedRows() throws IOException {
+        var migration = new ClassPathResource("db/migration/V007__admin_editorial_and_media.sql");
+        assertThat(migration.exists()).isTrue();
+        String sql = migration.getContentAsString(StandardCharsets.UTF_8);
+        assertThat(sql).contains("CREATE TABLE admin.poi_editorial_record")
+                .contains("CREATE TABLE admin.poi_editorial_audit")
+                .contains("CREATE TABLE media.poi_asset")
+                .contains("CREATE TABLE media.poi_asset_audit")
+                .contains("BEFORE UPDATE OR DELETE ON admin.poi_editorial_audit")
+                .contains("BEFORE UPDATE OR DELETE ON media.poi_asset_audit")
+                .contains("admin_editorial_geo_approval_evidence")
+                .contains("admin_editorial_identity_evidence")
+                .doesNotContain("UPDATE geo.point_of_interest SET location")
+                .doesNotContain("UPDATE geo.destination SET location");
+    }
 }

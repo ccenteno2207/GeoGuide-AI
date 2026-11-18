@@ -14,11 +14,17 @@ public record RoutePoiCandidate(
         double distanceToRouteMeters,
         double routeProgress,
         String description,
-        ProvenanceSummary provenance) {
+        ProvenanceSummary provenance,
+        String primaryMediaPath) {
 
     public RoutePoiCandidate(PoiId poiId, String name, Category category, GeoPoint location,
             boolean active, double distanceToRouteMeters, double routeProgress) {
-        this(poiId, name, category, location, active, distanceToRouteMeters, routeProgress, null, null);
+        this(poiId, name, category, location, active, distanceToRouteMeters, routeProgress, null, null, null);
+    }
+
+    public RoutePoiCandidate(PoiId poiId,String name,Category category,GeoPoint location,boolean active,
+            double distanceToRouteMeters,double routeProgress,String description,ProvenanceSummary provenance){
+        this(poiId,name,category,location,active,distanceToRouteMeters,routeProgress,description,provenance,null);
     }
 
     public RoutePoiCandidate {

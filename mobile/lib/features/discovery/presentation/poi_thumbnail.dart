@@ -58,7 +58,18 @@ class PoiThumbnail extends StatelessWidget {
       ),
     );
     final asset = PoiLocalDemoImageCatalog.assetFor(poi.id);
-    final image = asset == null
+    final remoteUrl = poi.primaryMediaUrl;
+    final image = remoteUrl != null
+        ? ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Image.network(
+              remoteUrl,
+              key: ValueKey('poi-published-media-${poi.id}'),
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => placeholder,
+            ),
+          )
+        : asset == null
         ? placeholder
         : ClipRRect(
             borderRadius: BorderRadius.circular(14),

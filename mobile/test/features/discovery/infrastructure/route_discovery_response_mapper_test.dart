@@ -48,6 +48,31 @@ void main() {
     expect(pois.single.attribution, 'Mincetur');
   });
 
+  test(
+    'accepts optional primary media URL for an explicitly published image',
+    () {
+      final pois = mapper.fromJson({
+        'results': [
+          {
+            'id': 'poi-1',
+            'name': 'Museum',
+            'category': 'MUSEUM',
+            'location': {'latitude': 10.0, 'longitude': 20.0},
+            'distanceToRouteMeters': 50,
+            'routeProgress': 0.25,
+            'reasonCodes': ['NEAR_ROUTE'],
+            'primaryMediaUrl':
+                'https://api.example.test/api/v1/pois/poi-1/media/primary',
+          },
+        ],
+      });
+      expect(
+        pois.single.primaryMediaUrl,
+        'https://api.example.test/api/v1/pois/poi-1/media/primary',
+      );
+    },
+  );
+
   test('keeps optional fields absent for backward-compatible payloads', () {
     final pois = mapper.fromJson({
       'results': [

@@ -32,6 +32,20 @@ class DioRouteDiscoveryRepository implements RouteDiscoveryRepository {
         'categories': categories.toList(growable: false),
       },
     );
+    final results = json['results'];
+    if (results is List) {
+      json['results'] = results
+          .map((result) {
+            if (result is! Map) return result;
+            final path = result['primaryMediaPath'];
+            if (path is! String || path.trim().isEmpty) return result;
+            return <String, Object?>{
+              ...result.map((key, value) => MapEntry(key.toString(), value)),
+              'primaryMediaUrl': _client.resolveApiPath(path).toString(),
+            };
+          })
+          .toList(growable: false);
+    }
     return _mapper.fromJson(json);
   }
 }

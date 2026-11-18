@@ -114,8 +114,21 @@ class SnapshotCodec {
     }
     final raw = data['results'];
     if (raw is! List) invalid();
-    final pois = const RouteDiscoveryResponseMapper().fromJson(data);
-    if (pois.length != (raw as List).length || pois.length > q.limit) invalid();
+    final offlineData = Map<String, Object?>.from(data);
+    offlineData['results'] = (raw as List)
+        .map((result) {
+          if (result is! Map) return result;
+          final poi = <String, Object?>{
+            for (final entry in result.entries)
+              if (entry.key is String) entry.key: entry.value,
+          };
+          poi.remove('primaryMediaUrl');
+          poi.remove('primaryMediaPath');
+          return poi;
+        })
+        .toList(growable: false);
+    final pois = const RouteDiscoveryResponseMapper().fromJson(offlineData);
+    if (pois.length != raw.length || pois.length > q.limit) invalid();
     final ids = <String>{};
     for (final p in pois) {
       if (!discoveryCategoryCodes.contains(p.category)) invalid();

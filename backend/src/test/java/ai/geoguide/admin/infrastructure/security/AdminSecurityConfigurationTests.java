@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
@@ -36,5 +37,25 @@ class AdminSecurityConfigurationTests {
                 .isFalse();
         assertThat(AdminSecurityConfiguration.adminAccessPolicy(true).check(() -> editor, request).isGranted())
                 .isTrue();
+    }
+
+    @Test
+    void adminJwtMustCarryTheConfiguredApiAudience() {
+        var validator = AdminSecurityConfiguration.audienceValidator("geoguide-admin-api");
+        var good = new Jwt("test-token", Instant.parse("2026-11-17T12:00:00Z"),
+                Instant.parse("2026-11-17T12:05:00Z"), Map.of("alg", "none"),
+                Map.of("sub", "reviewer", "aud", List.of("geoguide-admin-api")));
+        var wrong = new Jwt("test-token", Instant.parse("2026-11-17T12:00:00Z"),
+                Instant.parse("2026-11-17T12:05:00Z"), Map.of("alg", "none"),
+                Map.of("sub", "reviewer", "aud", List.of("other-api")));
+        assertThat(validator.validate(good)).isEqualTo(OAuth2TokenValidatorResult.success());
+        assertThat(validator.validate(wrong).hasErrors()).isTrue();
+    }
+
+    @Test
+    void enablingAdminSecurityWithoutAnIssuerOrAudienceFailsClosedBeforeNetworkAccess() {
+        assertThatThrownBy(() -> new AdminSecurityConfiguration().adminJwtDecoder(" ", " "))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("issuer URI and API audience are required");
     }
 }

@@ -1,6 +1,10 @@
 spring:
   application:
     name: geoguide-backend
+  servlet:
+    multipart:
+      max-file-size: ${GEOGUIDE_MEDIA_MAX_BYTES:10MB}
+      max-request-size: ${GEOGUIDE_MEDIA_MAX_BYTES:10MB}
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -22,6 +26,16 @@ geoguide:
       enabled: ${GEOGUIDE_ADMIN_SECURITY_ENABLED:false}
       roles-claim: ${GEOGUIDE_ADMIN_SECURITY_ROLES_CLAIM:roles}
       issuer-uri: ${GEOGUIDE_ADMIN_SECURITY_ISSUER_URI:}
+      audience: ${GEOGUIDE_ADMIN_SECURITY_AUDIENCE:}
+  media:
+    max-bytes: ${GEOGUIDE_MEDIA_MAX_BYTES:10485760}
+    max-pixels: ${GEOGUIDE_MEDIA_MAX_PIXELS:40000000}
+    storage:
+      enabled: ${GEOGUIDE_MEDIA_STORAGE_ENABLED:false}
+      endpoint: ${GEOGUIDE_MEDIA_STORAGE_ENDPOINT:}
+      access-key: ${GEOGUIDE_MEDIA_STORAGE_ACCESS_KEY:}
+      secret-key: ${GEOGUIDE_MEDIA_STORAGE_SECRET_KEY:}
+      bucket: ${GEOGUIDE_MEDIA_STORAGE_BUCKET:geoguide-poi-media-private}
   routing:
     base-url: ${ROUTING_BASE_URL:http://graphhopper:8989}
     timeout: ${ROUTING_TIMEOUT:10s}

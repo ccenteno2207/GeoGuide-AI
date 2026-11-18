@@ -5,8 +5,28 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geoguide_ai/core/network/app_failure.dart';
 import 'package:geoguide_ai/core/network/geoguide_http_client.dart';
+import 'package:geoguide_ai/core/network/backend_configuration.dart';
 
 void main() {
+  test(
+    'published image API paths resolve only against the configured backend',
+    () {
+      final client = GeoGuideHttpClient(
+        configuration: BackendConfiguration(
+          Uri.parse('https://api.example.test:5443'),
+        ),
+      );
+      expect(
+        client.resolveApiPath('/api/v1/pois/abc/media/primary').toString(),
+        'https://api.example.test:5443/api/v1/pois/abc/media/primary',
+      );
+      expect(
+        () => client.resolveApiPath('https://attacker.test/image'),
+        throwsArgumentError,
+      );
+    },
+  );
+
   group('mapDioException', () {
     test(
       'TLS and authorization failures never become cacheable network failures',

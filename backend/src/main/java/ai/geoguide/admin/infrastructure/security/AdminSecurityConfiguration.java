@@ -15,6 +15,12 @@ import org.springframework.security.web.access.intercept.RequestAuthorizationCon
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtDecoders;
+import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.OAuth2TokenValidator;
+import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -27,11 +33,25 @@ public class AdminSecurityConfiguration {
 
     @Bean
     @ConditionalOnProperty(name = "geoguide.admin.security.enabled", havingValue = "true")
-    JwtDecoder adminJwtDecoder(@Value("${geoguide.admin.security.issuer-uri}") String issuerUri) {
-        if (issuerUri == null || issuerUri.isBlank()) {
-            throw new IllegalStateException("An OIDC issuer URI is required when admin security is enabled.");
+    JwtDecoder adminJwtDecoder(@Value("${geoguide.admin.security.issuer-uri}") String issuerUri,
+            @Value("${geoguide.admin.security.audience}") String audience) {
+        if (issuerUri == null || issuerUri.isBlank() || audience == null || audience.isBlank()) {
+            throw new IllegalStateException("An OIDC issuer URI and API audience are required when admin security is enabled.");
         }
-        return JwtDecoders.fromIssuerLocation(issuerUri);
+        JwtDecoder resolved = JwtDecoders.fromIssuerLocation(issuerUri);
+        if (!(resolved instanceof NimbusJwtDecoder decoder)) {
+            throw new IllegalStateException("The configured OIDC issuer did not produce a supported JWT decoder.");
+        }
+        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
+                JwtValidators.createDefaultWithIssuer(issuerUri), audienceValidator(audience.trim())));
+        return decoder;
+    }
+
+    static OAuth2TokenValidator<Jwt> audienceValidator(String expectedAudience) {
+        if (expectedAudience == null || expectedAudience.isBlank()) throw new IllegalArgumentException("API audience is required.");
+        return token -> token.getAudience().contains(expectedAudience)
+                ? OAuth2TokenValidatorResult.success()
+                : OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token", "Required API audience is missing.", null));
     }
 
     @Bean

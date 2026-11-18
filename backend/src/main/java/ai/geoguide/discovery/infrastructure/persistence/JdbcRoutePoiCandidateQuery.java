@@ -34,6 +34,7 @@ public class JdbcRoutePoiCandidateQuery implements RoutePoiCandidateQuery {
                 SELECT p.id, p.name, p.active, c.id AS category_id, c.code AS category_code,
                        c.name AS category_name, c.active AS category_active, p.description,
                        prov.source_system, prov.source_url, prov.attribution,
+                       CASE WHEN media_asset.id IS NULL THEN NULL ELSE '/api/v1/pois/' || p.id || '/media/primary' END AS primary_media_path,
                        ST_Y(p.location) AS latitude, ST_X(p.location) AS longitude,
                        ST_Distance(p.location::geography, route.geometry::geography) AS distance_meters,
                        ST_LineLocatePoint(route.geometry, p.location) AS route_progress
@@ -47,6 +48,9 @@ public class JdbcRoutePoiCandidateQuery implements RoutePoiCandidateQuery {
                     ORDER BY source_system, logical_key
                     LIMIT 1
                 ) prov ON true
+                LEFT JOIN LATERAL (
+                    SELECT id FROM media.poi_asset WHERE poi_id=p.id AND review_state='PUBLISHED' AND is_primary LIMIT 1
+                ) media_asset ON true
                 WHERE p.active = true
                   AND p.location && ST_Expand(route.geometry, ? / 111320.0)
                   AND ST_DWithin(p.location::geography, route.geometry::geography, ?)
@@ -64,7 +68,8 @@ public class JdbcRoutePoiCandidateQuery implements RoutePoiCandidateQuery {
                 new GeoPoint(rs.getDouble("latitude"), rs.getDouble("longitude")), rs.getBoolean("active"),
                 rs.getDouble("distance_meters"), rs.getDouble("route_progress"), rs.getString("description"),
                 rs.getString("source_system") == null ? null : new ProvenanceSummary(
-                        rs.getString("source_system"), rs.getString("source_url"), rs.getString("attribution"))), parameters.toArray());
+                        rs.getString("source_system"), rs.getString("source_url"), rs.getString("attribution")),
+                rs.getString("primary_media_path")), parameters.toArray());
     }
 
     private String asGeoJson(RouteGeometry geometry) {
