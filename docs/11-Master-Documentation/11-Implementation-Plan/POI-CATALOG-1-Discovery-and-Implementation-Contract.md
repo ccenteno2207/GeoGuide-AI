@@ -1,6 +1,6 @@
 # POI-CATALOG-1 — Discovery y propuesta de implementación
 
-**Estado:** `READY_FOR_APPROVAL` — propuesta; no autoriza implementación funcional
+**Estado:** `FROZEN` — aprobado por decisión del propietario POI-CATALOG-1 D01–D06
 **Baseline revisado:** `origin/main` `7b7fb9c9aec8efe4076a048fb224e4ec92681155` (PR #112 integrado)
 **Fecha:** 2026-11-18
 
@@ -8,7 +8,7 @@
 
 Definir una expansión controlada del catálogo turístico MINCETUR y su flujo de revisión para que recursos elegibles puedan publicarse, por decisión editorial, como destinos buscables, POIs descubribles en ruta o ambos. Esta propuesta reúne los hallazgos de POI-DATA-1, ADMIN-1 y POI-MEDIA-1 y especifica las decisiones necesarias para una implementación posterior.
 
-Este documento no congela una fase ni autoriza código, migraciones, publicación, despliegue o integración. La aprobación humana de esta propuesta deberá identificar su revisión exacta antes de iniciar implementación. No modifica retrospectivamente P8, P9, UI2-SEARCH-001, V006/V007 ni la evidencia histórica. `P12_5`, cierre maestro UI-2 y Production Readiness permanecen fuera de alcance.
+La revisión aprobada es el commit `8cd835bec8cf7c30e66cf36966d7e2254e5b5c1c`, complementado únicamente por las decisiones D01–D06 registradas en §11. La autorización permite implementación funcional local/aislada dentro del contrato. No autoriza publicación de registros reales en entornos compartidos, despliegues ni integración GitHub. No modifica retrospectivamente P8, P9, UI2-SEARCH-001, V006/V007 ni evidencia histórica. `P12_5`, cierre maestro UI-2 y Production Readiness permanecen fuera de alcance.
 
 ## 2. Baseline y hechos comprobados
 
@@ -208,21 +208,25 @@ Los pasos siguientes son una secuencia propuesta ejecutable dentro del contrato 
 
 No se propone automatizar PR, merge, despliegue, importación compartida ni aprobación física.
 
-## 11. Decisiones para aprobación humana
+## 11. Decisiones aprobadas y alcance congelado
 
-1. Aprobar o rechazar la revisión exacta de este contrato y, con ello, autorizar (o no) una futura fase de implementación local.
-2. Confirmar el modelo de relación destination↔POI propuesto, tipos `SAME_RESOURCE` / `RELATED_RESOURCE`, y si se registran borradores de relación o solo vínculos ya revisados.
-3. Confirmar política de aprobaciones separadas para piloto (geo/identity/publication) y si un actor puede desempeñar más de un rol con motivo registrado.
-4. Confirmar el piloto inicial recomendado Lima–Canta–Obrajillo y el objetivo orientativo 20–50 sin cuota mínima; o especificar otro corredor.
-5. Confirmar si el piloto tiene como objetivo ambos canales (destino + Route Discovery) o si los resultados pueden aceptarse en solo uno cuando falte evidencia del otro.
-6. Confirmar si una publicación editorial local es solo prueba aislada o si una integración futura compartida requerirá autorización separada por registro/lote. Esta propuesta presupone aprobación separada antes de cualquier entorno operativo.
+El propietario aprobó esta revisión y registró D01–D06. Estas decisiones concretan las alternativas propuestas y prevalecen únicamente sobre cualquier frase incompatible de este documento; no reescriben contratos históricos.
 
-Hasta resolver esas decisiones, cualquier implementación de persistencia destination↔POI, publicación de registros MINCETUR o selección definitiva del corredor permanece no autorizada.
+| ID | Decisión congelada |
+|---|---|
+| D01 | Congelar esta revisión con D01–D06 como contrato POI-CATALOG-1. |
+| D02 | Mantener `geo.destination` y `geo.point_of_interest` separados. Implementar relación explícita y auditable con tipos `SAME_RESOURCE` y `RELATED_RESOURCE`, admitiendo relaciones pendientes y aprobadas. No sincronizar coordenadas ni estados automáticamente. |
+| D03 | Las decisiones de geografía, identidad y publicación son independientes y registran actor, fecha, razón, evidencia y versión. En el piloto una persona puede cumplir varios roles autorizados, pero cada acción queda separada y auditada. |
+| D04 | El piloto será Lima–Canta–Obrajillo. Objetivo orientativo de 20–50 registros, sin mínimo y sin relajar criterios de calidad. |
+| D05 | La elegibilidad es independiente: destino, POI o ambos. Un POI sin acceso vial confirmado no se habilita automáticamente como destino navegable. |
+| D06 | Se autorizan desarrollo y validación local/aislada con datos sintéticos. No publicar registros reales en entornos compartidos sin autorización posterior. |
+
+La implementación local puede incorporar filas y fixtures sintéticos al stack aislado. El snapshot real existente permanece en staging y no se aprueban sus registros mediante este freeze. Cualquier futuro uso/publicación de registros reales en un entorno compartido requiere decisión posterior.
 
 ```ini
 POI_CATALOG_1_DISCOVERY = COMPLETE
-POI_CATALOG_1_CONTRACT = READY_FOR_APPROVAL
-POI_CATALOG_1_IMPLEMENTATION = NOT_AUTHORIZED
+POI_CATALOG_1_CONTRACT = FROZEN
+POI_CATALOG_1_IMPLEMENTATION = AUTHORIZED_LOCAL_ISOLATED
 MINCETUR_6_331 = NORMALIZED_PENDING_REVIEW
 MINCETUR_10 = QUARANTINED
 MINCETUR_PUBLICATION = NONE
