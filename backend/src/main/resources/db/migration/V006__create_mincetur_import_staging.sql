@@ -42,15 +42,24 @@ CREATE TABLE geo.mincetur_import_record (
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT mincetur_record_row_positive CHECK (row_number > 0),
     CONSTRAINT mincetur_record_status_valid CHECK (record_status IN (
-        'COORDINATE_FORMAT_AMBIGUOUS', 'COORDINATE_MAPPING_UNVERIFIED',
+        'NORMALIZED_PENDING_REVIEW', 'COORDINATE_FORMAT_AMBIGUOUS', 'COORDINATE_MAPPING_UNVERIFIED',
         'DUPLICATE_SOURCE_ID', 'MALFORMED_ROW'
     )),
     CONSTRAINT mincetur_record_coordinate_pair CHECK (
         (normalized_latitude IS NULL AND normalized_longitude IS NULL)
         OR (normalized_latitude IS NOT NULL AND normalized_longitude IS NOT NULL)
     ),
-    CONSTRAINT mincetur_record_not_published CHECK (
-        normalized_latitude IS NULL AND normalized_longitude IS NULL
+    CONSTRAINT mincetur_record_candidate_pair_status CHECK (
+        (record_status = 'NORMALIZED_PENDING_REVIEW'
+            AND normalized_latitude BETWEEN -18.5 AND 0
+            AND normalized_longitude BETWEEN -82.5 AND -68.0
+            AND normalization_rule IS NOT NULL
+            AND validation_evidence IS NOT NULL
+            AND quarantine_reason IS NULL)
+        OR
+        (record_status <> 'NORMALIZED_PENDING_REVIEW'
+            AND normalized_latitude IS NULL
+            AND normalized_longitude IS NULL)
     ),
     CONSTRAINT mincetur_record_batch_row_unique UNIQUE (batch_id, row_number)
 );

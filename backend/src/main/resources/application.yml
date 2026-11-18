@@ -16,6 +16,12 @@ geoguide:
   mincetur-import:
     enabled: ${GEOGUIDE_MINCETUR_IMPORT_ENABLED:false}
     source-path: ${GEOGUIDE_MINCETUR_SOURCE_PATH:}
+    coordinate-manifest: ${GEOGUIDE_MINCETUR_COORDINATE_MANIFEST:classpath:data/destination-search/mincetur-20261110-coordinate-recovery-v1.json}
+  admin:
+    security:
+      enabled: ${GEOGUIDE_ADMIN_SECURITY_ENABLED:false}
+      roles-claim: ${GEOGUIDE_ADMIN_SECURITY_ROLES_CLAIM:roles}
+      issuer-uri: ${GEOGUIDE_ADMIN_SECURITY_ISSUER_URI:}
   routing:
     base-url: ${ROUTING_BASE_URL:http://graphhopper:8989}
     timeout: ${ROUTING_TIMEOUT:10s}

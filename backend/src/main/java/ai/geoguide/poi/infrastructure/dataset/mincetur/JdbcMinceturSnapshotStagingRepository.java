@@ -23,7 +23,9 @@ public class JdbcMinceturSnapshotStagingRepository {
 
     @Transactional
     public UUID stage(Snapshot snapshot) {
-        int quarantined = snapshot.records().size();
+        int quarantined = Math.toIntExact(snapshot.records().stream()
+                .filter(record -> record.status() != MinceturSnapshotParser.RecordStatus.NORMALIZED_PENDING_REVIEW)
+                .count());
         jdbc.update("""
                 INSERT INTO geo.mincetur_import_batch(
                     id, source_system, source_file_name, source_sha256, source_cutoff,

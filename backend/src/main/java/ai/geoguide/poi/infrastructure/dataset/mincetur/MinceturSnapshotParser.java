@@ -213,6 +213,7 @@ public final class MinceturSnapshotParser {
     private record CoordinateAssessment(RecordStatus status, String reason) {}
 
     public enum RecordStatus {
+        NORMALIZED_PENDING_REVIEW,
         COORDINATE_FORMAT_AMBIGUOUS,
         COORDINATE_MAPPING_UNVERIFIED,
         DUPLICATE_SOURCE_ID,
@@ -235,9 +236,15 @@ public final class MinceturSnapshotParser {
                     null, null, null, null);
         }
 
-        private SnapshotRecord withStatus(RecordStatus nextStatus, String reason) {
+        SnapshotRecord withStatus(RecordStatus nextStatus, String reason) {
             return new SnapshotRecord(rowNumber, sourceRecordId, rawFields, nextStatus, reason,
                     normalizedLatitude, normalizedLongitude, normalizationRule, validationEvidence);
+        }
+
+        SnapshotRecord withNormalizedCoordinates(BigDecimal latitude, BigDecimal longitude,
+                String rule, String evidence) {
+            return new SnapshotRecord(rowNumber, sourceRecordId, rawFields,
+                    RecordStatus.NORMALIZED_PENDING_REVIEW, null, latitude, longitude, rule, evidence);
         }
     }
 }
