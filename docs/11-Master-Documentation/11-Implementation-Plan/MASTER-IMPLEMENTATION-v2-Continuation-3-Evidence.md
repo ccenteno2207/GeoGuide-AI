@@ -131,6 +131,7 @@ Esta sección actualiza los pendientes de infraestructura registrados arriba par
 ### Defectos, limitaciones y limpieza
 
 - Defectos corregidos localmente: consultas administrativas con filtros nulos no tipados en PostgreSQL y exposición de claves privadas de MinIO en DTO administrativos.
+- Correcciones, pruebas focalizadas y esta evidencia: commit local `04a9627421db515ca672c1c3efc25ac23282b58d` en `codex/master-implementation-v2`.
 - No se utilizaron fotografías reales del piloto, no se instalaron APK, no se hicieron cambios en servicios compartidos ni se desplegó nada.
 - Resultado: `VALIDATION_4B = PARTIAL`. Persisten la falta de validación contra GraphHopper real, la inspección de portal en navegador y la imposibilidad de observar el código HTTP del rechazo por tamaño; no hay evidencia de regresión de servicios existentes.
 - Limpieza completada: duración del token sintético restaurada a 300 segundos; procesos locales y túnel loopback detenidos; contenedores, red, volúmenes y directorios temporales exclusivos eliminados. Se verificó que no quedan listeners de VALIDATION-4B en los puertos locales usados. Los seis servicios preexistentes siguen `running` y con la misma salud observada al inicio; la memoria disponible de la VM pasó de aproximadamente 4,8 GiB durante la prueba a 5,6 GiB después.
