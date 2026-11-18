@@ -148,3 +148,20 @@ P12_5 = NOT_AUTHORIZED
 UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
 PRODUCTION_READINESS = NOT_DECLARED
 ```
+
+## Cierre de limpieza local — 2026-11-18
+
+El propietario informó que completó manualmente la limpieza Windows pendiente. Se verificó mediante consultas de solo lectura que no existen `D:\Codex\poi-catalog-1-validation-20261118-fca48c38` ni `%TEMP%\poicat1_validation_path.txt`. No se ejecutaron operaciones de borrado ni se repitieron suites.
+
+Se conservan íntegros los resultados técnicos de la sección anterior y los resultados `PARTIAL` históricos previos. `git fetch origin` confirma `origin/main = 7b7fb9c9aec8efe4076a048fb224e4ec92681155`; antes de esta actualización documental, la rama estaba siete commits adelante y cero detrás y el worktree estaba limpio. La revisión del diff completo del rango y de los cambios documentales pasó `git diff --check` y el escaneo de secretos; no contiene APK, imágenes, PBF, `.env` ni artefactos de ejecución.
+
+```ini
+TEMPORARY_WINDOWS_STAGING_CLEANUP = PASS
+POI_CATALOG_1_VALIDATION = PASS
+POI_CATALOG_1_READY_FOR_PR_REVIEW = YES
+MINCETUR_PUBLICATION = NONE
+REAL_PHOTOS = EXCLUDED
+P12_5 = NOT_AUTHORIZED
+UI_2_MASTER_CLOSURE = NOT_AUTHORIZED
+PRODUCTION_READINESS = NOT_DECLARED
+```
