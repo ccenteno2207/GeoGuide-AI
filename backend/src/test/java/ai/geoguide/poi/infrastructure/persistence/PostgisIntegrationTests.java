@@ -12,6 +12,8 @@ import ai.geoguide.destination.application.port.DestinationRepository;
 import ai.geoguide.destination.domain.Destination;
 import ai.geoguide.destination.infrastructure.dataset.DestinationCatalogLoader;
 import ai.geoguide.poi.infrastructure.dataset.P3DatasetLoader;
+import ai.geoguide.poi.infrastructure.dataset.mincetur.JdbcMinceturSnapshotStagingRepository;
+import ai.geoguide.poi.infrastructure.dataset.mincetur.MinceturSnapshotParser;
 import ai.geoguide.discovery.domain.DiscoveryCriteria;
 import ai.geoguide.discovery.infrastructure.persistence.JdbcRoutePoiCandidateQuery;
 import ai.geoguide.routing.domain.RouteGeometry;
@@ -44,7 +46,8 @@ import org.testcontainers.utility.DockerImageName;
 @Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import({JdbcPoiRepository.class, JdbcCategoryRepository.class, JdbcRoutePoiCandidateQuery.class})
+@Import({JdbcPoiRepository.class, JdbcCategoryRepository.class, JdbcRoutePoiCandidateQuery.class,
+        JdbcMinceturSnapshotStagingRepository.class})
 class PostgisIntegrationTests {
 
     @Container
@@ -78,10 +81,14 @@ class PostgisIntegrationTests {
     ObjectMapper objectMapper;
 
     @Autowired
+    JdbcMinceturSnapshotStagingRepository minceturStagingRepository;
+
+    @Autowired
     MockMvc mockMvc;
 
     @BeforeEach
     void cleanP3Data() {
+        jdbcTemplate.execute("TRUNCATE geo.mincetur_import_record, geo.mincetur_import_batch CASCADE");
         jdbcTemplate.execute("TRUNCATE geo.poi_provenance, geo.point_of_interest, geo.category CASCADE");
         jdbcTemplate.execute("TRUNCATE geo.destination_alias, geo.destination CASCADE");
     }
@@ -92,7 +99,7 @@ class PostgisIntegrationTests {
 
         assertThat(jdbcTemplate.queryForObject("SELECT PostGIS_Version()", String.class)).isNotBlank();
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM flyway_schema_history", Integer.class))
-                .isEqualTo(5);
+                .isEqualTo(6);
         assertThat(jdbcTemplate.queryForObject("""
                 SELECT COUNT(*) FROM information_schema.tables
                 WHERE table_schema = 'geo'
@@ -116,6 +123,33 @@ class PostgisIntegrationTests {
                 SELECT data_type FROM information_schema.columns
                 WHERE table_schema = 'geo' AND table_name = 'point_of_interest' AND column_name = 'created_at'
                 """, String.class)).isEqualTo("timestamp with time zone");
+    }
+
+    @Test
+    void stagingSnapshotIsIdempotentAndDoesNotPublishOrCreateGeometry() throws Exception {
+        String csv = String.join("\r\n",
+                "REGIÓN;PROVINCIA;DISTRITO;CODIGO DEL RECURSO;NOMBRE DEL RECURSO;CATEGORÍA;TIPO DE CATEGORÍA;SUB TIPO CATEGORÍA;URL;LATITUD;LONGITUD;FECHA_DE_CORTE",
+                "Ica;Ica;ICA;237;Laguna De Huacachina;1. SITIOS NATURALES;g. Cuerpo de Agua;Lagunas;https://example.test/237;-7.576.291.501.522.060;-14.087.854.051.458.200;20261110",
+                "");
+        var snapshot = new MinceturSnapshotParser().parse("sample.csv", csv.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        var firstBatchId = minceturStagingRepository.stage(snapshot);
+        var secondBatchId = minceturStagingRepository.stage(snapshot);
+
+        assertThat(secondBatchId).isEqualTo(firstBatchId);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.mincetur_import_batch", Integer.class))
+                .isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.mincetur_import_record", Integer.class))
+                .isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT record_status FROM geo.mincetur_import_record WHERE batch_id = ?
+                """, String.class, firstBatchId)).isEqualTo("COORDINATE_FORMAT_AMBIGUOUS");
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT normalized_latitude IS NULL AND normalized_longitude IS NULL
+                FROM geo.mincetur_import_record WHERE batch_id = ?
+                """, Boolean.class, firstBatchId)).isTrue();
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.destination", Integer.class)).isZero();
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest", Integer.class)).isZero();
     }
 
     @Test

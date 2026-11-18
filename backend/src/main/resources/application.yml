@@ -13,6 +13,9 @@ management:
         include: health
 
 geoguide:
+  mincetur-import:
+    enabled: ${GEOGUIDE_MINCETUR_IMPORT_ENABLED:false}
+    source-path: ${GEOGUIDE_MINCETUR_SOURCE_PATH:}
   routing:
     base-url: ${ROUTING_BASE_URL:http://graphhopper:8989}
     timeout: ${ROUTING_TIMEOUT:10s}
