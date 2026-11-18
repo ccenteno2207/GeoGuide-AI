@@ -69,6 +69,10 @@ La tabla anterior funciona como cola de priorización, no como selección editor
 
 El resultado PARTIAL de la validación integrada anterior se conserva como historial. Esta rama no declara PASS integrado basándose en mocks o pruebas omitidas.
 
+### Seguimiento de validación integral — 2026-11-18
+
+Se inspeccionó el host local antes de crear recursos. No hay ejecutable Docker ni servicio Docker, Podman, PostgreSQL o PostGIS instalados; `wsl --status` informa que WSL no tiene distribuciones instaladas. Tampoco se encontraron utilidades `psql`, `pg_ctl` o `pg_isready`, ni un servicio PostgreSQL. El host reportó 8 GiB de RAM total y aproximadamente 1 GiB libre. No se instalaron runtimes o distribuciones, no se descargaron imágenes ni se crearon contenedores, redes, volúmenes, bases o listeners temporales. No se usó VM ni servicio compartido. Sin un motor PostgreSQL/PostGIS aislado disponible, no se pudo ejecutar `PostgisIntegrationTests`, aplicar Flyway V001–V008, correr la importación/idempotencia en una base real o validar el flujo completo con GraphHopper. Los 14 casos PostGIS permanecen omitidos por falta de Docker; las pruebas aplicables del CSV se ejecutaron aparte y pasaron. Este resultado es una limitación de entorno, no PASS de integración.
+
 ## Riesgos y límites
 
 - Los candidatos normalizados no son ubicaciones verificadas ni publicables. Mantener staging y cuarentena; no ejecutar el importador sobre base compartida.
