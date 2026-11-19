@@ -67,4 +67,13 @@ La limpieza del directorio Windows `D:\Codex\poi-data-2-v009-validation-20261118
 - `backend/src/test/java/ai/geoguide/poi/infrastructure/dataset/mincetur/MinceturTaxonomyFilterTests.java`
 - `backend/src/test/java/ai/geoguide/poi/infrastructure/persistence/PostgisIntegrationTests.java`
 
-La implementación es local y no publicada. `MINCETUR_PUBLICATION` permanece `NOT_EXECUTED`.
+El código funcional y esta evidencia de implementación se integraron mediante el PR #115. `MINCETUR_PUBLICATION` permanece `NOT_EXECUTED`; el merge no importó ni publicó registros en el catálogo operativo.
+
+## Integración
+
+- PR: [#115](https://github.com/ccenteno2207/GeoGuide-AI/pull/115), merge normal el 2026-11-19.
+- Commit funcional integrado: `fcf323b313fa1afad1d3eb3ace9227437eca8875`.
+- Merge commit: `0f342508f3adc629d6fc85ab7ecb5cdf36987e59`.
+- Baseline de `origin/main` verificado después del merge: `0f342508f3adc629d6fc85ab7ecb5cdf36987e59`.
+- GitHub no reportó checks para el PR (`NO_CHECKS_REPORTED`); las pruebas locales descritas arriba son la evidencia de validación, no un resultado de CI.
+- `WINDOWS_TEMPORARY_STAGING_CLEANUP = BLOCKED` continúa pendiente según la nota anterior; el artefacto permanece fuera del repositorio.
