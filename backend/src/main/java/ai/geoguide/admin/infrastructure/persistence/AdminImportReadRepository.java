@@ -35,14 +35,16 @@ public class AdminImportReadRepository {
                 rs.getLong("destination_drafts"), rs.getLong("unassigned_candidates")));
     }
 
-    public Page<ImportRecordView> records(UUID batchId, String status, String query,int page,int size) {
+    public Page<ImportRecordView> records(UUID batchId, String status, String query, String locality, String category, int page,int size) {
         int safePage=Math.max(0,Math.min(page,1_000_000)),safeSize=Math.max(1,Math.min(size,500)),offset=safePage*safeSize;
         long total=jdbc.queryForObject("""
                 SELECT count(*) FROM geo.mincetur_import_record r
                 WHERE r.batch_id=? AND (CAST(? AS VARCHAR) IS NULL OR r.record_status=?)
                   AND (CAST(? AS TEXT) IS NULL OR r.source_record_id=? OR r.raw_fields->>'NOMBRE DEL RECURSO' ILIKE '%'||?||'%')
+                  AND (CAST(? AS TEXT) IS NULL OR concat_ws(' ', r.raw_fields->>'DISTRITO', r.raw_fields->>'PROVINCIA', r.raw_fields->>'REGIÓN') ILIKE '%'||?||'%')
+                  AND (CAST(? AS TEXT) IS NULL OR r.raw_fields->>'CATEGORÍA' = ?)
                 """,
-                Long.class,batchId,status,status,query,query,query);
+                Long.class,batchId,status,status,query,query,query,locality,locality,category,category);
         List<ImportRecordView> content=jdbc.query("""
                 SELECT r.id,r.source_record_id,r.row_number,r.raw_fields->>'NOMBRE DEL RECURSO' AS name,
                        r.raw_fields->>'CATEGORÍA' AS source_category,r.raw_fields->>'REGIÓN' AS region,
@@ -55,6 +57,8 @@ public class AdminImportReadRepository {
                 LEFT JOIN admin.destination_editorial_record d ON d.import_record_id=r.id
                 WHERE r.batch_id=? AND (CAST(? AS VARCHAR) IS NULL OR r.record_status=?)
                   AND (CAST(? AS TEXT) IS NULL OR r.source_record_id=? OR r.raw_fields->>'NOMBRE DEL RECURSO' ILIKE '%'||?||'%')
+                  AND (CAST(? AS TEXT) IS NULL OR concat_ws(' ', r.raw_fields->>'DISTRITO', r.raw_fields->>'PROVINCIA', r.raw_fields->>'REGIÓN') ILIKE '%'||?||'%')
+                  AND (CAST(? AS TEXT) IS NULL OR r.raw_fields->>'CATEGORÍA' = ?)
                 ORDER BY r.row_number LIMIT ? OFFSET ?
                 """, (rs, n) -> new ImportRecordView(rs.getObject("id", UUID.class),rs.getString("source_record_id"),
                 rs.getInt("row_number"),rs.getString("name"),rs.getString("source_category"),rs.getString("region"),
@@ -65,7 +69,7 @@ public class AdminImportReadRepository {
                 rs.getBoolean("has_destination_editorial_record"), MinceturReviewClassification.classify(
                         rs.getString("record_status"), rs.getBoolean("has_editorial_record"),
                         rs.getBoolean("has_destination_editorial_record")).name()),
-                batchId,status,status,query,query,query,safeSize,offset);
+                batchId,status,status,query,query,query,locality,locality,category,category,safeSize,offset);
         return new Page<>(content,safePage,safeSize,total);
     }
 

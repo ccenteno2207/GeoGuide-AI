@@ -27,6 +27,7 @@ geoguide:
       enabled: ${GEOGUIDE_ADMIN_SECURITY_ENABLED:false}
       roles-claim: ${GEOGUIDE_ADMIN_SECURITY_ROLES_CLAIM:roles}
       issuer-uri: ${GEOGUIDE_ADMIN_SECURITY_ISSUER_URI:}
+      jwk-set-uri: ${GEOGUIDE_ADMIN_SECURITY_JWK_SET_URI:}
       audience: ${GEOGUIDE_ADMIN_SECURITY_AUDIENCE:}
   media:
     max-bytes: ${GEOGUIDE_MEDIA_MAX_BYTES:10485760}

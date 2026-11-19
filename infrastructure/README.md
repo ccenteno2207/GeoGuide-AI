@@ -1,5 +1,37 @@
 # Infraestructura local — P1
 
+## Portal ADMIN-POI-01
+
+El portal administrativo se incorpora sólo al combinar `compose.admin.yaml` con
+los archivos Compose habituales. El overlay agrega un cliente OIDC público con
+Authorization Code + PKCE, Keycloak fijado a `26.4.7`, una base PostgreSQL privada
+propia para identidad y un frontend estático. Ninguno publica puertos de host; sólo
+Nginx conserva los listeners 80/443. Keycloak incluye roles `ADMINISTRATOR`,
+`EDITOR` y `REVIEWER`; Spring valida issuer, audiencia y el claim `roles`. Sin el
+overlay o sin issuer/audiencia configurados, la API administrativa sigue denegada.
+
+Los secretos del proveedor no se guardan en Git. En la VM se suministran mediante
+un archivo externo con permisos `0600`, junto al `.env` de infraestructura:
+
+```text
+docker compose --env-file infrastructure/.env \
+  --env-file /etc/geoguide/secrets/admin-poi-01.env \
+  -f infrastructure/compose.yaml \
+  -f infrastructure/compose.tls.yaml \
+  -f infrastructure/compose.admin.yaml config --quiet
+```
+
+El overlay crea el volumen aislado `admin_keycloak_data`; no reutiliza la base
+principal para Keycloak. Los topes de recursos son 96 MiB para el portal, 384 MiB
+para su PostgreSQL y 896 MiB para Keycloak (máximo agregado configurado: 1.34 GiB,
+0.25 + 0.5 + 0.75 vCPU). La activación y desactivación de POIs es una operación
+backend auditada; reactivar un registro existente requiere una solicitud editorial
+aprobada.
+
+La importación MINCETUR permanece opt-in y no se ejecuta por el mero despliegue del
+portal. Debe habilitarse sólo con el snapshot original identificado por SHA-256 y
+montado de sólo lectura; importar staging no publica candidatos.
+
 Esta carpeta contiene la infraestructura local validada en P1 y la incorporación del
 backend correspondiente a P2.7. Levanta PostgreSQL/PostGIS, el backend, Redis, MinIO y
 GraphHopper. El backend se conecta únicamente a PostgreSQL en este checkpoint; no integra

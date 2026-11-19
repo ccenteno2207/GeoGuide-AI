@@ -12,6 +12,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.mock.web.MockHttpServletRequest;
+import ai.geoguide.admin.infrastructure.http.AdminCatalogController;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 class AdminSecurityConfigurationTests {
     @Test
@@ -58,8 +60,28 @@ class AdminSecurityConfigurationTests {
 
     @Test
     void enablingAdminSecurityWithoutAnIssuerOrAudienceFailsClosedBeforeNetworkAccess() {
-        assertThatThrownBy(() -> new AdminSecurityConfiguration().adminJwtDecoder(" ", " "))
+        assertThatThrownBy(() -> new AdminSecurityConfiguration().adminJwtDecoder(" ", " ", ""))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("issuer URI and API audience are required");
+    }
+
+    @Test
+    void internalJwkEndpointCanValidateTokensAgainstThePublicIssuer() {
+        var decoder = new AdminSecurityConfiguration().adminJwtDecoder(
+                "https://identity.example/auth/realms/geoguide-admin", "geoguide-admin-api",
+                "http://keycloak:8080/auth/realms/geoguide-admin/protocol/openid-connect/certs");
+        assertThat(decoder).isInstanceOf(org.springframework.security.oauth2.jwt.NimbusJwtDecoder.class);
+    }
+
+    @Test
+    void activationEndpointsRequireAdministratorRoleAtMethodBoundary() throws Exception {
+        var editorial = AdminCatalogController.class.getMethod("activation", java.util.UUID.class,
+                AdminCatalogController.ActivationRequest.class, org.springframework.security.core.Authentication.class)
+                .getAnnotation(PreAuthorize.class);
+        var existing = AdminCatalogController.class.getMethod("setPoiActivation", java.util.UUID.class,
+                AdminCatalogController.ExistingPoiActivationRequest.class, org.springframework.security.core.Authentication.class)
+                .getAnnotation(PreAuthorize.class);
+        assertThat(editorial.value()).isEqualTo("hasRole('ADMINISTRATOR')");
+        assertThat(existing.value()).isEqualTo("hasRole('ADMINISTRATOR')");
     }
 }
