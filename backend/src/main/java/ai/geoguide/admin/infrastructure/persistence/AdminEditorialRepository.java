@@ -80,17 +80,21 @@ public class AdminEditorialRepository {
             int inserted = jdbc.update("""
                     INSERT INTO admin.poi_editorial_record(id,import_record_id,source_record_id,name,administrative_context,
                         category_code,latitude,longitude,raw_latitude,raw_longitude,coordinate_normalization_rule,
-                        coordinate_validation_evidence,source_url,created_by)
+                        coordinate_validation_evidence,source_url,source_license,source_attribution,created_by)
                     SELECT ?, r.id, r.source_record_id, r.raw_fields->>'NOMBRE DEL RECURSO',
                         concat_ws(' — ', r.raw_fields->>'DISTRITO', r.raw_fields->>'PROVINCIA', r.raw_fields->>'REGIÓN'),
                         ?, r.normalized_latitude, r.normalized_longitude,r.raw_latitude,r.raw_longitude,
-                        r.normalization_rule,r.validation_evidence,nullif(r.raw_fields->>'URL',''), ?
+                        r.normalization_rule,r.validation_evidence,nullif(r.raw_fields->>'URL',''), ?, ?, ?
                     FROM geo.mincetur_import_record r
+                    JOIN geo.mincetur_import_batch b ON b.id = r.batch_id
                     WHERE r.id = ? AND r.record_status = 'NORMALIZED_PENDING_REVIEW'
+                      AND r.thematic_eligibility = 'ELIGIBLE_FOR_REVIEW'
+                      AND b.taxonomy_filter_version = 'MINCETUR-TAXONOMY-FILTER-v1'
                       AND r.normalized_latitude IS NOT NULL AND r.normalized_longitude IS NOT NULL
                     ON CONFLICT (import_record_id) DO NOTHING
-                    """, id, command.categoryCode().trim(), actor, command.importRecordId());
-            if (inserted != 1) throw new EditorialWorkflowConflictException("Import record is absent, quarantined, or already has an editorial candidate.");
+                    """, id, command.categoryCode().trim(), command.sourceLicense(), command.sourceAttribution(), actor,
+                    command.importRecordId());
+            if (inserted != 1) throw new EditorialWorkflowConflictException("Import record is absent, quarantined, thematically excluded or unreviewed, uses an unsupported taxonomy filter, or already has an editorial candidate.");
         }
         audit(id, actor, "CREATE", "Editorial candidate created", null, EditorialState.DRAFT.name(), 0,
                 command.importRecordId() == null ? "{}" : "{\"source\":\"MINCETUR\"}");

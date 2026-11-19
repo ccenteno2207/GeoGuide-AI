@@ -452,16 +452,17 @@ class PostgisIntegrationTests {
         UUID importRecordId = UUID.randomUUID();
         jdbcTemplate.update("""
                 INSERT INTO geo.mincetur_import_batch(id,source_system,source_file_name,source_sha256,source_cutoff,
-                    detected_encoding,delimiter,parser_version,record_count,quarantined_count,batch_status)
+                    detected_encoding,delimiter,parser_version,record_count,quarantined_count,batch_status,taxonomy_filter_version)
                 VALUES (?, 'MINCETUR', 'synthetic.csv', ?, DATE '2026-11-10', 'UTF-8', ';', 'precision-test', 1, 0,
-                    'STAGED_REQUIRES_REVIEW')
+                    'STAGED_REQUIRES_REVIEW', 'MINCETUR-TAXONOMY-FILTER-v1')
                 """, batchId, "A".repeat(64));
         jdbcTemplate.update("""
                 INSERT INTO geo.mincetur_import_record(id,batch_id,row_number,source_record_id,raw_fields,
                     raw_latitude,raw_longitude,normalized_latitude,normalized_longitude,normalization_rule,
-                    validation_evidence,record_status)
+                    validation_evidence,record_status,thematic_eligibility,thematic_rule_code,thematic_reason)
                 VALUES (?,?,1,'237',?::jsonb,?,?,?,?,'synthetic-precision-rule',
-                    'synthetic test evidence; candidate is not published', 'NORMALIZED_PENDING_REVIEW')
+                    'synthetic test evidence; candidate is not published', 'NORMALIZED_PENDING_REVIEW',
+                    'ELIGIBLE_FOR_REVIEW','TEST_ELIGIBLE','Synthetic eligible fixture')
                 """, importRecordId,
                 batchId,
                 "{\"NOMBRE DEL RECURSO\":\"Laguna de Huacachina\",\"URL\":\"https://example.test/237\"}",
@@ -470,14 +471,154 @@ class PostgisIntegrationTests {
                 new java.math.BigDecimal("-75.76291501522060"));
 
         var draft = adminEditorialRepository.create(new AdminEditorialRepository.CreateEditorial(
-                importRecordId, null, null, "NATURAL_SITE", null, null, null, null, null, null, null, null), "editor-test");
+                importRecordId, null, null, "NATURAL_SITE", null, null, null, null, null, null,
+                "ODC-BY-1.0", "MINCETUR Open Data catalog; test attribution"), "editor-test");
 
         assertThat(draft.latitude()).isEqualByComparingTo("-14.087854051458200");
         assertThat(draft.longitude()).isEqualByComparingTo("-75.76291501522060");
         assertThat(draft.rawLatitude()).isEqualTo("-7.576.291.501.522.060");
         assertThat(draft.rawLongitude()).isEqualTo("-14.087.854.051.458.200");
+        assertThat(draft.sourceLicense()).isEqualTo("ODC-BY-1.0");
+        assertThat(draft.sourceAttribution()).isEqualTo("MINCETUR Open Data catalog; test attribution");
         assertThat(draft.state()).isEqualTo("DRAFT");
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest", Integer.class)).isZero();
+    }
+
+    @Test
+    void editorialDraftCannotBeCreatedFromThematicallyExcludedImportRecord() {
+        UUID batchId = UUID.randomUUID();
+        UUID importRecordId = UUID.randomUUID();
+        jdbcTemplate.update("""
+                INSERT INTO geo.mincetur_import_batch(id,source_system,source_file_name,source_sha256,source_cutoff,
+                    detected_encoding,delimiter,parser_version,record_count,quarantined_count,batch_status,taxonomy_filter_version)
+                VALUES (?, 'MINCETUR', 'excluded.csv', ?, DATE '2026-11-10', 'UTF-8', ';', 'taxonomy-test', 1, 0,
+                    'STAGED_REQUIRES_REVIEW', 'MINCETUR-TAXONOMY-FILTER-v1')
+                """, batchId, "B".repeat(64));
+        jdbcTemplate.update("""
+                INSERT INTO geo.mincetur_import_record(id,batch_id,row_number,source_record_id,raw_fields,
+                    raw_latitude,raw_longitude,normalized_latitude,normalized_longitude,normalization_rule,
+                    validation_evidence,record_status,thematic_eligibility,thematic_rule_code,thematic_reason)
+                VALUES (?,?,1,'excluded-1',?::jsonb,'-76.6','-11.4',-11.4,-76.6,'test-rule',
+                    'synthetic test evidence','NORMALIZED_PENDING_REVIEW','EXCLUDED_FROM_NAVIGATION',
+                    'TD-EX-01','Synthetic excluded fixture')
+                """, importRecordId, batchId, "{\"NOMBRE DEL RECURSO\":\"Excluded cultural event\"}");
+
+        assertThatThrownBy(() -> adminEditorialRepository.create(new AdminEditorialRepository.CreateEditorial(
+                importRecordId, null, null, "MONUMENT", null, null, null, null, null, null,
+                "ODC-BY-1.0", "MINCETUR attribution"), "editor-test"))
+                .isInstanceOf(ai.geoguide.admin.domain.EditorialWorkflowConflictException.class)
+                .hasMessageContaining("thematically excluded");
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM admin.poi_editorial_record", Integer.class)).isZero();
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest", Integer.class)).isZero();
+    }
+
+    @Test
+    void cantaPilotPublishesOnlyIndependentlyReviewedPoiCandidates() throws Exception {
+        String csvPath = System.getProperty("geoguide.test.minceturCsv");
+        Assumptions.assumeTrue(csvPath != null && !csvPath.isBlank(),
+                "Set geoguide.test.minceturCsv to publish the owner-provided snapshot into an isolated pilot database.");
+
+        var p3 = new P3DatasetLoader(objectMapper, categoryRepository, repository,
+                new ClassPathResource("data/p3/taxonomy-v1.json"),
+                new ClassPathResource("data/p3/lima-obrajillo-v1.json")).load();
+        var curatedDestinations = new DestinationCatalogLoader(objectMapper, destinationRepository,
+                new ClassPathResource("data/destination-search/mincetur-pilot-v1.json")).load();
+        assertThat(p3.poiCount()).isEqualTo(5);
+        assertThat(curatedDestinations).isEqualTo(9);
+
+        byte[] sourceBytes = Files.readAllBytes(Path.of(csvPath));
+        var snapshot = new MinceturSnapshotCoordinateNormalizer(objectMapper).normalize(
+                new MinceturSnapshotParser().parse(Path.of(csvPath).getFileName().toString(), sourceBytes),
+                new ClassPathResource("data/destination-search/mincetur-20261110-coordinate-recovery-v1.json")
+                        .getInputStream());
+        assertThat(snapshot.sha256()).isEqualToIgnoringCase(
+                "29351B0BAEA9E68AC1D50CFA2B5BF6273594FEC4A8CE112D2E63271F2D08FD66");
+        UUID batchId = minceturStagingRepository.stage(snapshot);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM geo.mincetur_import_record WHERE batch_id=?",
+                Integer.class, batchId)).isEqualTo(6_341);
+
+        record ReviewedPoi(String sourceId, String category, String latitude, String longitude,
+                String coordinateEvidence) {}
+        List<ReviewedPoi> reviewed = List.of(
+                new ReviewedPoi("1851", "ARCHAEOLOGICAL_SITE", "-11.43885", "-76.59179",
+                        "MINCETUR ficha 1851 identifies the archaeological site in Canta; OSM node 1649971847 " +
+                                "(https://www.openstreetmap.org/node/1649971847) places Ciudadela de Cantamarca at " +
+                                "-11.43885,-76.59179. The staged candidate differs by approximately 15 m. " +
+                                "Independent identity context: https://target2.promperu.gob.pe/destinos/lima/canta/sitio-arqueologico-de-cantamarca"),
+                new ReviewedPoi("12185", "HISTORIC_CHURCH", "-11.48941", "-76.66162",
+                        "MINCETUR ficha 12185 identifies the colonial church in San Buenaventura; OSM way 450034994 " +
+                                "(https://www.openstreetmap.org/way/450034994) maps Iglesia de San Buenaventura at " +
+                                "-11.48941,-76.66162. The staged candidate differs by approximately 19 m."),
+                new ReviewedPoi("14041", "WATERFALL", "-11.46317", "-76.63708",
+                        "MINCETUR ficha 14041 identifies Cascada Huamanmayo in San Buenaventura and documents its " +
+                                "community land/access terms; OSM node 1651111731 " +
+                                "(https://www.openstreetmap.org/node/1651111731) maps Cascadas de Huamanmayo at " +
+                                "-11.46317,-76.63708. The staged candidate differs by approximately 28 m. " +
+                                "Publication is POI-only; no route-access destination is created."));
+
+        String combinedLicense = "ODC-BY-1.0 (MINCETUR inventory); ODbL-1.0 (OSM coordinate source)";
+        String combinedAttribution = "MINCETUR — Inventario Nacional de Recursos Turísticos; " +
+                "© OpenStreetMap contributors";
+        String reviewer = "poi-data-3-automated-review";
+        for (ReviewedPoi item : reviewed) {
+            UUID importId = jdbcTemplate.queryForObject("""
+                    SELECT id FROM geo.mincetur_import_record
+                    WHERE batch_id=? AND source_record_id=? AND thematic_eligibility='ELIGIBLE_FOR_REVIEW'
+                      AND record_status='NORMALIZED_PENDING_REVIEW'
+                    """, (rs, row) -> rs.getObject(1, UUID.class), batchId, item.sourceId());
+            var draft = adminEditorialRepository.create(new AdminEditorialRepository.CreateEditorial(
+                    importId, null, null, item.category(), null, null, null, null, null, null,
+                    combinedLicense, combinedAttribution), reviewer);
+            var positioned = adminEditorialRepository.update(draft.id(), draft.version(),
+                    new AdminEditorialRepository.UpdateEditorial(draft.name(), null, item.category(),
+                            new java.math.BigDecimal(item.latitude()), new java.math.BigDecimal(item.longitude()),
+                            "MINCETUR-TAXONOMY-FILTER-v1 + independently matched OSM feature",
+                            item.coordinateEvidence(), combinedLicense, combinedAttribution),
+                    reviewer, "Apply independently corroborated pilot coordinate and provenance.");
+            var geographic = adminEditorialRepository.reviewGeography(positioned.id(), positioned.version(), true,
+                    reviewer, "Independent point match, source context and administrative location verified.");
+            assertThat(adminEditorialRepository.duplicates(geographic.id())).as("duplicate candidates for MINCETUR %s", item.sourceId())
+                    .isEmpty();
+            var identity = adminEditorialRepository.reviewIdentity(geographic.id(), geographic.version(), true,
+                    reviewer, "Compared by source ID, exact identity and active POI/destination proximity.",
+                    "No duplicate in the loaded five P3 POIs or nine curated destinations; see coordinate evidence.");
+            var submitted = adminEditorialRepository.transition(identity.id(), identity.version(), "SUBMIT_FOR_REVIEW",
+                    reviewer, "Qualification gates satisfied for isolated Canta pilot.", item.coordinateEvidence());
+            var published = adminEditorialRepository.transition(submitted.id(), submitted.version(), "APPROVE",
+                    reviewer, "Publish independently qualified POI to isolated development pilot only.",
+                    "POI-only pilot publication; no production release or route destination access assertion.");
+            assertThat(published.state()).isEqualTo("PUBLISHED");
+            assertThat(published.publishedPoiId()).isEqualTo(published.id());
+            assertThat(jdbcTemplate.queryForObject("""
+                    SELECT ST_SRID(location)=4326 AND ST_X(location)=? AND ST_Y(location)=?
+                    FROM geo.point_of_interest WHERE id=? AND active
+                    """, Boolean.class, Double.parseDouble(item.longitude()), Double.parseDouble(item.latitude()),
+                    published.id())).isTrue();
+            var route = new RouteGeometry(List.of(
+                    new RoutePoint(Double.parseDouble(item.latitude()), Double.parseDouble(item.longitude()) - 0.01),
+                    new RoutePoint(Double.parseDouble(item.latitude()), Double.parseDouble(item.longitude()) + 0.01)));
+            assertThat(discoveryQuery.findAlong(route,
+                    new DiscoveryCriteria(java.util.Set.of(item.category()), 1_000, 20)))
+                    .extracting(candidate -> candidate.name()).contains(item.sourceId().equals("1851")
+                            ? "Sitio Arqueológico Cantamarca"
+                            : item.sourceId().equals("12185") ? "Iglesia Colonial De San Buenaventura"
+                                    : "Cascada De Huamanmayo");
+        }
+
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM geo.point_of_interest WHERE active", Integer.class))
+                .isEqualTo(8);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM geo.destination WHERE active", Integer.class))
+                .isEqualTo(9);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM admin.poi_editorial_record WHERE editorial_state='PUBLISHED'",
+                Integer.class)).isEqualTo(3);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM geo.point_of_interest WHERE id IN ("
+                + "SELECT published_poi_id FROM admin.poi_editorial_record)", Integer.class)).isEqualTo(3);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM geo.mincetur_import_record " +
+                "WHERE thematic_eligibility='EXCLUDED_FROM_NAVIGATION'", Integer.class)).isEqualTo(1_768);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM geo.mincetur_import_record " +
+                "WHERE thematic_eligibility='ELIGIBLE_FOR_REVIEW'", Integer.class)).isEqualTo(4_573);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM geo.mincetur_import_record " +
+                "WHERE record_status='COORDINATE_FORMAT_AMBIGUOUS'", Integer.class)).isEqualTo(10);
     }
 
     @Test
