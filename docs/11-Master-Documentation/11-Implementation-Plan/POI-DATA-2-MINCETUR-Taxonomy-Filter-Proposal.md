@@ -1,9 +1,9 @@
 # POI-DATA-2 — Auditoría de taxonomía MINCETUR y propuesta de filtro
 
-**Estado:** `POI_DATA_2_TAXONOMY_AUDIT = PARTIAL`  
-**Contrato:** `POI_DATA_2_FILTER_CONTRACT = PROPOSED_NOT_APPROVED`  
-**Baseline auditado:** `origin/main = 2b94eb459ca711d08c711c732a3310ccb77f36e9`  
-**Rama local:** `codex/poi-data-2-taxonomy-audit`  
+**Estado:** `POI_DATA_2_TAXONOMY_AUDIT = PARTIAL`
+**Contrato:** `POI_DATA_2_FILTER_CONTRACT = PROPOSED_NOT_APPROVED`
+**Baseline auditado:** `origin/main = 2b94eb459ca711d08c711c732a3310ccb77f36e9`
+**Rama local:** `codex/poi-data-2-taxonomy-audit`
 
 ## Alcance y fuente
 
@@ -431,4 +431,3 @@ La decisión posterior necesaria es aprobar o ajustar el tratamiento de los 16 c
 - Conteos temáticos calculados desde `TIPO DE CATEGORÍA`; cruces y conflictos calculados desde las tres columnas raw.
 - Normalización se ejecutó en memoria únicamente para comparación; no se cambió el CSV ni el staging.
 - Backend, portal, migraciones, base persistente y reglas de publicación: sin cambios.
-
