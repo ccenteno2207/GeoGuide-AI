@@ -208,6 +208,8 @@ class PostgisIntegrationTests {
 
     @Test
     void observedRecordCanBeReviewedAgainAndPublishedArchiveReopensAsSameInactivePoiChangeRequest() throws Exception {
+        jdbcTemplate.update("INSERT INTO geo.category(id,code,name,active) VALUES (?,?,?,true)",
+                UUID.randomUUID(), "ARCHAEOLOGICAL_SITE", "Archaeological site");
         UUID importRecordId = insertSyntheticMinceturCandidate("1851", "Sitio Arqueológico Cantamarca sintético");
         var draft = adminEditorialRepository.create(new AdminEditorialRepository.CreateEditorial(importRecordId,
                 null, null, "ARCHAEOLOGICAL_SITE", null, null, null, null, null, null,
