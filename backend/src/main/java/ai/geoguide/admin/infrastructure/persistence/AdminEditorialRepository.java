@@ -120,7 +120,8 @@ public class AdminEditorialRepository {
                 LEFT JOIN LATERAL (SELECT source_record_id,source_url,license,attribution FROM geo.poi_provenance
                     WHERE poi_id=p.id ORDER BY source_system,logical_key LIMIT 1) prov ON TRUE
                 WHERE p.id=?
-                ON CONFLICT (target_poi_id) WHERE editorial_state IN ('DRAFT','OBSERVED','PENDING_REVIEW') DO NOTHING
+                ON CONFLICT (target_poi_id) WHERE target_poi_id IS NOT NULL
+                    AND editorial_state IN ('DRAFT','OBSERVED','PENDING_REVIEW') DO NOTHING
                 """, id, actor, poiId);
         if (inserted != 1) throw new EditorialWorkflowConflictException("Existing POI is inactive, missing, or already has a change request.");
         audit(id, actor, "CREATE_CHANGE_REQUEST", "Editorial change request created for an existing POI", null,

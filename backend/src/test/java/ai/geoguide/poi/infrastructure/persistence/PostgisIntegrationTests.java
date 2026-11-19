@@ -157,6 +157,8 @@ class PostgisIntegrationTests {
         jdbcTemplate.execute("TRUNCATE geo.mincetur_import_record, geo.mincetur_import_batch CASCADE");
         jdbcTemplate.execute("TRUNCATE geo.poi_provenance, geo.point_of_interest, geo.category CASCADE");
         jdbcTemplate.execute("TRUNCATE geo.destination_alias, geo.destination CASCADE");
+        jdbcTemplate.execute("TRUNCATE admin.poi_editorial_record, admin.destination_editorial_record, " +
+                "admin.destination_poi_relationship, media.poi_asset CASCADE");
     }
 
     @Test
@@ -165,7 +167,7 @@ class PostgisIntegrationTests {
 
         assertThat(jdbcTemplate.queryForObject("SELECT PostGIS_Version()", String.class)).isNotBlank();
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM flyway_schema_history", Integer.class))
-                .isEqualTo(9);
+                .isEqualTo(10);
         assertThat(jdbcTemplate.queryForObject("""
                 SELECT COUNT(*) FROM information_schema.tables
                 WHERE table_schema = 'geo'
