@@ -160,6 +160,13 @@ public class AdminCatalogController {
             Authentication auth) { return editorial.transition(id, request.expectedVersion(), "RESTORE_APPROVAL",
                     actor(auth), request.reason(), request.evidence()); }
 
+    @PostMapping("/records/{id}/reopen")
+    @PreAuthorize("hasRole('ADMINISTRATOR')")
+    public AdminEditorialRepository.EditorialView reopen(@PathVariable UUID id,
+            @Valid @RequestBody ReopenRequest request, Authentication auth) {
+        return editorial.reopen(id, request.expectedVersion(), actor(auth), request.reason());
+    }
+
     @PostMapping("/records/{id}/activation")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public AdminEditorialRepository.EditorialView activation(@PathVariable UUID id, @Valid @RequestBody ActivationRequest request,
@@ -201,6 +208,7 @@ public class AdminCatalogController {
     public record IdentityReviewRequest(long expectedVersion, boolean noDuplicate, @NotBlank String reason,
             @NotBlank String evidence) {}
     public record VersionedAction(long expectedVersion, @NotBlank String reason, @NotBlank String evidence) {}
+    public record ReopenRequest(long expectedVersion, @NotBlank @Size(max = 1000) String reason) {}
     public record ActivationRequest(long expectedVersion, boolean active, @NotBlank String reason, @NotBlank String evidence) {}
     public record ExistingPoiActivationRequest(@NotNull java.time.Instant expectedUpdatedAt, boolean active,
             @NotBlank String reason, @NotBlank String evidence) {}

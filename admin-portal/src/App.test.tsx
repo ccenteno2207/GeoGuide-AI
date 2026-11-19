@@ -5,6 +5,7 @@ import App from './App';
 let capturedRequests: Array<{ url: string; init?: RequestInit }> = [];
 let includeMinceturCandidate = false;
 let includeArchivedEditorialRecord = false;
+let hasReopenedEditorialRecord = false;
 let archiveRecordAfterConflict = false;
 let simulateArchiveConflict = false;
 
@@ -23,6 +24,7 @@ describe('POI media audit controls', () => {
     capturedRequests = [];
     includeMinceturCandidate = false;
     includeArchivedEditorialRecord = false;
+    hasReopenedEditorialRecord = false;
     archiveRecordAfterConflict = false;
     simulateArchiveConflict = false;
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -50,12 +52,15 @@ describe('POI media audit controls', () => {
       const batch = { id: 'batch-1', fileName: 'synthetic.csv', sha256: 'A'.repeat(64), cutoff: '2026-11-10',
         total: 1, candidates: 1, quarantined: 0, poiDrafts: 0, destinationDrafts: 0, unassignedCandidates: 1 };
       const staleRecord = { ...archivedRecord, state: 'OBSERVED', version: 11, geographicReviewStatus: 'APPROVED', identityReviewStatus: 'NO_DUPLICATE' };
+      const reopenedRecord = { ...archivedRecord, state: 'DRAFT', version: 13, geographicReviewStatus: 'PENDING', identityReviewStatus: 'PENDING', publishedPoiId: null, active: false };
       const body = init?.method === 'POST' && url.endsWith('/api/v1/admin/records')
         ? { id: 'draft-1', importRecordId: null, sourceRecordId: null, name: 'POI sintético', description: null,
             administrativeContext: 'Canta', categoryCode: 'MONUMENT', latitude: null, longitude: null,
             rawLatitude: null, rawLongitude: null, normalizationRule: null, coordinateEvidence: null,
             geographicReviewStatus: 'PENDING', identityReviewStatus: 'PENDING', identityReviewEvidence: null,
             state: 'DRAFT', sourceLicense: null, sourceAttribution: null, sourceUrl: null, publishedPoiId: null, active: false, targetPoiId: null, version: 0 }
+        : url.includes('/api/v1/admin/records/fdfeb867-576f-4fb5-bcbf-8784e54c2f3a/reopen') && init?.method === 'POST'
+          ? (hasReopenedEditorialRecord = true, reopenedRecord)
         : url.includes('/api/v1/admin/records/fdfeb867-576f-4fb5-bcbf-8784e54c2f3a/archive')
           && init?.method === 'POST' && archiveRecordAfterConflict
           ? new Response(JSON.stringify({ status: 409, detail: 'El recurso cambió o la transición solicitada no está permitida.' }), { status: 409, headers: { 'Content-Type': 'application/problem+json' } })
@@ -63,9 +68,9 @@ describe('POI media audit controls', () => {
           && init?.method === 'POST' ? (archiveRecordAfterConflict = true, new Response(JSON.stringify({ status: 409, detail: 'El recurso cambió o la transición solicitada no está permitida.' }), { status: 409, headers: { 'Content-Type': 'application/problem+json' } }))
         : url.includes('/duplicates') ? []
         : url.endsWith('/api/v1/admin/records/fdfeb867-576f-4fb5-bcbf-8784e54c2f3a')
-          ? archiveRecordAfterConflict ? archivedRecord : includeArchivedEditorialRecord ? archivedRecord : staleRecord
+          ? hasReopenedEditorialRecord ? reopenedRecord : archiveRecordAfterConflict ? archivedRecord : includeArchivedEditorialRecord ? archivedRecord : staleRecord
         : url.includes('/api/v1/admin/records?') && (includeArchivedEditorialRecord || simulateArchiveConflict)
-          ? { content: [simulateArchiveConflict && !archiveRecordAfterConflict ? staleRecord : archivedRecord], page: 0, size: 50, totalElements: 1, totalPages: 1 }
+          ? { content: [hasReopenedEditorialRecord ? reopenedRecord : simulateArchiveConflict && !archiveRecordAfterConflict ? staleRecord : archivedRecord], page: 0, size: 50, totalElements: 1, totalPages: 1 }
         : url.endsWith('/api/v1/admin/imports') && includeMinceturCandidate ? [batch]
         : url.includes('/api/v1/admin/imports/batch-1/records') && includeMinceturCandidate
           ? { content: [minceturRecord], page: 0, size: 100, totalElements: 1, totalPages: 1 }
@@ -144,12 +149,30 @@ describe('POI media audit controls', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Sitio Arqueológico Cantamarca/ }));
 
     expect((await screen.findByRole('status')).textContent).toContain('ARCHIVED');
-    expect(screen.getByRole('status').textContent).toContain('no cree otro expediente');
+    expect(screen.getByRole('status').textContent).toContain('No crea duplicados');
     expect((screen.getByLabelText('Nombre editorial') as HTMLInputElement).matches(':disabled')).toBe(true);
     const editorialControls = screen.getByLabelText('Nombre editorial').closest('fieldset');
     expect(editorialControls?.disabled).toBe(true);
     expect(Array.from(editorialControls?.querySelectorAll('button, input, select') ?? []).every(control => control.matches(':disabled'))).toBe(true);
     expect(capturedRequests.some(({ url, init }) => init?.method === 'POST' && /\/(approve|archive|geographic-review|identity-review)$/.test(url))).toBe(false);
+  });
+
+  it('reopens the same archived MINCETUR record to an inactive draft with a reason and reset reviews', async () => {
+    includeArchivedEditorialRecord = true;
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: /Sitio Arqueológico Cantamarca/ }));
+
+    fireEvent.change(await screen.findByLabelText('Motivo de reapertura'), { target: { value: 'Revisar evidencia actualizada' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Reabrir expediente a borrador' }));
+
+    expect(await screen.findByText('DRAFT · DESACTIVADO · v13')).toBeTruthy();
+    expect(screen.getByText('Raw MINCETUR: -7.659.177.699.999.990 / -11.438.714')).toBeTruthy();
+    const request = capturedRequests.find(({ url, init }) => url.endsWith('/api/v1/admin/records/fdfeb867-576f-4fb5-bcbf-8784e54c2f3a/reopen') && init?.method === 'POST');
+    expect(request).toBeTruthy();
+    expect(JSON.parse(String(request?.init?.body))).toEqual({ expectedVersion: 12, reason: 'Revisar evidencia actualizada' });
+    expect(screen.getByText('DRAFT · geo PENDING · identidad PENDING')).toBeTruthy();
+    expect(capturedRequests.some(({ url, init }) => init?.method === 'POST' && /\/(approve|activation)$/.test(url))).toBe(false);
+    expect(hasReopenedEditorialRecord).toBe(true);
   });
 
   it('refreshes an archived status after HTTP 409 while preserving unsaved editor text', async () => {

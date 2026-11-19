@@ -269,6 +269,20 @@ paths:
       responses:
         '200': { description: Aprobación restaurada; activación requiere acción administrativa separada }
         '403': { description: ADMINISTRATOR requerido }
+  /admin/records/{id}/reopen:
+    post:
+      summary: Reabrir expediente ARCHIVED como DRAFT, manteniéndolo desactivado
+      description: Solo ADMINISTRATOR. Conserva el ID y provenance, reinicia revisiones y no aprueba ni activa. Requiere motivo y versión actual; si hubo publicación previa, conserva el vínculo como solicitud de cambio al mismo POI.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AdminReopenRequest' } } }
+      responses:
+        '200': { description: Expediente DRAFT, inactivo, con revisiones pendientes y auditoría de reapertura }
+        '403': { description: ADMINISTRATOR requerido }
+        '409': { description: Estado distinto de ARCHIVED, versión obsoleta o vínculo duplicado/conflictivo }
   /admin/records/{id}/activation:
     post:
       summary: Activar o desactivar un POI editorial aprobado
@@ -880,6 +894,12 @@ components:
         expectedVersion: { type: integer, format: int64 }
         reason: { type: string }
         evidence: { type: string, description: Referencia o evidencia concreta que respalda esta decisión }
+    AdminReopenRequest:
+      type: object
+      required: [expectedVersion, reason]
+      properties:
+        expectedVersion: { type: integer, format: int64 }
+        reason: { type: string, minLength: 1, maxLength: 1000 }
     AdminActivationRequest:
       type: object
       required: [expectedVersion, active, reason, evidence]

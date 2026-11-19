@@ -84,4 +84,12 @@ class AdminSecurityConfigurationTests {
         assertThat(editorial.value()).isEqualTo("hasRole('ADMINISTRATOR')");
         assertThat(existing.value()).isEqualTo("hasRole('ADMINISTRATOR')");
     }
+
+    @Test
+    void archivedRecordReopenRequiresAdministratorRoleAtMethodBoundary() throws Exception {
+        var reopen = AdminCatalogController.class.getMethod("reopen", java.util.UUID.class,
+                AdminCatalogController.ReopenRequest.class, org.springframework.security.core.Authentication.class)
+                .getAnnotation(PreAuthorize.class);
+        assertThat(reopen.value()).isEqualTo("hasRole('ADMINISTRATOR')");
+    }
 }
