@@ -301,7 +301,7 @@ class PostgisIntegrationTests {
                     detected_encoding,delimiter,parser_version,record_count,quarantined_count,batch_status,taxonomy_filter_version)
                 VALUES (?, 'MINCETUR', 'synthetic-reopen.csv', ?, DATE '2026-11-19', 'UTF-8', ';', 'reopen-test', 1, 0,
                     'STAGED_REQUIRES_REVIEW', 'MINCETUR-TAXONOMY-FILTER-v1')
-                """, batchId, "R".repeat(64));
+                """, batchId, "A".repeat(64));
         jdbcTemplate.update("""
                 INSERT INTO geo.mincetur_import_record(id,batch_id,row_number,source_record_id,raw_fields,
                     raw_latitude,raw_longitude,normalized_latitude,normalized_longitude,normalization_rule,
