@@ -57,6 +57,19 @@ server {
         client_max_body_size 64k;
     }
 
+    # Keep the collection path exact: an ending-slash prefix would make Nginx
+    # redirect /pois to /pois/ using its internal TLS port (443), not public 5443.
+    location = /api/v1/admin/pois {
+        limit_req zone=admin_api burst=20 nodelay;
+        client_max_body_size 64k;
+        proxy_pass http://backend:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_read_timeout 30s;
+    }
+
     location ^~ /api/v1/admin/pois/ {
         limit_req zone=admin_api burst=20 nodelay;
         client_max_body_size 10m;
