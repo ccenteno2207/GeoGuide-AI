@@ -25,9 +25,9 @@ describe('POI media audit controls', () => {
             administrativeContext: 'Canta', categoryCode: 'MONUMENT', latitude: null, longitude: null,
             rawLatitude: null, rawLongitude: null, normalizationRule: null, coordinateEvidence: null,
             geographicReviewStatus: 'PENDING', identityReviewStatus: 'PENDING', identityReviewEvidence: null,
-            state: 'DRAFT', sourceLicense: null, sourceAttribution: null, sourceUrl: null, publishedPoiId: null, version: 0 }
+            state: 'DRAFT', sourceLicense: null, sourceAttribution: null, sourceUrl: null, publishedPoiId: null, active: false, targetPoiId: null, version: 0 }
         : url.includes('/duplicates') ? []
-        : url.includes('/api/v1/admin/records') || url.includes('/api/v1/admin/destination-records')
+        : url.includes('/api/v1/admin/pois?') || url.includes('/api/v1/admin/records') || url.includes('/api/v1/admin/destination-records')
           || url.includes('/api/v1/admin/destination-poi-relationships')
           ? { content: [], page: 0, size: 50, totalElements: 0 }
           : [];
@@ -69,7 +69,7 @@ describe('POI media audit controls', () => {
     expect(body.latitude).toBeNull();
     expect(body.longitude).toBeNull();
     expect(capturedRequests.some(({ url }) => url.includes('/publish') || url.endsWith('/approve'))).toBe(false);
-    expect(await screen.findByText('DRAFT · v0')).toBeTruthy();
+    expect(await screen.findByText('DRAFT · DESACTIVADO · v0')).toBeTruthy();
   });
 
   it('sends locality, exact category, state, and name filters only to the admin catalog endpoint', async () => {

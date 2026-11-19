@@ -18,6 +18,7 @@ import ai.geoguide.poi.infrastructure.dataset.mincetur.JdbcMinceturSnapshotStagi
 import ai.geoguide.poi.infrastructure.dataset.mincetur.MinceturSnapshotParser;
 import ai.geoguide.admin.infrastructure.persistence.AdminEditorialRepository;
 import ai.geoguide.admin.infrastructure.persistence.AdminImportReadRepository;
+import ai.geoguide.admin.infrastructure.persistence.AdminPoiInventoryRepository;
 import ai.geoguide.admin.domain.EditorialWorkflowConflictException;
 import ai.geoguide.admin.infrastructure.persistence.AdminDestinationRepository;
 import ai.geoguide.admin.infrastructure.persistence.AdminDestinationPoiRelationshipRepository;
@@ -138,6 +139,9 @@ class PostgisIntegrationTests {
 
     @Autowired
     AdminImportReadRepository adminImportReadRepository;
+
+    @Autowired
+    AdminPoiInventoryRepository adminPoiInventoryRepository;
 
     @Autowired
     AdminDestinationRepository adminDestinationRepository;
@@ -448,15 +452,26 @@ class PostgisIntegrationTests {
         var submitted=adminEditorialRepository.transition(candidate.id(),identity.version(),"SUBMIT_FOR_REVIEW","editor-test","Ready for independent editorial review","Synthetic review packet is complete.");
         var published=adminEditorialRepository.transition(candidate.id(),submitted.version(),"APPROVE","reviewer-test","Approved synthetic fixture for local integration test","Synthetic publication evidence validated.");
 
-        assertThat(published.state()).isEqualTo("PUBLISHED");
+        assertThat(published.state()).isEqualTo("APPROVED");
         assertThat(published.publishedPoiId()).isEqualTo(candidate.id());
+        assertThat(published.active()).isFalse();
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest",Integer.class)).isEqualTo(2);
+        assertThat(jdbcTemplate.queryForObject("SELECT active FROM geo.point_of_interest WHERE id=?",Boolean.class,candidate.id())).isFalse();
+        var syntheticRoute = new RouteGeometry(List.of(new RoutePoint(-14.1, -75.11), new RoutePoint(-14.1, -75.09)));
+        assertThat(discoveryQuery.findAlong(syntheticRoute, new DiscoveryCriteria(java.util.Set.of("MONUMENT"), 2_000, 20)))
+                .extracting(item -> item.poiId().value()).doesNotContain(candidate.id());
+        var activePoi = adminEditorialRepository.setActivation(published.id(), published.version(), true,
+                "administrator-test", "Activate after separate approval", "Synthetic administrator activation evidence.");
+        assertThat(activePoi.active()).isTrue();
+        assertThat(discoveryQuery.findAlong(syntheticRoute, new DiscoveryCriteria(java.util.Set.of("MONUMENT"), 2_000, 20)))
+                .extracting(item -> item.poiId().value()).contains(candidate.id());
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM admin.poi_editorial_audit WHERE editorial_id=? AND action='ACTIVATE'", Integer.class, candidate.id())).isEqualTo(1);
         assertThat(jdbcTemplate.queryForObject("SELECT name FROM geo.point_of_interest WHERE id=?",String.class,existingId))
                 .isEqualTo("Existing P3 record");
         assertThat(jdbcTemplate.queryForObject("SELECT ST_X(location) FROM geo.point_of_interest WHERE id=?",Double.class,existingId))
                 .isEqualTo(-75.0);
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.poi_provenance WHERE poi_id=?",Integer.class,candidate.id())).isEqualTo(1);
-        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM admin.poi_editorial_audit WHERE editorial_id=?",Integer.class,candidate.id())).isEqualTo(5);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM admin.poi_editorial_audit WHERE editorial_id=?",Integer.class,candidate.id())).isEqualTo(6);
         assertThat(jdbcTemplate.queryForObject("""
                 SELECT details->>'evidence' FROM admin.poi_editorial_audit
                 WHERE editorial_id=? AND action='NO_DUPLICATE_CONFIRMED'
@@ -465,6 +480,67 @@ class PostgisIntegrationTests {
                 SELECT details->>'decisionEvidence' FROM admin.poi_editorial_audit
                 WHERE editorial_id=? AND action='APPROVE'
                 """, String.class, candidate.id())).isEqualTo("Synthetic publication evidence validated.");
+    }
+
+    @Test
+    void existingPoiDeactivationIsAuditedAndReactivationRequiresEditorialApproval() {
+        UUID categoryId = UUID.randomUUID();
+        UUID poiId = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO geo.category(id,code,name,active) VALUES (?,?,?,true)", categoryId, "MONUMENT", "Monument");
+        jdbcTemplate.update("INSERT INTO geo.point_of_interest(id,category_id,name,location,active,created_at,updated_at) "
+                + "VALUES (?,?,?,ST_SetSRID(ST_MakePoint(-75,-14),4326),true,now(),now())", poiId, categoryId, "Existing synthetic POI");
+        var before = adminPoiInventoryRepository.list("synthetic", "MONUMENT", true, 0, 20).content().getFirst();
+        assertThatThrownBy(() -> adminPoiInventoryRepository.setActive(poiId, before.updatedAt(), true, "admin-test",
+                "Direct activation", "Synthetic evidence."))
+                .hasMessageContaining("approved editorial change request");
+        var deactivated = adminPoiInventoryRepository.setActive(poiId, before.updatedAt(), false, "admin-test",
+                "Explicit deactivation for test", "Synthetic deactivation evidence.");
+        assertThat(deactivated.active()).isFalse();
+        assertThat(adminPoiInventoryRepository.audit(poiId)).hasSize(1);
+        assertThatThrownBy(() -> adminPoiInventoryRepository.setActive(poiId, before.updatedAt(), false, "admin-test",
+                "Stale activation", "Synthetic stale evidence.")).hasMessageContaining("stale");
+    }
+
+    @Test
+    void existingPoiReactivationUsesSameUuidAndRequiresApprovedChangeRequest() {
+        UUID categoryId = UUID.randomUUID();
+        UUID poiId = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO geo.category(id,code,name,active) VALUES (?,?,?,true)", categoryId, "MONUMENT", "Monument");
+        jdbcTemplate.update("INSERT INTO geo.point_of_interest(id,category_id,name,description,location,active,created_at,updated_at) "
+                + "VALUES (?,?,?, ?,ST_SetSRID(ST_MakePoint(-75,-14),4326),false,now(),now())",
+                poiId, categoryId, "Existing curated POI", "Original description");
+        jdbcTemplate.update("INSERT INTO geo.poi_provenance(id,poi_id,source_system,source_record_id,retrieved_at,license,attribution,incorporation_method,logical_key) "
+                + "VALUES (?,?, 'P3', 'fixture-42', now(), 'Synthetic test license', 'Synthetic test attribution', 'fixture', 'fixture-42')",
+                UUID.randomUUID(), poiId);
+
+        var draft = adminEditorialRepository.createChangeRequest(poiId, "editor-test");
+        assertThat(draft.targetPoiId()).isEqualTo(poiId);
+        var updated = adminEditorialRepository.update(draft.id(), draft.version(), new AdminEditorialRepository.UpdateEditorial(
+                "Updated curated POI", "Updated description", "MONUMENT", new java.math.BigDecimal("-14.01"),
+                new java.math.BigDecimal("-75.01"), "Synthetic test coordinate", "Synthetic independent confirmation",
+                "Synthetic test license", "Synthetic test attribution", "Canta"), "editor-test", "Update reviewed fixture.");
+        var geographic = adminEditorialRepository.reviewGeography(updated.id(), updated.version(), true, "reviewer-test", "Synthetic geography checked.");
+        var identity = adminEditorialRepository.reviewIdentity(geographic.id(), geographic.version(), true, "reviewer-test",
+                "Synthetic no duplicate check.", "Compared with the isolated fixture catalog.");
+        var submitted = adminEditorialRepository.transition(identity.id(), identity.version(), "SUBMIT_FOR_REVIEW", "editor-test",
+                "Submit approved change request.", "Synthetic change packet complete.");
+        var approved = adminEditorialRepository.transition(submitted.id(), submitted.version(), "APPROVE", "reviewer-test",
+                "Approve existing POI edits while keeping it hidden.", "Synthetic editorial approval.");
+
+        assertThat(approved.state()).isEqualTo("APPROVED");
+        assertThat(approved.publishedPoiId()).isEqualTo(poiId);
+        assertThat(approved.active()).isFalse();
+        assertThat(jdbcTemplate.queryForObject("SELECT active FROM geo.point_of_interest WHERE id=?", Boolean.class, poiId)).isFalse();
+        assertThat(jdbcTemplate.queryForObject("SELECT source_record_id FROM geo.poi_provenance WHERE poi_id=?", String.class, poiId))
+                .isEqualTo("fixture-42");
+
+        var active = adminEditorialRepository.setActivation(approved.id(), approved.version(), true, "administrator-test",
+                "Reactivate only after editorial approval.", "Synthetic activation evidence.");
+        assertThat(active.active()).isTrue();
+        assertThat(jdbcTemplate.queryForObject("SELECT id FROM geo.point_of_interest WHERE name='Updated curated POI' AND active", UUID.class))
+                .isEqualTo(poiId);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM admin.poi_activation_audit WHERE poi_id=? AND action='ACTIVATE'", Integer.class, poiId))
+                .isEqualTo(1);
     }
 
     @Test
@@ -648,8 +724,12 @@ class PostgisIntegrationTests {
             var published = adminEditorialRepository.transition(submitted.id(), submitted.version(), "APPROVE",
                     reviewer, "Publish independently qualified POI to isolated development pilot only.",
                     "POI-only pilot publication; no production release or route destination access assertion.");
-            assertThat(published.state()).isEqualTo("PUBLISHED");
+            assertThat(published.state()).isEqualTo("APPROVED");
             assertThat(published.publishedPoiId()).isEqualTo(published.id());
+            assertThat(jdbcTemplate.queryForObject("SELECT active FROM geo.point_of_interest WHERE id=?", Boolean.class, published.id())).isFalse();
+            var activated = adminEditorialRepository.setActivation(published.id(), published.version(), true,
+                    reviewer, "Explicitly activate validated isolated pilot POI.", "Synthetic activation evidence.");
+            assertThat(activated.active()).isTrue();
             assertThat(jdbcTemplate.queryForObject("""
                     SELECT ST_SRID(location)=4326 AND ST_X(location)=? AND ST_Y(location)=?
                     FROM geo.point_of_interest WHERE id=? AND active
@@ -670,7 +750,7 @@ class PostgisIntegrationTests {
                 .isEqualTo(8);
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM geo.destination WHERE active", Integer.class))
                 .isEqualTo(9);
-        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM admin.poi_editorial_record WHERE editorial_state='PUBLISHED'",
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM admin.poi_editorial_record WHERE editorial_state='APPROVED' AND active",
                 Integer.class)).isEqualTo(3);
         assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM geo.point_of_interest WHERE id IN ("
                 + "SELECT published_poi_id FROM admin.poi_editorial_record)", Integer.class)).isEqualTo(3);

@@ -34,11 +34,14 @@ public class AdminSecurityConfiguration {
     @Bean
     @ConditionalOnProperty(name = "geoguide.admin.security.enabled", havingValue = "true")
     JwtDecoder adminJwtDecoder(@Value("${geoguide.admin.security.issuer-uri}") String issuerUri,
-            @Value("${geoguide.admin.security.audience}") String audience) {
+            @Value("${geoguide.admin.security.audience}") String audience,
+            @Value("${geoguide.admin.security.jwk-set-uri:}") String jwkSetUri) {
         if (issuerUri == null || issuerUri.isBlank() || audience == null || audience.isBlank()) {
             throw new IllegalStateException("An OIDC issuer URI and API audience are required when admin security is enabled.");
         }
-        JwtDecoder resolved = JwtDecoders.fromIssuerLocation(issuerUri);
+        JwtDecoder resolved = jwkSetUri == null || jwkSetUri.isBlank()
+                ? JwtDecoders.fromIssuerLocation(issuerUri)
+                : NimbusJwtDecoder.withJwkSetUri(jwkSetUri.trim()).build();
         if (!(resolved instanceof NimbusJwtDecoder decoder)) {
             throw new IllegalStateException("The configured OIDC issuer did not produce a supported JWT decoder.");
         }

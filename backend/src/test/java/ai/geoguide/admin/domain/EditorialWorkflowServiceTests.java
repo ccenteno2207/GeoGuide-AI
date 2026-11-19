@@ -19,12 +19,12 @@ class EditorialWorkflowServiceTests {
                 EditorialRole.REVIEWER, "reviewer-2", "Evidence verified", Instant.parse("2026-11-17T12:05:00Z"));
 
         assertThat(submitted.record().state()).isEqualTo(EditorialState.PENDING_REVIEW);
-        assertThat(published.record().state()).isEqualTo(EditorialState.PUBLISHED);
+        assertThat(published.record().state()).isEqualTo(EditorialState.APPROVED);
         assertThat(published.record().version()).isEqualTo(2);
         assertThat(published.auditEvent()).satisfies(event -> {
             assertThat(event.actorId()).isEqualTo("reviewer-2");
             assertThat(event.fromState()).isEqualTo(EditorialState.PENDING_REVIEW);
-            assertThat(event.toState()).isEqualTo(EditorialState.PUBLISHED);
+            assertThat(event.toState()).isEqualTo(EditorialState.APPROVED);
             assertThat(event.reason()).isEqualTo("Evidence verified");
         });
     }

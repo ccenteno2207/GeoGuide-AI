@@ -27,7 +27,7 @@ public final class EditorialWorkflowService {
             case APPROVE -> {
                 requireRole(role, EditorialRole.REVIEWER, EditorialRole.ADMINISTRATOR);
                 requireState(record, EditorialState.PENDING_REVIEW);
-                yield EditorialState.PUBLISHED;
+                yield EditorialState.APPROVED;
             }
             case REJECT -> {
                 requireRole(role, EditorialRole.REVIEWER, EditorialRole.ADMINISTRATOR);
@@ -36,7 +36,8 @@ public final class EditorialWorkflowService {
             }
             case ARCHIVE -> {
                 requireRole(role, EditorialRole.ADMINISTRATOR);
-                requireState(record, EditorialState.PUBLISHED, EditorialState.REJECTED, EditorialState.DRAFT);
+                requireState(record, EditorialState.PUBLISHED, EditorialState.APPROVED, EditorialState.SUSPENDED,
+                        EditorialState.REJECTED, EditorialState.DRAFT, EditorialState.OBSERVED);
                 yield EditorialState.ARCHIVED;
             }
         };
