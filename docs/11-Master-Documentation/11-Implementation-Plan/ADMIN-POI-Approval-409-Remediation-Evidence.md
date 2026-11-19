@@ -23,7 +23,11 @@ Se verificaron también los datos de categoría: el registro editorial efectivam
 - Pruebas focalizadas backend: 12/12 PASS (seguridad, Problem Details y mapeador exacto).
 - Portal: `npm test` 10/10 PASS; `npm run build` PASS.
 - `git diff --check`: PASS.
-- Despliegue, smoke test HTTPS y verificación posterior de la base de integración: pendientes de merge.
+- Despliegue de integración después del PR #122: backend y portal se construyeron y recrearon únicamente esos dos servicios con `--no-deps`; ambos quedaron `healthy`. El resto de contenedores persistentes permaneció activo y saludable.
+- Respaldo previo a V011: `/home/manager/backups/admin-poi-approval-409-20261119/geoguide-pre-v011-20261119.dump`, 902.443 bytes, SHA-256 `e9a94a74d3badc69c11c90599e7dee2621a7b4f3ae9c7d78fd3ccf66438a5525`; `pg_restore --list` lo reconoció.
+- Smoke HTTPS posterior: portal `/admin/` HTTP 200; endpoint administrativo anónimo HTTP 401. Flyway quedó en V011 (`success=true`) y `geo.poi_provenance.license` tiene límite 240.
+- Verificación posterior del expediente 1851: continúa versión 5, `PENDING_REVIEW`, `active=false`, categoría `WATERFALL`, geografía `APPROVED`, identidad `NO_DUPLICATE` y licencia de 162 caracteres; no se añadió aprobación ni se modificó su auditoría. Los conteos permanecen en 5 POIs y 9 destinos.
+- El checkout de despliegue quedó limpio en el merge commit `6b7e5f7881c1ad649fadbf613d9cfed8e88d4f89`. La prueba PostGIS temporal se retiró antes del despliegue; no quedan túneles asociados.
 
 ## Protección del expediente real
 
@@ -31,7 +35,7 @@ El expediente 1851 no se aprobó ni activó. La corrección no escribe directame
 
 ```ini
 ADMIN_POI_APPROVAL_409_ROOT_CAUSE = IDENTIFIED
-ADMIN_POI_APPROVAL_409_FIX = LOCALLY_VALIDATED
-ADMIN_POI_APPROVAL_E2E = PENDING
-ADMIN_POI_VM_DEPLOYMENT = PENDING
+ADMIN_POI_APPROVAL_409_FIX = PASS
+ADMIN_POI_APPROVAL_E2E = PASS_SYNTHETIC
+ADMIN_POI_VM_DEPLOYMENT = PASS
 ```
