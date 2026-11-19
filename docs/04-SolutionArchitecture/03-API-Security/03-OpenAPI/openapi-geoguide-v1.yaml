@@ -770,6 +770,8 @@ components:
         rowNumber: { type: integer }
         name: { type: string, nullable: true }
         sourceCategory: { type: string, nullable: true }
+        sourceType: { type: string, nullable: true, description: Valor raw MINCETUR de TIPO DE CATEGORÍA; no se reescribe }
+        suggestedPoiCategoryCode: { type: string, nullable: true, description: Mapeo exacto conocido a una categoría P3; null requiere selección editorial explícita }
         region: { type: string, nullable: true }
         province: { type: string, nullable: true }
         district: { type: string, nullable: true }
@@ -831,7 +833,7 @@ components:
         identityReviewStatus: { type: string }
         identityReviewEvidence: { type: string, nullable: true }
         state: { type: string }
-        sourceLicense: { type: string, nullable: true }
+        sourceLicense: { type: string, nullable: true, maxLength: 240 }
         sourceAttribution: { type: string, nullable: true }
         sourceUrl: { type: string, nullable: true }
         publishedPoiId: { type: string, format: uuid, nullable: true }
@@ -853,7 +855,7 @@ components:
         rawLongitude: { type: string, nullable: true }
         normalizationRule: { type: string, nullable: true }
         coordinateEvidence: { type: string, nullable: true }
-        sourceLicense: { type: string, nullable: true }
+        sourceLicense: { type: string, nullable: true, maxLength: 240 }
         sourceAttribution: { type: string, nullable: true }
     AdminEditorialUpdate:
       type: object
@@ -869,7 +871,7 @@ components:
         longitude: { type: number, nullable: true }
         normalizationRule: { type: string, nullable: true }
         coordinateEvidence: { type: string, nullable: true }
-        sourceLicense: { type: string, nullable: true }
+        sourceLicense: { type: string, nullable: true, maxLength: 240 }
         sourceAttribution: { type: string, nullable: true }
     AdminVersionedAction:
       type: object

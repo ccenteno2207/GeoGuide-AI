@@ -2,7 +2,7 @@ export type ApiConfig = { baseUrl: string; getToken: () => Promise<string | null
 export type EditorialState = 'DRAFT' | 'PENDING_REVIEW' | 'OBSERVED' | 'APPROVED' | 'SUSPENDED' | 'PUBLISHED' | 'REJECTED' | 'ARCHIVED';
 export type ImportBatch = { id: string; fileName: string; sha256: string; cutoff: string | null; total: number; candidates: number; quarantined: number; poiDrafts: number; destinationDrafts: number; unassignedCandidates: number };
 export type PageResult<T> = { content: T[]; page: number; size: number; totalElements: number; totalPages?: number };
-export type ImportRecord = { id: string; sourceRecordId: string; rowNumber: number; name: string; sourceCategory: string; region: string; province: string; district: string; sourceUrl: string; rawLatitude: string; rawLongitude: string; normalizedLatitude: number | null; normalizedLongitude: number | null; normalizationRule: string; validationEvidence: string; status: string; quarantineReason: string | null; hasEditorialRecord: boolean; hasDestinationEditorialRecord: boolean; reviewClassification: string };
+export type ImportRecord = { id: string; sourceRecordId: string; rowNumber: number; name: string; sourceCategory: string; sourceType: string | null; suggestedPoiCategoryCode: string | null; region: string; province: string; district: string; sourceUrl: string; rawLatitude: string; rawLongitude: string; normalizedLatitude: number | null; normalizedLongitude: number | null; normalizationRule: string; validationEvidence: string; status: string; quarantineReason: string | null; hasEditorialRecord: boolean; hasDestinationEditorialRecord: boolean; reviewClassification: string };
 export type EditorialRecord = { id: string; importRecordId: string | null; sourceRecordId: string | null; name: string; description: string | null; administrativeContext: string | null; categoryCode: string; latitude: number | null; longitude: number | null; rawLatitude: string | null; rawLongitude: string | null; normalizationRule: string | null; coordinateEvidence: string | null; geographicReviewStatus: string; identityReviewStatus: string; identityReviewEvidence: string | null; state: EditorialState; sourceLicense: string | null; sourceAttribution: string | null; sourceUrl: string | null; publishedPoiId: string | null; active: boolean; targetPoiId: string | null; version: number };
 export type AdminPoi = { id: string; name: string; description: string | null; categoryCode: string; categoryName: string; active: boolean; updatedAt: string; sourceSystem: string | null; sourceRecordId: string | null; sourceUrl: string | null; license: string | null; attribution: string | null };
 export type DuplicateCandidate = { entityType: 'POI' | 'DESTINATION'; entityId: string; name: string; distanceMeters: number | null };
@@ -17,7 +17,17 @@ export class AdminApi {
       ...init,
       headers: { ...(init.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }), Authorization: `Bearer ${token}`, ...init.headers },
     });
-    if (!response.ok) throw new Error(`API ${response.status}: ${await response.text()}`);
+    if (!response.ok) {
+      const body = await response.text();
+      let detail = body;
+      try {
+        const problem = JSON.parse(body) as { detail?: unknown };
+        if (typeof problem.detail === 'string') detail = problem.detail;
+      } catch {
+        // Preserve plain-text errors from compatible API gateways.
+      }
+      throw new Error(`API ${response.status}: ${detail}`);
+    }
     if (response.status === 204) return undefined as T;
     return response.json() as Promise<T>;
   }

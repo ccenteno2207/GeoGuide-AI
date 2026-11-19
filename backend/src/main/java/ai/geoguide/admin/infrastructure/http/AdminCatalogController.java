@@ -6,6 +6,7 @@ import ai.geoguide.admin.infrastructure.persistence.AdminPoiInventoryRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
@@ -191,10 +192,10 @@ public class AdminCatalogController {
     public record CreateRequest(UUID importRecordId, String name, String description, String administrativeContext,
             @NotBlank String categoryCode, BigDecimal latitude, BigDecimal longitude,
             String rawLatitude,String rawLongitude,String normalizationRule,String coordinateEvidence,
-            String sourceLicense, String sourceAttribution) {}
+            @Size(max = 240) String sourceLicense, String sourceAttribution) {}
     public record UpdateRequest(long expectedVersion, @NotBlank String reason, @NotBlank String name,
             String description, @NotBlank String categoryCode, BigDecimal latitude, BigDecimal longitude,
-            String normalizationRule,String coordinateEvidence,String sourceLicense, String sourceAttribution,
+            String normalizationRule,String coordinateEvidence,@Size(max = 240) String sourceLicense, String sourceAttribution,
             String administrativeContext) {}
     public record GeographicReviewRequest(long expectedVersion, boolean approve, @NotBlank String reason) {}
     public record IdentityReviewRequest(long expectedVersion, boolean noDuplicate, @NotBlank String reason,
