@@ -406,7 +406,7 @@ class PostgisIntegrationTests {
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest", Integer.class)).isZero();
         assertThat(adminEditorialRepository.list(null, null, null, null, 0, 50).totalElements()).isEqualTo(1);
         assertThat(adminEditorialRepository.list(null, null, "Canta", "MONUMENT", 0, 50).totalElements()).isEqualTo(1);
-        assertThat(adminEditorialRepository.list(null, null, "Lima", "MONUMENT", 0, 50).totalElements()).isZero();
+        assertThat(adminEditorialRepository.list(null, null, "Arequipa", "MONUMENT", 0, 50).totalElements()).isZero();
         assertThat(adminEditorialRepository.list(null, null, "Canta", "MUSEUM", 0, 50).totalElements()).isZero();
 
         UUID batchId = UUID.randomUUID();
