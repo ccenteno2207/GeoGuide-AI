@@ -2,6 +2,7 @@ package ai.geoguide.admin.infrastructure.persistence;
 
 import ai.geoguide.admin.domain.EditorialState;
 import ai.geoguide.admin.domain.EditorialWorkflowConflictException;
+import ai.geoguide.destination.domain.Destination;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.math.BigDecimal;
@@ -24,20 +25,25 @@ public class AdminEditorialRepository {
 
     public AdminEditorialRepository(JdbcTemplate jdbc,ObjectMapper objectMapper) { this.jdbc = jdbc; this.objectMapper=objectMapper; }
 
-    public Page<EditorialView> list(String state, String query,int page,int size) {
+    public Page<EditorialView> list(String state, String query, String locality, String category, int page, int size) {
         int safePage=Math.max(0,Math.min(page,1_000_000)),safeSize=Math.max(1,Math.min(size,100)),offset=safePage*safeSize;
         long total=jdbc.queryForObject("""
                 SELECT count(*) FROM admin.poi_editorial_record
-                WHERE (CAST(? AS VARCHAR) IS NULL OR editorial_state = ?) AND (CAST(? AS TEXT) IS NULL OR name ILIKE '%' || ? || '%' OR source_record_id = ?)
+                WHERE (CAST(? AS VARCHAR) IS NULL OR editorial_state = ?)
+                  AND (CAST(? AS TEXT) IS NULL OR name ILIKE '%' || ? || '%' OR source_record_id = ?)
+                  AND (CAST(? AS TEXT) IS NULL OR administrative_context ILIKE '%' || ? || '%')
+                  AND (CAST(? AS TEXT) IS NULL OR category_code = ?)
                 """,
-                Long.class,state,state,query,query,query);
+                Long.class,state,state,query,query,query,locality,locality,category,category);
         List<EditorialView> content=jdbc.query("""
                 SELECT * FROM admin.poi_editorial_record
                 WHERE (CAST(? AS VARCHAR) IS NULL OR editorial_state = ?)
                   AND (CAST(? AS TEXT) IS NULL OR name ILIKE '%' || ? || '%' OR source_record_id = ?)
+                  AND (CAST(? AS TEXT) IS NULL OR administrative_context ILIKE '%' || ? || '%')
+                  AND (CAST(? AS TEXT) IS NULL OR category_code = ?)
                 ORDER BY updated_at DESC, id
                 LIMIT ? OFFSET ?
-                """, this::map, state, state, query, query, query,safeSize,offset);
+                """, this::map, state, state, query, query, query, locality, locality, category, category,safeSize,offset);
         return new Page<>(content,safePage,safeSize,total);
     }
 
@@ -69,11 +75,11 @@ public class AdminEditorialRepository {
         UUID id = UUID.randomUUID();
         if (command.importRecordId() == null) {
             jdbc.update("""
-                    INSERT INTO admin.poi_editorial_record(id,name,description,category_code,latitude,longitude,
+                    INSERT INTO admin.poi_editorial_record(id,name,description,administrative_context,category_code,latitude,longitude,
                         raw_latitude,raw_longitude,coordinate_normalization_rule,coordinate_validation_evidence,
                         source_license,source_attribution,created_by)
-                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
-                    """, id, command.name().trim(), command.description(), command.categoryCode().trim(),
+                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                    """, id, command.name().trim(), command.description(), command.administrativeContext(), command.categoryCode().trim(),
                     command.latitude(), command.longitude(),command.rawLatitude(),command.rawLongitude(),command.normalizationRule(),
                     command.coordinateEvidence(), command.sourceLicense(), command.sourceAttribution(), actor);
         } else {
@@ -105,14 +111,14 @@ public class AdminEditorialRepository {
     public EditorialView update(UUID id, long expectedVersion, UpdateEditorial command, String actor, String reason) {
         EditorialView before=find(id).orElseThrow(()->new IllegalArgumentException("Editorial record not found."));
         int changed = jdbc.update("""
-                UPDATE admin.poi_editorial_record SET name=?, description=?, category_code=?, latitude=?, longitude=?,
+                UPDATE admin.poi_editorial_record SET name=?, description=?, administrative_context=?, category_code=?, latitude=?, longitude=?,
                     coordinate_normalization_rule=?,coordinate_validation_evidence=?,source_license=?, source_attribution=?, geographic_review_status='PENDING',
                     geographic_review_actor=NULL, geographic_reviewed_at=NULL, geographic_review_reason=NULL,
                     identity_review_status='PENDING',identity_review_actor=NULL,identity_reviewed_at=NULL,
                     identity_review_reason=NULL,identity_review_evidence=NULL,
                     version=version+1, updated_at=now()
                 WHERE id=? AND version=? AND editorial_state IN ('DRAFT','REJECTED')
-                """, command.name().trim(), command.description(), command.categoryCode().trim(), command.latitude(),
+                """, command.name().trim(), command.description(), command.administrativeContext(), command.categoryCode().trim(), command.latitude(),
                 command.longitude(),command.normalizationRule(),command.coordinateEvidence(),command.sourceLicense(), command.sourceAttribution(), id, expectedVersion);
         if (changed != 1) throw new EditorialWorkflowConflictException("Record is stale, missing, or cannot be edited in its current state.");
         EditorialView after=find(id).orElseThrow();
@@ -162,6 +168,7 @@ public class AdminEditorialRepository {
                 if (!before.identityReviewStatus().equals("NO_DUPLICATE")) throw new EditorialWorkflowConflictException("An explicit identity/duplicate review is required before publication.");
                 if (before.identityReviewEvidence() == null || before.identityReviewEvidence().isBlank()) throw new EditorialWorkflowConflictException("Evidenced identity review is required before publication.");
                 if (before.sourceLicense() == null || before.sourceAttribution() == null || before.sourceLicense().isBlank() || before.sourceAttribution().isBlank()) throw new EditorialWorkflowConflictException("Documented source license and attribution are required before publication.");
+                if (before.importRecordId() == null) ensureManualRecordIsNotThematicallyExcluded(before.name());
                 publish(before);
                 yield "PUBLISHED";
             }
@@ -204,6 +211,20 @@ public class AdminEditorialRepository {
                 """, UUID.randomUUID(), poiId, record.sourceRecordId() == null ? "ADMIN_CURATED" : "MINCETUR_INVENTARIO",
                 record.sourceRecordId(), record.sourceUrl(), record.sourceLicense(), record.sourceAttribution(),
                 "ADMINISTRATIVELY_REVIEWED", sourceKey);
+    }
+
+    private void ensureManualRecordIsNotThematicallyExcluded(String name) {
+        String normalizedName = Destination.normalize(name);
+        List<String> excludedNames = jdbc.query("""
+                SELECT r.raw_fields->>'NOMBRE DEL RECURSO'
+                FROM geo.mincetur_import_record r
+                WHERE r.thematic_eligibility='EXCLUDED_FROM_NAVIGATION'
+                  AND r.raw_fields->>'NOMBRE DEL RECURSO' IS NOT NULL
+                """, (rs, row) -> rs.getString(1));
+        if (excludedNames.stream().anyMatch(excluded -> Destination.normalize(excluded).equals(normalizedName))) {
+            throw new EditorialWorkflowConflictException(
+                    "A manually created POI exactly matches a MINCETUR resource excluded from navigation and cannot be published through the manual workflow.");
+        }
     }
 
     public List<DuplicateCandidate> duplicates(UUID id) {
@@ -252,9 +273,24 @@ public class AdminEditorialRepository {
 
     public record CreateEditorial(UUID importRecordId, String name, String description, String categoryCode,
             BigDecimal latitude, BigDecimal longitude,String rawLatitude,String rawLongitude,String normalizationRule,
-            String coordinateEvidence,String sourceLicense, String sourceAttribution) {}
+            String coordinateEvidence,String sourceLicense, String sourceAttribution, String administrativeContext) {
+        public CreateEditorial(UUID importRecordId, String name, String description, String categoryCode,
+                BigDecimal latitude, BigDecimal longitude, String rawLatitude, String rawLongitude,
+                String normalizationRule, String coordinateEvidence, String sourceLicense, String sourceAttribution) {
+            this(importRecordId, name, description, categoryCode, latitude, longitude, rawLatitude, rawLongitude,
+                    normalizationRule, coordinateEvidence, sourceLicense, sourceAttribution, null);
+        }
+    }
     public record UpdateEditorial(String name, String description, String categoryCode, BigDecimal latitude,
-            BigDecimal longitude,String normalizationRule,String coordinateEvidence, String sourceLicense, String sourceAttribution) {}
+            BigDecimal longitude,String normalizationRule,String coordinateEvidence, String sourceLicense, String sourceAttribution,
+            String administrativeContext) {
+        public UpdateEditorial(String name, String description, String categoryCode, BigDecimal latitude,
+                BigDecimal longitude, String normalizationRule, String coordinateEvidence, String sourceLicense,
+                String sourceAttribution) {
+            this(name, description, categoryCode, latitude, longitude, normalizationRule, coordinateEvidence,
+                    sourceLicense, sourceAttribution, null);
+        }
+    }
     public record EditorialView(UUID id, UUID importRecordId, String sourceRecordId, String name, String description,String administrativeContext,
             String categoryCode, BigDecimal latitude, BigDecimal longitude,String rawLatitude,String rawLongitude,
              String normalizationRule,String coordinateEvidence,String geographicReviewStatus,String identityReviewStatus,

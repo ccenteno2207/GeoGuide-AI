@@ -43,14 +43,17 @@ public class AdminCatalogController {
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','EDITOR','REVIEWER')")
     public AdminImportReadRepository.Page<AdminImportReadRepository.ImportRecordView> importRecords(@PathVariable UUID batchId,
             @RequestParam(required = false) String status, @RequestParam(required = false) String q,
+            @RequestParam(required = false) String locality, @RequestParam(required = false) String category,
             @RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="100") int size) {
-        return imports.records(batchId, status, q,page,size);
+        return imports.records(batchId, status, q, locality, category, page, size);
     }
 
     @GetMapping("/records")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','EDITOR','REVIEWER')")
     public AdminEditorialRepository.Page<AdminEditorialRepository.EditorialView> records(@RequestParam(required = false) String state,
-            @RequestParam(required = false) String q,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="50") int size) { return editorial.list(state, q,page,size); }
+            @RequestParam(required = false) String q, @RequestParam(required = false) String locality,
+            @RequestParam(required = false) String category, @RequestParam(defaultValue="0") int page,
+            @RequestParam(defaultValue="50") int size) { return editorial.list(state, q, locality, category, page, size); }
 
     @GetMapping("/records/{id}")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','EDITOR','REVIEWER')")
@@ -62,10 +65,13 @@ public class AdminCatalogController {
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','EDITOR')")
     public AdminEditorialRepository.EditorialView create(@Valid @RequestBody CreateRequest request, Authentication auth) {
+        if (request.importRecordId() == null && (request.name() == null || request.name().isBlank())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A manual POI draft requires a non-blank name.");
+        }
         return editorial.create(new AdminEditorialRepository.CreateEditorial(request.importRecordId(), request.name(),
                 request.description(), request.categoryCode(), request.latitude(), request.longitude(),
                 request.rawLatitude(),request.rawLongitude(),request.normalizationRule(),request.coordinateEvidence(),
-                request.sourceLicense(), request.sourceAttribution()), actor(auth));
+                request.sourceLicense(), request.sourceAttribution(), request.administrativeContext()), actor(auth));
     }
 
     @PutMapping("/records/{id}")
@@ -74,7 +80,8 @@ public class AdminCatalogController {
             Authentication auth) {
         return editorial.update(id, request.expectedVersion(), new AdminEditorialRepository.UpdateEditorial(request.name(),
                 request.description(), request.categoryCode(), request.latitude(), request.longitude(),
-                request.normalizationRule(),request.coordinateEvidence(),request.sourceLicense(), request.sourceAttribution()), actor(auth), request.reason());
+                request.normalizationRule(),request.coordinateEvidence(),request.sourceLicense(), request.sourceAttribution(),
+                request.administrativeContext()), actor(auth), request.reason());
     }
 
     @PostMapping("/records/{id}/geographic-review")
@@ -127,13 +134,14 @@ public class AdminCatalogController {
         return authentication.getName();
     }
 
-    public record CreateRequest(UUID importRecordId, String name, String description,
+    public record CreateRequest(UUID importRecordId, String name, String description, String administrativeContext,
             @NotBlank String categoryCode, BigDecimal latitude, BigDecimal longitude,
             String rawLatitude,String rawLongitude,String normalizationRule,String coordinateEvidence,
             String sourceLicense, String sourceAttribution) {}
     public record UpdateRequest(long expectedVersion, @NotBlank String reason, @NotBlank String name,
             String description, @NotBlank String categoryCode, BigDecimal latitude, BigDecimal longitude,
-            String normalizationRule,String coordinateEvidence,String sourceLicense, String sourceAttribution) {}
+            String normalizationRule,String coordinateEvidence,String sourceLicense, String sourceAttribution,
+            String administrativeContext) {}
     public record GeographicReviewRequest(long expectedVersion, boolean approve, @NotBlank String reason) {}
     public record IdentityReviewRequest(long expectedVersion, boolean noDuplicate, @NotBlank String reason,
             @NotBlank String evidence) {}

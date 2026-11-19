@@ -18,6 +18,7 @@ import ai.geoguide.poi.infrastructure.dataset.mincetur.JdbcMinceturSnapshotStagi
 import ai.geoguide.poi.infrastructure.dataset.mincetur.MinceturSnapshotParser;
 import ai.geoguide.admin.infrastructure.persistence.AdminEditorialRepository;
 import ai.geoguide.admin.infrastructure.persistence.AdminImportReadRepository;
+import ai.geoguide.admin.domain.EditorialWorkflowConflictException;
 import ai.geoguide.admin.infrastructure.persistence.AdminDestinationRepository;
 import ai.geoguide.admin.infrastructure.persistence.AdminDestinationPoiRelationshipRepository;
 import ai.geoguide.discovery.domain.DiscoveryCriteria;
@@ -390,7 +391,17 @@ class PostgisIntegrationTests {
 
     @Test
     void administrativeReadQueriesAcceptOmittedOptionalFilters() {
-        assertThat(adminEditorialRepository.list(null, null, 0, 50)).isNotNull();
+        var manual = adminEditorialRepository.create(new AdminEditorialRepository.CreateEditorial(null,
+                "Synthetic manual draft", null, "MONUMENT", null, null, null, null, null, null,
+                null, null, "Canta — Lima"), "editor-test");
+        assertThat(manual.state()).isEqualTo("DRAFT");
+        assertThat(manual.latitude()).isNull();
+        assertThat(manual.longitude()).isNull();
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest", Integer.class)).isZero();
+        assertThat(adminEditorialRepository.list(null, null, null, null, 0, 50).totalElements()).isEqualTo(1);
+        assertThat(adminEditorialRepository.list(null, null, "Canta", "MONUMENT", 0, 50).totalElements()).isEqualTo(1);
+        assertThat(adminEditorialRepository.list(null, null, "Lima", "MONUMENT", 0, 50).totalElements()).isZero();
+        assertThat(adminEditorialRepository.list(null, null, "Canta", "MUSEUM", 0, 50).totalElements()).isZero();
 
         UUID batchId = UUID.randomUUID();
         jdbcTemplate.update("""
@@ -400,8 +411,18 @@ class PostgisIntegrationTests {
                     'STAGED_REQUIRES_REVIEW')
                 """, batchId, UUID.randomUUID().toString().replace("-", "").repeat(2).toUpperCase(java.util.Locale.ROOT));
 
-        assertThat(adminImportReadRepository.records(batchId, null, null, 0, 50).totalElements()).isZero();
-        assertThat(adminImportReadRepository.records(batchId, "NORMALIZED_PENDING_REVIEW", "", 0, 50)
+        assertThat(adminImportReadRepository.records(batchId, null, null, null, null, 0, 50).totalElements()).isZero();
+        assertThat(adminImportReadRepository.records(batchId, "NORMALIZED_PENDING_REVIEW", "", null, null, 0, 50)
+                .totalElements()).isZero();
+        UUID importId = UUID.randomUUID();
+        jdbcTemplate.update("""
+                INSERT INTO geo.mincetur_import_record(id,batch_id,row_number,source_record_id,raw_fields,record_status)
+                VALUES (?,?,1,'synthetic-1',?::jsonb,'MALFORMED_ROW')
+                """, importId, batchId,
+                "{\"NOMBRE DEL RECURSO\":\"Synthetic place\",\"DISTRITO\":\"Obrajillo\",\"PROVINCIA\":\"Canta\",\"REGIÓN\":\"Lima\",\"CATEGORÍA\":\"Natural\"}");
+        assertThat(adminImportReadRepository.records(batchId, null, null, "Canta", "Natural", 0, 50)
+                .totalElements()).isEqualTo(1);
+        assertThat(adminImportReadRepository.records(batchId, null, null, "Canta", "natural", 0, 50)
                 .totalElements()).isZero();
     }
 
@@ -444,6 +465,46 @@ class PostgisIntegrationTests {
                 SELECT details->>'decisionEvidence' FROM admin.poi_editorial_audit
                 WHERE editorial_id=? AND action='APPROVE'
                 """, String.class, candidate.id())).isEqualTo("Synthetic publication evidence validated.");
+    }
+
+    @Test
+    void manualPublicationCannotBypassMinceturThematicExclusion() {
+        UUID categoryId = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO geo.category(id,code,name,active) VALUES (?,?,?,true)",
+                categoryId, "MONUMENT", "Monument");
+        String excludedName = "Fiesta de la Vendimia";
+        var draft = adminEditorialRepository.create(new AdminEditorialRepository.CreateEditorial(null,
+                excludedName, "Synthetic draft", "MONUMENT", new java.math.BigDecimal("-14.1"),
+                new java.math.BigDecimal("-75.1"), null, null, null,
+                "Synthetic geographic evidence", "Synthetic license", "Synthetic attribution", "Canta"),
+                "editor-test");
+        var geography = adminEditorialRepository.reviewGeography(draft.id(), draft.version(), true,
+                "reviewer-test", "Synthetic location review");
+        var identity = adminEditorialRepository.reviewIdentity(draft.id(), geography.version(), true,
+                "reviewer-test", "Synthetic identity review", "No published duplicate found.");
+        var submitted = adminEditorialRepository.transition(draft.id(), identity.version(), "SUBMIT_FOR_REVIEW",
+                "editor-test", "Synthetic submission", "Review packet complete.");
+
+        UUID batchId = UUID.randomUUID();
+        jdbcTemplate.update("""
+                INSERT INTO geo.mincetur_import_batch(id,source_system,source_file_name,source_sha256,source_cutoff,
+                    detected_encoding,delimiter,parser_version,record_count,quarantined_count,batch_status)
+                VALUES (?, 'MINCETUR', 'excluded.csv', ?, DATE '2026-11-10', 'UTF-8', ';', 'exclusion-test', 1, 0,
+                    'STAGED_REQUIRES_REVIEW')
+                """, batchId, "A".repeat(64));
+        jdbcTemplate.update("""
+                INSERT INTO geo.mincetur_import_record(id,batch_id,row_number,raw_fields,record_status,
+                    thematic_eligibility,thematic_rule_code,thematic_reason)
+                VALUES (?,?,1,?::jsonb,'MALFORMED_ROW','EXCLUDED_FROM_NAVIGATION','TEST_EXCLUSION','Synthetic excluded row')
+                """, UUID.randomUUID(), batchId,
+                "{\"NOMBRE DEL RECURSO\":\"fiesta   de la vendimia\"}");
+
+        assertThatThrownBy(() -> adminEditorialRepository.transition(draft.id(), submitted.version(), "APPROVE",
+                "reviewer-test", "Should remain unpublished", "Synthetic excluded identity match"))
+                .isInstanceOf(EditorialWorkflowConflictException.class)
+                .hasMessageContaining("excluded from navigation");
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest", Integer.class)).isZero();
+        assertThat(adminEditorialRepository.find(draft.id()).orElseThrow().state()).isEqualTo("PENDING_REVIEW");
     }
 
     @Test
