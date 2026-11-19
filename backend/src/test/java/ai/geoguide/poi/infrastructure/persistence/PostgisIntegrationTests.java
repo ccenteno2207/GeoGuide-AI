@@ -8,25 +8,33 @@ import ai.geoguide.poi.domain.GeoPoint;
 import ai.geoguide.poi.domain.PoiId;
 import ai.geoguide.poi.domain.PointOfInterest;
 import ai.geoguide.poi.domain.SourceReference;
+import ai.geoguide.poi.application.port.CategoryRepository;
 import ai.geoguide.destination.application.port.DestinationRepository;
 import ai.geoguide.destination.domain.Destination;
 import ai.geoguide.destination.infrastructure.dataset.DestinationCatalogLoader;
 import ai.geoguide.poi.infrastructure.dataset.P3DatasetLoader;
+import ai.geoguide.poi.infrastructure.dataset.mincetur.MinceturSnapshotCoordinateNormalizer;
 import ai.geoguide.poi.infrastructure.dataset.mincetur.JdbcMinceturSnapshotStagingRepository;
 import ai.geoguide.poi.infrastructure.dataset.mincetur.MinceturSnapshotParser;
 import ai.geoguide.admin.infrastructure.persistence.AdminEditorialRepository;
 import ai.geoguide.admin.infrastructure.persistence.AdminImportReadRepository;
+import ai.geoguide.admin.infrastructure.persistence.AdminDestinationRepository;
+import ai.geoguide.admin.infrastructure.persistence.AdminDestinationPoiRelationshipRepository;
 import ai.geoguide.discovery.domain.DiscoveryCriteria;
 import ai.geoguide.discovery.infrastructure.persistence.JdbcRoutePoiCandidateQuery;
 import ai.geoguide.routing.domain.RouteGeometry;
 import ai.geoguide.routing.domain.RoutePoint;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,32 +48,71 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.ConditionEvaluationResult;
+import org.junit.jupiter.api.extension.ExecutionCondition;
+import org.junit.jupiter.api.extension.ExtensionContext;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.DockerClientFactory;
 import org.testcontainers.utility.DockerImageName;
 
-@Testcontainers(disabledWithoutDocker = true)
+@ExtendWith(PostgisIntegrationTests.PostgisEnvironmentCondition.class)
 @SpringBootTest
 @AutoConfigureMockMvc
 @Import({JdbcPoiRepository.class, JdbcCategoryRepository.class, JdbcRoutePoiCandidateQuery.class,
         JdbcMinceturSnapshotStagingRepository.class})
 class PostgisIntegrationTests {
 
-    @Container
     static final PostgreSQLContainer<?> POSTGIS = new PostgreSQLContainer<>(
             DockerImageName.parse("postgis/postgis:16-3.4")
                     .asCompatibleSubstituteFor("postgres"));
 
+    static final String EXTERNAL_DATABASE_PROPERTY = "geoguide.test.postgis.external";
+
+    public static final class PostgisEnvironmentCondition implements ExecutionCondition {
+        @Override
+        public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
+            if (Boolean.getBoolean(EXTERNAL_DATABASE_PROPERTY)) {
+                return ConditionEvaluationResult.enabled("Using explicitly configured isolated PostGIS database.");
+            }
+            return DockerClientFactory.instance().isDockerAvailable()
+                    ? ConditionEvaluationResult.enabled("Docker is available for Testcontainers.")
+                    : ConditionEvaluationResult.disabled("Docker is unavailable and no external PostGIS was configured.");
+        }
+    }
+
     @DynamicPropertySource
     static void databaseProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", POSTGIS::getJdbcUrl);
-        registry.add("spring.datasource.username", POSTGIS::getUsername);
-        registry.add("spring.datasource.password", POSTGIS::getPassword);
+        if (Boolean.getBoolean(EXTERNAL_DATABASE_PROPERTY)) {
+            registry.add("spring.datasource.url", () -> requiredSystemProperty("geoguide.test.postgis.url"));
+            registry.add("spring.datasource.username", () -> requiredSystemProperty("geoguide.test.postgis.username"));
+            registry.add("spring.datasource.password", () -> requiredSystemProperty("geoguide.test.postgis.password"));
+        } else {
+            POSTGIS.start();
+            registry.add("spring.datasource.url", POSTGIS::getJdbcUrl);
+            registry.add("spring.datasource.username", POSTGIS::getUsername);
+            registry.add("spring.datasource.password", POSTGIS::getPassword);
+        }
+    }
+
+    @AfterAll
+    static void stopPostgisContainer() {
+        if (!Boolean.getBoolean(EXTERNAL_DATABASE_PROPERTY) && POSTGIS.isRunning()) {
+            POSTGIS.stop();
+        }
+    }
+
+    private static String requiredSystemProperty(String name) {
+        String value = System.getProperty(name);
+        if (value == null || value.isBlank()) throw new IllegalStateException(name + " is required.");
+        return value;
     }
 
     @Autowired
     JdbcPoiRepository repository;
+
+    @Autowired
+    CategoryRepository categoryRepository;
 
     @Autowired
     JdbcTemplate jdbcTemplate;
@@ -92,6 +139,12 @@ class PostgisIntegrationTests {
     AdminImportReadRepository adminImportReadRepository;
 
     @Autowired
+    AdminDestinationRepository adminDestinationRepository;
+
+    @Autowired
+    AdminDestinationPoiRelationshipRepository adminDestinationPoiRelationshipRepository;
+
+    @Autowired
     MockMvc mockMvc;
 
     @BeforeEach
@@ -107,7 +160,7 @@ class PostgisIntegrationTests {
 
         assertThat(jdbcTemplate.queryForObject("SELECT PostGIS_Version()", String.class)).isNotBlank();
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM flyway_schema_history", Integer.class))
-                .isEqualTo(7);
+                .isEqualTo(8);
         assertThat(jdbcTemplate.queryForObject("""
                 SELECT COUNT(*) FROM information_schema.tables
                 WHERE table_schema = 'geo'
@@ -131,6 +184,77 @@ class PostgisIntegrationTests {
                 SELECT data_type FROM information_schema.columns
                 WHERE table_schema = 'geo' AND table_name = 'point_of_interest' AND column_name = 'created_at'
                 """, String.class)).isEqualTo("timestamp with time zone");
+    }
+
+    @Test
+    void destinationPublicationRequiresIndependentGeoIdentityAndAccessReviewsAndDoesNotPublishPoi() {
+        var draft = adminDestinationRepository.create(new AdminDestinationRepository.CreateDestination(
+                "Recurso sintético Lima Canta", "REALIZACION_TECNICA", "Canta — Lima — Lima",
+                new java.math.BigDecimal("-11.45"), new java.math.BigDecimal("-76.62"),
+                "raw-lat", "raw-lon", "synthetic-test-rule", "synthetic map evidence",
+                "https://example.invalid/test-source", "TEST_ONLY", "Synthetic fixture attribution", "test-dest-1"),
+                "editor-1");
+
+        var geo = adminDestinationRepository.reviewGeography(draft.id(), draft.version(), true,
+                "reviewer-1", "synthetic coordinate verified");
+        var identity = adminDestinationRepository.reviewIdentity(geo.id(), geo.version(), true,
+                "reviewer-1", "synthetic unique fixture", "No matching destination in synthetic database.");
+        assertThatThrownBy(() -> adminDestinationRepository.transition(identity.id(), identity.version(),
+                "SUBMIT_FOR_REVIEW", "editor-1", "access review missing", "Synthetic test proves access review gate is incomplete."))
+                .isInstanceOf(RuntimeException.class);
+        var access = adminDestinationRepository.reviewAccess(identity.id(), identity.version(), true,
+                "reviewer-1", "access checked in synthetic test map", "fixture route point is on test road segment");
+        var pending = adminDestinationRepository.transition(access.id(), access.version(),
+                "SUBMIT_FOR_REVIEW", "editor-1", "all independent reviews recorded", "All required synthetic review evidence is attached.");
+        var published = adminDestinationRepository.transition(pending.id(), pending.version(),
+                "APPROVE", "reviewer-1", "publish isolated synthetic destination", "Approved synthetic destination record.");
+
+        assertThat(published.publishedDestinationId()).isEqualTo(published.id());
+        assertThat(destinationRepository.search(Destination.normalize("Recurso sintético"), 10))
+                .extracting(Destination::id).contains(published.id());
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest", Integer.class)).isZero();
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM admin.destination_editorial_audit WHERE destination_editorial_id=?", Integer.class,
+                published.id())).isEqualTo(6);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT details->>'evidence' FROM admin.destination_editorial_audit
+                WHERE destination_editorial_id=? AND action='NO_DUPLICATE_CONFIRMED'
+                """, String.class, published.id())).isEqualTo("No matching destination in synthetic database.");
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT details->>'evidence' FROM admin.destination_editorial_audit
+                WHERE destination_editorial_id=? AND action='APPROVE'
+                """, String.class, published.id())).isEqualTo("Approved synthetic destination record.");
+    }
+
+    @Test
+    void destinationPoiRelationshipIsPendingAndAuditedWithoutChangingEitherGeometry() {
+        UUID destinationId = UUID.randomUUID();
+        UUID poiId = UUID.randomUUID();
+        UUID categoryId = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO geo.category(id,code,name,active) VALUES (?,?,?,true)", categoryId, "OTHER", "Other");
+        jdbcTemplate.update("""
+                INSERT INTO geo.destination(id,canonical_name,normalized_name,destination_type,administrative_context,
+                    location,source_system,source_record_id,source_url,source_license,attribution,verified_at,catalog_version,active)
+                VALUES (?,?,?,? ,?,ST_SetSRID(ST_MakePoint(?,?),4326),?,?,?,?,?,CURRENT_DATE,?,true)
+                """, destinationId,"Destination test","destination test","TEST","Canta, Lima",-76.620000,-11.450000,
+                "TEST","dest-link-1","https://example.invalid","TEST_ONLY","synthetic", "test-v1");
+        jdbcTemplate.update("""
+                INSERT INTO geo.point_of_interest(id,category_id,name,description,location,active,created_at,updated_at)
+                VALUES (?,?,?,NULL,ST_SetSRID(ST_MakePoint(?,?),4326),true,now(),now())
+                """, poiId,categoryId,"POI test",-76.619000,-11.451000);
+
+        var pending = adminDestinationPoiRelationshipRepository.create(
+                new AdminDestinationPoiRelationshipRepository.CreateRelationship(destinationId, poiId,
+                        "RELATED_RESOURCE", "synthetic relationship review", "Fixture says these are related only."), "editor-1");
+        assertThat(pending.status()).isEqualTo("PENDING");
+        var approved = adminDestinationPoiRelationshipRepository.review(pending.id(), pending.version(), true,
+                "reviewer-1", "relationship confirmed", "synthetic test evidence");
+        assertThat(approved.status()).isEqualTo("APPROVED");
+        assertThat(jdbcTemplate.queryForObject("SELECT ST_X(location) FROM geo.destination WHERE id=?", Double.class,
+                destinationId)).isEqualTo(-76.62);
+        assertThat(jdbcTemplate.queryForObject("SELECT ST_X(location) FROM geo.point_of_interest WHERE id=?", Double.class,
+                poiId)).isEqualTo(-76.619);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM admin.destination_poi_relationship_audit WHERE relationship_id=?",
+                Integer.class, pending.id())).isEqualTo(2);
     }
 
     @Test
@@ -161,6 +285,72 @@ class PostgisIntegrationTests {
     }
 
     @Test
+    void fullMinceturSnapshotStagesExpectedCountsIdempotentlyAndPreservesP3AndCuratedDestinations() throws Exception {
+        String csvPath = System.getProperty("geoguide.test.minceturCsv");
+        Assumptions.assumeTrue(csvPath != null && !csvPath.isBlank(),
+                "Set geoguide.test.minceturCsv to stage the owner-provided source snapshot.");
+
+        var p3 = new P3DatasetLoader(objectMapper, categoryRepository, repository,
+                new ClassPathResource("data/p3/taxonomy-v1.json"),
+                new ClassPathResource("data/p3/lima-obrajillo-v1.json")).load();
+        int destinations = new DestinationCatalogLoader(objectMapper, destinationRepository,
+                new ClassPathResource("data/destination-search/mincetur-pilot-v1.json")).load();
+        assertThat(p3.poiCount()).isEqualTo(5);
+        assertThat(destinations).isEqualTo(9);
+
+        var p3Before = jdbcTemplate.queryForList("""
+                SELECT id::text AS id, name, ST_AsText(location) AS geometry, active
+                FROM geo.point_of_interest ORDER BY id
+                """);
+        var destinationsBefore = jdbcTemplate.queryForList("""
+                SELECT id::text AS id, canonical_name, ST_AsText(location) AS geometry, active
+                FROM geo.destination ORDER BY id
+                """);
+
+        byte[] source = Files.readAllBytes(Path.of(csvPath));
+        var parsed = new MinceturSnapshotParser().parse(Path.of(csvPath).getFileName().toString(), source);
+        var normalizer = new MinceturSnapshotCoordinateNormalizer(objectMapper);
+        var manifest = new ClassPathResource(
+                "data/destination-search/mincetur-20261110-coordinate-recovery-v1.json");
+        var snapshot = normalizer.normalize(parsed, manifest.getInputStream());
+
+        assertThat(snapshot.sha256()).isEqualToIgnoringCase(
+                "29351B0BAEA9E68AC1D50CFA2B5BF6273594FEC4A8CE112D2E63271F2D08FD66");
+        assertThat(snapshot.records()).hasSize(6_341);
+        assertThat(snapshot.records().stream().filter(r -> r.status()
+                == MinceturSnapshotParser.RecordStatus.NORMALIZED_PENDING_REVIEW)).hasSize(6_331);
+        assertThat(snapshot.records().stream().filter(r -> r.status()
+                == MinceturSnapshotParser.RecordStatus.COORDINATE_FORMAT_AMBIGUOUS)).hasSize(10);
+
+        UUID firstBatch = minceturStagingRepository.stage(snapshot);
+        UUID secondBatch = minceturStagingRepository.stage(snapshot);
+
+        assertThat(secondBatch).isEqualTo(firstBatch);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.mincetur_import_batch", Integer.class))
+                .isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.mincetur_import_record", Integer.class))
+                .isEqualTo(6_341);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM geo.mincetur_import_record
+                WHERE record_status='NORMALIZED_PENDING_REVIEW'
+                """, Integer.class)).isEqualTo(6_331);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM geo.mincetur_import_record
+                WHERE record_status='COORDINATE_FORMAT_AMBIGUOUS'
+                """, Integer.class)).isEqualTo(10);
+        assertThat(jdbcTemplate.queryForList("""
+                SELECT id::text AS id, name, ST_AsText(location) AS geometry, active
+                FROM geo.point_of_interest ORDER BY id
+                """)).isEqualTo(p3Before);
+        assertThat(jdbcTemplate.queryForList("""
+                SELECT id::text AS id, canonical_name, ST_AsText(location) AS geometry, active
+                FROM geo.destination ORDER BY id
+                """)).isEqualTo(destinationsBefore);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM admin.poi_editorial_record", Integer.class)).isZero();
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM admin.destination_editorial_record", Integer.class)).isZero();
+    }
+
+    @Test
     void administrativeReadQueriesAcceptOmittedOptionalFilters() {
         assertThat(adminEditorialRepository.list(null, null, 0, 50)).isNotNull();
 
@@ -170,7 +360,7 @@ class PostgisIntegrationTests {
                     detected_encoding,delimiter,parser_version,record_count,quarantined_count,batch_status)
                 VALUES (?, 'MINCETUR', 'filters.csv', ?, DATE '2026-11-10', 'UTF-8', ';', 'filters-test', 0, 0,
                     'STAGED_REQUIRES_REVIEW')
-                """, batchId, UUID.randomUUID().toString().replace("-", "").repeat(2));
+                """, batchId, UUID.randomUUID().toString().replace("-", "").repeat(2).toUpperCase(java.util.Locale.ROOT));
 
         assertThat(adminImportReadRepository.records(batchId, null, null, 0, 50).totalElements()).isZero();
         assertThat(adminImportReadRepository.records(batchId, "NORMALIZED_PENDING_REVIEW", "", 0, 50)
@@ -194,9 +384,10 @@ class PostgisIntegrationTests {
         assertThat(candidate.state()).isEqualTo("DRAFT");
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest",Integer.class)).isEqualTo(1);
         var geographic=adminEditorialRepository.reviewGeography(candidate.id(),0,true,"reviewer-test","Coordinates manually checked against isolated fixture evidence");
-        var identity=adminEditorialRepository.reviewIdentity(candidate.id(),geographic.version(),true,"reviewer-test","No matching P3 or destination entry in isolated fixture");
-        var submitted=adminEditorialRepository.transition(candidate.id(),identity.version(),"SUBMIT_FOR_REVIEW","editor-test","Ready for independent editorial review");
-        var published=adminEditorialRepository.transition(candidate.id(),submitted.version(),"APPROVE","reviewer-test","Approved synthetic fixture for local integration test");
+        var identity=adminEditorialRepository.reviewIdentity(candidate.id(),geographic.version(),true,"reviewer-test",
+                "No matching P3 or destination entry in isolated fixture", "Synthetic identity comparison returned no exact match.");
+        var submitted=adminEditorialRepository.transition(candidate.id(),identity.version(),"SUBMIT_FOR_REVIEW","editor-test","Ready for independent editorial review","Synthetic review packet is complete.");
+        var published=adminEditorialRepository.transition(candidate.id(),submitted.version(),"APPROVE","reviewer-test","Approved synthetic fixture for local integration test","Synthetic publication evidence validated.");
 
         assertThat(published.state()).isEqualTo("PUBLISHED");
         assertThat(published.publishedPoiId()).isEqualTo(candidate.id());
@@ -207,6 +398,14 @@ class PostgisIntegrationTests {
                 .isEqualTo(-75.0);
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.poi_provenance WHERE poi_id=?",Integer.class,candidate.id())).isEqualTo(1);
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM admin.poi_editorial_audit WHERE editorial_id=?",Integer.class,candidate.id())).isEqualTo(5);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT details->>'evidence' FROM admin.poi_editorial_audit
+                WHERE editorial_id=? AND action='NO_DUPLICATE_CONFIRMED'
+                """, String.class, candidate.id())).isEqualTo("Synthetic identity comparison returned no exact match.");
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT details->>'decisionEvidence' FROM admin.poi_editorial_audit
+                WHERE editorial_id=? AND action='APPROVE'
+                """, String.class, candidate.id())).isEqualTo("Synthetic publication evidence validated.");
     }
 
     @Test

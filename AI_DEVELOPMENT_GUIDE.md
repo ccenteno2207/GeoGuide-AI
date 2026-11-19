@@ -67,6 +67,29 @@ Flujo Git esperado: `main` limpio → rama autorizada → checkpoints → prueba
 cohesivos → push → PR → auditoría maestra → remediación → merge → validación post-merge
 → cierre formal → limpieza de rama.
 
+## Entornos de validación
+
+- Windows + VS Code/Codex es el entorno habitual de desarrollo, análisis estático,
+  compilación, pruebas unitarias y commits locales.
+- La VM Ubuntu de integración existente en Proxmox es el entorno preferido para Docker,
+  PostgreSQL/PostGIS, GraphHopper y pruebas integradas reales cuando el contrato de fase
+  lo autorice. Consultar el estado actual de host, recursos, servicios, redes, volúmenes y
+  puertos antes de usarla; no asumir que conserva su configuración histórica.
+- La validación física Android exige autorización explícita para el dispositivo y la
+  actividad aplicable.
+- Antes de declarar un bloqueo de Docker/PostGIS en Windows, revisar la documentación del
+  proyecto y comprobar si la VM autorizada está disponible.
+- No instalar infraestructura adicional en Windows sin necesidad justificada y
+  aprobación explícita.
+- Cada stack de validación debe usar nombres, red y volúmenes temporales exclusivos. No
+  reutilizar ni alterar servicios, bases, volúmenes, redes, Compose, DNS, TLS, firewall o
+  endpoints públicos compartidos. La autorización de validación aislada no concede una
+  autorización general para modificar infraestructura.
+- `CONTINUE_BY_DEFAULT` permite avanzar entre operaciones técnicas ordinarias dentro del
+  objetivo aprobado; no amplía su alcance. Usar `STOP_AND_REPORT` ante bloqueo material,
+  cambio de alcance/contrato, riesgo de seguridad, operación destructiva o acción sin
+  autorización.
+
 ## Escalamiento
 
 Pausar ante ampliación de alcance, nueva decisión arquitectónica, violación de frontera

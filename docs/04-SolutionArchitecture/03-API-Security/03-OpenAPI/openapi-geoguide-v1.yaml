@@ -160,7 +160,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/AdminReviewDecision' }
+            schema: { $ref: '#/components/schemas/AdminGeographicDecision' }
       responses:
         '200': { description: Estado geográfico actualizado; no publica el POI }
         '403': { description: Revisor o administrador requerido }
@@ -247,6 +247,128 @@ paths:
             schema: { $ref: '#/components/schemas/AdminVersionedAction' }
       responses:
         '200': { description: Candidato ARCHIVED }
+  /admin/destination-records:
+    get:
+      summary: Listar candidatos editoriales de destino
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: query, name: state, schema: { type: string } }
+        - { in: query, name: q, schema: { type: string } }
+        - { in: query, name: page, schema: { type: integer, minimum: 0, default: 0 } }
+        - { in: query, name: size, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+      responses:
+        '200':
+          description: Borradores de destino; no implica elegibilidad pública
+          content: { application/json: { schema: { $ref: '#/components/schemas/AdminDestinationPage' } } }
+    post:
+      summary: Crear candidato sintético/curado de destino
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AdminDestinationCreate' } } }
+      responses:
+        '201': { description: Borrador DRAFT privado }
+  /admin/destination-records/from-import:
+    post:
+      summary: Crear borrador independiente desde fila staging elegible
+      description: No admite cuarentena, no publica y no reutiliza automáticamente la categoría POI.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AdminDestinationImportCreate' } } }
+      responses:
+        '201': { description: Candidato privado de destino }
+        '409': { description: Fila no elegible o ya vinculada a un borrador de destino }
+  /admin/destination-records/{id}:
+    get:
+      summary: Consultar candidato de destino y evidencia
+      security: [{ bearerAuth: [] }]
+      parameters: [{ in: path, name: id, required: true, schema: { type: string, format: uuid } }]
+      responses:
+        '200': { description: Candidato administrativo }
+        '404': { description: Candidato no encontrado }
+    put:
+      summary: Editar candidato y reiniciar revisiones independientes
+      security: [{ bearerAuth: [] }]
+      parameters: [{ in: path, name: id, required: true, schema: { type: string, format: uuid } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AdminDestinationUpdate' } } }
+      responses:
+        '200': { description: Candidato actualizado }
+        '409': { description: Versión obsoleta o no editable }
+  /admin/destination-records/{id}/duplicates:
+    get:
+      summary: Obtener indicios de duplicado; no fusiona ni aprueba identidad
+      security: [{ bearerAuth: [] }]
+      parameters: [{ in: path, name: id, required: true, schema: { type: string, format: uuid } }]
+      responses: { '200': { description: Destinos y POIs candidatos de comparación } }
+  /admin/destination-records/{id}/geographic-review:
+    post:
+      summary: Aprobar o rechazar coordenada con actor, razón y evidencia
+      security: [{ bearerAuth: [] }]
+      parameters: [{ in: path, name: id, required: true, schema: { type: string, format: uuid } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AdminGeographicDecision' } } }
+      responses: { '200': { description: Revisión geográfica registrada }, '409': { description: Coordenada/evidencia insuficiente o versión obsoleta } }
+  /admin/destination-records/{id}/identity-review:
+    post:
+      summary: Registrar decisión independiente de identidad
+      security: [{ bearerAuth: [] }]
+      parameters: [{ in: path, name: id, required: true, schema: { type: string, format: uuid } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AdminIdentityDecision' } } }
+      responses: { '200': { description: Revisión de identidad registrada } }
+  /admin/destination-records/{id}/access-review:
+    post:
+      summary: Revisar separadamente el punto de llegada/acceso vial
+      security: [{ bearerAuth: [] }]
+      parameters: [{ in: path, name: id, required: true, schema: { type: string, format: uuid } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AdminAccessDecision' } } }
+      responses: { '200': { description: Revisión de acceso registrada }, '409': { description: Revisión geográfica previa requerida } }
+  /admin/destination-records/{id}/{action}:
+    post:
+      summary: Enviar, publicar, rechazar o archivar destino
+      description: approve solo publica tras revisión geográfica, identidad sin duplicado, acceso aprobado y provenance/licencia. No crea ni actualiza POI.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+        - { in: path, name: action, required: true, schema: { type: string, enum: [submit, approve, reject, archive] } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AdminVersionedAction' } } }
+      responses: { '200': { description: Transición editorial explícita }, '409': { description: Controles incompletos o versión obsoleta } }
+  /admin/destination-poi-relationships:
+    get:
+      summary: Listar relaciones explícitas destino-POI
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: query, name: status, schema: { type: string, enum: [PENDING, APPROVED, REJECTED] } }
+        - { in: query, name: page, schema: { type: integer, minimum: 0, default: 0 } }
+        - { in: query, name: size, schema: { type: integer, minimum: 1, maximum: 100, default: 50 } }
+      responses: { '200': { description: Relaciones y datos de ambas entidades sin sincronización } }
+    post:
+      summary: Crear relación PENDING con evidencia auditable
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AdminDestinationPoiRelationshipCreate' } } }
+      responses: { '201': { description: Relación pendiente; no cambia publicación o geometría } }
+  /admin/destination-poi-relationships/{id}/{action}:
+    post:
+      summary: Aprobar o rechazar relación existente
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+        - { in: path, name: action, required: true, schema: { type: string, enum: [approve, reject] } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AdminRelationshipReview' } } }
+      responses: { '200': { description: Decisión de relación auditada }, '409': { description: Versión obsoleta o relación no pendiente } }
   /admin/pois/{poiId}/media:
     get:
       summary: Listar media privada de un POI
@@ -315,7 +437,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/AdminVersionedAction' }
+            schema: { $ref: '#/components/schemas/AdminMediaVersionedAction' }
       responses: { '200': { description: Asset PENDING_REVIEW } }
   /admin/media/{id}/publish:
     post:
@@ -337,7 +459,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/AdminVersionedAction' }
+            schema: { $ref: '#/components/schemas/AdminMediaVersionedAction' }
       responses: { '200': { description: Asset retirado y sin imagen principal } }
   /admin/media/{id}/reject:
     post:
@@ -348,7 +470,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/AdminVersionedAction' }
+            schema: { $ref: '#/components/schemas/AdminMediaVersionedAction' }
       responses: { '200': { description: Asset rechazado sin publicarse } }
   /pois/{poiId}/media/primary:
     get:
@@ -514,7 +636,7 @@ components:
         generatedAt: { type: string, format: date-time }
     AdminImportBatch:
       type: object
-      required: [id, fileName, sha256, total, candidates, quarantined]
+      required: [id, fileName, sha256, total, candidates, quarantined, poiDrafts, destinationDrafts, unassignedCandidates]
       properties:
         id: { type: string, format: uuid }
         fileName: { type: string }
@@ -523,9 +645,12 @@ components:
         total: { type: integer }
         candidates: { type: integer }
         quarantined: { type: integer }
+        poiDrafts: { type: integer, description: Cantidad de borradores POI vinculados al lote; no implica publicación }
+        destinationDrafts: { type: integer, description: Cantidad de borradores destino vinculados al lote; no implica publicación }
+        unassignedCandidates: { type: integer, description: Candidatos pendientes sin borrador POI ni destino }
     AdminImportRecord:
       type: object
-      required: [id, rowNumber, status, hasEditorialRecord]
+      required: [id, rowNumber, status, hasEditorialRecord, hasDestinationEditorialRecord, reviewClassification]
       properties:
         id: { type: string, format: uuid }
         sourceRecordId: { type: string, nullable: true }
@@ -545,6 +670,8 @@ components:
         status: { type: string }
         quarantineReason: { type: string, nullable: true }
         hasEditorialRecord: { type: boolean }
+        hasDestinationEditorialRecord: { type: boolean }
+        reviewClassification: { type: string, enum: [QUARANTINED, POI_AND_DESTINATION_EDITORIALS_EXIST, POI_EDITORIAL_EXISTS, DESTINATION_EDITORIAL_EXISTS, UNASSIGNED_CANDIDATE] }
     AdminImportRecordPage:
       allOf:
         - $ref: '#/components/schemas/PageMetadata'
@@ -557,6 +684,12 @@ components:
         - type: object
           properties:
             content: { type: array, items: { $ref: '#/components/schemas/AdminEditorialRecord' } }
+    AdminDestinationPage:
+      allOf:
+        - $ref: '#/components/schemas/PageMetadata'
+        - type: object
+          properties:
+            content: { type: array, items: { $ref: '#/components/schemas/AdminDestinationRecord' } }
     PageMetadata:
       type: object
       required: [page, size, totalElements, totalPages]
@@ -583,6 +716,7 @@ components:
         coordinateEvidence: { type: string, nullable: true }
         geographicReviewStatus: { type: string }
         identityReviewStatus: { type: string }
+        identityReviewEvidence: { type: string, nullable: true }
         state: { type: string }
         sourceLicense: { type: string, nullable: true }
         sourceAttribution: { type: string, nullable: true }
@@ -596,7 +730,7 @@ components:
         importRecordId: { type: string, format: uuid, nullable: true }
         name: { type: string }
         description: { type: string, nullable: true }
-        categoryCode: { type: string, enum: [WATERFALL, LAGOON, MOUNTAIN, FOREST, BEACH, MUSEUM, ARCHAEOLOGICAL_SITE, MONUMENT, HISTORIC_CHURCH, VIEWPOINT] }
+        categoryCode: { type: string, enum: [WATERFALL, LAGOON, MOUNTAIN, FOREST, BEACH, MUSEUM, ARCHAEOLOGICAL_SITE, MONUMENT, HISTORIC_CHURCH, VIEWPOINT, FUEL, HEALTH, FOOD, LODGING, OTHER] }
         latitude: { type: number, nullable: true }
         longitude: { type: number, nullable: true }
         rawLatitude: { type: string, nullable: true }
@@ -622,13 +756,97 @@ components:
         sourceAttribution: { type: string, nullable: true }
     AdminVersionedAction:
       type: object
-      required: [expectedVersion, reason]
+      required: [expectedVersion, reason, evidence]
       properties:
         expectedVersion: { type: integer, format: int64 }
         reason: { type: string }
+        evidence: { type: string, description: Referencia o evidencia concreta que respalda esta decisión }
+    AdminDestinationRecord:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        importRecordId: { type: string, format: uuid, nullable: true }
+        sourceRecordId: { type: string, nullable: true }
+        canonicalName: { type: string }
+        destinationType: { type: string }
+        administrativeContext: { type: string, nullable: true }
+        latitude: { type: number, nullable: true }
+        longitude: { type: number, nullable: true }
+        rawLatitude: { type: string, nullable: true }
+        rawLongitude: { type: string, nullable: true }
+        normalizationRule: { type: string, nullable: true }
+        coordinateEvidence: { type: string, nullable: true }
+        sourceUrl: { type: string, nullable: true }
+        sourceLicense: { type: string, nullable: true }
+        sourceAttribution: { type: string, nullable: true }
+        geographicReviewStatus: { type: string, enum: [PENDING, APPROVED, REJECTED] }
+        identityReviewStatus: { type: string, enum: [PENDING, NO_DUPLICATE, MATCH_FOUND] }
+        identityReviewEvidence: { type: string, nullable: true }
+        accessReviewStatus: { type: string, enum: [PENDING, APPROVED, REJECTED] }
+        accessReviewEvidence: { type: string, nullable: true }
+        state: { type: string, enum: [DRAFT, PENDING_REVIEW, PUBLISHED, REJECTED, ARCHIVED] }
+        publishedDestinationId: { type: string, format: uuid, nullable: true }
+        version: { type: integer, format: int64 }
+    AdminDestinationCreate:
+      type: object
+      required: [canonicalName, destinationType, administrativeContext, sourceUrl, sourceLicense, sourceAttribution]
+      properties:
+        canonicalName: { type: string }
+        destinationType: { type: string }
+        administrativeContext: { type: string }
+        latitude: { type: number, nullable: true }
+        longitude: { type: number, nullable: true }
+        rawLatitude: { type: string, nullable: true }
+        rawLongitude: { type: string, nullable: true }
+        normalizationRule: { type: string, nullable: true }
+        coordinateEvidence: { type: string, nullable: true }
+        sourceUrl: { type: string }
+        sourceLicense: { type: string }
+        sourceAttribution: { type: string }
+        sourceRecordId: { type: string, nullable: true }
+    AdminDestinationImportCreate:
+      type: object
+      required: [importRecordId, destinationType]
+      properties:
+        importRecordId: { type: string, format: uuid }
+        destinationType: { type: string }
+        sourceLicense: { type: string, nullable: true }
+        sourceAttribution: { type: string, nullable: true }
+    AdminDestinationUpdate:
+      allOf:
+        - $ref: '#/components/schemas/AdminDestinationCreate'
+        - type: object
+          required: [expectedVersion, reason]
+          properties:
+            expectedVersion: { type: integer, format: int64 }
+            reason: { type: string }
+    AdminAccessDecision:
+      type: object
+      required: [expectedVersion, approve, reason, evidence]
+      properties:
+        expectedVersion: { type: integer, format: int64 }
+        approve: { type: boolean }
+        reason: { type: string }
+        evidence: { type: string }
+    AdminDestinationPoiRelationshipCreate:
+      type: object
+      required: [destinationId, poiId, relationshipType, reason, evidence]
+      properties:
+        destinationId: { type: string, format: uuid }
+        poiId: { type: string, format: uuid }
+        relationshipType: { type: string, enum: [SAME_RESOURCE, RELATED_RESOURCE] }
+        reason: { type: string }
+        evidence: { type: string }
+    AdminRelationshipReview:
+      type: object
+      required: [expectedVersion, reason, evidence]
+      properties:
+        expectedVersion: { type: integer, format: int64 }
+        reason: { type: string }
+        evidence: { type: string }
     AdminMediaRights:
       allOf:
-        - $ref: '#/components/schemas/AdminVersionedAction'
+        - $ref: '#/components/schemas/AdminMediaVersionedAction'
         - type: object
           required: [license, attribution, evidenceReference]
           properties:
@@ -637,11 +855,17 @@ components:
             evidenceReference: { type: string }
     AdminMediaPublish:
       allOf:
-        - $ref: '#/components/schemas/AdminVersionedAction'
+        - $ref: '#/components/schemas/AdminMediaVersionedAction'
         - type: object
           required: [makePrimary]
           properties:
             makePrimary: { type: boolean }
+    AdminMediaVersionedAction:
+      type: object
+      required: [expectedVersion, reason]
+      properties:
+        expectedVersion: { type: integer, format: int64 }
+        reason: { type: string }
     AdminMediaAsset:
       type: object
       required: [id, poiId, contentType, sha256, sizeBytes, width, height, author, sourceUrl, rightsStatus, state, primary, version]
@@ -662,13 +886,13 @@ components:
         state: { type: string, enum: [DRAFT, PENDING_REVIEW, PUBLISHED, REJECTED, WITHDRAWN] }
         primary: { type: boolean }
         version: { type: integer, format: int64 }
-    AdminReviewDecision:
-      allOf:
-        - $ref: '#/components/schemas/AdminVersionedAction'
-        - type: object
-          required: [approve]
-          properties:
-            approve: { type: boolean }
+    AdminGeographicDecision:
+      type: object
+      required: [expectedVersion, approve, reason]
+      properties:
+        expectedVersion: { type: integer, format: int64 }
+        approve: { type: boolean }
+        reason: { type: string }
     AdminIdentityDecision:
       allOf:
         - $ref: '#/components/schemas/AdminVersionedAction'

@@ -88,28 +88,33 @@ public class AdminCatalogController {
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','REVIEWER')")
     public AdminEditorialRepository.EditorialView identityReview(@PathVariable UUID id,
             @Valid @RequestBody IdentityReviewRequest request, Authentication auth) {
-        return editorial.reviewIdentity(id, request.expectedVersion(), request.noDuplicate(), actor(auth), request.reason());
+        return editorial.reviewIdentity(id, request.expectedVersion(), request.noDuplicate(), actor(auth),
+                request.reason(), request.evidence());
     }
 
     @PostMapping("/records/{id}/submit")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','EDITOR')")
     public AdminEditorialRepository.EditorialView submit(@PathVariable UUID id, @Valid @RequestBody VersionedAction request,
-            Authentication auth) { return editorial.transition(id, request.expectedVersion(), "SUBMIT_FOR_REVIEW", actor(auth), request.reason()); }
+            Authentication auth) { return editorial.transition(id, request.expectedVersion(), "SUBMIT_FOR_REVIEW",
+                    actor(auth), request.reason(), request.evidence()); }
 
     @PostMapping("/records/{id}/approve")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','REVIEWER')")
     public AdminEditorialRepository.EditorialView approve(@PathVariable UUID id, @Valid @RequestBody VersionedAction request,
-            Authentication auth) { return editorial.transition(id, request.expectedVersion(), "APPROVE", actor(auth), request.reason()); }
+            Authentication auth) { return editorial.transition(id, request.expectedVersion(), "APPROVE",
+                    actor(auth), request.reason(), request.evidence()); }
 
     @PostMapping("/records/{id}/reject")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','REVIEWER')")
     public AdminEditorialRepository.EditorialView reject(@PathVariable UUID id, @Valid @RequestBody VersionedAction request,
-            Authentication auth) { return editorial.transition(id, request.expectedVersion(), "REJECT", actor(auth), request.reason()); }
+            Authentication auth) { return editorial.transition(id, request.expectedVersion(), "REJECT",
+                    actor(auth), request.reason(), request.evidence()); }
 
     @PostMapping("/records/{id}/archive")
     @PreAuthorize("hasRole('ADMINISTRATOR')")
     public AdminEditorialRepository.EditorialView archive(@PathVariable UUID id, @Valid @RequestBody VersionedAction request,
-            Authentication auth) { return editorial.transition(id, request.expectedVersion(), "ARCHIVE", actor(auth), request.reason()); }
+            Authentication auth) { return editorial.transition(id, request.expectedVersion(), "ARCHIVE",
+                    actor(auth), request.reason(), request.evidence()); }
 
     @GetMapping("/records/{id}/duplicates")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','EDITOR','REVIEWER')")
@@ -130,6 +135,7 @@ public class AdminCatalogController {
             String description, @NotBlank String categoryCode, BigDecimal latitude, BigDecimal longitude,
             String normalizationRule,String coordinateEvidence,String sourceLicense, String sourceAttribution) {}
     public record GeographicReviewRequest(long expectedVersion, boolean approve, @NotBlank String reason) {}
-    public record IdentityReviewRequest(long expectedVersion, boolean noDuplicate, @NotBlank String reason) {}
-    public record VersionedAction(long expectedVersion, @NotBlank String reason) {}
+    public record IdentityReviewRequest(long expectedVersion, boolean noDuplicate, @NotBlank String reason,
+            @NotBlank String evidence) {}
+    public record VersionedAction(long expectedVersion, @NotBlank String reason, @NotBlank String evidence) {}
 }
