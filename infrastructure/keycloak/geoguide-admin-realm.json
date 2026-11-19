@@ -1,0 +1,60 @@
+{
+  "realm": "geoguide-admin",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "resetPasswordAllowed": false,
+  "rememberMe": false,
+  "roles": {
+    "realm": [
+      { "name": "ADMINISTRATOR", "description": "Administra activación y configuración del catálogo" },
+      { "name": "EDITOR", "description": "Crea y edita borradores administrativos" },
+      { "name": "REVIEWER", "description": "Revisa geografía, identidad y decisiones editoriales" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "rutea-admin-portal",
+      "name": "Rutea Admin Portal",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": ["https://geoguide.getcom.pe:5443/admin/auth/callback"],
+      "webOrigins": ["https://geoguide.getcom.pe:5443"],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "https://geoguide.getcom.pe:5443/admin/"
+      },
+      "protocolMappers": [
+        {
+          "name": "admin-api-audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.client.audience": "geoguide-admin-api",
+            "id.token.claim": "false",
+            "access.token.claim": "true"
+          }
+        },
+        {
+          "name": "admin-realm-roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ]
+}

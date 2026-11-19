@@ -52,3 +52,46 @@ ADMIN_POI_01_CONTRACT_GAPS = IDENTIFIED
 ADMIN_POI_01_IMPLEMENTATION = PARTIAL
 ADMIN_POI_01_DEPLOYMENT = NOT_AUTHORIZED
 ```
+
+## Actualización administrativa — 2026-11-19
+
+Esta actualización complementa los resultados locales anteriores sin reescribir su
+historial. La separación de aprobación y activación se implementó mediante V010:
+aprobar crea o actualiza el POI con `active=false`; la reactivación exige un registro
+`APPROVED` con revisión geográfica, revisión de identidad, provenance y elegibilidad
+temática. La desactivación tiene auditoría append-only. Reactivar un POI curado sigue
+el flujo de solicitud de cambio que conserva su UUID y provenance.
+
+Se completaron:
+
+- Inventario administrativo paginado con filtros por nombre, categoría y estado;
+  historial de activación; solicitud editorial para POIs preexistentes; filtros de
+  localidad, categoría y estado en staging/editorial.
+- Estados `OBSERVED`, `APPROVED` y `SUSPENDED`, con endpoints protegidos por roles.
+- OIDC Authorization Code + PKCE para el portal bajo `/admin/`; JWT valida issuer,
+  audiencia y el claim de roles. JWKS se puede consultar por red interna sin alterar
+  el issuer público validado.
+- Overlay Compose ADMIN aislado para portal, Keycloak y su PostgreSQL propio; no
+  publica puertos de esos servicios. Nginx agrega HTTPS-only, CSP, HSTS, headers de
+  seguridad y límites de tasa administrativos.
+- La importación MINCETUR continúa opt-in; ningún candidato se publica por el
+  despliegue. No se transfirieron fotografías.
+
+Validación local posterior a esta actualización:
+
+- Portal: 8/8 Vitest PASS, build de producción PASS, `npm audit --omit=optional`:
+  0 vulnerabilidades (Vitest actualizado a 4.1.12).
+- Backend: `mvnw verify` BUILD SUCCESS, 117 pruebas ejecutadas, 0 fallos, 24
+  omitidas; 20 pruebas PostGIS requieren Docker y no pudieron ejecutarse localmente.
+- La validación PostGIS de V010, el OIDC real, despliegue HTTPS y smoke end-to-end
+  permanecen pendientes de integración en la VM autorizada.
+
+Estados de esta etapa antes de la integración remota:
+
+```ini
+ADMIN_POI_01_IMPLEMENTATION = LOCAL_VALIDATION_PASS_PENDING_POSTGIS
+ADMIN_POI_01_MAIN_INTEGRATION = PENDING
+ADMIN_POI_01_VM_DEPLOYMENT = PENDING
+ADMIN_POI_01_SECURITY_VALIDATION = LOCAL_PASS_PENDING_OIDC_SMOKE
+MINCETUR_SNAPSHOT_IMPORT = NOT_EXECUTED
+```

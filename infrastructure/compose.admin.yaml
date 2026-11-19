@@ -1,0 +1,81 @@
+services:
+  backend:
+    environment:
+      GEOGUIDE_ADMIN_SECURITY_ENABLED: "true"
+      GEOGUIDE_ADMIN_SECURITY_ISSUER_URI: https://${GEOGUIDE_API_DOMAIN:-geoguide.getcom.pe}:${GEOGUIDE_PUBLIC_HTTPS_PORT:-5443}/auth/realms/geoguide-admin
+      GEOGUIDE_ADMIN_SECURITY_JWK_SET_URI: http://keycloak:8080/auth/realms/geoguide-admin/protocol/openid-connect/certs
+      GEOGUIDE_ADMIN_SECURITY_AUDIENCE: geoguide-admin-api
+
+  admin-portal:
+    build:
+      context: ../admin-portal
+      dockerfile: Dockerfile
+      args:
+        VITE_OIDC_AUTHORITY: https://${GEOGUIDE_API_DOMAIN:-geoguide.getcom.pe}:${GEOGUIDE_PUBLIC_HTTPS_PORT:-5443}/auth/realms/geoguide-admin
+        VITE_OIDC_CLIENT_ID: rutea-admin-portal
+    image: geoguide-ai/admin-portal:admin-poi-01
+    restart: unless-stopped
+    mem_limit: 96m
+    cpus: 0.25
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/healthz"]
+      interval: 15s
+      timeout: 3s
+      retries: 5
+    networks: [data]
+
+  admin-keycloak-postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    mem_limit: 384m
+    cpus: 0.5
+    environment:
+      POSTGRES_DB: ${ADMIN_OIDC_DB_NAME:-keycloak}
+      POSTGRES_USER: ${ADMIN_OIDC_DB_USER:-keycloak}
+      POSTGRES_PASSWORD: ${ADMIN_OIDC_DB_PASSWORD:?Provide ADMIN_OIDC_DB_PASSWORD in the external admin env file}
+    volumes:
+      - admin_keycloak_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [data]
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.4.7
+    restart: unless-stopped
+    command: ["start", "--import-realm"]
+    mem_limit: 896m
+    cpus: 0.75
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://admin-keycloak-postgres:5432/${ADMIN_OIDC_DB_NAME:-keycloak}
+      KC_DB_USERNAME: ${ADMIN_OIDC_DB_USER:-keycloak}
+      KC_DB_PASSWORD: ${ADMIN_OIDC_DB_PASSWORD:?Provide ADMIN_OIDC_DB_PASSWORD in the external admin env file}
+      KC_HTTP_ENABLED: "true"
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_PROXY_HEADERS: xforwarded
+      KC_HOSTNAME: https://${GEOGUIDE_API_DOMAIN:-geoguide.getcom.pe}:${GEOGUIDE_PUBLIC_HTTPS_PORT:-5443}/auth
+      KC_HEALTH_ENABLED: "true"
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${ADMIN_OIDC_BOOTSTRAP_USER:?Provide ADMIN_OIDC_BOOTSTRAP_USER in the external admin env file}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${ADMIN_OIDC_BOOTSTRAP_PASSWORD:?Provide ADMIN_OIDC_BOOTSTRAP_PASSWORD in the external admin env file}
+      JAVA_OPTS_APPEND: -Xms128m -Xmx512m
+    volumes:
+      - ./keycloak/geoguide-admin-realm.json:/opt/keycloak/data/import/geoguide-admin-realm.json:ro
+    depends_on:
+      admin-keycloak-postgres:
+        condition: service_healthy
+    networks: [data]
+
+  nginx:
+    depends_on:
+      backend:
+        condition: service_healthy
+      admin-portal:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+
+volumes:
+  admin_keycloak_data:
