@@ -1,7 +1,7 @@
 # POI-DATA-2 — Auditoría de taxonomía MINCETUR y propuesta de filtro
 
 **Estado:** `POI_DATA_2_TAXONOMY_AUDIT = PASS`
-**Contrato:** `POI_DATA_2_FILTER_CONTRACT = RECONCILED_READY_FOR_FREEZE_REVIEW`
+**Contrato:** `POI_DATA_2_FILTER_CONTRACT = FROZEN`
 **Baseline auditado:** `origin/main = 2b94eb459ca711d08c711c732a3310ccb77f36e9`
 **Rama local:** `codex/poi-data-2-taxonomy-audit`
 
@@ -403,7 +403,7 @@ La elegibilidad temática solo indica que una fila puede pasar a revisiones post
 
 Resultado piloto: **14** de 17 permanecen candidatos a revisión temática; **3** quedan excluidos: códigos 7174, 7186 y 7187. Ningún registro se aprueba o publica por esta auditoría.
 
-## Contrato reconciliado POI-DATA-2 — listo para revisión de freeze
+## Contrato POI-DATA-2 — FROZEN
 
 ### Elegibilidad temática
 
@@ -445,12 +445,12 @@ Los registros excluidos del catálogo navegable permanecen en el inventario/stag
 
 ```ini
 POI_DATA_2_TAXONOMY_AUDIT = PASS
-POI_DATA_2_FILTER_CONTRACT = RECONCILED_READY_FOR_FREEZE_REVIEW
+POI_DATA_2_FILTER_CONTRACT = FROZEN
 POI_DATA_2_IMPLEMENTATION = NOT_AUTHORIZED
 MINCETUR_PUBLICATION = NOT_EXECUTED
 ```
 
-Las reglas de producto para los 16 casos ya están reconciliadas. Falta la revisión/aprobación formal del freeze del contrato; esta tarea no autoriza su implementación funcional. Los valores y registros originales permanecen intactos.
+El propietario aprobó el freeze de `MINCETUR-TAXONOMY-FILTER-v1` el 2026-11-18, incluidas las nueve reglas primarias, TD-EX-10 a TD-EX-12, el resultado de conteos y TD-AC-01 a TD-AC-09. Los valores y registros originales permanecen intactos. El freeze autoriza el contrato, no la implementación funcional.
 
 ## Validación documental
 
