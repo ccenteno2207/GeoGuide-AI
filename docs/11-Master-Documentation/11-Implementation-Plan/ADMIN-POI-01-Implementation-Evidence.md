@@ -95,3 +95,47 @@ ADMIN_POI_01_VM_DEPLOYMENT = PENDING
 ADMIN_POI_01_SECURITY_VALIDATION = LOCAL_PASS_PENDING_OIDC_SMOKE
 MINCETUR_SNAPSHOT_IMPORT = NOT_EXECUTED
 ```
+
+## Cierre de integración y despliegue — 2026-11-19
+
+La integración autorizada quedó incorporada en PR #118 (`e348d8faea2da49bbfee725a6ca672048444213d`). Durante el smoke test se detectó que Nginx redirigía `/api/v1/admin/pois` hacia una URL sin el puerto HTTPS público. La corrección mínima se integró por PR #119 (`a531c5065c78df14fad01faea6304c7726b5d4e8`), con una ubicación exacta para la ruta de colección.
+
+### Despliegue
+
+- Baseline desplegado: `a531c5065c78df14fad01faea6304c7726b5d4e8`.
+- Portal: `https://geoguide.getcom.pe:5443/admin/`.
+- Keycloak 26.4.7 utiliza un PostgreSQL y volumen propios; no publica puertos de host. El portal y Keycloak permanecen en la red Docker privada del servicio existente.
+- El backend se reinició una vez para activar seguridad OIDC y aplicar V006–V010. El servicio volvió a `healthy`; el resto de servicios existentes permaneció activo y saludable.
+- Nginx se actualizó con recreación exclusiva del contenedor para tomar el template corregido; no se reiniciaron PostgreSQL, Redis, MinIO ni GraphHopper.
+- Se crearon tres cuentas sintéticas con roles `ADMINISTRATOR`, `EDITOR` y `REVIEWER`. Sus credenciales están solo en `/home/manager/.config/geoguide/admin-poi-01.env` (permisos 600, fuera del repositorio). No se incluyen valores de credenciales en esta evidencia.
+
+### Respaldo y datos
+
+- Antes de la migración se guardó un respaldo completo de PostGIS en `/home/manager/backups/admin-poi-01-20261119/geoguide-before-admin-poi-01-20261119T164549Z.dump`.
+- SHA-256: `3e7ef5f558af849dc48b271f97e72f164c5ad310c7c8f3e474af42a894239fb1`; `pg_restore --list` reconoció el archivo (73 entradas).
+- Flyway validó V001–V010 y aplicó V006–V010; la versión actual es V010.
+- Después del despliegue permanecen 5 POIs y 9 destinos. No se creó ningún registro editorial, no se importó el CSV MINCETUR y no se publicó ningún candidato.
+- El CSV original seguía bloqueado para lectura durante la preparación anterior; la importación queda pendiente hasta disponer de una lectura verificable y su SHA-256. No se copió al repositorio ni a la VM.
+- No se transfirieron fotografías del piloto.
+
+### Validación de integración
+
+- `mvn verify` en la VM, con repositorio Maven aislado y Testcontainers: BUILD SUCCESS; 117 pruebas, 0 fallos, 6 omitidas. `PostgisIntegrationTests`: 20 descubiertas, 18 ejecutadas PASS y 2 omitidas por sus condiciones. V001–V010 se aplicaron en un contenedor PostGIS temporal.
+- OIDC real por Authorization Code + PKCE: PASS para los tres roles; se comprobaron issuer, audience `geoguide-admin-api`, claim de rol, lectura del inventario POI y límites de activación. Usuarios y datos son sintéticos.
+- API administrativa anónima: HTTP 401. Lectura autenticada de `/api/v1/admin/pois`: HTTP 200. La ruta sin barra final ya no redirige; Nginx syntax test: PASS.
+- Smoke HTTPS: portal 200, discovery OIDC 200 y health del backend 200.
+- Recursos originales: backend, PostgreSQL, Redis, MinIO, GraphHopper y Nginx permanecieron activos y saludables al cierre. No se cambiaron DNS, TLS ni puertos públicos.
+- GitHub no reportó checks configurados para PR #118 ni PR #119; esto no se considera CI PASS.
+
+### Estados vigentes
+
+```ini
+ADMIN_POI_01_MAIN_INTEGRATION = PASS
+ADMIN_POI_01_VM_DEPLOYMENT = PASS
+ADMIN_POI_01_SECURITY_VALIDATION = PASS
+ADMIN_POI_01_BACKUP = VERIFIED
+MINCETUR_SNAPSHOT_IMPORT = NOT_EXECUTED
+MINCETUR_PUBLICATION = NOT_EXECUTED
+```
+
+Persisten como límites: catálogo MINCETUR sin importar, usuarios sintéticos de despliegue de desarrollo, ausencia de validación de uso operativo con un equipo editorial real, y ninguna declaración de Production Readiness.
