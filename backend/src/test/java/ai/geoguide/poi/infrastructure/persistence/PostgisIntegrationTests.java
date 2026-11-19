@@ -167,7 +167,7 @@ class PostgisIntegrationTests {
 
         assertThat(jdbcTemplate.queryForObject("SELECT PostGIS_Version()", String.class)).isNotBlank();
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM flyway_schema_history", Integer.class))
-                .isEqualTo(10);
+                .isEqualTo(11);
         assertThat(jdbcTemplate.queryForObject("""
                 SELECT COUNT(*) FROM information_schema.tables
                 WHERE table_schema = 'geo'
@@ -621,6 +621,88 @@ class PostgisIntegrationTests {
         assertThat(draft.sourceAttribution()).isEqualTo("MINCETUR Open Data catalog; test attribution");
         assertThat(draft.state()).isEqualTo("DRAFT");
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.point_of_interest", Integer.class)).isZero();
+    }
+
+    @Test
+    void minceturEditorialApprovalPersistsLicenseWithinEditorialLimitAndStaysInactive() {
+        UUID batchId = UUID.randomUUID();
+        UUID importRecordId = UUID.randomUUID();
+        UUID categoryId = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO geo.category(id,code,name,active) VALUES (?,?,?,true)",
+                categoryId, "ARCHAEOLOGICAL_SITE", "Sitio arqueológico");
+        jdbcTemplate.update("""
+                INSERT INTO geo.mincetur_import_batch(id,source_system,source_file_name,source_sha256,source_cutoff,
+                    detected_encoding,delimiter,parser_version,record_count,quarantined_count,batch_status,taxonomy_filter_version)
+                VALUES (?, 'MINCETUR', 'synthetic-1851.csv', ?, DATE '2026-11-10', 'UTF-8', ';', 'approval-409-test', 1, 0,
+                    'STAGED_REQUIRES_REVIEW', 'MINCETUR-TAXONOMY-FILTER-v1')
+                """, batchId, "C".repeat(64));
+        jdbcTemplate.update("""
+                INSERT INTO geo.mincetur_import_record(id,batch_id,row_number,source_record_id,raw_fields,
+                    raw_latitude,raw_longitude,normalized_latitude,normalized_longitude,normalization_rule,
+                    validation_evidence,record_status,thematic_eligibility,thematic_rule_code,thematic_reason)
+                VALUES (?,?,1,'1851',?::jsonb,'-11.4','-76.5',-11.4,-76.5,'synthetic-approved-candidate',
+                    'Synthetic coordinate validation evidence', 'NORMALIZED_PENDING_REVIEW',
+                    'ELIGIBLE_FOR_REVIEW','TEST_ELIGIBLE','Synthetic eligible fixture')
+                """, importRecordId, batchId,
+                "{\"NOMBRE DEL RECURSO\":\"Sitio Arqueológico Cantamarca (synthetic)\",\"CATEGORÍA\":\"2. MANIFESTACIONES CULTURALES\",\"TIPO DE CATEGORÍA\":\"Sitios Arqueológicos\"}");
+
+        String license = "MINCETUR — condiciones de reutilización de la ficha y datos pendientes de verificación. "
+                + "No se presume licencia abierta para fotografías ni contenidos de terceros.";
+        String attribution = "MINCETUR — Inventario Nacional de Recursos Turísticos. "
+                + "Ficha sintética de prueba; no constituye aprobación ni publicación del expediente real.";
+        assertThat(license).hasSize(162);
+        assertThat(attribution.length()).isLessThanOrEqualTo(240);
+
+        assertThat(adminImportReadRepository.records(batchId, null, null, null, null, 0, 10).content().getFirst()
+                .suggestedPoiCategoryCode()).isEqualTo("ARCHAEOLOGICAL_SITE");
+        assertThatThrownBy(() -> adminEditorialRepository.create(new AdminEditorialRepository.CreateEditorial(
+                importRecordId, null, null, "WATERFALL", null, null, null, null, null, null,
+                license, attribution), "synthetic-editor"))
+                .isInstanceOf(ai.geoguide.admin.domain.EditorialCategoryMismatchException.class)
+                .hasMessageContaining("ARCHAEOLOGICAL_SITE");
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM admin.poi_editorial_record", Integer.class)).isZero();
+
+        var draft = adminEditorialRepository.create(new AdminEditorialRepository.CreateEditorial(
+                importRecordId, null, null, "ARCHAEOLOGICAL_SITE", null, null, null, null, null, null,
+                license, attribution), "synthetic-editor");
+        var geographic = adminEditorialRepository.reviewGeography(draft.id(), draft.version(), true,
+                "synthetic-reviewer", "Synthetic geographic review.");
+        var identity = adminEditorialRepository.reviewIdentity(geographic.id(), geographic.version(), true,
+                "synthetic-reviewer", "Synthetic identity review.", "Synthetic no-duplicate evidence.");
+        var pending = adminEditorialRepository.transition(identity.id(), identity.version(), "SUBMIT_FOR_REVIEW",
+                "synthetic-editor", "Submit synthetic MINCETUR record.", "Synthetic submission evidence.");
+
+        assertThatThrownBy(() -> adminEditorialRepository.transition(pending.id(), pending.version() - 1,
+                "APPROVE", "synthetic-reviewer", "Stale optimistic version.", "Synthetic decision evidence."))
+                .isInstanceOf(EditorialWorkflowConflictException.class).hasMessageContaining("version is stale");
+        assertThat(adminEditorialRepository.find(pending.id()).orElseThrow().state()).isEqualTo("PENDING_REVIEW");
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM geo.point_of_interest", Integer.class)).isZero();
+
+        // Simulate a legacy editorial row created before the category mapping existed.
+        jdbcTemplate.update("UPDATE admin.poi_editorial_record SET category_code='WATERFALL' WHERE id=?", pending.id());
+        assertThatThrownBy(() -> adminEditorialRepository.transition(pending.id(), pending.version(), "APPROVE",
+                "synthetic-reviewer", "Reject legacy mismapped category.", "Synthetic mismatch evidence."))
+                .isInstanceOf(ai.geoguide.admin.domain.EditorialCategoryMismatchException.class)
+                .hasMessageContaining("ARCHAEOLOGICAL_SITE");
+        assertThat(adminEditorialRepository.find(pending.id()).orElseThrow().state()).isEqualTo("PENDING_REVIEW");
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM geo.point_of_interest", Integer.class)).isZero();
+        jdbcTemplate.update("UPDATE admin.poi_editorial_record SET category_code='ARCHAEOLOGICAL_SITE' WHERE id=?", pending.id());
+
+        var approved = adminEditorialRepository.transition(pending.id(), pending.version(), "APPROVE",
+                "synthetic-reviewer", "Approve synthetic record while remaining inactive.", "Synthetic approval evidence.");
+        assertThat(approved.state()).isEqualTo("APPROVED");
+        assertThat(approved.active()).isFalse();
+        assertThat(approved.categoryCode()).isEqualTo("ARCHAEOLOGICAL_SITE");
+        assertThat(jdbcTemplate.queryForObject("SELECT active FROM geo.point_of_interest WHERE id=?", Boolean.class,
+                approved.id())).isFalse();
+        assertThat(jdbcTemplate.queryForObject("SELECT c.code FROM geo.point_of_interest p JOIN geo.category c ON c.id=p.category_id WHERE p.id=?",
+                String.class, approved.id())).isEqualTo("ARCHAEOLOGICAL_SITE");
+        assertThat(jdbcTemplate.queryForObject("SELECT license FROM geo.poi_provenance WHERE poi_id=?", String.class,
+                approved.id())).isEqualTo(license);
+        assertThat(jdbcTemplate.queryForObject("SELECT attribution FROM geo.poi_provenance WHERE poi_id=?", String.class,
+                approved.id())).isEqualTo(attribution);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM admin.poi_editorial_audit WHERE editorial_id=? AND action='APPROVE'",
+                Integer.class, approved.id())).isEqualTo(1);
     }
 
     @Test

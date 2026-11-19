@@ -1,6 +1,7 @@
 package ai.geoguide.admin.infrastructure.http;
 
 import ai.geoguide.admin.domain.EditorialWorkflowConflictException;
+import ai.geoguide.admin.domain.EditorialCategoryMismatchException;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,16 @@ class AdminApiExceptionHandlerTests {
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getDetail()).doesNotContain("database query details");
+    }
+
+    @Test
+    void categoryMismatchConflictExplainsTheRequiredEditorialCorrection() {
+        var response = handler.categoryMismatch(new EditorialCategoryMismatchException("ARCHAEOLOGICAL_SITE"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getDetail()).contains("ARCHAEOLOGICAL_SITE", "Observado", "repita las revisiones");
+        assertThat(response.getBody().getProperties()).containsEntry("code", "EDITORIAL_CATEGORY_MISMATCH");
     }
 
     @Test

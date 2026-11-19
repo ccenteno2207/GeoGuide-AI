@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from './App';
 
 let capturedRequests: Array<{ url: string; init?: RequestInit }> = [];
+let includeMinceturCandidate = false;
 
 vi.mock('./auth', () => ({
   adminUserManager: {
@@ -17,15 +18,30 @@ vi.mock('./auth', () => ({
 describe('POI media audit controls', () => {
   beforeEach(() => {
     capturedRequests = [];
+    includeMinceturCandidate = false;
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       capturedRequests.push({ url, init });
+      const minceturRecord = {
+        id: 'import-1851', sourceRecordId: '1851', rowNumber: 717, name: 'Sitio Arqueológico Cantamarca',
+        sourceCategory: '2. MANIFESTACIONES CULTURALES', sourceType: 'Sitios Arqueológicos',
+        suggestedPoiCategoryCode: 'ARCHAEOLOGICAL_SITE', region: 'Lima', province: 'Canta', district: 'Canta',
+        sourceUrl: 'https://example.test/1851', rawLatitude: '-7.659.177.699.999.990', rawLongitude: '-11.438.714',
+        normalizedLatitude: -11.438714, normalizedLongitude: -76.591777, normalizationRule: 'synthetic',
+        validationEvidence: 'synthetic', status: 'NORMALIZED_PENDING_REVIEW', quarantineReason: null,
+        hasEditorialRecord: false, hasDestinationEditorialRecord: false, reviewClassification: 'UNASSIGNED_CANDIDATE',
+      };
+      const batch = { id: 'batch-1', fileName: 'synthetic.csv', sha256: 'A'.repeat(64), cutoff: '2026-11-10',
+        total: 1, candidates: 1, quarantined: 0, poiDrafts: 0, destinationDrafts: 0, unassignedCandidates: 1 };
       const body = init?.method === 'POST' && url.endsWith('/api/v1/admin/records')
         ? { id: 'draft-1', importRecordId: null, sourceRecordId: null, name: 'POI sintético', description: null,
             administrativeContext: 'Canta', categoryCode: 'MONUMENT', latitude: null, longitude: null,
             rawLatitude: null, rawLongitude: null, normalizationRule: null, coordinateEvidence: null,
             geographicReviewStatus: 'PENDING', identityReviewStatus: 'PENDING', identityReviewEvidence: null,
             state: 'DRAFT', sourceLicense: null, sourceAttribution: null, sourceUrl: null, publishedPoiId: null, active: false, targetPoiId: null, version: 0 }
+        : url.endsWith('/api/v1/admin/imports') && includeMinceturCandidate ? [batch]
+        : url.includes('/api/v1/admin/imports/batch-1/records') && includeMinceturCandidate
+          ? { content: [minceturRecord], page: 0, size: 100, totalElements: 1, totalPages: 1 }
         : url.includes('/duplicates') ? []
         : url.includes('/api/v1/admin/pois?') || url.includes('/api/v1/admin/records') || url.includes('/api/v1/admin/destination-records')
           || url.includes('/api/v1/admin/destination-poi-relationships')
@@ -58,6 +74,7 @@ describe('POI media audit controls', () => {
     await screen.findByLabelText('Nombre del POI manual');
     fireEvent.change(screen.getByLabelText('Nombre del POI manual'), { target: { value: 'POI sintético' } });
     fireEvent.change(screen.getByLabelText('Localidad del POI manual'), { target: { value: 'Canta' } });
+    fireEvent.change(screen.getByLabelText('Categoría del POI manual'), { target: { value: 'MONUMENT' } });
     fireEvent.click(screen.getByRole('button', { name: 'Crear borrador deshabilitado para Rutea' }));
 
     await screen.findByText('Raw MINCETUR: — / —');
@@ -70,6 +87,27 @@ describe('POI media audit controls', () => {
     expect(body.longitude).toBeNull();
     expect(capturedRequests.some(({ url }) => url.includes('/publish') || url.endsWith('/approve'))).toBe(false);
     expect(await screen.findByText('DRAFT · DESACTIVADO · v0')).toBeTruthy();
+  });
+
+  it('uses the exact MINCETUR type mapping and persists its P3 category for each candidate', async () => {
+    includeMinceturCandidate = true;
+    render(<App />);
+
+    const batchButton = await screen.findByRole('button', { name: /synthetic.csv/ });
+    fireEvent.click(batchButton);
+    await screen.findByText('Sitio Arqueológico Cantamarca');
+
+    const category = screen.getByLabelText('Categoría P3 1851') as HTMLSelectElement;
+    const createButton = screen.getByRole('button', { name: 'Crear borrador POI' }) as HTMLButtonElement;
+    expect(category.value).toBe('ARCHAEOLOGICAL_SITE');
+    expect(screen.getByText('Mapeo exacto por tipo MINCETUR: Sitios Arqueológicos → ARCHAEOLOGICAL_SITE')).toBeTruthy();
+    expect(createButton.disabled).toBe(false);
+    fireEvent.click(createButton);
+
+    await screen.findByText('Raw MINCETUR: — / —');
+    const createRequest = capturedRequests.find(({ url, init }) => url.endsWith('/api/v1/admin/records') && init?.method === 'POST');
+    expect(createRequest).toBeTruthy();
+    expect(JSON.parse(String(createRequest?.init?.body))).toEqual({ importRecordId: 'import-1851', categoryCode: 'ARCHAEOLOGICAL_SITE' });
   });
 
   it('sends locality, exact category, state, and name filters only to the admin catalog endpoint', async () => {

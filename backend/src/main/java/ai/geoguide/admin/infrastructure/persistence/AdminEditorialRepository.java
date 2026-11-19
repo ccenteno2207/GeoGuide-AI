@@ -1,6 +1,8 @@
 package ai.geoguide.admin.infrastructure.persistence;
 
 import ai.geoguide.admin.domain.EditorialState;
+import ai.geoguide.admin.domain.EditorialCategoryMismatchException;
+import ai.geoguide.admin.domain.MinceturPoiCategoryMapper;
 import ai.geoguide.admin.domain.EditorialWorkflowConflictException;
 import ai.geoguide.destination.domain.Destination;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -73,6 +75,7 @@ public class AdminEditorialRepository {
     @Transactional
     public EditorialView create(CreateEditorial command, String actor) {
         UUID id = UUID.randomUUID();
+        validateKnownMinceturCategory(command.importRecordId(), command.categoryCode());
         if (command.importRecordId() == null) {
             jdbc.update("""
                     INSERT INTO admin.poi_editorial_record(id,name,description,administrative_context,category_code,latitude,longitude,
@@ -105,6 +108,17 @@ public class AdminEditorialRepository {
         audit(id, actor, "CREATE", "Editorial candidate created", null, EditorialState.DRAFT.name(), 0,
                 command.importRecordId() == null ? "{}" : "{\"source\":\"MINCETUR\"}");
         return find(id).orElseThrow();
+    }
+
+    private void validateKnownMinceturCategory(UUID importRecordId, String categoryCode) {
+        if (importRecordId == null) return;
+        List<String> sourceTypes = jdbc.query("SELECT raw_fields->>'TIPO DE CATEGORÍA' FROM geo.mincetur_import_record WHERE id=?",
+                (rs, row) -> rs.getString(1), importRecordId);
+        String sourceType = sourceTypes.isEmpty() ? null : sourceTypes.getFirst();
+        String suggested = MinceturPoiCategoryMapper.suggestedCategoryCode(sourceType);
+        if (suggested != null && !suggested.equals(categoryCode == null ? null : categoryCode.trim())) {
+            throw new EditorialCategoryMismatchException(suggested);
+        }
     }
 
     @Transactional
@@ -190,6 +204,7 @@ public class AdminEditorialRepository {
                 if (!before.identityReviewStatus().equals("NO_DUPLICATE")) throw new EditorialWorkflowConflictException("An explicit identity/duplicate review is required before publication.");
                 if (before.identityReviewEvidence() == null || before.identityReviewEvidence().isBlank()) throw new EditorialWorkflowConflictException("Evidenced identity review is required before publication.");
                 if (before.sourceLicense() == null || before.sourceAttribution() == null || before.sourceLicense().isBlank() || before.sourceAttribution().isBlank()) throw new EditorialWorkflowConflictException("Documented source license and attribution are required before publication.");
+                validateKnownMinceturCategory(before.importRecordId(), before.categoryCode());
                 if (before.importRecordId() == null && before.targetPoiId() == null) ensureManualRecordIsNotThematicallyExcluded(before.name());
                 publish(before);
                 yield "APPROVED";

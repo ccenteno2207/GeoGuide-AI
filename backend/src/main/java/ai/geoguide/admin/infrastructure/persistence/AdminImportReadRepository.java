@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import ai.geoguide.admin.domain.MinceturReviewClassification;
+import ai.geoguide.admin.domain.MinceturPoiCategoryMapper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -47,7 +48,8 @@ public class AdminImportReadRepository {
                 Long.class,batchId,status,status,query,query,query,locality,locality,category,category);
         List<ImportRecordView> content=jdbc.query("""
                 SELECT r.id,r.source_record_id,r.row_number,r.raw_fields->>'NOMBRE DEL RECURSO' AS name,
-                       r.raw_fields->>'CATEGORÍA' AS source_category,r.raw_fields->>'REGIÓN' AS region,
+                       r.raw_fields->>'CATEGORÍA' AS source_category,r.raw_fields->>'TIPO DE CATEGORÍA' AS source_type,
+                       r.raw_fields->>'REGIÓN' AS region,
                        r.raw_fields->>'PROVINCIA' AS province,r.raw_fields->>'DISTRITO' AS district,
                        r.raw_fields->>'URL' AS source_url,r.raw_latitude,r.raw_longitude,
                        r.normalized_latitude,r.normalized_longitude,r.normalization_rule,r.validation_evidence,
@@ -61,7 +63,8 @@ public class AdminImportReadRepository {
                   AND (CAST(? AS TEXT) IS NULL OR r.raw_fields->>'CATEGORÍA' = ?)
                 ORDER BY r.row_number LIMIT ? OFFSET ?
                 """, (rs, n) -> new ImportRecordView(rs.getObject("id", UUID.class),rs.getString("source_record_id"),
-                rs.getInt("row_number"),rs.getString("name"),rs.getString("source_category"),rs.getString("region"),
+                rs.getInt("row_number"),rs.getString("name"),rs.getString("source_category"),rs.getString("source_type"),
+                MinceturPoiCategoryMapper.suggestedCategoryCode(rs.getString("source_type")),rs.getString("region"),
                 rs.getString("province"),rs.getString("district"),rs.getString("source_url"),rs.getString("raw_latitude"),
                 rs.getString("raw_longitude"),rs.getBigDecimal("normalized_latitude"),rs.getBigDecimal("normalized_longitude"),
                 rs.getString("normalization_rule"),rs.getString("validation_evidence"),rs.getString("record_status"),
@@ -76,6 +79,7 @@ public class AdminImportReadRepository {
     public record BatchView(UUID id,String fileName,String sha256,LocalDate cutoff,int total,long candidates,
             long quarantined,long poiDrafts,long destinationDrafts,long unassignedCandidates) {}
     public record ImportRecordView(UUID id,String sourceRecordId,int rowNumber,String name,String sourceCategory,
+            String sourceType,String suggestedPoiCategoryCode,
             String region,String province,String district,String sourceUrl,String rawLatitude,String rawLongitude,
             BigDecimal normalizedLatitude,BigDecimal normalizedLongitude,String normalizationRule,String validationEvidence,
             String status,String quarantineReason,boolean hasEditorialRecord,boolean hasDestinationEditorialRecord,

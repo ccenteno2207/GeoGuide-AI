@@ -1,6 +1,7 @@
 package ai.geoguide.admin.infrastructure.http;
 
 import ai.geoguide.admin.domain.EditorialWorkflowConflictException;
+import ai.geoguide.admin.domain.EditorialCategoryMismatchException;
 import ai.geoguide.media.domain.PoiMediaWorkflowConflictException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -24,6 +25,13 @@ public class AdminApiExceptionHandler {
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     ResponseEntity<ProblemDetail> uploadTooLarge(MaxUploadSizeExceededException ignored) {
         return problem(HttpStatus.PAYLOAD_TOO_LARGE, "El archivo supera el tamaño máximo permitido.");
+    }
+
+    @ExceptionHandler(EditorialCategoryMismatchException.class)
+    ResponseEntity<ProblemDetail> categoryMismatch(EditorialCategoryMismatchException exception) {
+        ProblemDetail detail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        detail.setProperty("code", "EDITORIAL_CATEGORY_MISMATCH");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(detail);
     }
 
     @ExceptionHandler({EditorialWorkflowConflictException.class, PoiMediaWorkflowConflictException.class,
