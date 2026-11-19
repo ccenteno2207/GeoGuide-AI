@@ -160,7 +160,7 @@ class PostgisIntegrationTests {
 
         assertThat(jdbcTemplate.queryForObject("SELECT PostGIS_Version()", String.class)).isNotBlank();
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM flyway_schema_history", Integer.class))
-                .isEqualTo(8);
+                .isEqualTo(9);
         assertThat(jdbcTemplate.queryForObject("""
                 SELECT COUNT(*) FROM information_schema.tables
                 WHERE table_schema = 'geo'
@@ -277,6 +277,9 @@ class PostgisIntegrationTests {
                 SELECT record_status FROM geo.mincetur_import_record WHERE batch_id = ?
                 """, String.class, firstBatchId)).isEqualTo("COORDINATE_FORMAT_AMBIGUOUS");
         assertThat(jdbcTemplate.queryForObject("""
+                SELECT thematic_eligibility FROM geo.mincetur_import_record WHERE batch_id = ?
+                """, String.class, firstBatchId)).isEqualTo("CLASSIFICATION_REVIEW_REQUIRED");
+        assertThat(jdbcTemplate.queryForObject("""
                 SELECT normalized_latitude IS NULL AND normalized_longitude IS NULL
                 FROM geo.mincetur_import_record WHERE batch_id = ?
                 """, Boolean.class, firstBatchId)).isTrue();
@@ -322,6 +325,22 @@ class PostgisIntegrationTests {
         assertThat(snapshot.records().stream().filter(r -> r.status()
                 == MinceturSnapshotParser.RecordStatus.COORDINATE_FORMAT_AMBIGUOUS)).hasSize(10);
 
+        var taxonomy = new ai.geoguide.poi.infrastructure.dataset.mincetur.MinceturTaxonomyFilter()
+                .classify(snapshot);
+        assertThat(taxonomy.supportedSnapshot()).isTrue();
+        assertThat(taxonomy.decisionsByRowNumber().values().stream()
+                .filter(decision -> decision.eligibility() ==
+                        ai.geoguide.poi.infrastructure.dataset.mincetur.MinceturTaxonomyFilter.Eligibility
+                                .EXCLUDED_FROM_NAVIGATION)).hasSize(1_768);
+        assertThat(taxonomy.decisionsByRowNumber().values().stream()
+                .filter(decision -> decision.eligibility() ==
+                        ai.geoguide.poi.infrastructure.dataset.mincetur.MinceturTaxonomyFilter.Eligibility
+                                .ELIGIBLE_FOR_REVIEW)).hasSize(4_573);
+        assertThat(taxonomy.decisionsByRowNumber().values().stream()
+                .filter(decision -> decision.eligibility() ==
+                        ai.geoguide.poi.infrastructure.dataset.mincetur.MinceturTaxonomyFilter.Eligibility
+                                .CLASSIFICATION_REVIEW_REQUIRED)).isEmpty();
+
         UUID firstBatch = minceturStagingRepository.stage(snapshot);
         UUID secondBatch = minceturStagingRepository.stage(snapshot);
 
@@ -331,6 +350,9 @@ class PostgisIntegrationTests {
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM geo.mincetur_import_record", Integer.class))
                 .isEqualTo(6_341);
         assertThat(jdbcTemplate.queryForObject("""
+                SELECT taxonomy_filter_version FROM geo.mincetur_import_batch WHERE id = ?
+                """, String.class, firstBatch)).isEqualTo("MINCETUR-TAXONOMY-FILTER-v1");
+        assertThat(jdbcTemplate.queryForObject("""
                 SELECT COUNT(*) FROM geo.mincetur_import_record
                 WHERE record_status='NORMALIZED_PENDING_REVIEW'
                 """, Integer.class)).isEqualTo(6_331);
@@ -338,6 +360,22 @@ class PostgisIntegrationTests {
                 SELECT COUNT(*) FROM geo.mincetur_import_record
                 WHERE record_status='COORDINATE_FORMAT_AMBIGUOUS'
                 """, Integer.class)).isEqualTo(10);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM geo.mincetur_import_record
+                WHERE thematic_eligibility='EXCLUDED_FROM_NAVIGATION'
+                """, Integer.class)).isEqualTo(1_768);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM geo.mincetur_import_record
+                WHERE thematic_eligibility='ELIGIBLE_FOR_REVIEW'
+                """, Integer.class)).isEqualTo(4_573);
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT COUNT(*) FROM geo.mincetur_import_record
+                WHERE thematic_eligibility='CLASSIFICATION_REVIEW_REQUIRED'
+                """, Integer.class)).isZero();
+        assertThat(jdbcTemplate.queryForObject("""
+                SELECT raw_fields->>'LATITUD' FROM geo.mincetur_import_record
+                WHERE batch_id = ? AND source_record_id = '237'
+                """, String.class, firstBatch)).isEqualTo("-7.576.291.501.522.060");
         assertThat(jdbcTemplate.queryForList("""
                 SELECT id::text AS id, name, ST_AsText(location) AS geometry, active
                 FROM geo.point_of_interest ORDER BY id
