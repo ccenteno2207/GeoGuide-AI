@@ -62,7 +62,7 @@ public class AdminEditorialRepository {
                 UPDATE admin.poi_editorial_record SET identity_review_status=?,
                 identity_review_actor=?,identity_reviewed_at=now(),identity_review_reason=?,identity_review_evidence=?,
                 version=version+1,updated_at=now()
-                WHERE id=? AND version=? AND editorial_state IN ('DRAFT','REJECTED')""",
+                WHERE id=? AND version=? AND editorial_state IN ('DRAFT','OBSERVED','REJECTED')""",
                 noDuplicate ? "NO_DUPLICATE" : "MATCH_FOUND", actor, reason, evidence.trim(), id, expectedVersion);
         if (changed != 1) throw new EditorialWorkflowConflictException("Identity review failed because the record is stale or not editable.");
         EditorialView after=find(id).orElseThrow();
@@ -167,7 +167,7 @@ public class AdminEditorialRepository {
         int changed = jdbc.update("""
                 UPDATE admin.poi_editorial_record SET geographic_review_status=?, geographic_review_actor=?,
                     geographic_reviewed_at=now(), geographic_review_reason=?, version=version+1, updated_at=now()
-                WHERE id=? AND version=? AND editorial_state IN ('DRAFT','REJECTED')
+                WHERE id=? AND version=? AND editorial_state IN ('DRAFT','OBSERVED','REJECTED')
                   AND latitude IS NOT NULL AND longitude IS NOT NULL
                   AND coordinate_validation_evidence IS NOT NULL AND btrim(coordinate_validation_evidence)<>''
                   AND (? = FALSE OR (latitude BETWEEN -18.5 AND 0 AND longitude BETWEEN -82.5 AND -68.0))
@@ -234,6 +234,84 @@ public class AdminEditorialRepository {
         audit(id, actor, action, reason, before.state(), next, expectedVersion + 1,
                 json(java.util.Map.of("decisionEvidence", evidence.trim(),
                         "publishedPoiId",after.publishedPoiId()==null?"":after.publishedPoiId().toString())));
+        return after;
+    }
+
+    @Transactional
+    public EditorialView reopen(UUID id, long expectedVersion, String actor, String reason) {
+        if (reason == null || reason.isBlank()) {
+            throw new IllegalArgumentException("A non-empty reopen reason is required.");
+        }
+        EditorialView before = find(id).orElseThrow(() -> new IllegalArgumentException("Editorial record not found."));
+        if (before.version() != expectedVersion) {
+            throw new EditorialWorkflowConflictException("Editorial record version is stale.");
+        }
+        if (!before.state().equals("ARCHIVED")) {
+            throw new EditorialWorkflowConflictException("Only archived editorial records can be reopened.");
+        }
+        if (before.sourceRecordId() != null) {
+            jdbc.query("SELECT pg_advisory_xact_lock(hashtext(?))", rs -> {
+                if (rs.next()) rs.getObject(1);
+                return null;
+            }, before.sourceRecordId());
+            Integer duplicateIdentity = jdbc.queryForObject("""
+                    SELECT count(*) FROM admin.poi_editorial_record
+                    WHERE source_record_id=? AND id<>?
+                    """, Integer.class, before.sourceRecordId(), id);
+            if (duplicateIdentity != null && duplicateIdentity > 0) {
+                throw new EditorialWorkflowConflictException("Another editorial record already uses this MINCETUR source code.");
+            }
+        }
+        if (before.targetPoiId() != null && before.publishedPoiId() != null
+                && !before.targetPoiId().equals(before.publishedPoiId())) {
+            throw new EditorialWorkflowConflictException("Archived record has conflicting existing POI links and cannot be reopened safely.");
+        }
+        UUID existingPoiId = before.targetPoiId() != null ? before.targetPoiId() : before.publishedPoiId();
+        if (existingPoiId != null) {
+            Integer duplicateChange = jdbc.queryForObject("""
+                    SELECT count(*) FROM admin.poi_editorial_record
+                    WHERE target_poi_id=? AND id<>? AND editorial_state IN ('DRAFT','OBSERVED','PENDING_REVIEW')
+                    """, Integer.class, existingPoiId, id);
+            if (duplicateChange != null && duplicateChange > 0) {
+                throw new EditorialWorkflowConflictException("An active editorial change request already exists for this POI.");
+            }
+            List<Boolean> activeStates = jdbc.query("SELECT active FROM geo.point_of_interest WHERE id=?",
+                    (rs, row) -> rs.getBoolean(1), existingPoiId);
+            if (activeStates.isEmpty()) {
+                throw new EditorialWorkflowConflictException("The archived record references a missing public POI.");
+            }
+            boolean wasActive = activeStates.getFirst();
+            int deactivated = jdbc.update("UPDATE geo.point_of_interest SET active=false, updated_at=now() WHERE id=?", existingPoiId);
+            if (deactivated != 1) {
+                throw new EditorialWorkflowConflictException("The existing public POI could not be kept inactive.");
+            }
+            if (wasActive) {
+                jdbc.update("""
+                        INSERT INTO admin.poi_activation_audit(id,poi_id,actor_id,action,reason,evidence,previous_active,next_active)
+                        VALUES (?,?,?,?,?,?,TRUE,FALSE)
+                        """, UUID.randomUUID(), existingPoiId, actor, "DEACTIVATE",
+                        "Keep the POI inactive while its archived editorial record is reopened.",
+                        "Archived editorial reopen; editorialId=" + id + "; expectedVersion=" + expectedVersion);
+            }
+        }
+        int changed = jdbc.update("""
+                UPDATE admin.poi_editorial_record SET editorial_state='DRAFT', active=FALSE,
+                    geographic_review_status='PENDING', geographic_review_actor=NULL, geographic_reviewed_at=NULL,
+                    geographic_review_reason=NULL, identity_review_status='PENDING', identity_review_actor=NULL,
+                    identity_reviewed_at=NULL, identity_review_reason=NULL, identity_review_evidence=NULL,
+                    target_poi_id=COALESCE(target_poi_id,published_poi_id), published_poi_id=NULL,
+                    version=version+1, updated_at=now()
+                WHERE id=? AND version=? AND editorial_state='ARCHIVED'
+                """, id, expectedVersion);
+        if (changed != 1) {
+            throw new EditorialWorkflowConflictException("Editorial record changed concurrently.");
+        }
+        EditorialView after = find(id).orElseThrow();
+        audit(id, actor, "REOPEN", reason.trim(), before.state(), after.state(), expectedVersion + 1,
+                json(java.util.Map.of("previousPublishedPoiId", before.publishedPoiId() == null ? "" : before.publishedPoiId().toString(),
+                        "targetPoiId", after.targetPoiId() == null ? "" : after.targetPoiId().toString(),
+                        "importRecordId", after.importRecordId() == null ? "" : after.importRecordId().toString(),
+                        "sourceRecordId", after.sourceRecordId() == null ? "" : after.sourceRecordId())));
         return after;
     }
 

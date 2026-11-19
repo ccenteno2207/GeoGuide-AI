@@ -162,6 +162,161 @@ class PostgisIntegrationTests {
     }
 
     @Test
+    void reopenedUnpublishedMinceturArchiveKeepsIdentityAndResetsReviewsWithoutPublishing() throws Exception {
+        UUID importRecordId = insertSyntheticMinceturCandidate("1851", "Sitio Arqueológico Cantamarca sintético");
+        var draft = adminEditorialRepository.create(new AdminEditorialRepository.CreateEditorial(importRecordId,
+                null, null, "ARCHAEOLOGICAL_SITE", null, null, null, null, null, null,
+                "Synthetic license", "Synthetic attribution"), "editor-test");
+        var archived = adminEditorialRepository.transition(draft.id(), draft.version(), "ARCHIVE", "administrator-test",
+                "Archive fixture before review.", "Synthetic archive evidence.");
+
+        var reopened = adminEditorialRepository.reopen(archived.id(), archived.version(), "administrator-test",
+                "Reopen the synthetic archived candidate for editorial review.");
+
+        assertThat(reopened.id()).isEqualTo(archived.id());
+        assertThat(reopened.importRecordId()).isEqualTo(importRecordId);
+        assertThat(reopened.sourceRecordId()).isEqualTo("1851");
+        assertThat(reopened.state()).isEqualTo("DRAFT");
+        assertThat(reopened.version()).isEqualTo(archived.version() + 1);
+        assertThat(reopened.active()).isFalse();
+        assertThat(reopened.publishedPoiId()).isNull();
+        assertThat(reopened.targetPoiId()).isNull();
+        assertThat(reopened.geographicReviewStatus()).isEqualTo("PENDING");
+        assertThat(reopened.identityReviewStatus()).isEqualTo("PENDING");
+        assertThat(reopened.identityReviewEvidence()).isNull();
+        assertThat(reopened.rawLatitude()).isEqualTo("-11.438714");
+        assertThat(reopened.rawLongitude()).isEqualTo("-76.591777");
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM geo.point_of_interest", Integer.class)).isZero();
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM admin.poi_editorial_record WHERE import_record_id=?", Integer.class,
+                importRecordId)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForMap("""
+                SELECT actor_id, action, reason, previous_state, next_state, version
+                FROM admin.poi_editorial_audit WHERE editorial_id=? ORDER BY version DESC LIMIT 1
+                """, reopened.id())).containsEntry("actor_id", "administrator-test")
+                .containsEntry("action", "REOPEN")
+                .containsEntry("reason", "Reopen the synthetic archived candidate for editorial review.")
+                .containsEntry("previous_state", "ARCHIVED")
+                .containsEntry("next_state", "DRAFT")
+                .containsEntry("version", reopened.version());
+        assertThatThrownBy(() -> adminEditorialRepository.reopen(reopened.id(), archived.version(), "administrator-test", "stale reopen"))
+                .isInstanceOf(EditorialWorkflowConflictException.class)
+                .hasMessageContaining("version is stale");
+        assertThatThrownBy(() -> adminEditorialRepository.reopen(reopened.id(), reopened.version(), "administrator-test", "duplicate reopen"))
+                .isInstanceOf(EditorialWorkflowConflictException.class)
+                .hasMessageContaining("Only archived");
+    }
+
+    @Test
+    void observedRecordCanBeReviewedAgainAndPublishedArchiveReopensAsSameInactivePoiChangeRequest() throws Exception {
+        jdbcTemplate.update("INSERT INTO geo.category(id,code,name,active) VALUES (?,?,?,true)",
+                UUID.randomUUID(), "ARCHAEOLOGICAL_SITE", "Archaeological site");
+        UUID importRecordId = insertSyntheticMinceturCandidate("1851", "Sitio Arqueológico Cantamarca sintético");
+        var draft = adminEditorialRepository.create(new AdminEditorialRepository.CreateEditorial(importRecordId,
+                null, null, "ARCHAEOLOGICAL_SITE", null, null, null, null, null, null,
+                "Synthetic license", "Synthetic attribution"), "editor-test");
+        var geographic = adminEditorialRepository.reviewGeography(draft.id(), draft.version(), true,
+                "reviewer-test", "Initial synthetic coordinate review.");
+        var identity = adminEditorialRepository.reviewIdentity(draft.id(), geographic.version(), true,
+                "reviewer-test", "Initial synthetic identity review.", "No duplicate found in synthetic catalog.");
+        var submitted = adminEditorialRepository.transition(identity.id(), identity.version(), "SUBMIT_FOR_REVIEW",
+                "editor-test", "Submit synthetic candidate.", "Initial review evidence.");
+        var observed = adminEditorialRepository.transition(submitted.id(), submitted.version(), "OBSERVE",
+                "reviewer-test", "Request a synthetic correction.", "Correct the validated description.");
+        var edited = adminEditorialRepository.update(observed.id(), observed.version(),
+                new AdminEditorialRepository.UpdateEditorial(observed.name(), "Corrected synthetic description.",
+                        observed.categoryCode(), observed.latitude(), observed.longitude(), observed.normalizationRule(),
+                        observed.coordinateEvidence(), observed.sourceLicense(), observed.sourceAttribution(),
+                        observed.administrativeContext()), "editor-test", "Apply the requested synthetic correction.");
+        var observedGeography = adminEditorialRepository.reviewGeography(edited.id(), edited.version(), true,
+                "reviewer-test", "Recheck coordinates after the observed edit.");
+        var observedIdentity = adminEditorialRepository.reviewIdentity(observedGeography.id(), observedGeography.version(), true,
+                "reviewer-test", "Recheck identity after the observed edit.", "No duplicate found after the edit.");
+        var resubmitted = adminEditorialRepository.transition(observedIdentity.id(), observedIdentity.version(), "SUBMIT_FOR_REVIEW",
+                "editor-test", "Resubmit corrected candidate.", "Both reviews were repeated.");
+        var approved = adminEditorialRepository.transition(resubmitted.id(), resubmitted.version(), "APPROVE",
+                "reviewer-test", "Approve synthetic candidate, leave disabled.", "Required checks passed.");
+        UUID poiId = approved.publishedPoiId();
+        assertThat(approved.state()).isEqualTo("APPROVED");
+        assertThat(approved.active()).isFalse();
+        var activated = adminEditorialRepository.setActivation(approved.id(), approved.version(), true,
+                "administrator-test", "Explicit synthetic activation.", "Synthetic activation evidence.");
+        var archived = adminEditorialRepository.transition(activated.id(), activated.version(), "ARCHIVE", "administrator-test",
+                "Archive synthetic published record.", "Synthetic archive evidence.");
+        assertThat(jdbcTemplate.queryForObject("SELECT active FROM geo.point_of_interest WHERE id=?", Boolean.class, poiId)).isFalse();
+
+        var reopened = adminEditorialRepository.reopen(archived.id(), archived.version(), "administrator-test",
+                "Reopen the same synthetic record for another review.");
+
+        assertThat(reopened.id()).isEqualTo(archived.id());
+        assertThat(reopened.state()).isEqualTo("DRAFT");
+        assertThat(reopened.publishedPoiId()).isNull();
+        assertThat(reopened.targetPoiId()).isEqualTo(poiId);
+        assertThat(reopened.active()).isFalse();
+        assertThat(reopened.geographicReviewStatus()).isEqualTo("PENDING");
+        assertThat(reopened.identityReviewStatus()).isEqualTo("PENDING");
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM geo.point_of_interest", Integer.class)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT active FROM geo.point_of_interest WHERE id=?", Boolean.class, poiId)).isFalse();
+        assertThat(jdbcTemplate.queryForObject("SELECT source_record_id FROM geo.poi_provenance WHERE poi_id=?", String.class, poiId))
+                .isEqualTo("1851");
+
+        var reopenedGeography = adminEditorialRepository.reviewGeography(reopened.id(), reopened.version(), true,
+                "reviewer-test", "Repeat geographic review after reopening.");
+        var reopenedIdentity = adminEditorialRepository.reviewIdentity(reopened.id(), reopenedGeography.version(), true,
+                "reviewer-test", "Repeat identity review after reopening.", "No duplicate found.");
+        var finalSubmission = adminEditorialRepository.transition(reopenedIdentity.id(), reopenedIdentity.version(), "SUBMIT_FOR_REVIEW",
+                "editor-test", "Submit the reopened candidate.", "Fresh reviews recorded.");
+        var secondApproval = adminEditorialRepository.transition(finalSubmission.id(), finalSubmission.version(), "APPROVE",
+                "reviewer-test", "Approve without activating.", "Fresh checks passed.");
+        assertThat(secondApproval.publishedPoiId()).isEqualTo(poiId);
+        assertThat(secondApproval.active()).isFalse();
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM geo.point_of_interest", Integer.class)).isEqualTo(1);
+        assertThat(jdbcTemplate.queryForObject("SELECT active FROM geo.point_of_interest WHERE id=?", Boolean.class, poiId)).isFalse();
+    }
+
+    @Test
+    void reopeningIsRejectedWhenAnotherRecordAlreadyUsesTheMinceturSourceCode() {
+        UUID first = UUID.randomUUID();
+        UUID second = UUID.randomUUID();
+        jdbcTemplate.update("""
+                INSERT INTO admin.poi_editorial_record(id, source_record_id, name, category_code, editorial_state, created_by)
+                VALUES (?, '1851', 'Synthetic Cantamarca one', 'ARCHAEOLOGICAL_SITE', 'ARCHIVED', 'fixture')
+                """, first);
+        jdbcTemplate.update("""
+                INSERT INTO admin.poi_editorial_record(id, source_record_id, name, category_code, editorial_state, created_by)
+                VALUES (?, '1851', 'Synthetic Cantamarca two', 'ARCHAEOLOGICAL_SITE', 'ARCHIVED', 'fixture')
+                """, second);
+
+        assertThatThrownBy(() -> adminEditorialRepository.reopen(first, 0, "administrator-test", "Check duplicate guard."))
+                .isInstanceOf(EditorialWorkflowConflictException.class)
+                .hasMessageContaining("already uses this MINCETUR source code");
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM admin.poi_editorial_record WHERE source_record_id='1851'", Integer.class))
+                .isEqualTo(2);
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM admin.poi_editorial_record WHERE editorial_state='DRAFT'", Integer.class))
+                .isZero();
+    }
+
+    private UUID insertSyntheticMinceturCandidate(String sourceId, String name) throws Exception {
+        UUID batchId = UUID.randomUUID();
+        UUID importRecordId = UUID.randomUUID();
+        jdbcTemplate.update("""
+                INSERT INTO geo.mincetur_import_batch(id,source_system,source_file_name,source_sha256,source_cutoff,
+                    detected_encoding,delimiter,parser_version,record_count,quarantined_count,batch_status,taxonomy_filter_version)
+                VALUES (?, 'MINCETUR', 'synthetic-reopen.csv', ?, DATE '2026-11-19', 'UTF-8', ';', 'reopen-test', 1, 0,
+                    'STAGED_REQUIRES_REVIEW', 'MINCETUR-TAXONOMY-FILTER-v1')
+                """, batchId, "A".repeat(64));
+        jdbcTemplate.update("""
+                INSERT INTO geo.mincetur_import_record(id,batch_id,row_number,source_record_id,raw_fields,
+                    raw_latitude,raw_longitude,normalized_latitude,normalized_longitude,normalization_rule,
+                    validation_evidence,record_status,thematic_eligibility,thematic_rule_code,thematic_reason)
+                VALUES (?,?,1,?,?::jsonb,'-11.438714','-76.591777',-11.438714,-76.591777,
+                    'synthetic-normalizer','Synthetic coordinate evidence.', 'NORMALIZED_PENDING_REVIEW',
+                    'ELIGIBLE_FOR_REVIEW','TEST_ELIGIBLE','Synthetic eligible record')
+                """, importRecordId, batchId, sourceId,
+                objectMapper.writeValueAsString(Map.of("NOMBRE DEL RECURSO", name, "URL", "https://example.test/" + sourceId)));
+        return importRecordId;
+    }
+
+    @Test
     void migrationsCreateApprovedPostgisBaseline() {
         flyway.validate();
 

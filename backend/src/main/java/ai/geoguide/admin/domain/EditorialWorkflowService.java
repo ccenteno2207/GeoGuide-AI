@@ -21,8 +21,13 @@ public final class EditorialWorkflowService {
         EditorialState next = switch (action) {
             case SUBMIT_FOR_REVIEW -> {
                 requireRole(role, EditorialRole.EDITOR, EditorialRole.ADMINISTRATOR);
-                requireState(record, EditorialState.DRAFT, EditorialState.REJECTED);
+                requireState(record, EditorialState.DRAFT, EditorialState.OBSERVED, EditorialState.REJECTED);
                 yield EditorialState.PENDING_REVIEW;
+            }
+            case OBSERVE -> {
+                requireRole(role, EditorialRole.REVIEWER, EditorialRole.ADMINISTRATOR);
+                requireState(record, EditorialState.PENDING_REVIEW);
+                yield EditorialState.OBSERVED;
             }
             case APPROVE -> {
                 requireRole(role, EditorialRole.REVIEWER, EditorialRole.ADMINISTRATOR);
@@ -39,6 +44,21 @@ public final class EditorialWorkflowService {
                 requireState(record, EditorialState.PUBLISHED, EditorialState.APPROVED, EditorialState.SUSPENDED,
                         EditorialState.REJECTED, EditorialState.DRAFT, EditorialState.OBSERVED);
                 yield EditorialState.ARCHIVED;
+            }
+            case SUSPEND -> {
+                requireRole(role, EditorialRole.ADMINISTRATOR);
+                requireState(record, EditorialState.APPROVED, EditorialState.PUBLISHED);
+                yield EditorialState.SUSPENDED;
+            }
+            case RESTORE_APPROVAL -> {
+                requireRole(role, EditorialRole.ADMINISTRATOR);
+                requireState(record, EditorialState.SUSPENDED);
+                yield EditorialState.APPROVED;
+            }
+            case REOPEN -> {
+                requireRole(role, EditorialRole.ADMINISTRATOR);
+                requireState(record, EditorialState.ARCHIVED);
+                yield EditorialState.DRAFT;
             }
         };
         var updated = new EditorialRecord(record.id(), next, record.version() + 1);
