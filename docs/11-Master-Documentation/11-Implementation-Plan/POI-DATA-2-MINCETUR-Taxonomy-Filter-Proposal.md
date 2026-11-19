@@ -1,7 +1,7 @@
 # POI-DATA-2 — Auditoría de taxonomía MINCETUR y propuesta de filtro
 
-**Estado:** `POI_DATA_2_TAXONOMY_AUDIT = PARTIAL`
-**Contrato:** `POI_DATA_2_FILTER_CONTRACT = PROPOSED_NOT_APPROVED`
+**Estado:** `POI_DATA_2_TAXONOMY_AUDIT = PASS`
+**Contrato:** `POI_DATA_2_FILTER_CONTRACT = RECONCILED_READY_FOR_FREEZE_REVIEW`
 **Baseline auditado:** `origin/main = 2b94eb459ca711d08c711c732a3310ccb77f36e9`
 **Rama local:** `codex/poi-data-2-taxonomy-audit`
 
@@ -34,13 +34,13 @@ Los 12 encabezados del snapshot coinciden con los declarados por `MinceturSnapsh
 | 4. REALIZACIONES TÉCNICAS, CIENTÍFICAS Y ARTÍSTICAS CONTEMPORÁNEAS | 314 |
 | 5. ACONTECIMIENTOS PROGRAMADOS | 783 |
 
-### TIPO DE CATEGORÍA (criterio principal propuesto)
+### TIPO DE CATEGORÍA (criterio principal)
 
 | Valor exacto del CSV | Registros | Decisión temática propuesta |
 |---|---:|---|
 | Arquitectura y Espacios Urbanos | 1059 | No está en exclusión; candidato sujeto a gates separados |
 | Artesanía y Artes | 93 | Excluir (clase aprobada) |
-| Artísticos | 27 | No está en exclusión; candidato sujeto a gates separados |
+| Artísticos | 27 | Excluir solo subtipos `Danza` (12) y `Música` (1); resto sigue candidato |
 | Centros Científicos y Técnicos | 85 | No está en exclusión; candidato sujeto a gates separados |
 | Creencias Populares | 168 | Excluir (clase aprobada) |
 | Etnias | 28 | No está en exclusión; candidato sujeto a gates separados |
@@ -48,7 +48,7 @@ Los 12 encabezados del snapshot coinciden con los declarados por `MinceturSnapsh
 | Explotaciones  Agropecuarias y Pesqueras | 75 | Excluir (clase aprobada) |
 | Explotaciones Industriales | 121 | Excluir (clase aprobada) |
 | Explotaciones Mineras | 2 | Excluir (clase aprobada) |
-| Ferias y Mercados | 18 | No está en exclusión; candidato sujeto a gates separados |
+| Ferias y Mercados | 18 | Excluir solo `Ferias gastronómicas` (3); resto sigue candidato |
 | Fiestas | 555 | Excluir (clase aprobada) |
 | Gastronomía | 290 | Excluir (clase aprobada) |
 | Lugares Históricos | 80 | No está en exclusión; candidato sujeto a gates separados |
@@ -328,7 +328,18 @@ La decisión de producto aplica a igualdad del campo `TIPO DE CATEGORÍA`, con a
 | Eventos | Eventos | 196 | igualdad |
 | Creencias Populares | Creencias Populares | 168 | igualdad |
 | Artesanía y Artes | Artesanía y Artes | 93 | acentos/caja normalizados |
-| **Total excluido** |  | **1,752** | Nueve clases exactas/alias; sin substring matching |
+| **Exclusión por tipo** |  | **1,752** | Nueve clases exactas/alias; sin substring matching |
+
+Reglas secundarias aprobadas para los 16 casos tipo–subtipo previamente señalados:
+
+| Regla versionada | CATEGORÍA / TIPO DE CATEGORÍA | SUB TIPO CATEGORÍA exacto | Registros excluidos |
+|---|---|---|---:|
+| `TD-EX-10` | 5. ACONTECIMIENTOS PROGRAMADOS / Artísticos | Danza | 12 |
+| `TD-EX-11` | 5. ACONTECIMIENTOS PROGRAMADOS / Artísticos | Música | 1 |
+| `TD-EX-12` | 3. FOLCLORE / Ferias y Mercados | Ferias gastronómicas | 3 |
+| **Total secundario** |  |  | **16** |
+| **Total excluido de navegación** |  |  | **1,768** |
+
 
 ## Calidad de clasificación y conteos cruzados
 
@@ -337,9 +348,9 @@ La decisión de producto aplica a igualdad del campo `TIPO DE CATEGORÍA`, con a
 | Inventario original | 6,341 | Filas del snapshot identificado |
 | Excluido por tipo | 1,752 | Exclusión temática primaria |
 | Pasa regla primaria | 4,589 | No es aprobación como POI/destino |
-| Conflictos tipo–subtipo | 16 | Artísticos/Danza 12; Artísticos/Música 1; Ferias y Mercados/Ferias gastronómicas 3 |
-| Elegible para revisión temática, sin conflicto detectado | 4,573 | Cola de revisión; no significa POI/destino aprobado y aún requiere gates geográficos/editoriales |
-| Clasificación insuficiente/conflictiva para inclusión automática | 16 | Requiere revisión de tipo–subtipo antes de resolver elegibilidad |
+| Exclusiones secundarias versionadas | 16 | Artísticos/Danza 12; Artísticos/Música 1; Ferias y Mercados/Ferias gastronómicas 3 |
+| Elegible para revisión temática | 4,573 | Cola tras el filtro aprobado; no significa POI/destino aprobado y aún requiere gates geográficos/editoriales |
+| Filas que quedan pendientes por los 16 conflictos detectados | 0 | Los 16 casos se resuelven por `TD-EX-10` a `TD-EX-12` |
 | Categoría raíz vacía | 0 | Cobertura completa |
 | Tipo vacío | 0 | Cobertura completa de campo primario |
 | Subtipo vacío | 1 | Código 14342 `La Q’Ocha Fiesta`; tipo `Fiestas`, ya excluido por regla primaria |
@@ -349,7 +360,7 @@ La decisión de producto aplica a igualdad del campo `TIPO DE CATEGORÍA`, con a
 
 Variantes de whitespace observadas: `TIPO DE CATEGORÍA` contiene dos espacios internos en `Explotaciones␠␠Agropecuarias y Pesqueras` (75 filas); en subtipos aparecen `Mercados␠␠Artesanales` (3), `Otros␠` (11) y `Sierra␠` (5). `␠` representa un espacio literal. La comparación propuesta colapsa whitespace para igualdad, pero raw conserva cada forma. No se detectó valor con acento/caja que cambiara la regla fuera de alias expresos.
 
-Los 16 conflictos secundarios son señales para revisión, no una ampliación automática de las exclusiones. En particular, no se usa una búsqueda parcial para convertir `Ferias gastronómicas` en exclusión; se retiene para revisión de clasificación. El único subtipo vacío ya queda excluido por `TIPO`, por lo que no genera un candidato temáticamente indeterminado.
+La decisión de producto reconcilió los 16 casos con reglas exactas TD-EX-10…12. No se amplía por ello la exclusión completa de `Artísticos` o `Ferias y Mercados`. `Ferias gastronómicas` se excluye por igualdad exacta del subtipo dentro de la pareja de clasificación indicada, no mediante coincidencia parcial. El único subtipo vacío (código 14342) ya queda excluido por el tipo `Fiestas`; no queda un candidato navegable con clasificación incompleta en este snapshot.
 
 ### Cuarentena cruzada con taxonomía
 
@@ -392,15 +403,15 @@ La elegibilidad temática solo indica que una fila puede pasar a revisiones post
 
 Resultado piloto: **14** de 17 permanecen candidatos a revisión temática; **3** quedan excluidos: códigos 7174, 7186 y 7187. Ningún registro se aprueba o publica por esta auditoría.
 
-## Propuesta de contrato POI-DATA-2 (no aprobada)
+## Contrato reconciliado POI-DATA-2 — listo para revisión de freeze
 
 ### Elegibilidad temática
 
 - Preservar snapshot, SHA, corte, encabezados y valores raw.
-- Aplicar una tabla versionada de exclusión por igualdad normalizada de `TIPO DE CATEGORÍA`, con aliases explícitos y auditables.
-- Validar la pareja `CATEGORÍA × TIPO` contra la taxonomía del snapshot. Pareja desconocida, tipo vacío o conflicto secundario se marca `CLASSIFICATION_REVIEW_REQUIRED`; nunca se publica automáticamente.
-- Usar `SUB TIPO CATEGORÍA` como control de coherencia. Señal excluida exacta bajo tipo no excluido pasa a revisión. En esta muestra hay 16 conflictos. No usar `contains`/fuzzy matching; `Ferias gastronómicas` requiere resolución explícita.
-- No excluir raíces completas ni ampliar las nueve clases por similitud. `Artísticos`, `Ferias y Mercados` y `Otros` no entran automáticamente en exclusión; filas en conflicto esperan revisión.
+- Aplicar el ruleset versionado `MINCETUR-TAXONOMY-FILTER-v1`, ligado a este snapshot SHA. La regla primaria excluye por igualdad normalizada de `TIPO DE CATEGORÍA`, con aliases explícitos y auditables.
+- Validar la pareja `CATEGORÍA × TIPO` contra la taxonomía del snapshot. Pareja desconocida o tipo vacío pasa a `CLASSIFICATION_REVIEW_REQUIRED`; nunca se publica automáticamente. Aplicar las tres reglas secundarias exactas TD-EX-10…12 antes de decidir la elegibilidad.
+- Reglas secundarias exactas: (a) `5. ACONTECIMIENTOS PROGRAMADOS × Artísticos × Danza`; (b) la misma pareja × `Música`; (c) `3. FOLCLORE × Ferias y Mercados × Ferias gastronómicas`. Cada regla es igualdad exacta tras normalización declarada; no usar `contains`/fuzzy matching.
+- No excluir raíces completas ni ampliar clases por similitud. `Artísticos` y `Ferias y Mercados` permanecen parcialmente navegables conforme a sus subtipos no excluidos; `Otros` no se excluye por defecto.
 
 ### Validación geográfica
 
@@ -414,16 +425,32 @@ Resultado piloto: **14** de 17 permanecen candidatos a revisión temática; **3*
 - Publicación solo por decisión explícita, autorizada y auditada. Importar, filtrar o reprocesar nunca publica automáticamente.
 - Reimportar no sobrescribe snapshot raw ni retrocede decisiones editoriales/geográficas.
 
+### Criterios de aceptación
+
+- `TD-AC-01`: procesar el snapshot únicamente si SHA-256, fecha de corte y columnas identifican el archivo; preservar 6.341 filas y campos raw sin alteración.
+- `TD-AC-02`: aplicar las nueve reglas primarias por tipo exacto normalizado y los aliases explícitos de singular/plural y whitespace.
+- `TD-AC-03`: aplicar TD-EX-10, TD-EX-11 y TD-EX-12 solo a las parejas exactas categoría/tipo/subtipo; impedir exclusión total de Artísticos o Ferias y Mercados.
+- `TD-AC-04`: para el snapshot auditado, producir 1.752 exclusiones primarias + 16 secundarias, sin doble conteo; total excluido = 1.768 y candidato a revisión = 4.573.
+- `TD-AC-05`: rechazar coincidencia por substring, fuzzy matching y ampliaciones semánticas no versionadas.
+- `TD-AC-06`: conservar inalteradas 10 cuarentenas geográficas; la intersección temática/geográfica es 2 y los otros 8 no se liberan geográficamente.
+- `TD-AC-07`: la elegibilidad temática no aprueba geometría, identidad, derechos, dominio ni publicación; importación y filtro nunca publican.
+- `TD-AC-08`: conservar los registros excluidos como fuente raw potencial para futuro trabajo cultural CEFI; no implica indexación, publicación cultural ni uso inmediato en respuestas.
+- `TD-AC-09`: reimportar el mismo snapshot/ruleset no duplica filas ni modifica datos raw o decisiones independientes.
+
+### Conservación cultural futura
+
+Los registros excluidos del catálogo navegable permanecen en el inventario/staging íntegro como fuente potencial para futuras capacidades culturales de CEFI (gastronomía, festividades, tradiciones, artes y experiencias locales). Esto no crea un catálogo cultural, no publica registros culturales, no valida derechos o datos, y no autoriza a CEFI a consumirlos en respuestas. Cualquier capacidad futura requiere alcance, fuente, revisión, controles y autorización propios.
+
 ## Estado y decisiones posteriores
 
 ```ini
-POI_DATA_2_TAXONOMY_AUDIT = PARTIAL
-POI_DATA_2_FILTER_CONTRACT = PROPOSED_NOT_APPROVED
+POI_DATA_2_TAXONOMY_AUDIT = PASS
+POI_DATA_2_FILTER_CONTRACT = RECONCILED_READY_FOR_FREEZE_REVIEW
 POI_DATA_2_IMPLEMENTATION = NOT_AUTHORIZED
 MINCETUR_PUBLICATION = NOT_EXECUTED
 ```
 
-La decisión posterior necesaria es aprobar o ajustar el tratamiento de los 16 conflictos tipo–subtipo antes de implementar el filtro. Recomendación: mantenerlos en revisión por registro, sin ampliar clases excluidas automáticamente. Este documento no altera reglas existentes ni autoriza implementación.
+Las reglas de producto para los 16 casos ya están reconciliadas. Falta la revisión/aprobación formal del freeze del contrato; esta tarea no autoriza su implementación funcional. Los valores y registros originales permanecen intactos.
 
 ## Validación documental
 
