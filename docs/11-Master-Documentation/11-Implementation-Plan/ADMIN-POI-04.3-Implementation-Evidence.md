@@ -60,3 +60,38 @@ ADMIN_POI_04_3_MEDIA_COMPATIBILITY = AUTOMATED_TESTS_PASS_POSTGIS_PENDING
 ADMIN_POI_04_3_TESTS = PASS_WITH_POSTGIS_SKIPPED
 ADMIN_POI_04_3_READY_FOR_PR = BLOCKED
 ```
+
+## Validación aislada de integración — 2026-11-21
+
+Esta ejecución posterior usó recursos efímeros propios en la VM de desarrollo, no el stack persistente ni su base de datos, bucket, red o credenciales. Se mantuvo el resultado anterior como registro histórico; los resultados siguientes lo complementan y lo sustituyen únicamente para las comprobaciones repetidas aquí.
+
+| Criterio | Estado | Evidencia y límites |
+|---|---|---|
+| `ADMIN_POI_04_3_FLYWAY_V014` | PASS | PostgreSQL/PostGIS aislado partió vacío. Flyway V001–V013 se aplicaron; se insertó una fila multimedia sintética `EXTERNAL_SOURCE` con esquema V013 y el arranque normal aplicó V014. La fila y su auditoría se conservaron. Las cuatro restricciones negativas de V014 rechazaron combinaciones inválidas. |
+| `ADMIN_POI_04_3_POSTGIS` | PASS | `PostgisIntegrationTests`: 26 ejecutadas, 0 fallos, 0 errores, 2 omitidas. La primera ejecución encontró una expectativa fija de 13 migraciones; se actualizó a 14 y la repetición pasó. |
+| `ADMIN_POI_04_3_MINIO_E2E` | PASS | MinIO temporal privado; bucket aislado. Acceso anónimo al objeto rechazado. El backend autenticado leyó los bytes del archivo sintético. El bucket y volumen temporal fueron eliminados al cerrar la prueba. |
+| `ADMIN_POI_04_3_API_UPLOAD` | PASS | Flujo OIDC Authorization Code + PKCE sintético y API autenticada. Carga propia JPEG/PNG quedó `DRAFT/UNVERIFIED`, sin URL externa, con declaración, actor y fecha. Solicitudes inválidas produjeron HTTP 400 estructurado sin crear assets. No se publicaron imágenes. |
+| `ADMIN_POI_04_3_EXTERNAL_COMPATIBILITY` | PASS | Un asset externo previo con URL HTTPS sobrevivió V014 y una nueva carga `EXTERNAL_SOURCE` válida fue aceptada en estado borrador. Se rechazaron origen externo sin URL y origen propio con URL. |
+| `ADMIN_POI_04_3_OPENAPI_VALIDATION` | PARTIAL | Redocly CLI 1.34.5 informó 109 errores y 81 advertencias en la rama, frente a 112 errores y 81 advertencias en `origin/main`; son hallazgos globales heredados de lint. La evidencia focalizada previa no identificó hallazgos en el multipart nuevo ni en `AdminMediaAsset`, pero el reporte JSON disponible está truncado por el límite de problemas y no permite certificar de nuevo la validación integral. |
+| `ADMIN_POI_04_3_AUTHENTICATED_PORTAL_SMOKE` | BLOCKED | La prueba de login OIDC y llamadas protegidas se ejecutó por HTTP con identidad sintética; no equivale a interacción visual autenticada. El runtime de automatización de navegador falló al iniciar con `failed to write kernel assets: The system cannot find the path specified (os error 3)` en dos intentos. |
+| Servicios persistentes | PASS | Los nueve contenedores preexistentes `geoguide-ai` permanecieron activos; los que tenían healthcheck siguieron healthy. No se modificó su configuración. Las métricas al finalizar fueron consistentes con el consumo observado durante el precheck. |
+| Limpieza VM | PASS | Se detuvo el backend temporal tras verificar PID, directorio de trabajo y comando. Compose eliminó exclusivamente los tres contenedores, volúmenes y red con prefijo `adminpoi043_93003994`; no quedaron listeners en los puertos temporales. Se eliminó el directorio remoto temporal. |
+| Limpieza Windows | BLOCKED | El túnel primario terminó y los otros procesos Vite/túnel asociados a sesiones terminaron. La política de ejecución rechazó `Remove-Item` para el staging local `D:\Codex\adminpoi043-validation-93003994`; no se intentó otra vía. Ese directorio conserva artefactos y credenciales sintéticas de esta prueba y requiere retirada manual por el propietario. También quedó un `admin-portal/tsconfig.tsbuildinfo` generado por build como archivo no rastreado; no está incluido en el commit. |
+| Publicación o datos reales | NOT_RUN | Se usaron un POI y archivos sintéticos. No se modificaron POIs reales, no se publicaron imágenes y no se usaron las cinco fotografías del piloto. |
+
+El primer arranque local del backend temporal enlazó brevemente a `0.0.0.0`; se detuvo inmediatamente al detectarlo, antes de enviar solicitudes. El backend se reinició enlazado a `127.0.0.1`, se validó así y se detuvo al terminar. No se modificó el servicio persistente.
+
+```ini
+ADMIN_POI_04_3_FLYWAY_V014 = PASS
+ADMIN_POI_04_3_POSTGIS = PASS
+ADMIN_POI_04_3_MINIO_E2E = PASS
+ADMIN_POI_04_3_API_UPLOAD = PASS
+ADMIN_POI_04_3_EXTERNAL_COMPATIBILITY = PASS
+ADMIN_POI_04_3_OPENAPI_VALIDATION = PARTIAL
+ADMIN_POI_04_3_AUTHENTICATED_PORTAL_SMOKE = BLOCKED
+ADMIN_POI_04_3_READY_FOR_PR = NO
+ADMIN_POI_04_3_VM_TEMP_CLEANUP = PASS
+ADMIN_POI_04_3_WINDOWS_TEMP_CLEANUP = BLOCKED
+```
+
+La rama no queda lista para PR mientras permanezcan sin resolver la limpieza local del staging sintético y el smoke visual autenticado. No se ejecutaron push, PR, merge, despliegue ni instalación física.
