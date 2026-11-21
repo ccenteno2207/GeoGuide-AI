@@ -95,3 +95,50 @@ ADMIN_POI_04_3_WINDOWS_TEMP_CLEANUP = BLOCKED
 ```
 
 La rama no queda lista para PR mientras permanezcan sin resolver la limpieza local del staging sintético y el smoke visual autenticado. No se ejecutaron push, PR, merge, despliegue ni instalación física.
+
+## Preparación controlada de PR — 2026-11-21
+
+### Estado Git y alcance
+
+- `origin/main`: `13ab45cb8642aa1ba384a39d87ac4325ea00e9ba`.
+- HEAD local: `89e2b48270fb5afdea0851d42832255b7e35ef48` (`codex/admin-poi-04-3-own-photo-upload`, tres commits adelante).
+- Los 18 archivos del diff corresponden al upload de fotografía propia, V014, pruebas, OpenAPI y evidencia del contrato ADMIN-POI-04.3. No se detectaron cambios en datos reales, infraestructura ni contratos P8/P9.
+- `admin-portal/tsconfig.tsbuildinfo` es salida generada por TypeScript, no está rastreada ni staged, y no aparece en el diff de la rama; por tanto queda fuera del PR mientras no se agregue explícitamente. La herramienta rechazó su eliminación, así que sigue presente localmente.
+- El staging `D:\Codex\adminpoi043-validation-93003994` continúa pendiente de eliminación manual por el propietario. Está fuera del repositorio y no se incluirá en Git. No se copiaron sus credenciales sintéticas a esta evidencia.
+- `git diff --check origin/main...HEAD`: PASS. El escaneo focalizado del diff no encontró patrones de secretos.
+
+### Revisión OpenAPI focalizada
+
+Redocly CLI 1.34.5 con salida `stylish` y máximo ampliado de problemas confirma que las secciones modificadas del multipart de carga y `AdminMediaAsset` no tienen errores nuevos. En el baseline aparecen tres errores `nullable` sobre campos que V014 convirtió a uniones OAS 3.1; la rama reduce el lint total de 112 a 109 errores y mantiene 81 advertencias. La especificación completa continúa con deuda heredada de lint, por lo que esto no equivale a un PASS global del documento.
+
+### Guía breve de smoke autenticado manual
+
+Ejecutar contra un entorno aislado y un POI/archivo sintético; no usar ni publicar fotografías reales durante esta comprobación:
+
+1. Iniciar sesión en el portal con una cuenta de prueba autorizada y abrir el editor de medios de un POI de prueba ya seleccionado.
+2. Elegir `Fotografía propia`. Confirmar que no se exige URL externa y que la URL no forma parte del formulario enviado.
+3. Verificar etiquetas, obligatoriedad y ayudas para autor/titular, licencia, atribución y declaración de autoría. Completar datos veraces del fixture.
+4. Seleccionar un JPEG o PNG válido y comprobar que la vista previa corresponde al archivo antes de enviar.
+5. Pulsar **Subir borrador privado**. Confirmar el mensaje de éxito, que el editor conserva el POI seleccionado y que el nuevo asset queda `DRAFT`/`UNVERIFIED`.
+6. Consultar la galería administrativa del mismo POI y comprobar que aparece el asset, con procedencia visible y sin exponer claves o URL interna de MinIO.
+7. Confirmar que no se publica automáticamente, no se marca como principal ni aparece en la API pública. No ejecutar la acción de publicar.
+8. Para errores, probar una sola validación inválida a la vez y comprobar el modal, el campo señalado y la conservación de los datos; no repetir una escritura automáticamente.
+
+Este smoke visual sigue pendiente: el runtime de automatización del navegador no inició en la validación aislada. La prueba API OIDC/PKCE no sustituye estos pasos interactivos.
+
+### Estado final para preparación
+
+```ini
+ADMIN_POI_04_3_FLYWAY_V014 = PASS
+ADMIN_POI_04_3_POSTGIS = PASS
+ADMIN_POI_04_3_API_MINIO_INTEGRATION = PASS
+ADMIN_POI_04_3_EXTERNAL_COMPATIBILITY = PASS
+ADMIN_POI_04_3_OPENAPI_CHANGED_SURFACE = PASS_NO_NEW_ERRORS
+ADMIN_POI_04_3_OPENAPI_FULL_LINT = INHERITED_FINDINGS
+ADMIN_POI_04_3_AUTHENTICATED_PORTAL_SMOKE = PENDING_MANUAL
+ADMIN_POI_04_3_WINDOWS_STAGING_CLEANUP = PENDING_OWNER_MANUAL
+ADMIN_POI_04_3_TSCONFIG_BUILDINFO = GENERATED_UNTRACKED_EXCLUDED_FROM_DIFF
+ADMIN_POI_04_3_READY_FOR_PR = YES_WITH_MANUAL_SMOKE_PENDING
+```
+
+La preparación de PR puede continuar porque el archivo generado no está en el diff y no hay defectos nuevos detectados en la superficie OpenAPI modificada. El smoke manual autenticado es obligatorio antes de cualquier despliegue persistente. El staging local debe eliminarse manualmente antes de compartir o transferir este equipo; no se realizó push, PR, merge ni despliegue en esta fase.
