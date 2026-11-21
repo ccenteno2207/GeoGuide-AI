@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -26,13 +28,33 @@ public class PoiMediaRepository {
         if (active == null) throw new IllegalArgumentException("Only an existing active POI can receive media.");
         jdbc.update("""
                 INSERT INTO media.poi_asset(id,poi_id,object_key,content_type,sha256,size_bytes,width,height,
-                author,source_url,created_by,alt_text,display_order) VALUES (?,?,?,?,?,?,?,?,?,?,?, ?,
-                COALESCE((SELECT MAX(display_order)+1 FROM media.poi_asset WHERE poi_id=?),0))""", asset.id(),asset.poiId(),asset.objectKey(),
-                asset.contentType(),asset.sha256(),asset.sizeBytes(),asset.width(),asset.height(),asset.author(),asset.sourceUrl(),actor,
-                asset.altText(), asset.poiId());
+                author,source_url,created_by,alt_text,display_order,source_type,capture_date,capture_place,
+                author_declaration_version,author_declaration_text,author_declaration_by,author_declaration_at,
+                author_declaration_asset_version,license,attribution,rights_evidence_reference)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,
+                COALESCE((SELECT MAX(display_order)+1 FROM media.poi_asset WHERE poi_id=?),0),
+                ?,?,?,?,?,?,CASE WHEN ? THEN NOW() ELSE NULL END,?,?,?,?)""",
+                asset.id(),asset.poiId(),asset.objectKey(),asset.contentType(),asset.sha256(),asset.sizeBytes(),
+                asset.width(),asset.height(),asset.author(),asset.sourceUrl(),actor,asset.altText(),asset.poiId(),
+                asset.sourceType(),asset.captureDate(),asset.capturePlace(),asset.authorDeclarationVersion(),
+                asset.authorDeclarationText(),asset.authorDeclarationAccepted()?actor:null,
+                asset.authorDeclarationAccepted(),asset.authorDeclarationAccepted()?asset.version():null,
+                asset.license(),asset.attribution(),asset.rightsEvidence());
+        Asset stored = find(asset.id()).orElseThrow();
+        java.util.Map<String,Object> uploadAudit = new java.util.LinkedHashMap<>();
+        uploadAudit.put("contentType",stored.contentType()); uploadAudit.put("sha256",stored.sha256());
+        uploadAudit.put("sizeBytes",stored.sizeBytes()); uploadAudit.put("author",stored.author());
+        uploadAudit.put("sourceType",stored.sourceType()); uploadAudit.put("sourceUrl",stored.sourceUrl());
+        uploadAudit.put("captureDate",stored.captureDate()); uploadAudit.put("capturePlace",stored.capturePlace());
+        uploadAudit.put("authorDeclarationAccepted",stored.authorDeclarationAccepted());
+        uploadAudit.put("authorDeclarationVersion",stored.authorDeclarationVersion());
+        uploadAudit.put("authorDeclarationBy",stored.authorDeclarationBy());
+        uploadAudit.put("authorDeclarationAt",stored.authorDeclarationAt());
+        uploadAudit.put("assetVersion",stored.version());
+        uploadAudit.put("rightsStatus",stored.rightsStatus());
         audit(asset.id(),actor,"UPLOAD","Image uploaded as private draft",null,"DRAFT",
-                json(java.util.Map.of("contentType",asset.contentType(),"sha256",asset.sha256(),"sizeBytes",asset.sizeBytes(),"author",asset.author(),"sourceUrl",asset.sourceUrl(),"version",asset.version())));
-        return find(asset.id()).orElseThrow();
+                json(uploadAudit));
+        return stored;
     }
 
     public Optional<Asset> find(UUID id) {
@@ -168,14 +190,26 @@ public class PoiMediaRepository {
             r.getString("object_key"),r.getString("content_type"),r.getString("sha256"),r.getLong("size_bytes"),r.getInt("width"),r.getInt("height"),
             r.getString("author"),r.getString("source_url"),r.getString("license"),r.getString("attribution"),r.getString("rights_evidence_reference"),
             r.getString("rights_status"),r.getString("review_state"),r.getBoolean("is_primary"),r.getLong("version"),
-            r.getString("alt_text"),r.getInt("display_order"));}
+            r.getString("alt_text"),r.getInt("display_order"),r.getString("source_type"),
+            r.getDate("capture_date")==null?null:r.getDate("capture_date").toLocalDate(),r.getString("capture_place"),
+            "OWN_PHOTOGRAPH".equals(r.getString("source_type")), r.getString("author_declaration_version"),
+            r.getString("author_declaration_by"),r.getTimestamp("author_declaration_at")==null?null:r.getTimestamp("author_declaration_at").toInstant(),
+            r.getString("author_declaration_text"));}
     public record Asset(UUID id,UUID poiId,String objectKey,String contentType,String sha256,long sizeBytes,int width,int height,
             String author,String sourceUrl,String license,String attribution,String rightsEvidence,String rightsStatus,
-            String state,boolean primary,long version,String altText,int displayOrder){
+            String state,boolean primary,long version,String altText,int displayOrder,String sourceType,
+            LocalDate captureDate,String capturePlace,boolean authorDeclarationAccepted,String authorDeclarationVersion,
+            String authorDeclarationBy,Instant authorDeclarationAt,String authorDeclarationText){
         public Asset(UUID id,UUID poiId,String objectKey,String contentType,String sha256,long sizeBytes,int width,int height,
                 String author,String sourceUrl,String license,String attribution,String rightsEvidence,String rightsStatus,String state,boolean primary,long version) {
             this(id,poiId,objectKey,contentType,sha256,sizeBytes,width,height,author,sourceUrl,license,attribution,rightsEvidence,
-                    rightsStatus,state,primary,version,"",0);
+                    rightsStatus,state,primary,version,"",0,"EXTERNAL_SOURCE",null,null,false,null,null,null,null);
+        }
+        public Asset(UUID id,UUID poiId,String objectKey,String contentType,String sha256,long sizeBytes,int width,int height,
+                String author,String sourceUrl,String license,String attribution,String rightsEvidence,String rightsStatus,
+                String state,boolean primary,long version,String altText,int displayOrder) {
+            this(id,poiId,objectKey,contentType,sha256,sizeBytes,width,height,author,sourceUrl,license,attribution,rightsEvidence,
+                    rightsStatus,state,primary,version,altText,displayOrder,"EXTERNAL_SOURCE",null,null,false,null,null,null,null);
         }
         public boolean rightsDocumented(){return "DOCUMENTED".equals(rightsStatus)&&license!=null&&!license.isBlank()&&attribution!=null&&!attribution.isBlank()&&rightsEvidence!=null&&!rightsEvidence.isBlank();}}
     public record PresentationOrder(UUID id,long expectedVersion,int displayOrder) { }

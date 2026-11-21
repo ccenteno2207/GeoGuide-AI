@@ -23,4 +23,23 @@ class PoiMediaControllerTests {
         assertThat(response.get("id").asText()).isEqualTo(asset.id().toString());
         assertThat(response.get("state").asText()).isEqualTo("PUBLISHED");
     }
+
+    @Test
+    void ownedPhotoResponseExposesReceiptAndNullableExternalSourceWithoutStorageKey() throws Exception {
+        Asset asset = new Asset(UUID.randomUUID(), UUID.randomUUID(), "private/opaque", "image/jpeg",
+                "B".repeat(64), 256, 2, 2, "Synthetic author", null, "Rutea publication authorization",
+                "© Synthetic author", "authorization-fixture:1", "UNVERIFIED", "DRAFT", false, 0,
+                "synthetic image", 0, "OWN_PHOTOGRAPH", null, "Obrajillo", true,
+                "OWN_PHOTO_DECLARATION_V1", "synthetic-editor", null,
+                "Declaration text fixture");
+
+        var response = objectMapper.valueToTree(PoiMediaController.toResponse(asset));
+
+        assertThat(response.get("sourceType").asText()).isEqualTo("OWN_PHOTOGRAPH");
+        assertThat(response.get("sourceUrl").isNull()).isTrue();
+        assertThat(response.get("authorDeclarationAccepted").asBoolean()).isTrue();
+        assertThat(response.get("authorDeclarationBy").asText()).isEqualTo("synthetic-editor");
+        assertThat(response.get("authorDeclarationVersion").asText()).isEqualTo("OWN_PHOTO_DECLARATION_V1");
+        assertThat(response.get("objectKey")).isNull();
+    }
 }

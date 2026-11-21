@@ -580,12 +580,27 @@ paths:
           multipart/form-data:
             schema:
               type: object
-              required: [file, author, sourceUrl]
+              required: [file, author, sourceType]
+              oneOf:
+                - required: [sourceUrl]
+                  properties:
+                    sourceType: { const: EXTERNAL_SOURCE }
+                - required: [authorDeclarationAccepted, license, attribution]
+                  properties:
+                    sourceType: { const: OWN_PHOTOGRAPH }
+                    authorDeclarationAccepted: { const: 'true' }
               properties:
                 file: { type: string, format: binary, description: JPEG or PNG image; maximum 10 MiB }
                 author: { type: string, maxLength: 200, description: Author or rights holder }
-                sourceUrl: { type: string, format: uri, maxLength: 2048, description: HTTPS source URL }
+                sourceType: { type: string, enum: [OWN_PHOTOGRAPH, EXTERNAL_SOURCE] }
+                sourceUrl: { type: string, format: uri, maxLength: 2048, description: Required HTTPS source URL only for EXTERNAL_SOURCE; omit for OWN_PHOTOGRAPH }
                 altText: { type: string, maxLength: 500, description: Optional on private draft upload; required before publication }
+                authorDeclarationAccepted: { type: string, enum: ['true', 'false'], description: "Multipart form value; OWN_PHOTOGRAPH requires the literal true; records the authenticated actor, time, and declaration version but does not verify rights by itself" }
+                captureDate: { type: string, format: date, description: Optional actual capture date }
+                capturePlace: { type: string, maxLength: 300, description: Optional known capture place }
+                license: { type: string, maxLength: 240, description: Actual license or authorization; not inferred }
+                attribution: { type: string, maxLength: 2000, description: Actual author/rights-holder attribution }
+                rightsEvidenceReference: { type: string, maxLength: 4000, description: Optional reference captured with the draft; rights still require review }
       responses:
         '200':
           description: Asset validado por contenido, re-encoded, hashed y no publicado
@@ -1309,7 +1324,7 @@ components:
               message: { type: string, description: Safe corrective message }
     AdminMediaAsset:
       type: object
-      required: [id, poiId, contentType, sha256, sizeBytes, width, height, author, sourceUrl, rightsStatus, state, primary, version]
+      required: [id, poiId, contentType, sha256, sizeBytes, width, height, author, sourceType, rightsStatus, state, primary, version]
       properties:
         id: { type: string, format: uuid }
         poiId: { type: string, format: uuid }
@@ -1319,10 +1334,18 @@ components:
         width: { type: integer }
         height: { type: integer }
         author: { type: string }
-        sourceUrl: { type: string }
-        license: { type: string, nullable: true }
-        attribution: { type: string, nullable: true }
-        rightsEvidence: { type: string, nullable: true }
+        sourceUrl: { type: [string, 'null'] }
+        sourceType: { type: string, enum: [OWN_PHOTOGRAPH, EXTERNAL_SOURCE] }
+        captureDate: { type: [string, 'null'], format: date }
+        capturePlace: { type: [string, 'null'] }
+        authorDeclarationAccepted: { type: boolean }
+        authorDeclarationVersion: { type: [string, 'null'] }
+        authorDeclarationBy: { type: [string, 'null'] }
+        authorDeclarationAt: { type: [string, 'null'], format: date-time }
+        authorDeclarationText: { type: [string, 'null'] }
+        license: { type: [string, 'null'] }
+        attribution: { type: [string, 'null'] }
+        evidenceReference: { type: [string, 'null'] }
         rightsStatus: { type: string, enum: [UNVERIFIED, DOCUMENTED] }
         state: { type: string, enum: [DRAFT, PENDING_REVIEW, PUBLISHED, REJECTED, WITHDRAWN] }
         primary: { type: boolean }

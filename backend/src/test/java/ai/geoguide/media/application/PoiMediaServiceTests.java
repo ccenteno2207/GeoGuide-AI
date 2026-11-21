@@ -17,6 +17,7 @@ import ai.geoguide.media.infrastructure.persistence.PoiMediaRepository.Asset;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.time.LocalDate;
 import java.util.UUID;
 import javax.imageio.ImageIO;
 import org.junit.jupiter.api.BeforeEach;
@@ -87,6 +88,57 @@ class PoiMediaServiceTests {
                 .isInstanceOfSatisfying(PoiMediaValidationException.class, error -> assertThat(error.code()).isEqualTo("SOURCE_FORMAT_INVALID"));
         verify(storage, never()).storePrivate(any(), anyString(), anyLong(), any(InputStream.class));
         verify(repository, never()).create(any(Asset.class), anyString());
+    }
+
+    @Test
+    void acceptsOwnedPhotographWithoutExternalUrlAndKeepsItPrivateAndUnverified() throws Exception {
+        var uploaded = service.upload(UUID.randomUUID(), new MockMultipartFile("file", "own.png", "image/png", png(8, 6)),
+                "María Pérez", null, "Fachada principal", "editor-123", "OWN_PHOTOGRAPH", true,
+                "2026-11-20", "Obrajillo", "Autorización escrita para publicar en Rutea",
+                "© María Pérez", "consent-document:synthetic-1");
+
+        assertThat(uploaded.sourceType()).isEqualTo("OWN_PHOTOGRAPH");
+        assertThat(uploaded.sourceUrl()).isNull();
+        assertThat(uploaded.captureDate()).isEqualTo(LocalDate.of(2026, 11, 20));
+        assertThat(uploaded.capturePlace()).isEqualTo("Obrajillo");
+        assertThat(uploaded.authorDeclarationAccepted()).isTrue();
+        assertThat(uploaded.authorDeclarationVersion()).isEqualTo(PoiMediaService.OWN_PHOTO_DECLARATION_VERSION);
+        assertThat(uploaded.authorDeclarationBy()).isEqualTo("editor-123");
+        assertThat(uploaded.authorDeclarationText()).isEqualTo(PoiMediaService.OWN_PHOTO_DECLARATION_TEXT);
+        assertThat(uploaded.state()).isEqualTo("DRAFT");
+        assertThat(uploaded.rightsStatus()).isEqualTo("UNVERIFIED");
+        verify(storage).storePrivate(any(), org.mockito.ArgumentMatchers.eq("image/png"), anyLong(), any(InputStream.class));
+    }
+
+    @Test
+    void rejectsOwnedPhotoWithoutDeclarationOrRightsBeforeStorage() throws Exception {
+        var file = new MockMultipartFile("file", "own.png", "image/png", png(2, 2));
+        assertThatThrownBy(() -> service.upload(UUID.randomUUID(), file, "María Pérez", null, "", "editor",
+                "OWN_PHOTOGRAPH", false, null, null, "Autorización", "© María", null))
+                .isInstanceOfSatisfying(PoiMediaValidationException.class, error -> {
+                    assertThat(error.code()).isEqualTo("AUTHOR_DECLARATION_REQUIRED");
+                    assertThat(error.errors().getFirst().field()).isEqualTo("authorDeclaration");
+                });
+        assertThatThrownBy(() -> service.upload(UUID.randomUUID(), file, "María Pérez", null, "", "editor",
+                "OWN_PHOTOGRAPH", true, null, null, "", "", null))
+                .isInstanceOfSatisfying(PoiMediaValidationException.class, error -> assertThat(error.code()).isEqualTo("LICENSE_REQUIRED"));
+        assertThatThrownBy(() -> service.upload(UUID.randomUUID(), file, "María Pérez", "https://example.test/photo", "", "editor",
+                "OWN_PHOTOGRAPH", true, null, null, "Autorización", "© María", null))
+                .isInstanceOfSatisfying(PoiMediaValidationException.class, error -> assertThat(error.code()).isEqualTo("OWN_PHOTO_EXTERNAL_URL_NOT_ALLOWED"));
+        verify(storage, never()).storePrivate(any(), anyString(), anyLong(), any(InputStream.class));
+        verify(repository, never()).create(any(Asset.class), anyString());
+    }
+
+    @Test
+    void rejectsInvalidCaptureDateAndSourceTypeBeforeStorage() throws Exception {
+        var file = new MockMultipartFile("file", "own.png", "image/png", png(2, 2));
+        assertThatThrownBy(() -> service.upload(UUID.randomUUID(), file, "María Pérez", null, "", "editor",
+                "OWN_PHOTOGRAPH", true, "20/11/2026", null, "Autorización", "© María", null))
+                .isInstanceOfSatisfying(PoiMediaValidationException.class, error -> assertThat(error.code()).isEqualTo("CAPTURE_DATE_INVALID"));
+        assertThatThrownBy(() -> service.upload(UUID.randomUUID(), file, "María Pérez", null, "", "editor",
+                "LOCAL_FILE", true, null, null, "Autorización", "© María", null))
+                .isInstanceOfSatisfying(PoiMediaValidationException.class, error -> assertThat(error.code()).isEqualTo("SOURCE_TYPE_INVALID"));
+        verify(storage, never()).storePrivate(any(), anyString(), anyLong(), any(InputStream.class));
     }
 
     private static byte[] png(int width,int height)throws Exception{

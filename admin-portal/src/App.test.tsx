@@ -174,6 +174,29 @@ describe('POI media audit controls', () => {
     expect(capturedRequests.some(({ url, init }) => url.endsWith('/api/v1/admin/pois/02000000-0000-0000-0000-000000000005/media') && init?.method === 'POST')).toBe(true);
   });
 
+  it('uploads an own photograph without an external URL and sends the explicit rights declaration', async () => {
+    includeMediaPoi = true;
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar ficha turística' }));
+    fireEvent.change(await screen.findByLabelText('Origen de la fotografía'), { target: { value: 'OWN_PHOTOGRAPH' } });
+    fireEvent.change(screen.getByLabelText(/Autor o titular de derechos/), { target: { value: 'María Pérez' } });
+    fireEvent.change(screen.getByLabelText(/Licencia o autorización de uso/), { target: { value: 'Autorización escrita para publicar en Rutea' } });
+    fireEvent.change(screen.getByLabelText('Atribución de fotografía propia'), { target: { value: '© María Pérez' } });
+    fireEvent.change(screen.getByLabelText(/Archivo JPEG o PNG/), { target: { files: [new File(['synthetic'], 'own.png', { type: 'image/png' })] } });
+    fireEvent.click(screen.getByLabelText(/Declaro que soy el autor/));
+    fireEvent.click(screen.getByRole('button', { name: 'Subir borrador privado' }));
+
+    await screen.findByText('Fotografía cargada como borrador privado. Aún no es visible en Rutea.');
+    const request = capturedRequests.find(({ url, init }) => url.endsWith('/api/v1/admin/pois/02000000-0000-0000-0000-000000000005/media') && init?.method === 'POST');
+    expect(request).toBeTruthy();
+    const form = request?.init?.body as FormData;
+    expect(form.get('sourceType')).toBe('OWN_PHOTOGRAPH');
+    expect(form.get('sourceUrl')).toBeNull();
+    expect(form.get('authorDeclarationAccepted')).toBe('true');
+    expect(form.get('license')).toBe('Autorización escrita para publicar en Rutea');
+    expect(form.get('attribution')).toBe('© María Pérez');
+  });
+
   it('uses the exact MINCETUR type mapping and persists its P3 category for each candidate', async () => {
     includeMinceturCandidate = true;
     render(<App />);
