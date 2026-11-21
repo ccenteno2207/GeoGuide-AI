@@ -45,3 +45,28 @@ ADMIN_POI_CONTENT_PUBLICATION = AUTOMATED_TESTS_AND_POSTGIS_PASS
 RUTEA_DETAIL_ENRICHMENT = AUTOMATED_TESTS_PASS
 ADMIN_POI_VM_DEPLOYMENT = PARTIAL_V013_APPLIED_MEDIA_CONFIGURATION_PENDING
 ```
+
+## Integración y despliegue en VM — 2026-11-21
+
+- PR #130 se integró mediante merge normal (`ec64e887016f511c92db0fbdc38233561f76dd1d`). PR #131 añadió la configuración opcional de MinIO y el rechazo seguro cuando el bucket no existe; merge normal `583cd5d6e8bee6f2def31c472d219326ccd7eae1`. No hubo checks de GitHub (`NO_CHECKS_REPORTED`). `origin/main` y el checkout aislado `/home/manager/deploy/admin-poi-01` terminaron en `583cd5d6e8bee6f2def31c472d219326ccd7eae1`, limpio. El checkout `/home/manager/geoguide-ai` no se modificó.
+- Antes de aplicar V013 se verificó el backup restaurado `/home/manager/backups/admin-poi-04-20261121/pre-v013.dump`, 889,975 bytes, SHA-256 `3bddc61ad8a686f8783c8afae58bd57bb0e1a69ceef089ffde75645eb70cf55a`. La prueba de restauración aislada validó V012, seis POIs, PostGIS y Cantamarca activo.
+- Flyway aplicó V013 en la base persistente de integración. Después permanecieron seis POIs, Cantamarca `fdfeb867-576f-4fb5-bcbf-8784e54c2f3a` siguió activo; revisiones de contenido y proyecciones publicadas: cero. No se añadieron textos, horarios, promociones, fotografías ni cambios editoriales a registros reales.
+- Se habilitó el storage con el bucket privado `geoguide-poi-media-private` y una identidad de aplicación limitada a ese bucket. La configuración está fuera del repositorio en `/home/manager/.config/geoguide/admin-poi-04-media.env` (modo `0600`); no se registran sus valores. Una prueba sintética de almacenamiento verificó escritura/lectura/eliminación y denegación de acceso al bucket ajeno; el objeto temporal se eliminó. La política anónima del bucket es `private`.
+- Build del backend desplegado: Maven `BUILD SUCCESS`, 135 pruebas, cero fallos y 30 omitidas; la prueba PostGIS aislada ejecutó 26, cero fallos y dos omitidas. Se ejecutó `docker compose config -q` con los archivos externos de entorno, sin mostrar valores. El contenedor backend y el portal quedaron saludables; no se reiniciaron PostgreSQL, Keycloak, MinIO, GraphHopper, Redis ni Nginx.
+- Smoke HTTPS: `/admin/` HTTP 200; API administrativa anónima HTTP 401; contenido público de Cantamarca HTTP 200; galería pública HTTP 200 y vacía. Health backend `UP`. El bucket no se expuso públicamente.
+- Se identificó y corrigió el motivo inicial del 404 de galería: el despliegue omitía `GEOGUIDE_MEDIA_STORAGE_ENABLED`. PR #131 la deja apagada por defecto y la habilita solo con configuración explícita. El adaptador ya no crea buckets con la credencial runtime.
+- La validación OIDC previa está documentada en `ADMIN-POI-Operational-Information-and-401-Remediation.md` (renovación silenciosa real, RBAC y recuperación de GET 401); no se repitió una sesión interactiva para este editor. No se capturó una nueva pantalla autenticada del editor/preview porque la herramienta de navegador no pudo inicializarse en esta sesión. Por tanto, la evidencia visual del portal y la publicación autenticada desde un navegador quedan pendientes; no se infiere PASS de esas acciones.
+- No se instaló APK en HONOR. El contenido turístico nuevo requiere conexión y no se incorporó a los snapshots offline. No se subió ninguna fotografía real o sin derechos acreditados.
+
+```ini
+ADMIN_POI_VISUAL_EDITOR = PARTIAL_AUTHENTICATED_BROWSER_SMOKE_PENDING
+ADMIN_POI_MEDIA_MANAGEMENT = PARTIAL_NO_LIVE_PHOTO_UPLOAD
+ADMIN_POI_MOBILE_PREVIEW = AUTOMATED_TESTS_PASS_SCREENSHOT_NOT_CAPTURED
+ADMIN_POI_CONTENT_PUBLICATION = POSTGIS_INTEGRATION_PASS_NO_REAL_RECORD_WRITTEN
+RUTEA_DETAIL_ENRICHMENT = AUTOMATED_TESTS_PASS_PHYSICAL_NOT_AUTHORIZED
+ADMIN_POI_VM_DEPLOYMENT = PASS
+V013_INTEGRATION = PASS
+MINIO_BUCKET_PRIVACY = PASS
+OIDC_EDITOR_INTERACTIVE_SMOKE = NOT_EXECUTED
+ANDROID_PHYSICAL_VALIDATION = NOT_AUTHORIZED
+```
