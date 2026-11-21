@@ -3,7 +3,6 @@ package ai.geoguide.media.infrastructure.minio;
 import ai.geoguide.media.application.port.ObjectStorageProvider;
 import io.minio.BucketExistsArgs;
 import io.minio.GetObjectArgs;
-import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
@@ -40,7 +39,7 @@ public class MinioObjectStorageAdapter implements ObjectStorageProvider {
             if (bytes.length == 0 || bytes.length != sizeBytes) throw new IllegalArgumentException("Media stream size mismatch.");
             String hash = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
             if (!client.bucketExists(BucketExistsArgs.builder().bucket(bucket).build())) {
-                client.makeBucket(MakeBucketArgs.builder().bucket(bucket).build());
+                throw new IllegalStateException("Configured private media bucket is not provisioned.");
             }
             String key = "poi/" + mediaId + "/" + UUID.randomUUID();
             client.putObject(PutObjectArgs.builder().bucket(bucket).object(key).stream(
