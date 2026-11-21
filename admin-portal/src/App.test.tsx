@@ -8,6 +8,8 @@ let includeArchivedEditorialRecord = false;
 let hasReopenedEditorialRecord = false;
 let archiveRecordAfterConflict = false;
 let simulateArchiveConflict = false;
+let includeMediaPoi = false;
+let simulateMediaUpload400 = false;
 
 vi.mock('./auth', () => ({
   adminUserManager: {
@@ -32,6 +34,8 @@ describe('POI media audit controls', () => {
     hasReopenedEditorialRecord = false;
     archiveRecordAfterConflict = false;
     simulateArchiveConflict = false;
+    includeMediaPoi = false;
+    simulateMediaUpload400 = false;
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       capturedRequests.push({ url, init });
@@ -56,6 +60,14 @@ describe('POI media audit controls', () => {
       };
       const batch = { id: 'batch-1', fileName: 'synthetic.csv', sha256: 'A'.repeat(64), cutoff: '2026-11-10',
         total: 1, candidates: 1, quarantined: 0, poiDrafts: 0, destinationDrafts: 0, unassignedCandidates: 1 };
+      const mediaPoi = { id: '02000000-0000-0000-0000-000000000005', name: 'POI sintético de medios', description: null,
+        categoryCode: 'HISTORIC_CHURCH', categoryName: 'Iglesia histórica', active: true, updatedAt: '2026-11-21T00:00:00Z',
+        sourceSystem: 'fixture', sourceRecordId: 'fixture-1', sourceUrl: 'https://example.test/poi', license: null, attribution: null };
+      if (simulateMediaUpload400 && url.endsWith(`/api/v1/admin/pois/${mediaPoi.id}/media`) && init?.method === 'POST') {
+        return new Response(JSON.stringify({ status: 400, detail: 'Datos inválidos.', code: 'AUTHOR_REQUIRED', errors: [
+          { field: 'author', code: 'AUTHOR_REQUIRED', message: 'Indica el autor o titular de derechos.' },
+        ] }), { status: 400, headers: { 'Content-Type': 'application/problem+json', 'X-Request-Id': 'req-media-test' } });
+      }
       const staleRecord = { ...archivedRecord, state: 'OBSERVED', version: 11, geographicReviewStatus: 'APPROVED', identityReviewStatus: 'NO_DUPLICATE' };
       const reopenedRecord = { ...archivedRecord, state: 'DRAFT', version: 13, geographicReviewStatus: 'PENDING', identityReviewStatus: 'PENDING', publishedPoiId: null, active: false };
       const body = init?.method === 'POST' && url.endsWith('/api/v1/admin/records')
@@ -71,6 +83,15 @@ describe('POI media audit controls', () => {
           ? new Response(JSON.stringify({ status: 409, detail: 'El recurso cambió o la transición solicitada no está permitida.' }), { status: 409, headers: { 'Content-Type': 'application/problem+json' } })
         : url.includes('/api/v1/admin/records/fdfeb867-576f-4fb5-bcbf-8784e54c2f3a/archive')
           && init?.method === 'POST' ? (archiveRecordAfterConflict = true, new Response(JSON.stringify({ status: 409, detail: 'El recurso cambió o la transición solicitada no está permitida.' }), { status: 409, headers: { 'Content-Type': 'application/problem+json' } }))
+        : url.endsWith(`/api/v1/admin/pois/${mediaPoi.id}/content`)
+          ? { poiId: mediaPoi.id, curatedPoi: { name: mediaPoi.name, categoryCode: mediaPoi.categoryCode,
+              categoryName: mediaPoi.categoryName, description: 'Descripción sintética', sourceSystem: 'fixture',
+              sourceRecordId: 'fixture-1', sourceUrl: 'https://example.test/poi', license: null, attribution: null },
+            draftVersion: 0, draftState: 'NONE', draftContent: { summary: '', description: '', history: '', significance: '',
+              visitorExperience: '', interestingFacts: [], recommendations: [], practicalInfo: '', officialUrl: '' },
+            publishedVersion: null, publishedContent: null, publishedAt: null, revisions: [] }
+        : url.endsWith(`/api/v1/admin/pois/${mediaPoi.id}/operational-info`)
+          ? { timeZone: 'America/Lima', weeklyHours: [], items: [], version: 0 }
         : url.includes('/duplicates') ? []
         : url.endsWith('/api/v1/admin/records/fdfeb867-576f-4fb5-bcbf-8784e54c2f3a')
           ? hasReopenedEditorialRecord ? reopenedRecord : archiveRecordAfterConflict ? archivedRecord : includeArchivedEditorialRecord ? archivedRecord : staleRecord
@@ -79,6 +100,8 @@ describe('POI media audit controls', () => {
         : url.endsWith('/api/v1/admin/imports') && includeMinceturCandidate ? [batch]
         : url.includes('/api/v1/admin/imports/batch-1/records') && includeMinceturCandidate
           ? { content: [minceturRecord], page: 0, size: 100, totalElements: 1, totalPages: 1 }
+        : url.includes('/api/v1/admin/pois?') && includeMediaPoi
+          ? { content: [mediaPoi], page: 0, size: 50, totalElements: 1, totalPages: 1 }
         : url.includes('/api/v1/admin/pois?') || url.includes('/api/v1/admin/records') || url.includes('/api/v1/admin/destination-records')
           || url.includes('/api/v1/admin/destination-poi-relationships')
           ? { content: [], page: 0, size: 50, totalElements: 0 }
@@ -90,6 +113,7 @@ describe('POI media audit controls', () => {
 
   afterEach(() => {
     cleanup();
+    vi.restoreAllMocks();
     vi.unstubAllGlobals();
   });
 
@@ -97,7 +121,7 @@ describe('POI media audit controls', () => {
     render(<App />);
 
     const reason = await screen.findByLabelText('Razón de auditoría de media');
-    await waitFor(() => expect(screen.getByRole('heading', { name: /Media privada del POI/ })).toBeTruthy());
+    await waitFor(() => expect(screen.getByRole('heading', { name: /Fotografías del POI/ })).toBeTruthy());
 
     expect(reason).toBeTruthy();
     expect(screen.queryByLabelText('Razón de auditoría')).toBeNull();
@@ -124,6 +148,30 @@ describe('POI media audit controls', () => {
     expect(body.longitude).toBeNull();
     expect(capturedRequests.some(({ url }) => url.includes('/publish') || url.endsWith('/approve'))).toBe(false);
     expect(await screen.findByText('DRAFT · DESACTIVADO · v0')).toBeTruthy();
+  });
+
+  it('shows field-specific upload feedback and preserves the selected file after HTTP 400', async () => {
+    includeMediaPoi = true;
+    simulateMediaUpload400 = true;
+    render(<App />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Editar ficha turística' }));
+    const poiInput = await screen.findByLabelText('POI seleccionado para la fotografía') as HTMLInputElement;
+    expect(poiInput.value).toBe('POI sintético de medios');
+    const fileInput = screen.getByLabelText(/Archivo JPEG o PNG/) as HTMLInputElement;
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:preview');
+    const file = new File(['synthetic bytes'], 'fixture.png', { type: 'image/png' });
+    fireEvent.change(fileInput, { target: { files: [file] } });
+    fireEvent.change(screen.getByLabelText(/Autor o titular de derechos/), { target: { value: 'María Pérez' } });
+    fireEvent.change(screen.getByLabelText(/Fuente de la imagen/), { target: { value: 'https://example.test/fixture.png' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Subir borrador privado' }));
+
+    const dialog = await screen.findByRole('alertdialog', { name: 'Revisa la información ingresada' });
+    expect(dialog.textContent).toContain('Indica el autor o titular de derechos.');
+    await waitFor(() => expect(screen.getByLabelText(/Autor o titular de derechos/).getAttribute('aria-invalid')).toBe('true'));
+    expect((screen.getByLabelText(/Autor o titular de derechos/) as HTMLInputElement).value).toBe('María Pérez');
+    expect(fileInput.files?.[0]).toBe(file);
+    expect(screen.getByRole('img', { name: 'Vista previa de fixture.png' })).toBeTruthy();
+    expect(capturedRequests.some(({ url, init }) => url.endsWith('/api/v1/admin/pois/02000000-0000-0000-0000-000000000005/media') && init?.method === 'POST')).toBe(true);
   });
 
   it('uses the exact MINCETUR type mapping and persists its P3 category for each candidate', async () => {
@@ -190,8 +238,9 @@ describe('POI media audit controls', () => {
     fireEvent.change(screen.getByLabelText('Evidencia de decisión editorial'), { target: { value: 'Fixture HTTP 409' } });
     fireEvent.click(screen.getByRole('button', { name: 'Archivar' }));
 
-    expect((await screen.findByRole('alert')).textContent).toContain('HTTP 409');
-    expect(screen.getByRole('alert').textContent).toContain('el expediente está ARCHIVED');
+    const conflict = await screen.findByRole('alertdialog', { name: 'La información cambió' });
+    expect(conflict.textContent).toContain('archivado');
+    expect(conflict.textContent).toContain('Tus valores sin guardar se conservaron');
     expect((screen.getByLabelText('Nombre editorial') as HTMLInputElement).value).toBe('Texto sin guardar');
     expect((screen.getByLabelText('Nombre editorial') as HTMLInputElement).matches(':disabled')).toBe(true);
     expect(capturedRequests.some(({ url, init }) => url.endsWith('/api/v1/admin/records/fdfeb867-576f-4fb5-bcbf-8784e54c2f3a') && !init?.method)).toBe(true);

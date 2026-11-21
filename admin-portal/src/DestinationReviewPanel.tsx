@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { PageResult } from './api';
 import { AdminApi } from './api';
+import { useAdminFeedback } from './AdminFeedback';
 
 type DestinationRecord = {
   id: string; importRecordId: string | null; sourceRecordId: string | null;
@@ -17,6 +18,7 @@ type Relationship = { id: string; destinationId: string; destinationName: string
   poiName: string; relationshipType: string; status: string; version: number };
 
 export function DestinationReviewPanel({ api }: { api: AdminApi }) {
+  const { showError } = useAdminFeedback();
   const [rows, setRows] = useState<DestinationRecord[]>([]);
   const [selected, setSelected] = useState<DestinationRecord | null>(null);
   const [duplicates, setDuplicates] = useState<Duplicate[]>([]);
@@ -40,7 +42,6 @@ export function DestinationReviewPanel({ api }: { api: AdminApi }) {
   const [attribution, setAttribution] = useState('');
   const [reason, setReason] = useState('');
   const [query, setQuery] = useState('');
-  const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
   const load = async () => {
@@ -48,12 +49,12 @@ export function DestinationReviewPanel({ api }: { api: AdminApi }) {
     setRows(page.content);
     setRelationships((await api.get<PageResult<Relationship>>('/api/v1/admin/destination-poi-relationships?size=100')).content);
   };
-  useEffect(() => { void load().catch((e: unknown) => setError(e instanceof Error ? e.message : 'Error al cargar destinos.')); }, []);
+  useEffect(() => { void load().catch((e: unknown) => showError(e)); }, []);
 
   const run = async (action: () => Promise<void>) => {
-    setBusy(true); setError('');
+    setBusy(true);
     try { await action(); await load(); }
-    catch (e) { setError(e instanceof Error ? e.message : 'Error administrativo.'); }
+    catch (e) { showError(e); }
     finally { setBusy(false); }
   };
   const select = async (row: DestinationRecord) => {
@@ -87,7 +88,6 @@ export function DestinationReviewPanel({ api }: { api: AdminApi }) {
       <p>La elegibilidad de destino es independiente de POI. La ubicación del atractivo no demuestra un acceso navegable.</p></div>
       <div className="inline"><input aria-label="Buscar destinos" value={query} onChange={e => setQuery(e.target.value)} placeholder="Nombre o código" />
         <button disabled={busy} onClick={() => void run(load)}>Buscar</button></div></div>
-    {error && <div className="error alert" role="alert">{error}</div>}
     <div className="editor-layout"><div className="record-list">
       {rows.map(row => <button key={row.id} className={`record ${selected?.id === row.id ? 'selected' : ''}`} onClick={() => void select(row)}>
         <strong>{row.canonicalName}</strong><span>{row.state} · geo {row.geographicReviewStatus} · identidad {row.identityReviewStatus} · acceso {row.accessReviewStatus}</span>

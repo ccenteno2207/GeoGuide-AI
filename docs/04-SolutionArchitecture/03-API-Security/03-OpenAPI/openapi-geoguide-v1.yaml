@@ -582,17 +582,28 @@ paths:
               type: object
               required: [file, author, sourceUrl]
               properties:
-                file: { type: string, format: binary }
-                author: { type: string }
-                sourceUrl: { type: string }
+                file: { type: string, format: binary, description: JPEG or PNG image; maximum 10 MiB }
+                author: { type: string, maxLength: 200, description: Author or rights holder }
+                sourceUrl: { type: string, format: uri, maxLength: 2048, description: HTTPS source URL }
+                altText: { type: string, maxLength: 500, description: Optional on private draft upload; required before publication }
       responses:
         '200':
           description: Asset validado por contenido, re-encoded, hashed y no publicado
           content:
             application/json:
               schema: { $ref: '#/components/schemas/AdminMediaAsset' }
-        '413': { description: Se superó el límite de tamaño configurado }
-        '415': { description: Solo se aceptan JPEG y PNG decodificables }
+        '400':
+          description: Invalid upload fields or unsupported/undecodable image; includes field-level errors
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/AdminValidationProblem' }
+        '401': { description: Sesión no válida }
+        '403': { description: Rol sin autorización para cargar imágenes }
+        '413':
+          description: Se superó el límite de tamaño configurado
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/AdminValidationProblem' }
   /admin/media/{id}/history:
     get:
       summary: Consultar auditoría de un asset multimedia
@@ -1279,6 +1290,23 @@ components:
       properties:
         expectedVersion: { type: integer, format: int64 }
         reason: { type: string }
+    AdminValidationProblem:
+      type: object
+      required: [type, status, detail, code, errors]
+      properties:
+        type: { type: string, format: uri }
+        status: { type: integer, enum: [400, 413] }
+        detail: { type: string }
+        code: { type: string, description: Stable machine-readable error code }
+        errors:
+          type: array
+          items:
+            type: object
+            required: [field, code, message]
+            properties:
+              field: { type: string, description: Request field identifier }
+              code: { type: string, description: Stable field validation code }
+              message: { type: string, description: Safe corrective message }
     AdminMediaAsset:
       type: object
       required: [id, poiId, contentType, sha256, sizeBytes, width, height, author, sourceUrl, rightsStatus, state, primary, version]

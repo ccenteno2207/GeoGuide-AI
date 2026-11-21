@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { AdminApi, AdminPoi, MediaAsset, PoiOperationalInfo } from './api';
 import { PoiMediaGallery } from './PoiMediaGallery';
+import { useAdminFeedback } from './AdminFeedback';
 
 type Content = {
   summary: string | null; description: string | null; history: string | null;
@@ -19,6 +20,7 @@ const provisionalPattern = /\b(que\s+va\s+aqui|lorem\s+ipsum|placeholder|texto\s
 const hasProvisionalText = (content: Content) => [content.summary, content.description, content.history, content.significance, content.visitorExperience, content.practicalInfo, ...content.interestingFacts, ...content.recommendations].some(value => typeof value === 'string' && (provisionalPattern.test(value.normalize('NFD').replace(/[\u0300-\u036f]/g, '')) || value.trim().toLowerCase() === 'todo'));
 
 export function PoiTourismEditor({ poi, api, onClose, onManageMedia }: { poi: AdminPoi; api: AdminApi; onClose: () => void; onManageMedia: () => void }) {
+  const { showError, showSuccess } = useAdminFeedback();
   const [record, setRecord] = useState<AdminContent | null>(null);
   const [draft, setDraft] = useState<Content>(empty);
   const [media, setMedia] = useState<MediaAsset[]>([]);
@@ -27,13 +29,12 @@ export function PoiTourismEditor({ poi, api, onClose, onManageMedia }: { poi: Ad
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [previewMode, setPreviewMode] = useState<'draft' | 'published'>('draft');
   const dirty = useMemo(() => record != null && JSON.stringify(draft) !== JSON.stringify(record.draftContent), [draft, record]);
 
   const load = async () => {
-    setLoading(true); setError('');
+    setLoading(true);
     try {
       const [content, assets, operations] = await Promise.all([
         api.get<AdminContent>(`/api/v1/admin/pois/${poi.id}/content`),
@@ -44,7 +45,7 @@ export function PoiTourismEditor({ poi, api, onClose, onManageMedia }: { poi: Ad
       setDraft(content.draftState === 'NONE' ? content.publishedContent ?? empty : content.draftContent ?? empty);
       setPreviewMode(content.publishedVersion || content.draftState !== 'NONE' ? 'draft' : 'published');
       setMedia(assets); setOperational(operations);
-    } catch (e) { setError(e instanceof Error ? e.message : 'No se pudo cargar el editor.'); }
+    } catch (e) { showError(e); }
     finally { setLoading(false); }
   };
   useEffect(() => { void load(); return () => Object.values(previews).forEach(URL.revokeObjectURL); }, [poi.id]);
@@ -60,8 +61,8 @@ export function PoiTourismEditor({ poi, api, onClose, onManageMedia }: { poi: Ad
   }, [media, api]);
 
   const run = async (action: () => Promise<void>) => {
-    setBusy(true); setError(''); setNotice('');
-    try { await action(); } catch (e) { setError(e instanceof Error ? e.message : 'La operación no pudo completarse.'); }
+    setBusy(true); setNotice('');
+    try { await action(); } catch (e) { showError(e); }
     finally { setBusy(false); }
   };
   const mutate = (key: ScalarContentKey, value: string) => setDraft(current => ({ ...current, [key]: value }));
@@ -69,13 +70,13 @@ export function PoiTourismEditor({ poi, api, onClose, onManageMedia }: { poi: Ad
     if (!record || !reason.trim()) throw new Error('Indique una razón de auditoría.');
     const content: Content = { ...draft, interestingFacts: typeof draft.interestingFacts === 'string' ? lines(draft.interestingFacts as unknown as string) : draft.interestingFacts, recommendations: typeof draft.recommendations === 'string' ? lines(draft.recommendations as unknown as string) : draft.recommendations };
     const next = await api.put<AdminContent>(`/api/v1/admin/pois/${poi.id}/content/draft`, { expectedVersion: record.draftVersion, content, reason });
-    setRecord(next); setDraft(next.draftContent); setPreviewMode('draft'); setNotice('Borrador guardado. El contenido público no cambió.');
+    setRecord(next); setDraft(next.draftContent); setPreviewMode('draft'); showSuccess('Borrador guardado correctamente. El contenido público no cambió.');
   });
   const transition = (action: 'submit' | 'publish') => run(async () => {
     if (!record || !reason.trim()) throw new Error('Indique una razón de auditoría.');
     const next = await api.post<AdminContent>(`/api/v1/admin/pois/${poi.id}/content/${action}`, { expectedVersion: record.draftVersion, reason });
     setRecord(next); setDraft(next.draftContent); setPreviewMode(action === 'publish' ? 'published' : 'draft');
-    setNotice(action === 'publish' ? 'Versión turística publicada; el POI conserva su activación.' : 'Borrador enviado a revisión.');
+    showSuccess(action === 'publish' ? 'Cambios publicados correctamente.' : 'Contenido enviado a revisión.');
   });
   const revert = (revisionId: string) => run(async () => {
     if (!record || !reason.trim()) throw new Error('Indique una razón de auditoría.');
@@ -98,7 +99,7 @@ export function PoiTourismEditor({ poi, api, onClose, onManageMedia }: { poi: Ad
 
   return <section className="panel tourism-editor" aria-label={`Editor turístico de ${poi.name}`}>
     <div className="section-head"><div><h2>Ficha turística · {poi.name}</h2><p>Contenido turístico separado de identidad, ubicación y activación. Los cambios guardados no modifican el estado activo.</p></div><button className="secondary" onClick={onClose}>Cerrar editor</button></div>
-    {error && <p role="alert" className="alert error">{error}</p>}{notice && <p role="status" className="notice">{notice}</p>}
+    {notice && <p role="status" className="notice">{notice}</p>}
     {record && <div className="tourism-editor-grid">
       <div className="tourism-fields">
         <span className="pill">POI {poi.active ? 'ACTIVO' : 'DESACTIVADO'} · versión de trabajo v{record.draftVersion} · {record.draftState}{record.publishedVersion ? ` · publicado v${record.publishedVersion}` : ''}</span>

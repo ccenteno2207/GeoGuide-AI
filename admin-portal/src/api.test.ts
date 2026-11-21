@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { AdminApi } from './api';
+import { AdminApi, AdminApiError } from './api';
 
 afterEach(() => vi.unstubAllGlobals());
 
 describe('AdminApi token recovery', () => {
   it('reports an expired local session as recoverable without signing out first', async () => {
     const api = new AdminApi({ baseUrl: '', getToken: async () => null, renewToken: async () => null });
-    await expect(api.get('/api/v1/admin/pois')).rejects.toThrow('API 401: No hay una sesión utilizable');
+    await expect(api.get('/api/v1/admin/pois')).rejects.toMatchObject({ status: 401, code: 'SESSION_UNAVAILABLE' });
   });
 
   it('renews once and retries an idempotent GET after 401', async () => {
@@ -44,7 +44,7 @@ describe('AdminApi token recovery', () => {
     vi.stubGlobal('fetch', fetchMock);
     const api = new AdminApi({ baseUrl: '', getToken: async () => 'old-token', renewToken: async () => 'new-token' });
 
-    await expect(api.get('/api/v1/admin/pois')).rejects.toThrow('sigue sin autorización');
+    await expect(api.get('/api/v1/admin/pois')).rejects.toMatchObject({ status: 401 });
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
@@ -53,7 +53,7 @@ describe('AdminApi token recovery', () => {
     vi.stubGlobal('fetch', fetchMock);
     const api = new AdminApi({ baseUrl: '', getToken: async () => 'old-token', renewToken: async () => 'new-token' });
 
-    await expect(api.post('/api/v1/admin/pois/test/activation', {})).rejects.toThrow('no se repitió automáticamente');
+    await expect(api.post('/api/v1/admin/pois/test/activation', {})).rejects.toMatchObject({ status: 401, code: 'SESSION_RENEWED_WRITE_NOT_RETRIED' });
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
@@ -74,7 +74,21 @@ describe('AdminApi token recovery', () => {
     vi.stubGlobal('fetch', fetchMock);
     const api = new AdminApi({ baseUrl: '', getToken: async () => 'old-token', renewToken: async () => 'new-token' });
 
-    await expect(api.getBlob('/api/v1/admin/media/asset/content')).rejects.toThrow('sigue sin autorización');
+    await expect(api.getBlob('/api/v1/admin/media/asset/content')).rejects.toMatchObject({ status: 401 });
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('parses stable field validation errors without displaying the raw API body', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      status: 400, detail: 'Datos inválidos.', code: 'AUTHOR_REQUIRED',
+      errors: [{ field: 'author', code: 'AUTHOR_REQUIRED', message: 'Indica el autor o titular de derechos.' }],
+    }), { status: 400, headers: { 'Content-Type': 'application/problem+json', 'X-Request-Id': 'req-synthetic' } })));
+    const api = new AdminApi({ baseUrl: '', getToken: async () => 'synthetic-token' });
+    await expect(api.post('/api/v1/admin/media', {})).rejects.toMatchObject({
+      status: 400,
+      code: 'AUTHOR_REQUIRED',
+      requestId: 'req-synthetic',
+      fieldErrors: [{ field: 'author', code: 'AUTHOR_REQUIRED', message: 'Indica el autor o titular de derechos.' }],
+    } satisfies Partial<AdminApiError>);
   });
 });
