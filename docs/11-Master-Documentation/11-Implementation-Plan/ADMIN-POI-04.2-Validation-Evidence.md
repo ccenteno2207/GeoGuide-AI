@@ -78,3 +78,32 @@ ADMIN_POI_VM_DEPLOYMENT = NOT_AUTHORIZED_PENDING_OWNER_REVIEW
 ```
 
 Antes de push, PR, merge o despliegue se requiere revisión del propietario de este diagnóstico y del alcance. No se declara que el HTTP 400 histórico se haya reproducido con el payload original, que la renovación OIDC se haya probado en el portal vivo, ni que la ruta Portal→MinIO→API pública→HONOR esté validada en esta rama.
+
+## Integración y validación operativa — 2026-11-21
+
+- `origin/main` se verificó en `835d48e75f156376865a0c8529388b8e2fd24144`; la rama de esta ejecución partió de ese baseline y conserva el commit local `7cd7870991fa3e284a8fc5c5853dbd9e805992b2`.
+- Backend `mvnw verify`: 135 pruebas, 0 fallos y 30 omitidas; portal `npm test`: 41/41 PASS; `npm run build`: PASS.
+- PostGIS real aislado en la VM de integración: 26 pruebas ejecutadas, 0 fallos y 2 omitidas. Se ejecutaron Flyway V001–V013 contra un PostgreSQL 16/PostGIS 3.4 temporal. La primera conexión por túnel falló por la red `internal` que no publica puertos; se repitió correctamente usando una red Docker exclusiva con resolución interna. No se conectó a la base compartida.
+- MinIO aislado: una prueba temporal de smoke con imagen PNG sintética y UUID aleatorio verificó escritura por `MinioObjectStorageAdapter`, lectura byte a byte, rechazo de lectura anónima al bucket privado y eliminación del objeto. PASS 1/1. La prueba temporal se mantuvo en el staging de VM y no se añadió al repositorio. La validación de metadatos del registro y permisos HTTP continúa cubierta por pruebas unitarias/configuración existentes; no se ejecutó una solicitud API end-to-end autenticada sobre la misma imagen.
+- Se volvieron a calcular los SHA-256 de los cinco PNG originales fuera del repositorio; todos coinciden con la tabla de este documento. No se copiaron, cargaron ni publicaron imágenes originales. La API pública sigue sin incluirlas; el placeholder en builds estándar es el resultado esperado cuando no hay un medio autorizado y publicado. No se puede identificar la fuente de cada foto vista en capturas sin el SHA/build metadata de esas APK.
+- `GET /actuator/health` y `GET /admin/` respondieron 200 durante la comprobación previa. Esos códigos solo indican disponibilidad pública y no se consideran prueba de autenticación.
+- El runtime del navegador no pudo inicializar dos veces (`failed to write kernel assets`, OS error 3), por lo que no se ingresaron credenciales y no se subió archivo en el portal vivo. Renovación OIDC real y formulario autenticado permanecen sin verificar en esta ejecución. La causa histórica del 400 también permanece no atribuida; sí se conserva el caso reproducible local de autor ausente o fuente no HTTPS.
+- Durante las pruebas se usó staging temporal bajo `/tmp/admin-poi-04-2-validation-20261121`; el stack aislado estuvo compuesto por PostGIS limitado a 1 GiB/1 CPU, MinIO limitado a 512 MiB/0.5 CPU y Maven limitado a 2 GiB/1 CPU. El volumen de caché Maven fue exclusivo. Se eliminaron los contenedores, red y volúmenes de validación; los nueve servicios preexistentes siguen activos y saludables. La eliminación de los archivos/directorios de staging remanentes en Windows y VM fue rechazada por la revisión automática de seguridad (`blocked by policy`). No se intentó eludir el control. Permanecen dos archivos de archivo de backend y una prueba Java temporal en staging; no contienen fotografías, credenciales reales ni artefactos publicables. Limpieza de infraestructura = PASS; limpieza de staging local = BLOCKED.
+- No hubo cambios Flutter, contenido editorial, datos persistentes compartidos, publicaciones ni despliegue en esta etapa de validación.
+
+```ini
+ADMIN_POI_04_2_LOCAL_BACKEND = PASS_135_TESTS_30_SKIPPED
+ADMIN_POI_04_2_PORTAL = PASS_41_TESTS_AND_BUILD
+ADMIN_POI_04_2_POSTGIS_VM = PASS_26_TESTS_2_SKIPPED
+ADMIN_POI_04_2_MINIO_SYNTHETIC_OBJECT = PASS_1_TEST
+ADMIN_POI_04_2_HTTP400_FIELD_AUTOMATION = PASS
+ADMIN_POI_04_2_HTTP400_HISTORICAL_CAUSE = NOT_VERIFIED
+ADMIN_POI_04_2_AUTHENTICATED_BROWSER_SMOKE = BLOCKED_BROWSER_RUNTIME
+ADMIN_POI_04_2_OIDC_RENEWAL_LIVE = NOT_VERIFIED
+ADMIN_POI_04_2_FULL_API_TO_MINIO_E2E = NOT_RUN
+ADMIN_POI_04_2_PHOTOS_ORIGINALS = INTACT_NOT_PUBLISHED
+ADMIN_POI_04_2_TEMP_CONTAINERS_NETWORK_VOLUMES = CLEAN
+ADMIN_POI_04_2_TEMP_STAGING_CLEANUP = BLOCKED_AUTOMATIC_REVIEW
+ADMIN_POI_04_2_VM_DEPLOYMENT = PENDING
+ADMIN_POI_04_2_COMPLETE = PARTIAL
+```
