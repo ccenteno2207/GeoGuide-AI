@@ -19,6 +19,8 @@ import ai.geoguide.poi.infrastructure.dataset.mincetur.MinceturSnapshotParser;
 import ai.geoguide.admin.infrastructure.persistence.AdminEditorialRepository;
 import ai.geoguide.admin.infrastructure.persistence.AdminImportReadRepository;
 import ai.geoguide.admin.infrastructure.persistence.AdminPoiInventoryRepository;
+import ai.geoguide.admin.infrastructure.persistence.PoiOperationalInfoRepository;
+import ai.geoguide.poi.domain.PoiOperationalInfo;
 import ai.geoguide.admin.domain.EditorialWorkflowConflictException;
 import ai.geoguide.admin.infrastructure.persistence.AdminDestinationRepository;
 import ai.geoguide.admin.infrastructure.persistence.AdminDestinationPoiRelationshipRepository;
@@ -142,6 +144,9 @@ class PostgisIntegrationTests {
 
     @Autowired
     AdminPoiInventoryRepository adminPoiInventoryRepository;
+
+    @Autowired
+    PoiOperationalInfoRepository poiOperationalInfoRepository;
 
     @Autowired
     AdminDestinationRepository adminDestinationRepository;
@@ -656,6 +661,37 @@ class PostgisIntegrationTests {
         assertThat(adminPoiInventoryRepository.audit(poiId)).hasSize(1);
         assertThatThrownBy(() -> adminPoiInventoryRepository.setActive(poiId, before.updatedAt(), false, "admin-test",
                 "Stale activation", "Synthetic stale evidence.")).hasMessageContaining("stale");
+    }
+
+    @Test
+    void operationalInformationCanBeUpdatedOnAnActivePoiWithoutEditorialTransition() {
+        UUID categoryId = UUID.randomUUID();
+        UUID poiId = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO geo.category(id,code,name,active) VALUES (?,?,?,true)", categoryId, "MUSEUM", "Museum");
+        jdbcTemplate.update("INSERT INTO geo.point_of_interest(id,category_id,name,location,active,created_at,updated_at) "
+                + "VALUES (?,?,?,ST_SetSRID(ST_MakePoint(-75,-14),4326),true,now(),now())", poiId, categoryId, "Operational synthetic museum");
+
+        var before = poiOperationalInfoRepository.getAdmin(poiId);
+        var hours = java.util.Arrays.stream(java.time.DayOfWeek.values())
+                .map(day -> new PoiOperationalInfo.DailyHours(day, day == java.time.DayOfWeek.SATURDAY
+                        ? List.of(new PoiOperationalInfo.TimeRange(java.time.LocalTime.of(10, 0), java.time.LocalTime.of(16, 0)))
+                        : List.of())).toList();
+        var item = new PoiOperationalInfo.OperationalItem(UUID.randomUUID(), PoiOperationalInfo.ItemType.PERFORMANCE,
+                "Función sintética", "Actividad de prueba", "Sábados 14:00", null, null, null, true);
+        var inactiveItem = new PoiOperationalInfo.OperationalItem(UUID.randomUUID(), PoiOperationalInfo.ItemType.PROMOTION,
+                "Promoción retirada", null, null, null, null, null, false);
+        var saved = poiOperationalInfoRepository.update(poiId, before.version(), "editor-test",
+                new PoiOperationalInfo("America/Lima", hours, List.of(item, inactiveItem), before.version()));
+
+        assertThat(saved.version()).isEqualTo(1);
+        assertThat(saved.items()).hasSize(2);
+        assertThat(poiOperationalInfoRepository.getPublic(poiId).items()).containsExactly(item);
+        assertThat(jdbcTemplate.queryForObject("SELECT active FROM geo.point_of_interest WHERE id=?", Boolean.class, poiId)).isTrue();
+        assertThat(jdbcTemplate.queryForObject("SELECT count(*) FROM admin.poi_operational_info_audit WHERE poi_id=?", Integer.class, poiId)).isEqualTo(1);
+        assertThatThrownBy(() -> poiOperationalInfoRepository.update(poiId, 0, "editor-test", saved))
+                .isInstanceOf(PoiOperationalInfoRepository.OperationalInfoConflictException.class);
+        assertThatThrownBy(() -> poiOperationalInfoRepository.getPublic(UUID.randomUUID()))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

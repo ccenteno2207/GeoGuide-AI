@@ -2,6 +2,7 @@ package ai.geoguide.admin.infrastructure.http;
 
 import ai.geoguide.admin.domain.EditorialWorkflowConflictException;
 import ai.geoguide.admin.domain.EditorialCategoryMismatchException;
+import ai.geoguide.admin.infrastructure.persistence.PoiOperationalInfoRepository.OperationalInfoConflictException;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,16 @@ class AdminApiExceptionHandlerTests {
         assertThat(response.getBody()).isNotNull();
         assertThat(response.getBody().getDetail()).contains("ARCHAEOLOGICAL_SITE", "Observado", "repita las revisiones");
         assertThat(response.getBody().getProperties()).containsEntry("code", "EDITORIAL_CATEGORY_MISMATCH");
+    }
+
+    @Test
+    void operationalInformationConflictRequestsReloadWithoutEditorialLanguage() {
+        var response = handler.operationalInfoConflict(new OperationalInfoConflictException("stale version"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().getDetail()).contains("Recargue la ficha")
+                .doesNotContain("transición", "aprobación editorial");
     }
 
     @Test

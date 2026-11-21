@@ -12,10 +12,15 @@ let simulateArchiveConflict = false;
 vi.mock('./auth', () => ({
   adminUserManager: {
     getUser: vi.fn().mockResolvedValue({ access_token: 'synthetic-test-token', profile: { name: 'Synthetic admin' } }),
+    signinSilent: vi.fn().mockResolvedValue({ access_token: 'synthetic-test-token', expires_at: Math.floor(Date.now() / 1000) + 3600 }),
     signinRedirectCallback: vi.fn(),
+    signinSilentCallback: vi.fn(),
     signoutRedirect: vi.fn(),
     signinRedirect: vi.fn(),
   },
+  getValidAccessToken: vi.fn(async (manager) => (await manager?.getUser())?.access_token ?? null),
+  renewAccessToken: vi.fn(async () => 'synthetic-test-token'),
+  oidcRedirectUris: vi.fn((origin, base) => ({ redirectUri: `${origin}${base}auth/callback`, silentRedirectUri: `${origin}${base}auth/silent-callback`, postLogoutRedirectUri: `${origin}${base}` })),
   oidcConfigured: vi.fn().mockReturnValue(true),
 }));
 

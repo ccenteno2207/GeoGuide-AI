@@ -1,18 +1,33 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { AdminApi } from './api';
 
-describe('AdminApi problem responses', () => {
-  afterEach(() => vi.unstubAllGlobals());
+afterEach(() => vi.unstubAllGlobals());
 
-  it('surfaces the actionable detail from an editorial category conflict', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
-      status: 409,
-      code: 'EDITORIAL_CATEGORY_MISMATCH',
-      detail: 'El tipo MINCETUR corresponde a la categoría P3 ARCHAEOLOGICAL_SITE.',
-    }), { status: 409, headers: { 'Content-Type': 'application/problem+json' } })));
-    const api = new AdminApi({ baseUrl: 'https://admin.example.test', getToken: async () => 'synthetic' });
+describe('AdminApi token recovery', () => {
+  it('reports an expired local session as recoverable without signing out first', async () => {
+    const api = new AdminApi({ baseUrl: '', getToken: async () => null, renewToken: async () => null });
+    await expect(api.get('/api/v1/admin/pois')).rejects.toThrow('API 401: No hay una sesión utilizable');
+  });
 
-    await expect(api.post('/api/v1/admin/records/id/approve', {}))
-      .rejects.toThrow('API 409: El tipo MINCETUR corresponde a la categoría P3 ARCHAEOLOGICAL_SITE.');
+  it('renews once and retries an idempotent GET after 401', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(new Response('expired', { status: 401 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ content: [] }), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const api = new AdminApi({ baseUrl: '', getToken: async () => 'old-token', renewToken: async () => 'new-token' });
+
+    await expect(api.get('/api/v1/admin/pois')).resolves.toEqual({ content: [] });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[0][1]?.headers).toMatchObject({ Authorization: 'Bearer old-token' });
+    expect(fetchMock.mock.calls[1][1]?.headers).toMatchObject({ Authorization: 'Bearer new-token' });
+  });
+
+  it('never replays a mutation automatically after 401', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response('expired', { status: 401 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const api = new AdminApi({ baseUrl: '', getToken: async () => 'old-token', renewToken: async () => 'new-token' });
+
+    await expect(api.post('/api/v1/admin/pois/test/activation', {})).rejects.toThrow('no se repitió automáticamente');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

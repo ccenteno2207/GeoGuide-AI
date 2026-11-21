@@ -48,6 +48,30 @@ class GeoGuideHttpClient {
       throw mapDioException(error);
     }
   }
+
+  Future<Map<String, Object?>> getJson({
+    required String path,
+    Duration receiveTimeout = const Duration(seconds: 4),
+  }) async {
+    if (!path.startsWith('/api/v1/') || path.startsWith('//')) {
+      throw ArgumentError.value(
+        path,
+        'path',
+        'Only API-relative requests are allowed.',
+      );
+    }
+    try {
+      final response = await _dio.get<Object?>(
+        path,
+        options: Options(receiveTimeout: receiveTimeout),
+      );
+      final data = response.data;
+      if (data is! Map) throw const AppFailure(AppFailureType.invalidResponse);
+      return data.map((key, value) => MapEntry(key.toString(), value));
+    } on DioException catch (error) {
+      throw mapDioException(error);
+    }
+  }
 }
 
 AppFailure mapDioException(DioException error) {
