@@ -28,15 +28,22 @@ export class AdminApi {
     if (response.status === 401 && this.config.renewToken) {
       const renewedToken = await this.config.renewToken();
       const method = (init.method ?? 'GET').toUpperCase();
-      if (renewedToken && renewedToken !== token && method === 'GET') {
-        response = await send(renewedToken);
-      } else if (renewedToken && renewedToken !== token) {
+      if (method !== 'GET') {
         throw new Error('API 401: Se renovó la sesión. Vuelve a ejecutar esta acción; no se repitió automáticamente.');
+      }
+      const retryToken = renewedToken && renewedToken !== token
+        ? renewedToken
+        : await this.config.getToken();
+      if (retryToken && retryToken !== token) {
+        response = await send(retryToken);
       } else {
         throw new Error('API 401: No se pudo renovar la sesión. Inicia sesión de nuevo y repite la acción.');
       }
     }
     if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error('API 401: La sesión sigue sin autorización después de renovarla. Inicia sesión de nuevo.');
+      }
       const body = await response.text();
       let detail = body;
       try {
@@ -56,16 +63,24 @@ export class AdminApi {
   patch<T>(path: string, body: unknown) { return this.request<T>(path, { method: 'PATCH', body: JSON.stringify(body) }); }
   upload<T>(path: string, form: FormData) { return this.request<T>(path, { method: 'POST', body: form }); }
   async getBlob(path: string): Promise<Blob> {
-    const token = await this.config.getToken();
-    if (!token) throw new Error('API 401: Inicia sesión de nuevo para consultar la imagen.');
+    let token = await this.config.getToken();
+    if (!token) throw new Error('API 401: No hay una sesión utilizable para consultar la imagen. Inicia sesión de nuevo.');
     const url = `${this.config.baseUrl.replace(/\/$/, '')}${path}`;
     const send = (accessToken: string) => fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
     let response = await send(token);
     if (response.status === 401 && this.config.renewToken) {
       const renewed = await this.config.renewToken();
-      if (renewed && renewed !== token) response = await send(renewed);
+      const current = renewed && renewed !== token ? renewed : await this.config.getToken();
+      if (current && current !== token) {
+        token = current;
+        response = await send(token);
+      } else {
+        throw new Error('API 401: No se pudo renovar la sesión para consultar la imagen. Inicia sesión de nuevo y vuelve a abrir el editor.');
+      }
     }
-    if (!response.ok) throw new Error(`API ${response.status}: No se pudo cargar la vista previa de la imagen.`);
+    if (!response.ok) throw new Error(response.status === 401
+      ? 'API 401: La sesión sigue sin autorización después de renovarla. Inicia sesión de nuevo.'
+      : `API ${response.status}: No se pudo cargar la vista previa de la imagen.`);
     return response.blob();
   }
 }

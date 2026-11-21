@@ -1122,23 +1122,34 @@ class PostgisIntegrationTests {
         UUID poiId = UUID.randomUUID();
         jdbcTemplate.update("INSERT INTO geo.category(id,code,name,active) VALUES (?,?,'Historic site',true)", categoryId, "TOURISM_CONTENT_TEST");
         jdbcTemplate.update("""
-                INSERT INTO geo.point_of_interest(id,category_id,name,location,active,created_at,updated_at)
-                VALUES (?,?, 'Synthetic tourism content POI', ST_SetSRID(ST_MakePoint(-76.9,-11.8),4326), true, now(), now())
+                INSERT INTO geo.point_of_interest(id,category_id,name,description,location,active,created_at,updated_at)
+                VALUES (?,?, 'Synthetic tourism content POI','Curated fallback description', ST_SetSRID(ST_MakePoint(-76.9,-11.8),4326), true, now(), now())
                 """, poiId, categoryId);
         var draft = new PoiTourismContent("Short summary", "Tourist description", "Verified history", "Significance",
                 "Visitor experience", List.of("Fact"), List.of("Recommendation"), "Practical information", "https://example.test/poi");
 
         var saved = poiTourismContentRepository.saveDraft(poiId, 0, draft, "editor-test", "Create synthetic tourism draft");
         assertThat(saved.draftState()).isEqualTo("DRAFT");
-        assertThat(poiTourismContentRepository.getPublic(poiId).publishedVersion()).isNull();
+        var fallback = poiTourismContentRepository.getPublic(poiId);
+        assertThat(fallback.publishedVersion()).isNull();
+        assertThat(fallback.contentSource()).isEqualTo("CURATED");
+        assertThat(fallback.content().description()).isEqualTo("Curated fallback description");
+        assertThat(fallback.photos()).isEmpty();
+        assertThat(saved.curatedPoi().name()).isEqualTo("Synthetic tourism content POI");
+        var placeholder = new PoiTourismContent("Que va aquí", "Texto provisional", "", "", "", List.of(), List.of(), "", "");
+        var invalidDraft = poiTourismContentRepository.saveDraft(poiId, saved.draftVersion(), placeholder, "editor-test", "Test provisional content rejection");
+        assertThatThrownBy(() -> poiTourismContentRepository.submit(poiId, invalidDraft.draftVersion(), "editor-test", "Try provisional content"))
+                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("summary").hasMessageContaining("description");
+        saved = poiTourismContentRepository.saveDraft(poiId, invalidDraft.draftVersion(), draft, "editor-test", "Replace synthetic placeholder with valid text");
         var submitted = poiTourismContentRepository.submit(poiId, saved.draftVersion(), "editor-test", "Submit synthetic draft");
         assertThat(submitted.draftState()).isEqualTo("PENDING_REVIEW");
         var published = poiTourismContentRepository.publish(poiId, submitted.draftVersion(), "reviewer-test", "Approve synthetic tourism content");
         assertThat(published.publishedContent().summary()).isEqualTo("Short summary");
         assertThat(poiTourismContentRepository.getPublic(poiId).publishedVersion()).isEqualTo(published.draftVersion());
+        assertThat(poiTourismContentRepository.getPublic(poiId).contentSource()).isEqualTo("PUBLISHED");
         assertThat(poiTourismContentRepository.getPublic(poiId).content().summary()).isEqualTo("Short summary");
         assertThat(jdbcTemplate.queryForObject("SELECT active FROM geo.point_of_interest WHERE id=?", Boolean.class, poiId)).isTrue();
-        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM admin.poi_content_audit WHERE poi_id=?", Integer.class, poiId)).isEqualTo(3);
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM admin.poi_content_audit WHERE poi_id=?", Integer.class, poiId)).isEqualTo(5);
         assertThatThrownBy(() -> poiTourismContentRepository.saveDraft(poiId, 0, draft, "editor-test", "Stale write"))
                 .isInstanceOf(PoiTourismContentRepository.PoiContentConflictException.class);
         jdbcTemplate.update("UPDATE geo.point_of_interest SET active=false WHERE id=?", poiId);

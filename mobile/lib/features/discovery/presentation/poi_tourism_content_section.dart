@@ -89,7 +89,8 @@ class _PoiTourismContentSectionState extends State<PoiTourismContentSection> {
               Text(text, style: Theme.of(context).textTheme.titleMedium),
             ],
             for (final section in <(String, String?)>[
-              ('Descripción', content.description),
+              if (content.contentSource != 'CURATED')
+                ('Descripción turística', content.description),
               ('Historia', content.history),
               ('Importancia', content.significance),
               ('Qué puedes conocer', content.visitorExperience),

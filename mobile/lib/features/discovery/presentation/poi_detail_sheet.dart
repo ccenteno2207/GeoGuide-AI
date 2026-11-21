@@ -25,6 +25,7 @@ class PoiDetailSheet extends StatelessWidget {
       child: SingleChildScrollView(
         child: Semantics(
           container: true,
+          explicitChildNodes: true,
           attributedLabel: spanishPoiUiPrefix('Detalle de ', poi.name),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
@@ -94,22 +95,56 @@ class PoiDetailSheet extends StatelessWidget {
                 if (poi.sourceLabel case final source?
                     when source.trim().isNotEmpty) ...[
                   const SizedBox(height: 16),
-                  Text(
-                    'Fuente',
-                    locale: spanishPoiUiLocale,
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(text: 'Fuente: ', locale: spanishPoiUiLocale),
+                        TextSpan(text: source),
+                      ],
+                    ),
                     style: Theme.of(context).textTheme.labelLarge,
                   ),
-                  Text(source),
                 ],
                 if (poi.attribution case final attribution?
                     when attribution.trim().isNotEmpty)
-                  Text(attribution),
-                if (poi.sourceUrl case final sourceUrl?
-                    when sourceUrl.trim().isNotEmpty)
-                  Semantics(
-                    link: true,
-                    attributedLabel: spanishPoiUiPrefix('URL de la fuente', ''),
-                    child: SelectableText(sourceUrl),
+                  Text(
+                    attribution,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                if ((poi.sourceUrl?.trim().isNotEmpty ?? false) ||
+                    (poi.sourceLabel?.trim().isNotEmpty ?? false) ||
+                    (poi.attribution?.trim().isNotEmpty ?? false))
+                  ExpansionTile(
+                    tilePadding: EdgeInsets.zero,
+                    title: const Text('Fuentes y referencias'),
+                    children: [
+                      if (poi.sourceLabel case final source?
+                          when source.trim().isNotEmpty)
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(source),
+                        ),
+                      if (poi.attribution case final attribution?
+                          when attribution.trim().isNotEmpty)
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(attribution),
+                        ),
+                      if (poi.sourceUrl case final sourceUrl?
+                          when sourceUrl.trim().isNotEmpty)
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Semantics(
+                            link: true,
+                            attributedLabel: spanishPoiUiPrefix(
+                              'URL de la fuente',
+                              '',
+                            ),
+                            child: SelectableText(sourceUrl),
+                          ),
+                        ),
+                    ],
                   ),
                 const SizedBox(height: 20),
                 SizedBox(

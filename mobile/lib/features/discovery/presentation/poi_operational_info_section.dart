@@ -116,7 +116,7 @@ class _PoiOperationalInfoSectionState extends State<PoiOperationalInfoSection> {
                         Padding(
                           padding: const EdgeInsets.only(top: 3),
                           child: Text(
-                            '${dayNames[day.day] ?? day.day}: ${day.periods.isEmpty ? 'Cerrado' : day.periods.map((period) => '${period.opensAt.substring(0, 5)}–${period.closesAt.substring(0, 5)}').join(' · ')}',
+                            '${dayNames[day.day] ?? day.day}: ${day.periods.isEmpty ? 'Horario no informado' : day.periods.map((period) => '${period.opensAt.substring(0, 5)}–${period.closesAt.substring(0, 5)}').join(' · ')}',
                           ),
                         ),
                     ],

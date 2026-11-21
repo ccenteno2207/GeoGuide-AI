@@ -43,6 +43,16 @@ public class PoiMediaRepository {
         return jdbc.query("SELECT * FROM media.poi_asset WHERE poi_id=? ORDER BY created_at DESC",this::map,poiId);
     }
 
+    public List<AuditEvent> history(UUID assetId) {
+        if (find(assetId).isEmpty()) throw new IllegalArgumentException("Media asset not found.");
+        return jdbc.query("""
+                SELECT actor_id,action,reason,prior_state,next_state,details::text AS details,occurred_at
+                FROM media.poi_asset_audit WHERE asset_id=? ORDER BY occurred_at DESC LIMIT 100
+                """, (rs, row) -> new AuditEvent(rs.getString("actor_id"), rs.getString("action"),
+                rs.getString("reason"), rs.getString("prior_state"), rs.getString("next_state"),
+                rs.getString("details"), rs.getTimestamp("occurred_at").toInstant()), assetId);
+    }
+
     public Optional<Asset> primaryPublished(UUID poiId) {
         return jdbc.query("""
                 SELECT m.* FROM media.poi_asset m JOIN geo.point_of_interest p ON p.id=m.poi_id
@@ -169,4 +179,6 @@ public class PoiMediaRepository {
         }
         public boolean rightsDocumented(){return "DOCUMENTED".equals(rightsStatus)&&license!=null&&!license.isBlank()&&attribution!=null&&!attribution.isBlank()&&rightsEvidence!=null&&!rightsEvidence.isBlank();}}
     public record PresentationOrder(UUID id,long expectedVersion,int displayOrder) { }
+    public record AuditEvent(String actor, String action, String reason, String priorState, String nextState,
+            String details, java.time.Instant occurredAt) { }
 }

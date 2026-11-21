@@ -50,10 +50,11 @@ public class PoiMediaController {
     }
 
     @GetMapping("/api/v1/pois/{poiId}/media")
-    public List<PublicMediaResponse> publicGallery(@PathVariable UUID poiId) {
-        return repository.publishedPhotos(poiId).stream().map(a -> new PublicMediaResponse(a.id(),
+    public ResponseEntity<List<PublicMediaResponse>> publicGallery(@PathVariable UUID poiId) {
+        List<PublicMediaResponse> photos = repository.publishedPhotos(poiId).stream().map(a -> new PublicMediaResponse(a.id(),
                 "/api/v1/pois/" + poiId + "/media/" + a.id() + "/content", a.altText(), a.primary(),
                 a.displayOrder(), a.author(), a.attribution(), a.license())).toList();
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(photos);
     }
 
     @GetMapping("/api/v1/pois/{poiId}/media/{assetId}/content")
@@ -71,7 +72,16 @@ public class PoiMediaController {
 
     @GetMapping("/api/v1/admin/pois/{poiId}/media")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','EDITOR','REVIEWER')")
-    public List<MediaAssetResponse> list(@PathVariable UUID poiId){return repository.byPoi(poiId).stream().map(PoiMediaController::toResponse).toList();}
+    public ResponseEntity<List<MediaAssetResponse>> list(@PathVariable UUID poiId){
+        List<MediaAssetResponse> assets = repository.byPoi(poiId).stream().map(PoiMediaController::toResponse).toList();
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(assets);
+    }
+
+    @GetMapping("/api/v1/admin/media/{id}/history")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR','EDITOR','REVIEWER')")
+    public ResponseEntity<List<PoiMediaRepository.AuditEvent>> history(@PathVariable UUID id) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(repository.history(id));
+    }
 
     @PostMapping(value="/api/v1/admin/pois/{poiId}/media",consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','EDITOR')")

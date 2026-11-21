@@ -27,6 +27,7 @@ public class PoiTourismContentRepository {
 
     public AdminContent getAdmin(UUID poiId) {
         requirePoi(poiId, false);
+        CuratedPoi curated = curatedPoi(poiId);
         Working working = working(poiId).orElse(null);
         Published published = published(poiId).orElse(null);
         List<RevisionSummary> history = jdbc.query("""
@@ -34,7 +35,7 @@ public class PoiTourismContentRepository {
                 FROM admin.poi_content_revision WHERE poi_id=? ORDER BY version DESC LIMIT 50
                 """, (rs, row) -> new RevisionSummary(rs.getObject("id", UUID.class), rs.getLong("version"),
                 rs.getString("state"), rs.getString("created_by"), rs.getTimestamp("created_at").toInstant()), poiId);
-        return new AdminContent(poiId, working == null ? 0 : working.version(),
+        return new AdminContent(poiId, curated, working == null ? 0 : working.version(),
                 working == null ? "NONE" : working.state(), working == null ? PoiTourismContent.empty() : working.content(),
                 published == null ? null : published.version(), published == null ? PoiTourismContent.empty() : published.content(),
                 published == null ? null : published.publishedAt(), history);
@@ -43,6 +44,7 @@ public class PoiTourismContentRepository {
     public PublicContent getPublic(UUID poiId) {
         requirePoi(poiId, true);
         Published published = published(poiId).orElse(null);
+        CuratedPoi curated = curatedPoi(poiId);
         List<PublicPhoto> photos = jdbc.query("""
                 SELECT id, alt_text, display_order, is_primary, author, attribution, license
                 FROM media.poi_asset WHERE poi_id=? AND review_state='PUBLISHED'
@@ -51,8 +53,30 @@ public class PoiTourismContentRepository {
                 "/api/v1/pois/" + poiId + "/media/" + rs.getObject("id", UUID.class) + "/content",
                 rs.getString("alt_text"), rs.getBoolean("is_primary"), rs.getInt("display_order"),
                 rs.getString("author"), rs.getString("attribution"), rs.getString("license")), poiId);
+        PoiTourismContent visibleContent = published == null
+                ? new PoiTourismContent(null, curated.description(), null, null, null, List.of(), List.of(), null, null)
+                : published.content();
         return new PublicContent(poiId, published == null ? null : published.version(),
-                published == null ? null : published.publishedAt(), published == null ? PoiTourismContent.empty() : published.content(), photos);
+                published == null ? null : published.publishedAt(), published == null ? "CURATED" : "PUBLISHED",
+                visibleContent, photos);
+    }
+
+    private CuratedPoi curatedPoi(UUID poiId) {
+        return jdbc.query("""
+                SELECT p.name,c.code AS category_code,c.name AS category_name,p.description,
+                       prov.source_system,prov.source_record_id,prov.source_url,prov.license,prov.attribution
+                FROM geo.point_of_interest p JOIN geo.category c ON c.id=p.category_id
+                LEFT JOIN LATERAL (
+                    SELECT source_system,source_record_id,source_url,license,attribution
+                    FROM geo.poi_provenance WHERE poi_id=p.id
+                    ORDER BY source_system,logical_key LIMIT 1
+                ) prov ON TRUE
+                WHERE p.id=?
+                """, (rs, row) -> new CuratedPoi(rs.getString("name"), rs.getString("category_code"),
+                rs.getString("category_name"), rs.getString("description"), rs.getString("source_system"),
+                rs.getString("source_record_id"), rs.getString("source_url"), rs.getString("license"),
+                rs.getString("attribution")), poiId).stream().findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("POI not found."));
     }
 
     @Transactional
@@ -88,6 +112,7 @@ public class PoiTourismContentRepository {
         lockPoi(poiId);
         Working current = requireWorking(poiId, expectedVersion);
         if (!"DRAFT".equals(current.state())) throw new PoiContentConflictException("Only a saved draft can be submitted for review.");
+        requirePublishable(current.content());
         int changed = jdbc.update("""
                 UPDATE admin.poi_content_revision SET state='PENDING_REVIEW', reviewed_by=?, reviewed_at=now(), review_reason=?
                 WHERE id=? AND state='DRAFT'
@@ -103,6 +128,7 @@ public class PoiTourismContentRepository {
         lockPoi(poiId);
         Working current = requireWorking(poiId, expectedVersion);
         if (!"PENDING_REVIEW".equals(current.state())) throw new PoiContentConflictException("Only content pending review can be published.");
+        requirePublishable(current.content());
         int changed = jdbc.update("""
                 UPDATE admin.poi_content_revision SET state='PUBLISHED', reviewed_by=?, reviewed_at=now(), review_reason=?
                 WHERE id=? AND state='PENDING_REVIEW'
@@ -184,6 +210,14 @@ public class PoiTourismContentRepository {
         if (reason == null || reason.isBlank()) throw new IllegalArgumentException("An audit reason is required.");
     }
 
+    private static void requirePublishable(PoiTourismContent content) {
+        List<String> issues = content.publicationIssues();
+        if (!issues.isEmpty()) {
+            throw new IllegalArgumentException("Tourism content requires a description and cannot contain provisional placeholders. Review fields: "
+                    + String.join(", ", issues) + ".");
+        }
+    }
+
     private String toJson(PoiTourismContent content) {
         try { return mapper.writeValueAsString(content); }
         catch (JsonProcessingException ex) { throw new IllegalStateException("Tourism content could not be serialized.", ex); }
@@ -194,9 +228,12 @@ public class PoiTourismContentRepository {
         catch (Exception ex) { throw new IllegalStateException("Stored tourism content is invalid.", ex); }
     }
 
-    public record AdminContent(UUID poiId, long draftVersion, String draftState, PoiTourismContent draftContent,
+    public record CuratedPoi(String name, String categoryCode, String categoryName, String description,
+            String sourceSystem, String sourceRecordId, String sourceUrl, String license, String attribution) { }
+    public record AdminContent(UUID poiId, CuratedPoi curatedPoi, long draftVersion, String draftState, PoiTourismContent draftContent,
             Long publishedVersion, PoiTourismContent publishedContent, Instant publishedAt, List<RevisionSummary> revisions) { }
-    public record PublicContent(UUID poiId, Long publishedVersion, Instant publishedAt, PoiTourismContent content, List<PublicPhoto> photos) { }
+    public record PublicContent(UUID poiId, Long publishedVersion, Instant publishedAt, String contentSource,
+            PoiTourismContent content, List<PublicPhoto> photos) { }
     public record PublicPhoto(UUID id, String path, String altText, boolean primary, int displayOrder,
             String author, String attribution, String license) { }
     public record RevisionSummary(UUID id, long version, String state, String createdBy, Instant createdAt) { }
