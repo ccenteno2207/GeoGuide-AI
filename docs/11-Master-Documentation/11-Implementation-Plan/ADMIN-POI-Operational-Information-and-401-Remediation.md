@@ -1,6 +1,6 @@
 # ADMIN-POI — Información operativa y recuperación de sesión
 
-**Estado:** implementación local candidata; pendiente de revisión e integración.
+**Estado actualizado:** integrada en `main` y desplegada en la VM de integración; ver evidencia posterior al merge al final de este documento.
 **Baseline:** `origin/main` `b6a6dfbf5b26289a456081c9ad4bb9dfe568145e`.
 **Rama:** `codex/admin-poi-operational-info`.
 
@@ -81,4 +81,90 @@ ADMIN_POI_OPERATIONAL_INFO_IMPLEMENTATION = LOCAL_VALIDATION_PASS_DB_PENDING
 ADMIN_POI_401_CLIENT_REMEDIATION = LOCAL_VALIDATION_PASS_DEPLOYMENT_PENDING
 ADMIN_POI_OPERATIONAL_INFO_DEPLOYMENT = NOT_AUTHORIZED
 P9_OFFLINE_SNAPSHOT_CHANGE = NONE
+```
+
+Los estados anteriores y los pendientes descritos en esta sección corresponden
+al corte inicial de la implementación. El resultado posterior al merge y el
+despliegue autorizado se registra a continuación; las pruebas históricas no se
+reclasifican retroactivamente.
+
+## Evidencia posterior al merge y despliegue de integración
+
+**Fecha:** 2026-11-20
+
+**Portal:** <https://geoguide.getcom.pe:5443/admin/>
+
+**Baseline final:** `origin/main` y checkout desplegado en
+`1ac1f771c3bcf6341619f9ae8386dda5cdde8629`.
+
+### Integración
+
+- PR #126 integrado mediante merge normal: `130cbfac72e5ac6949f817e8af586e98b26088e2`.
+- PR #127 integró la corrección del conteo de migraciones en pruebas PostGIS:
+  `2b258ee6d3a93d82cde10e246454b1ad2ac40ac9`.
+- PR #128 integró el callback silencioso exacto de OIDC:
+  `1ac1f771c3bcf6341619f9ae8386dda5cdde8629`.
+- GitHub no reportó checks configurados para estos PR; se registra
+  `NO_CHECKS_REPORTED`, no CI PASS.
+
+### V012, respaldo e integridad
+
+- Antes de V012 se creó el respaldo
+  `/home/manager/backups/admin-poi-operational-info-20261120/geoguide-pre-v012-20261120.dump`
+  (904.541 bytes, SHA-256
+  `58ae0b30b1e2c5686734e9a694f2ccb76827d22bc5954edfc62434e01f9e3980`).
+- La restaurabilidad se comprobó en un contenedor PostGIS aislado, sin red ni
+  volúmenes compartidos: restauración completada en versión V011 con los seis
+  POIs y la identidad/activación de Cantamarca preservadas.
+- Flyway aplicó V012 correctamente en la base persistente de integración.
+- Después de la migración se conservaron seis POIs y Cantamarca
+  (`fdfeb867-576f-4fb5-bcbf-8784e54c2f3a`) permaneció `active=true`.
+- Las tablas de información operativa y auditoría quedaron vacías; no se
+  introdujeron horarios, eventos o promociones ficticias.
+- La API pública de Cantamarca respondió HTTP 200 con siete días sin intervalos,
+  cero elementos y versión 0. Los datos se exponen en línea y el snapshot offline
+  permanece sin cambios.
+
+### Validación de sesión y HTTP 401
+
+- Keycloak y el portal permiten el callback normal y
+  `/admin/auth/silent-callback`, con URI exactas y sin comodines.
+- Authorization Code + PKCE real con cuenta sintética de administrador validó
+  issuer, audience `geoguide-admin-api` y rol `ADMINISTRATOR`.
+- El filtro administrativo devolvió HTTP 200 y encontró Cantamarca activo.
+- La renovación silenciosa `prompt=none` funcionó con la misma sesión y el
+  filtro continuó en HTTP 200.
+- Al esperar la expiración más la tolerancia JWT de 60 segundos, el access token
+  anterior fue rechazado con HTTP 401. Sin cerrar sesión, un nuevo flujo
+  silencioso obtuvo token y el filtro volvió a HTTP 200.
+- Después del logout, el intento silencioso devolvió `login_required`.
+- Esto demuestra que expiración de access token produce 401 y que el callback
+  silencioso desplegado recupera lecturas. No permite atribuir cada 401 histórico
+  a una sola causa ni sustituye una prueba de interacción visual del navegador.
+- Las pruebas del portal (19/19 Vitest) y el build pasaron; la renovación previa,
+  el reintento único de lecturas GET tras 401 y la protección contra reintento de
+  escrituras están cubiertos localmente.
+
+### Validación técnica y estado operativo
+
+- Backend: `mvnw verify` local, 133 pruebas, 0 fallos y 29 omitidas; las pruebas
+  PostGIS focalizadas en VM pasaron (25 ejecutadas, 0 fallos, 2 omitidas).
+- El build del contenedor backend pasó con 133 pruebas, 0 fallos y 29 omitidas;
+  los tests que requieren Docker se omitieron en ese contexto de build.
+- Flutter: analyze PASS; suite 315 PASS / 3 omitidas; pruebas focalizadas de
+  Detail 5/5 PASS.
+- Portal y backend quedaron saludables. El checkout desplegado está limpio y en
+  el baseline final indicado.
+- No se instaló APK en HONOR. No se ejecutaron cambios en producción ni se
+  modificaron contratos P8/P9.
+
+```ini
+ADMIN_POI_OPERATIONAL_INFO_MAIN = PASS
+ADMIN_POI_OPERATIONAL_INFO_V012 = PASS
+ADMIN_POI_OPERATIONAL_INFO_VM = PASS
+ADMIN_POI_SESSION_RENEWAL = PASS
+ADMIN_POI_OPERATIONAL_EDIT_E2E = PASS_SYNTHETIC_TESTS; NO_REAL_DATA_WRITTEN
+ADMIN_POI_RUTEA_ONLINE_QUERY = PASS_EMPTY_PROFILE
+P9_OFFLINE_SNAPSHOT_CHANGE = NONE
+PHYSICAL_HONOR_INSTALLATION = NOT_AUTHORIZED
 ```
