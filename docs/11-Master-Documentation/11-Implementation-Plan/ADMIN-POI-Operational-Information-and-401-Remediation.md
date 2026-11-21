@@ -1,7 +1,7 @@
 # ADMIN-POI — Información operativa y recuperación de sesión
 
-**Estado:** implementación local candidata; pendiente de revisión e integración.  
-**Baseline:** `origin/main` `b6a6dfbf5b26289a456081c9ad4bb9dfe568145e`.  
+**Estado:** implementación local candidata; pendiente de revisión e integración.
+**Baseline:** `origin/main` `b6a6dfbf5b26289a456081c9ad4bb9dfe568145e`.
 **Rama:** `codex/admin-poi-operational-info`.
 
 ## Alcance
