@@ -32,9 +32,10 @@ El precheck observó PostGIS V012, seis POIs activos (incluido Cantamarca 1851) 
 
 - Los POIs actuales conservan su texto público; sin revisión y publicación de una revisión no aparecerá contenido nuevo.
 - No se publicaron fotografías. Licencia/atribución se valida por el flujo de media existente.
+- En la primera puesta en marcha del código integrado, la API pública de contenido respondió 200, pero la galería multimedia devolvió 404 porque el backend no tenía `GEOGUIDE_MEDIA_STORAGE_ENABLED` configurado. El defecto de despliegue fue aislado: MinIO estaba disponible, pero el backend no exponía la integración.
 - El contrato P9 no cachea contenido ni imágenes turísticos; Detail enriquecido requiere conexión.
 - La validación física Android no está autorizada y permanece pendiente.
-- V013 y el despliegue integrado siguen pendientes después del merge.
+- V013 ya se aplicó en la base de integración; el despliegue de media queda pendiente de la configuración opcional con credenciales restringidas y bucket privado.
 
 ```ini
 ADMIN_POI_VISUAL_EDITOR = IMPLEMENTED_LOCAL
@@ -42,5 +43,5 @@ ADMIN_POI_MEDIA_MANAGEMENT = IMPLEMENTED_LOCAL
 ADMIN_POI_MOBILE_PREVIEW = AUTOMATED_TESTS_PASS
 ADMIN_POI_CONTENT_PUBLICATION = AUTOMATED_TESTS_AND_POSTGIS_PASS
 RUTEA_DETAIL_ENRICHMENT = AUTOMATED_TESTS_PASS
-ADMIN_POI_VM_DEPLOYMENT = PENDING_MERGE_AND_V013
+ADMIN_POI_VM_DEPLOYMENT = PARTIAL_V013_APPLIED_MEDIA_CONFIGURATION_PENDING
 ```
