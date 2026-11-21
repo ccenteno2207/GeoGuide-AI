@@ -20,6 +20,8 @@ import ai.geoguide.admin.infrastructure.persistence.AdminEditorialRepository;
 import ai.geoguide.admin.infrastructure.persistence.AdminImportReadRepository;
 import ai.geoguide.admin.infrastructure.persistence.AdminPoiInventoryRepository;
 import ai.geoguide.admin.infrastructure.persistence.PoiOperationalInfoRepository;
+import ai.geoguide.admin.infrastructure.persistence.PoiTourismContentRepository;
+import ai.geoguide.admin.domain.PoiTourismContent;
 import ai.geoguide.poi.domain.PoiOperationalInfo;
 import ai.geoguide.admin.domain.EditorialWorkflowConflictException;
 import ai.geoguide.admin.infrastructure.persistence.AdminDestinationRepository;
@@ -147,6 +149,9 @@ class PostgisIntegrationTests {
 
     @Autowired
     PoiOperationalInfoRepository poiOperationalInfoRepository;
+
+    @Autowired
+    PoiTourismContentRepository poiTourismContentRepository;
 
     @Autowired
     AdminDestinationRepository adminDestinationRepository;
@@ -327,7 +332,7 @@ class PostgisIntegrationTests {
 
         assertThat(jdbcTemplate.queryForObject("SELECT PostGIS_Version()", String.class)).isNotBlank();
         assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM flyway_schema_history", Integer.class))
-                .isEqualTo(12);
+                .isEqualTo(13);
         assertThat(jdbcTemplate.queryForObject("""
                 SELECT COUNT(*) FROM information_schema.tables
                 WHERE table_schema = 'geo'
@@ -1109,6 +1114,36 @@ class PostgisIntegrationTests {
                         "srid", 4326,
                         "longitude", -76.9456,
                         "latitude", -11.8765));
+    }
+
+    @Test
+    void tourismContentPublishesVersionedDraftWithoutChangingPoiActivationAndRejectsStaleWrites() {
+        UUID categoryId = UUID.randomUUID();
+        UUID poiId = UUID.randomUUID();
+        jdbcTemplate.update("INSERT INTO geo.category(id,code,name,active) VALUES (?,?,'Historic site',true)", categoryId, "TOURISM_CONTENT_TEST");
+        jdbcTemplate.update("""
+                INSERT INTO geo.point_of_interest(id,category_id,name,location,active,created_at,updated_at)
+                VALUES (?,?, 'Synthetic tourism content POI', ST_SetSRID(ST_MakePoint(-76.9,-11.8),4326), true, now(), now())
+                """, poiId, categoryId);
+        var draft = new PoiTourismContent("Short summary", "Tourist description", "Verified history", "Significance",
+                "Visitor experience", List.of("Fact"), List.of("Recommendation"), "Practical information", "https://example.test/poi");
+
+        var saved = poiTourismContentRepository.saveDraft(poiId, 0, draft, "editor-test", "Create synthetic tourism draft");
+        assertThat(saved.draftState()).isEqualTo("DRAFT");
+        assertThat(poiTourismContentRepository.getPublic(poiId).publishedVersion()).isNull();
+        var submitted = poiTourismContentRepository.submit(poiId, saved.draftVersion(), "editor-test", "Submit synthetic draft");
+        assertThat(submitted.draftState()).isEqualTo("PENDING_REVIEW");
+        var published = poiTourismContentRepository.publish(poiId, submitted.draftVersion(), "reviewer-test", "Approve synthetic tourism content");
+        assertThat(published.publishedContent().summary()).isEqualTo("Short summary");
+        assertThat(poiTourismContentRepository.getPublic(poiId).publishedVersion()).isEqualTo(published.draftVersion());
+        assertThat(poiTourismContentRepository.getPublic(poiId).content().summary()).isEqualTo("Short summary");
+        assertThat(jdbcTemplate.queryForObject("SELECT active FROM geo.point_of_interest WHERE id=?", Boolean.class, poiId)).isTrue();
+        assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM admin.poi_content_audit WHERE poi_id=?", Integer.class, poiId)).isEqualTo(3);
+        assertThatThrownBy(() -> poiTourismContentRepository.saveDraft(poiId, 0, draft, "editor-test", "Stale write"))
+                .isInstanceOf(PoiTourismContentRepository.PoiContentConflictException.class);
+        jdbcTemplate.update("UPDATE geo.point_of_interest SET active=false WHERE id=?", poiId);
+        assertThatThrownBy(() -> poiTourismContentRepository.getPublic(poiId))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

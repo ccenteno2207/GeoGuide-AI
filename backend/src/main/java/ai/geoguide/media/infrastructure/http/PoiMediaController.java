@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -48,6 +49,26 @@ public class PoiMediaController {
         }
     }
 
+    @GetMapping("/api/v1/pois/{poiId}/media")
+    public List<PublicMediaResponse> publicGallery(@PathVariable UUID poiId) {
+        return repository.publishedPhotos(poiId).stream().map(a -> new PublicMediaResponse(a.id(),
+                "/api/v1/pois/" + poiId + "/media/" + a.id() + "/content", a.altText(), a.primary(),
+                a.displayOrder(), a.author(), a.attribution(), a.license())).toList();
+    }
+
+    @GetMapping("/api/v1/pois/{poiId}/media/{assetId}/content")
+    public ResponseEntity<byte[]> publicPhoto(@PathVariable UUID poiId, @PathVariable UUID assetId) throws IOException {
+        Asset a = repository.publishedPhoto(poiId, assetId).orElse(null);
+        return photoBytes(a);
+    }
+
+    @GetMapping("/api/v1/admin/media/{id}/content")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR','EDITOR','REVIEWER')")
+    public ResponseEntity<byte[]> privatePhoto(@PathVariable UUID id) throws IOException {
+        Asset a = repository.find(id).orElse(null);
+        return photoBytes(a);
+    }
+
     @GetMapping("/api/v1/admin/pois/{poiId}/media")
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','EDITOR','REVIEWER')")
     public List<MediaAssetResponse> list(@PathVariable UUID poiId){return repository.byPoi(poiId).stream().map(PoiMediaController::toResponse).toList();}
@@ -55,8 +76,23 @@ public class PoiMediaController {
     @PostMapping(value="/api/v1/admin/pois/{poiId}/media",consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','EDITOR')")
     public MediaAssetResponse upload(@PathVariable UUID poiId,@RequestParam("file") MultipartFile file,
-            @RequestParam String author,@RequestParam String sourceUrl,Authentication auth){
-        return toResponse(service.upload(poiId,file,author,sourceUrl,actor(auth)));
+            @RequestParam String author,@RequestParam String sourceUrl,
+            @RequestParam(defaultValue = "") String altText,Authentication auth){
+        return toResponse(service.upload(poiId,file,author,sourceUrl,altText,actor(auth)));
+    }
+
+    @PatchMapping("/api/v1/admin/media/{id}/presentation")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR','EDITOR')")
+    public MediaAssetResponse presentation(@PathVariable UUID id,@Valid @RequestBody PresentationRequest request,Authentication auth){
+        return toResponse(repository.updatePresentation(id,request.expectedVersion(),request.altText(),request.displayOrder(),actor(auth),request.reason()));
+    }
+
+    @PutMapping("/api/v1/admin/pois/{poiId}/media/order")
+    @PreAuthorize("hasAnyRole('ADMINISTRATOR','EDITOR')")
+    public List<MediaAssetResponse> reorder(@PathVariable UUID poiId,@Valid @RequestBody ReorderRequest request,Authentication auth){
+        return repository.reorder(poiId,request.items().stream().map(item -> new PoiMediaRepository.PresentationOrder(
+                item.id(),item.expectedVersion(),item.displayOrder())).toList(),actor(auth),request.reason())
+                .stream().map(PoiMediaController::toResponse).toList();
     }
 
     @PatchMapping("/api/v1/admin/media/{id}/rights")
@@ -82,12 +118,25 @@ public class PoiMediaController {
     public MediaAssetResponse withdraw(@PathVariable UUID id,@Valid @RequestBody ActionRequest request,Authentication auth){return toResponse(repository.action(id,request.expectedVersion(),"WITHDRAW",actor(auth),request.reason(),false));}
 
     private static String actor(Authentication auth){if(auth==null||auth.getName()==null||auth.getName().isBlank())throw new IllegalStateException("Authenticated actor is required.");return auth.getName();}
-    static MediaAssetResponse toResponse(Asset asset){return new MediaAssetResponse(asset.id(),asset.poiId(),asset.contentType(),asset.sha256(),asset.sizeBytes(),asset.width(),asset.height(),asset.author(),asset.sourceUrl(),asset.license(),asset.attribution(),asset.rightsEvidence(),asset.rightsStatus(),asset.state(),asset.primary(),asset.version());}
+    private ResponseEntity<byte[]> photoBytes(Asset a) throws IOException {
+        if(a==null)return ResponseEntity.notFound().build();
+        try(var input=storage.readPrivate(a.objectKey())){
+            byte[] bytes=input.readAllBytes();
+            return ResponseEntity.ok().contentType(MediaType.parseMediaType(a.contentType())).contentLength(bytes.length)
+                    .cacheControl(CacheControl.noStore()).header("X-Content-Type-Options","nosniff").body(bytes);
+        }
+    }
+    static MediaAssetResponse toResponse(Asset asset){return new MediaAssetResponse(asset.id(),asset.poiId(),asset.contentType(),asset.sha256(),asset.sizeBytes(),asset.width(),asset.height(),asset.author(),asset.sourceUrl(),asset.license(),asset.attribution(),asset.rightsEvidence(),asset.rightsStatus(),asset.state(),asset.primary(),asset.version(),asset.altText(),asset.displayOrder());}
     public record MediaAssetResponse(UUID id,UUID poiId,String contentType,String sha256,long sizeBytes,int width,int height,
             String author,String sourceUrl,String license,String attribution,String evidenceReference,String rightsStatus,
-            String state,boolean primary,long version){}
+            String state,boolean primary,long version,String altText,int displayOrder){}
+    public record PublicMediaResponse(UUID id,String path,String altText,boolean primary,int displayOrder,String author,String attribution,String license){}
     public record RightsRequest(@PositiveOrZero long expectedVersion,@NotBlank String license,@NotBlank String attribution,
             @NotBlank String evidenceReference,@NotBlank String reason){}
     public record ActionRequest(@PositiveOrZero long expectedVersion,@NotBlank String reason){}
     public record PublishRequest(@PositiveOrZero long expectedVersion,@NotBlank String reason,@NotNull Boolean makePrimary){}
+    public record PresentationRequest(@PositiveOrZero long expectedVersion,@NotBlank @jakarta.validation.constraints.Size(max=500) String altText,
+            @PositiveOrZero int displayOrder,@NotBlank String reason){}
+    public record ReorderItem(@NotNull UUID id,@PositiveOrZero long expectedVersion,@PositiveOrZero int displayOrder){}
+    public record ReorderRequest(@NotNull @jakarta.validation.constraints.Size(max=100) List<@Valid ReorderItem> items,@NotBlank String reason){}
 }

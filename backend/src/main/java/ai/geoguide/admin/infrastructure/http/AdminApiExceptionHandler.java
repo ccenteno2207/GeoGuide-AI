@@ -3,6 +3,7 @@ package ai.geoguide.admin.infrastructure.http;
 import ai.geoguide.admin.domain.EditorialWorkflowConflictException;
 import ai.geoguide.admin.domain.EditorialCategoryMismatchException;
 import ai.geoguide.admin.infrastructure.persistence.PoiOperationalInfoRepository.OperationalInfoConflictException;
+import ai.geoguide.admin.infrastructure.persistence.PoiTourismContentRepository.PoiContentConflictException;
 import ai.geoguide.media.domain.PoiMediaWorkflowConflictException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -44,6 +45,13 @@ public class AdminApiExceptionHandler {
     @ExceptionHandler(OperationalInfoConflictException.class)
     ResponseEntity<ProblemDetail> operationalInfoConflict(OperationalInfoConflictException ignored) {
         return problem(HttpStatus.CONFLICT, "La información operativa cambió. Recargue la ficha y vuelva a guardar.");
+    }
+
+    @ExceptionHandler(PoiContentConflictException.class)
+    ResponseEntity<ProblemDetail> poiContentConflict(PoiContentConflictException exception) {
+        ProblemDetail detail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        detail.setProperty("code", "POI_CONTENT_CONFLICT");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(detail);
     }
 
     private ResponseEntity<ProblemDetail> problem(HttpStatus status, String detail) {

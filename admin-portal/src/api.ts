@@ -6,7 +6,7 @@ export type ImportRecord = { id: string; sourceRecordId: string; rowNumber: numb
 export type EditorialRecord = { id: string; importRecordId: string | null; sourceRecordId: string | null; name: string; description: string | null; administrativeContext: string | null; categoryCode: string; latitude: number | null; longitude: number | null; rawLatitude: string | null; rawLongitude: string | null; normalizationRule: string | null; coordinateEvidence: string | null; geographicReviewStatus: string; identityReviewStatus: string; identityReviewEvidence: string | null; state: EditorialState; sourceLicense: string | null; sourceAttribution: string | null; sourceUrl: string | null; publishedPoiId: string | null; active: boolean; targetPoiId: string | null; version: number };
 export type AdminPoi = { id: string; name: string; description: string | null; categoryCode: string; categoryName: string; active: boolean; updatedAt: string; sourceSystem: string | null; sourceRecordId: string | null; sourceUrl: string | null; license: string | null; attribution: string | null };
 export type DuplicateCandidate = { entityType: 'POI' | 'DESTINATION'; entityId: string; name: string; distanceMeters: number | null };
-export type MediaAsset = { id: string; poiId: string; contentType: string; sha256: string; sizeBytes: number; width: number; height: number; author: string; sourceUrl: string; license: string | null; attribution: string | null; rightsEvidence: string | null; rightsStatus: string; state: string; primary: boolean; version: number };
+export type MediaAsset = { id: string; poiId: string; contentType: string; sha256: string; sizeBytes: number; width: number; height: number; author: string; sourceUrl: string; license: string | null; attribution: string | null; rightsEvidence: string | null; rightsStatus: string; state: string; primary: boolean; version: number; altText: string; displayOrder: number };
 export type PoiOperationalInfo = {
   timeZone: string;
   weeklyHours: Array<{ day: string; periods: Array<{ opensAt: string; closesAt: string }> }>;
@@ -55,4 +55,17 @@ export class AdminApi {
   put<T>(path: string, body: unknown) { return this.request<T>(path, { method: 'PUT', body: JSON.stringify(body) }); }
   patch<T>(path: string, body: unknown) { return this.request<T>(path, { method: 'PATCH', body: JSON.stringify(body) }); }
   upload<T>(path: string, form: FormData) { return this.request<T>(path, { method: 'POST', body: form }); }
+  async getBlob(path: string): Promise<Blob> {
+    const token = await this.config.getToken();
+    if (!token) throw new Error('API 401: Inicia sesión de nuevo para consultar la imagen.');
+    const url = `${this.config.baseUrl.replace(/\/$/, '')}${path}`;
+    const send = (accessToken: string) => fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+    let response = await send(token);
+    if (response.status === 401 && this.config.renewToken) {
+      const renewed = await this.config.renewToken();
+      if (renewed && renewed !== token) response = await send(renewed);
+    }
+    if (!response.ok) throw new Error(`API ${response.status}: No se pudo cargar la vista previa de la imagen.`);
+    return response.blob();
+  }
 }

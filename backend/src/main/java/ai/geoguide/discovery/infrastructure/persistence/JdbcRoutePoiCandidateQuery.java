@@ -33,6 +33,7 @@ public class JdbcRoutePoiCandidateQuery implements RoutePoiCandidateQuery {
                 WITH route AS (SELECT ST_SetSRID(ST_GeomFromGeoJSON(?), 4326) AS geometry)
                 SELECT p.id, p.name, p.active, c.id AS category_id, c.code AS category_code,
                        c.name AS category_name, c.active AS category_active, p.description,
+                       NULLIF(pc.content->>'summary','') AS tourism_summary,
                        prov.source_system, prov.source_url, prov.attribution,
                        CASE WHEN media_asset.id IS NULL THEN NULL ELSE '/api/v1/pois/' || p.id || '/media/primary' END AS primary_media_path,
                        ST_Y(p.location) AS latitude, ST_X(p.location) AS longitude,
@@ -41,6 +42,7 @@ public class JdbcRoutePoiCandidateQuery implements RoutePoiCandidateQuery {
                 FROM geo.point_of_interest p
                 JOIN geo.category c ON c.id = p.category_id
                 CROSS JOIN route
+                LEFT JOIN geo.poi_published_content pc ON pc.poi_id=p.id
                 LEFT JOIN LATERAL (
                     SELECT source_system, source_url, attribution
                     FROM geo.poi_provenance
@@ -69,7 +71,7 @@ public class JdbcRoutePoiCandidateQuery implements RoutePoiCandidateQuery {
                 rs.getDouble("distance_meters"), rs.getDouble("route_progress"), rs.getString("description"),
                 rs.getString("source_system") == null ? null : new ProvenanceSummary(
                         rs.getString("source_system"), rs.getString("source_url"), rs.getString("attribution")),
-                rs.getString("primary_media_path")), parameters.toArray());
+                rs.getString("primary_media_path"), rs.getString("tourism_summary")), parameters.toArray());
     }
 
     private String asGeoJson(RouteGeometry geometry) {

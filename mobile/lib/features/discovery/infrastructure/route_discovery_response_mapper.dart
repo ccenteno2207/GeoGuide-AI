@@ -55,6 +55,7 @@ class RouteDiscoveryResponseMapper {
       sourceUrl: _optionalString(value['sourceUrl']),
       attribution: _optionalString(value['attribution']),
       primaryMediaUrl: _optionalString(value['primaryMediaUrl']),
+      tourismSummary: _optionalString(value['tourismSummary']),
     );
   }
 

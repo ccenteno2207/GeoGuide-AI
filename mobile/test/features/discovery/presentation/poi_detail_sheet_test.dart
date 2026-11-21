@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:geoguide_ai/features/discovery/domain/discovery_poi.dart';
 import 'package:geoguide_ai/features/discovery/domain/poi_operational_info.dart';
+import 'package:geoguide_ai/features/discovery/domain/poi_tourism_content.dart';
 import 'package:geoguide_ai/features/discovery/presentation/poi_detail_sheet.dart';
 import 'package:geoguide_ai/features/route_planning/domain/route_point.dart';
 
@@ -218,4 +219,46 @@ void main() {
     expect(find.textContaining('null'), findsNothing);
     expect(find.textContaining('N/A'), findsNothing);
   });
+
+  testWidgets(
+    'loads published tourism text online in Detail without fabricating fields',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PoiDetailSheet(
+              poi: DiscoveryPoi(
+                id: 'poi-1',
+                name: 'Museum',
+                category: 'MUSEUM',
+                location: const RoutePoint(latitude: 10, longitude: 20),
+                distanceToRouteMeters: 50,
+                routeProgress: .4,
+                reasonCodes: const [],
+              ),
+              loadTourismContent: (_) async => const PoiTourismContent(
+                summary: 'A concise museum summary',
+                description: 'Visitor description',
+                history: 'Verified history',
+                significance: null,
+                visitorExperience: null,
+                interestingFacts: ['A verified fact'],
+                recommendations: [],
+                practicalInfo: null,
+                officialUrl: null,
+                photos: [],
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('A concise museum summary'), findsOneWidget);
+      expect(find.text('Historia'), findsOneWidget);
+      expect(find.text('Verified history'), findsOneWidget);
+      expect(find.text('Datos interesantes'), findsOneWidget);
+      expect(find.text('• A verified fact'), findsOneWidget);
+      expect(find.text('Importancia'), findsNothing);
+    },
+  );
 }
