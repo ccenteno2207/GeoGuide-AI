@@ -95,13 +95,10 @@ void main() {
             tester.getSemantics(find.text(poi.attribution!)),
             poi.attribution!,
           );
-          final sourceLabel = surface is PoiResultCard
-              ? 'Fuente: ${poi.sourceLabel}'
-              : poi.sourceLabel!;
-          expectNoSpanishOverride(
-            tester.getSemantics(find.text(sourceLabel)),
-            poi.sourceLabel!,
-          );
+          final sourceLabel = 'Fuente: ${poi.sourceLabel}';
+          final sourceNode = tester.getSemantics(find.text(sourceLabel));
+          expectSpanishSegment(sourceNode, 'Fuente: ');
+          expectNoSpanishOverride(sourceNode, poi.sourceLabel!);
           expectSpanishSegment(
             tester.getSemantics(find.text('A 140 m del trazado')),
             'A 140 m del trazado',
@@ -124,10 +121,28 @@ void main() {
               unorderedEquals(['Museo', 'A 140 m del trazado', 'Fuente: ']),
             );
           } else {
-            expectSpanishSegment(nameNode, 'Detalle de ');
-            expectSpanishSegment(nameNode, 'Categoría: Museo');
-            expectSpanishSegment(nameNode, 'Cerca del trazado');
-            expectSpanishSegment(nameNode, 'Fuente');
+            final detailSemantics = tester.getSemantics(
+              find.byWidgetPredicate(
+                (widget) =>
+                    widget is Semantics &&
+                    widget.properties.attributedLabel?.string.startsWith(
+                          'Detalle de ',
+                        ) ==
+                        true,
+              ),
+            );
+            expectSpanishSegment(detailSemantics, 'Detalle de ');
+            expectSpanishSegment(
+              tester.getSemantics(find.text('Categoría: Museo')),
+              'Categoría: Museo',
+            );
+            expectSpanishSegment(
+              tester.getSemantics(find.text('Cerca del trazado')),
+              'Cerca del trazado',
+            );
+            expectSpanishSegment(sourceNode, 'Fuente: ');
+            await tester.tap(find.text('Fuentes y referencias'));
+            await tester.pumpAndSettle();
             final urlNode = tester.getSemantics(find.text(poi.sourceUrl!));
             expectNoSpanishOverride(urlNode, poi.sourceUrl!);
             final linkNode = semanticNodes(tester).singleWhere(

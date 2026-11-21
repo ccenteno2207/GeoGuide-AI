@@ -59,6 +59,24 @@ void expectNoSpanishOverride(SemanticsNode node, String factualText) {
   expect(occurrences, greaterThan(0));
 }
 
+void expectSpanishSegment(SemanticsNode node, String text) {
+  final data = node.getSemanticsData();
+  final attributes = data.attributedLabel.attributes
+      .whereType<ui.LocaleStringAttribute>()
+      .where((attribute) => attribute.locale == const Locale('es', 'PE'));
+  final start = data.label.indexOf(text);
+  expect(start, greaterThanOrEqualTo(0));
+  expect(
+    attributes.any(
+      (attribute) =>
+          attribute.range.start <= start &&
+          attribute.range.end >= start + text.length,
+    ),
+    isTrue,
+    reason: 'Expected Spanish UI range for "$text" in ${data.label}',
+  );
+}
+
 void activateSemantically(WidgetTester tester, String label) {
   final node = tester.getSemantics(find.text(label));
   expect(node.getSemanticsData().hasAction(ui.SemanticsAction.tap), isTrue);
@@ -188,15 +206,14 @@ void main() {
             expect(find.text(text), findsOneWidget);
             expectNoSpanishOverride(tester.getSemantics(find.text(text)), text);
           }
-          final sourceText = surface is PoiResultCard
-              ? 'Fuente: ${poi.sourceLabel}'
-              : poi.sourceLabel!;
+          final sourceText = 'Fuente: ${poi.sourceLabel}';
           expect(find.text(sourceText), findsOneWidget);
-          expectNoSpanishOverride(
-            tester.getSemantics(find.text(sourceText)),
-            poi.sourceLabel!,
-          );
+          final sourceNode = tester.getSemantics(find.text(sourceText));
+          expectSpanishSegment(sourceNode, 'Fuente: ');
+          expectNoSpanishOverride(sourceNode, poi.sourceLabel!);
           if (surface is PoiDetailSheet) {
+            await tester.tap(find.text('Fuentes y referencias'));
+            await tester.pumpAndSettle();
             expect(find.text(poi.sourceUrl!), findsOneWidget);
             expectNoSpanishOverride(
               tester.getSemantics(find.text(poi.sourceUrl!)),

@@ -79,6 +79,7 @@ void main() {
                         {'opensAt': '09:00:00', 'closesAt': '17:00:00'},
                       ],
                     },
+                    {'day': 'TUESDAY', 'periods': []},
                   ],
                   'items': [
                     {
@@ -101,6 +102,8 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('Lunes: 09:00–17:00'), findsOneWidget);
+      expect(find.text('Martes: Horario no informado'), findsOneWidget);
+      expect(find.textContaining('Cerrado'), findsNothing);
       expect(find.text('Promoción · Entrada 2x1'), findsOneWidget);
       expect(find.text('Promoción de prueba'), findsOneWidget);
     },
@@ -188,9 +191,11 @@ void main() {
           .icon,
       Icons.museum,
     );
-    expect(find.text('Fuente'), findsOneWidget);
-    expect(find.text('MINCETUR'), findsOneWidget);
+    expect(find.text('Fuente: MINCETUR'), findsOneWidget);
     expect(find.text('Mincetur'), findsOneWidget);
+    expect(find.text('https://example.test'), findsNothing);
+    await tester.tap(find.text('Fuentes y referencias'));
+    await tester.pumpAndSettle();
     expect(find.text('https://example.test'), findsOneWidget);
     expect(find.text('Coincide con la categoría seleccionada'), findsOneWidget);
   });
@@ -259,6 +264,39 @@ void main() {
       expect(find.text('Datos interesantes'), findsOneWidget);
       expect(find.text('• A verified fact'), findsOneWidget);
       expect(find.text('Importancia'), findsNothing);
+    },
+  );
+
+  testWidgets(
+    'curated content fallback does not duplicate the POI description',
+    (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: PoiDetailSheet(
+              poi: DiscoveryPoi(
+                id: 'poi-curated',
+                name: 'Nombre oficial',
+                category: 'MONUMENT',
+                location: const RoutePoint(latitude: -12, longitude: -77),
+                distanceToRouteMeters: 0,
+                routeProgress: 0,
+                reasonCodes: const [],
+                description: 'Descripción curada',
+              ),
+              loadTourismContent: (_) async => PoiTourismContent.fromJson({
+                'contentSource': 'CURATED',
+                'content': {'description': 'Descripción curada'},
+                'photos': [],
+              }),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Nombre oficial'), findsOneWidget);
+      expect(find.text('Descripción curada'), findsOneWidget);
+      expect(find.text('Descripción turística'), findsNothing);
     },
   );
 }

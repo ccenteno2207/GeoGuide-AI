@@ -10,6 +10,7 @@ class PoiTourismContent {
     required this.practicalInfo,
     required this.officialUrl,
     required this.photos,
+    this.contentSource = 'PUBLISHED',
   });
 
   final String? summary;
@@ -22,11 +23,12 @@ class PoiTourismContent {
   final String? practicalInfo;
   final String? officialUrl;
   final List<PoiTourismPhoto> photos;
+  final String contentSource;
 
   bool get hasText =>
       [
         summary,
-        description,
+        if (contentSource != 'CURATED') description,
         history,
         significance,
         visitorExperience,
@@ -52,6 +54,9 @@ class PoiTourismContent {
       recommendations: _textList(content['recommendations']),
       practicalInfo: _text(content['practicalInfo']),
       officialUrl: _text(content['officialUrl']),
+      contentSource: json['contentSource'] is String
+          ? json['contentSource']! as String
+          : 'PUBLISHED',
       photos: rawPhotos is List
           ? rawPhotos
                 .whereType<Map>()

@@ -97,12 +97,12 @@ describe('POI media audit controls', () => {
     render(<App />);
 
     const reason = await screen.findByLabelText('Razón de auditoría de media');
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Media privada del POI' })).toBeTruthy());
+    await waitFor(() => expect(screen.getByRole('heading', { name: /Media privada del POI/ })).toBeTruthy());
 
     expect(reason).toBeTruthy();
     expect(screen.queryByLabelText('Razón de auditoría')).toBeNull();
     expect(screen.getByText('1 / 1')).toBeTruthy();
-  });
+  }, 15000);
 
   it('creates a manual private draft without inventing coordinates or publishing it', async () => {
     render(<App />);

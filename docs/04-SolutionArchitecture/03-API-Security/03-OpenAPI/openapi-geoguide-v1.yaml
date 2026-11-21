@@ -496,6 +496,61 @@ paths:
         required: true
         content: { application/json: { schema: { $ref: '#/components/schemas/AdminRelationshipReview' } } }
       responses: { '200': { description: Decisión de relación auditada }, '409': { description: Versión obsoleta o relación no pendiente } }
+  /admin/pois/{poiId}/content:
+    get:
+      summary: Consultar contenido turístico, borrador y datos curados del POI
+      security: [{ bearerAuth: [] }]
+      parameters: [{ in: path, name: poiId, required: true, schema: { type: string, format: uuid } }]
+      responses:
+        '200':
+          description: Contenido administrativo y fuente curada, con Cache-Control no-store
+          content: { application/json: { schema: { $ref: '#/components/schemas/AdminPoiContentResponse' } } }
+        '404': { description: POI inexistente }
+  /admin/pois/{poiId}/content/draft:
+    put:
+      summary: Guardar una nueva revisión de borrador turístico
+      security: [{ bearerAuth: [] }]
+      parameters: [{ in: path, name: poiId, required: true, schema: { type: string, format: uuid } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AdminPoiContentDraft' } } }
+      responses: { '200': { description: Borrador versionado y auditado }, '409': { description: Versión obsoleta o revisión pendiente } }
+  /admin/pois/{poiId}/content/submit:
+    post:
+      summary: Enviar contenido turístico a revisión
+      security: [{ bearerAuth: [] }]
+      parameters: [{ in: path, name: poiId, required: true, schema: { type: string, format: uuid } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AdminPoiContentAction' } } }
+      responses: { '200': { description: Borrador pendiente de revisión }, '400': { description: Descripción requerida; no se permite contenido provisional }, '409': { description: Versión o transición inválida } }
+  /admin/pois/{poiId}/content/publish:
+    post:
+      summary: Publicar contenido turístico aprobado sin cambiar activación del POI
+      security: [{ bearerAuth: [] }]
+      parameters: [{ in: path, name: poiId, required: true, schema: { type: string, format: uuid } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AdminPoiContentAction' } } }
+      responses: { '200': { description: Contenido publicado y POI sin cambio de activación }, '400': { description: Descripción requerida; no se permite contenido provisional }, '409': { description: Versión o transición inválida } }
+  /admin/pois/{poiId}/content/revert:
+    post:
+      summary: Copiar una revisión previa a un nuevo borrador
+      security: [{ bearerAuth: [] }]
+      parameters: [{ in: path, name: poiId, required: true, schema: { type: string, format: uuid } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: '#/components/schemas/AdminPoiContentRevert' } } }
+      responses: { '200': { description: Borrador nuevo; no se publica automáticamente }, '409': { description: Versión obsoleta } }
+  /pois/{poiId}/content:
+    get:
+      summary: Consultar contenido publicado o descripción curada de fallback
+      parameters: [{ in: path, name: poiId, required: true, schema: { type: string, format: uuid } }]
+      responses:
+        '200':
+          description: Contenido en línea; drafts nunca expuestos; Cache-Control no-store
+          content: { application/json: { schema: { $ref: '#/components/schemas/PoiTourismContentResponse' } } }
+        '404': { description: POI inexistente o inactivo }
   /admin/pois/{poiId}/media:
     get:
       summary: Listar media privada de un POI
@@ -538,6 +593,12 @@ paths:
               schema: { $ref: '#/components/schemas/AdminMediaAsset' }
         '413': { description: Se superó el límite de tamaño configurado }
         '415': { description: Solo se aceptan JPEG y PNG decodificables }
+  /admin/media/{id}/history:
+    get:
+      summary: Consultar auditoría de un asset multimedia
+      security: [{ bearerAuth: [] }]
+      parameters: [{ in: path, name: id, required: true, schema: { type: string, format: uuid } }]
+      responses: { '200': { description: Historial auditado del asset; Cache-Control no-store } }
   /admin/media/{id}/rights:
     patch:
       summary: Registrar licencia, atribución y evidencia documental de derechos
@@ -1115,6 +1176,96 @@ components:
             license: { type: string }
             attribution: { type: string }
             evidenceReference: { type: string }
+    AdminPoiContent:
+      type: object
+      required: [summary, description, history, significance, visitorExperience, interestingFacts, recommendations, practicalInfo, officialUrl]
+      properties:
+        summary: { type: string, maxLength: 500 }
+        description: { type: string, maxLength: 12000 }
+        history: { type: string, maxLength: 12000 }
+        significance: { type: string, maxLength: 8000 }
+        visitorExperience: { type: string, maxLength: 8000 }
+        interestingFacts: { type: array, maxItems: 20, items: { type: string, maxLength: 1000 } }
+        recommendations: { type: array, maxItems: 20, items: { type: string, maxLength: 1000 } }
+        practicalInfo: { type: string, maxLength: 6000 }
+        officialUrl: { type: string, format: uri, maxLength: 2000 }
+    AdminPoiContentDraft:
+      type: object
+      required: [expectedVersion, content, reason]
+      properties:
+        expectedVersion: { type: integer, format: int64, minimum: 0 }
+        content: { $ref: '#/components/schemas/AdminPoiContent' }
+        reason: { type: string, minLength: 1, maxLength: 1000 }
+    AdminPoiContentAction:
+      type: object
+      required: [expectedVersion, reason]
+      properties:
+        expectedVersion: { type: integer, format: int64, minimum: 0 }
+        reason: { type: string, minLength: 1, maxLength: 1000 }
+    AdminPoiContentRevert:
+      allOf:
+        - $ref: '#/components/schemas/AdminPoiContentAction'
+        - type: object
+          required: [revisionId]
+          properties:
+            revisionId: { type: string, format: uuid }
+    PoiTourismContentResponse:
+      type: object
+      required: [poiId, contentSource, content, photos]
+      properties:
+        poiId: { type: string, format: uuid }
+        publishedVersion: { type: integer, format: int64, nullable: true }
+        publishedAt: { type: string, format: date-time, nullable: true }
+        contentSource: { type: string, enum: [PUBLISHED, CURATED] }
+        content: { $ref: '#/components/schemas/AdminPoiContent' }
+        photos: { type: array, items: { $ref: '#/components/schemas/PublicPoiPhoto' } }
+    AdminPoiContentResponse:
+      type: object
+      required: [poiId, curatedPoi, draftVersion, draftState, draftContent, publishedContent, revisions]
+      properties:
+        poiId: { type: string, format: uuid }
+        curatedPoi: { $ref: '#/components/schemas/CuratedPoiSummary' }
+        draftVersion: { type: integer, format: int64 }
+        draftState: { type: string, enum: [NONE, DRAFT, PENDING_REVIEW, PUBLISHED, SUPERSEDED] }
+        draftContent: { $ref: '#/components/schemas/AdminPoiContent' }
+        publishedVersion: { type: integer, format: int64, nullable: true }
+        publishedContent: { $ref: '#/components/schemas/AdminPoiContent' }
+        publishedAt: { type: string, format: date-time, nullable: true }
+        revisions: { type: array, items: { $ref: '#/components/schemas/AdminPoiContentRevision' } }
+    CuratedPoiSummary:
+      type: object
+      required: [name, categoryCode, categoryName]
+      properties:
+        name: { type: string }
+        categoryCode: { type: string }
+        categoryName: { type: string }
+        description: { type: string, nullable: true }
+        sourceSystem: { type: string, nullable: true }
+        sourceRecordId: { type: string, nullable: true }
+        sourceUrl: { type: string, format: uri, nullable: true }
+        license: { type: string, nullable: true }
+        attribution: { type: string, nullable: true }
+    AdminPoiContentRevision:
+      type: object
+      required: [id, version, state, createdBy, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        version: { type: integer, format: int64 }
+        state: { type: string }
+        createdBy: { type: string }
+        createdAt: { type: string, format: date-time }
+    PublicPoiPhoto:
+      type: object
+      required: [id, path, altText, primary, displayOrder]
+      properties:
+        id: { type: string, format: uuid }
+        path: { type: string }
+        altText: { type: string }
+        primary: { type: boolean }
+        displayOrder: { type: integer }
+        author: { type: string, nullable: true }
+        attribution: { type: string, nullable: true }
+        license: { type: string, nullable: true }
     AdminMediaPublish:
       allOf:
         - $ref: '#/components/schemas/AdminMediaVersionedAction'

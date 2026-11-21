@@ -2,6 +2,7 @@ package ai.geoguide.admin.domain;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Locale;
 
 /** Plain-text editorial content. Rendering clients must treat fields as text, never trusted HTML. */
 public record PoiTourismContent(
@@ -39,6 +40,35 @@ public record PoiTourismContent(
 
     public static PoiTourismContent empty() {
         return new PoiTourismContent("", "", "", "", "", List.of(), List.of(), "", "");
+    }
+
+    public List<String> provisionalFields() {
+        var fields = new java.util.ArrayList<String>();
+        checkProvisional(fields, "summary", summary);
+        checkProvisional(fields, "description", description);
+        checkProvisional(fields, "history", history);
+        checkProvisional(fields, "significance", significance);
+        checkProvisional(fields, "visitorExperience", visitorExperience);
+        checkProvisional(fields, "practicalInfo", practicalInfo);
+        checkProvisional(fields, "interestingFacts", String.join(" ", interestingFacts));
+        checkProvisional(fields, "recommendations", String.join(" ", recommendations));
+        return List.copyOf(fields);
+    }
+
+    public List<String> publicationIssues() {
+        var issues = new java.util.ArrayList<String>();
+        if (description.isBlank()) issues.add("description");
+        issues.addAll(provisionalFields());
+        return issues.stream().distinct().toList();
+    }
+
+    private static void checkProvisional(List<String> fields, String field, String value) {
+        String normalized = value == null ? "" : value.toLowerCase(Locale.ROOT)
+                .replace('á', 'a').replace('é', 'e').replace('í', 'i').replace('ó', 'o').replace('ú', 'u');
+        if (normalized.matches("(?s).*\\b(que\\s+va\\s+aqui|lorem\\s+ipsum|placeholder|texto\\s+provisional|por\\s+definir|tbd)\\b.*")
+                || normalized.strip().equals("todo")) {
+            fields.add(field);
+        }
     }
 
     private static String bounded(String value, int max, String field) {
