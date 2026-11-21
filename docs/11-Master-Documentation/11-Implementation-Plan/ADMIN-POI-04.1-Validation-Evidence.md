@@ -34,7 +34,7 @@
 
 | Comando | Resultado |
 | --- | --- |
-| `mvnw verify` | PASS: 136 tests, 0 fallos, 30 omitidos. Los 26 tests PostGIS de Testcontainers fueron omitidos porque Docker no está disponible en Windows; deben ejecutarse en la VM de integración. |
+| `mvnw verify` | PASS: 136 tests, 0 fallos, 30 omitidos. Los tests PostGIS omitidos localmente se ejecutaron en VM aislada (26, 0 fallos, 2 omitidos). |
 | `npm test -- --run` | PASS: 7 archivos, 28 tests. |
 | `npm run build` | PASS (Vite/TypeScript). |
 | `dart format` en los 7 Dart afectados | PASS: 0 cambios adicionales. |
@@ -43,6 +43,10 @@
 | `git diff --check` | PASS, sin errores; Git emite una advertencia de conversión CRLF/LF para `admin-portal/src/style.css`. |
 
 APK de integración preparada desde este árbol, con `BACKEND_BASE_URL=https://geoguide.getcom.pe:5443`: `mobile/build/app/outputs/flutter-apk/app-debug.apk`, 168,213,184 bytes, SHA-256 `75E0E6C830BA06AE49F568819262DE05D7B3E7602E0170F5473F9A91B2552AF7`. El certificado Android Debug coincide con la aplicación ya instalada en el HONOR (SHA-256 `894975b5bc6751da09b3d69923d4ae399192470d86c107106f65f6cb8d7eab7e`); la actualización no destructiva queda pendiente hasta que el backend integrado esté desplegado.
+
+### PostGIS aislado en VM
+
+Se clonó el HEAD del PR en un directorio temporal único, se creó un proyecto Compose efímero con PostGIS 16.4 (`postgis/postgis:16-3.4`, image ID `sha256:44126d872ac91993766c341e369c539e8196614321765d36a6f1bab0419a5fa5`) limitado a 1 GiB y 1 CPU, y se ejecutaron los 26 tests `PostgisIntegrationTests` con Flyway V001–V013 desde esquema vacío: 26 ejecutadas, 0 fallidas, 2 omitidas. Los nueve servicios previos permanecieron levantados y saludables; al finalizar se retiraron el contenedor, red, volumen y directorio temporal. La primera tentativa, que intentó usar el caché Maven compartido de manager, fue denegada por permisos antes de ejecutar pruebas; se repitió correctamente con repositorio Maven efímero dentro del directorio temporal, sin cambiar permisos ni el caché compartido.
 
 ## Pendientes antes del cierre
 
@@ -60,7 +64,8 @@ ADMIN_POI_04_1_MOBILE_PREVIEW = AUTOMATED_PASS_VISUAL_SMOKE_PENDING
 ADMIN_POI_04_1_PROVENANCE_PRESENTATION = PASS
 ADMIN_POI_04_1_UNKNOWN_HOURS = PASS
 ADMIN_POI_04_1_CONTENT_VALIDATION = PASS
-ADMIN_POI_04_1_BACKEND_TESTS = PASS_WITH_POSTGIS_SKIPPED_LOCALLY
+ADMIN_POI_04_1_BACKEND_TESTS = PASS
+ADMIN_POI_04_1_POSTGIS_TESTS = 26_PASS_2_SKIPPED_ISOLATED_VM
 ADMIN_POI_04_1_PORTAL_TESTS = PASS
 ADMIN_POI_04_1_FLUTTER_TESTS = PASS
 ADMIN_POI_04_1_VM_DEPLOYMENT = PENDING
