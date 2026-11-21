@@ -22,7 +22,10 @@
       "implicitFlowEnabled": false,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
-      "redirectUris": ["https://geoguide.getcom.pe:5443/admin/auth/callback"],
+      "redirectUris": [
+        "https://geoguide.getcom.pe:5443/admin/auth/callback",
+        "https://geoguide.getcom.pe:5443/admin/auth/silent-callback"
+      ],
       "webOrigins": ["https://geoguide.getcom.pe:5443"],
       "attributes": {
         "pkce.code.challenge.method": "S256",
