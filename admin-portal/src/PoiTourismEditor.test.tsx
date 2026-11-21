@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PoiTourismEditor } from './PoiTourismEditor';
+import { AdminFeedbackProvider } from './AdminFeedback';
 import type { AdminPoi } from './api';
 
 const poi: AdminPoi = { id: 'poi-1', name: 'Lugar de prueba', description: 'Descripción existente', categoryCode: 'MONUMENT', categoryName: 'Monumento', active: true, updatedAt: '', sourceSystem: 'fixture', sourceRecordId: 'test', sourceUrl: null, license: null, attribution: null };
@@ -24,7 +25,7 @@ afterEach(cleanup);
 describe('POI tourism visual editor', () => {
   it('previews edits immediately and saves a draft without publishing', async () => {
     const api = apiMock();
-    const view = render(<PoiTourismEditor poi={poi} api={api as never} onClose={() => undefined} onManageMedia={() => undefined} />);
+    const view = render(<AdminFeedbackProvider><PoiTourismEditor poi={poi} api={api as never} onClose={() => undefined} onManageMedia={() => undefined} /></AdminFeedbackProvider>);
     const description = await view.findByLabelText('Descripción turística');
     expect(view.container.querySelector('.phone-screen h2')?.textContent).toBe('Lugar de prueba');
     expect(view.container.querySelector('.phone-screen .poi-summary')?.textContent).toBe('Resumen publicado');
@@ -34,7 +35,7 @@ describe('POI tourism visual editor', () => {
     fireEvent.click(view.getByRole('button', { name: 'Guardar borrador' }));
     await waitFor(() => expect(api.put).toHaveBeenCalledTimes(1));
     expect(api.post).not.toHaveBeenCalled();
-    expect(view.getByText('Borrador guardado. El contenido público no cambió.')).toBeTruthy();
+    expect((await view.findByRole('status')).textContent).toContain('Borrador guardado correctamente.');
   });
 
   it('requires submit before the explicit publish action', async () => {

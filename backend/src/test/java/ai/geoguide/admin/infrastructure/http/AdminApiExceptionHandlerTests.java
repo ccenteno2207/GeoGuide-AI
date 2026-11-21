@@ -1,63 +1,43 @@
 package ai.geoguide.admin.infrastructure.http;
 
-import ai.geoguide.admin.domain.EditorialWorkflowConflictException;
-import ai.geoguide.admin.domain.EditorialCategoryMismatchException;
-import ai.geoguide.admin.infrastructure.persistence.PoiOperationalInfoRepository.OperationalInfoConflictException;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import ai.geoguide.media.domain.PoiMediaValidationException;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 
 class AdminApiExceptionHandlerTests {
     private final AdminApiExceptionHandler handler = new AdminApiExceptionHandler();
 
     @Test
-    void stateTransitionsReturnConflictWithoutLeakingInternalExceptionText() {
-        var response = handler.conflict(new EditorialWorkflowConflictException("database query details"));
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getDetail()).doesNotContain("database query details");
-    }
-
-    @Test
-    void categoryMismatchConflictExplainsTheRequiredEditorialCorrection() {
-        var response = handler.categoryMismatch(new EditorialCategoryMismatchException("ARCHAEOLOGICAL_SITE"));
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getDetail()).contains("ARCHAEOLOGICAL_SITE", "Observado", "repita las revisiones");
-        assertThat(response.getBody().getProperties()).containsEntry("code", "EDITORIAL_CATEGORY_MISMATCH");
-    }
-
-    @Test
-    void operationalInformationConflictRequestsReloadWithoutEditorialLanguage() {
-        var response = handler.operationalInfoConflict(new OperationalInfoConflictException("stale version"));
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getDetail()).contains("Recargue la ficha")
-                .doesNotContain("transición", "aprobación editorial");
-    }
-
-    @Test
-    void invalidRequestsReturnBadRequestWithoutLeakingInternalExceptionText() {
-        var response = handler.invalidRequest(new IllegalArgumentException("SQL fragments"));
-
+    void mapsMediaValidationToStableFieldErrorWithoutInternalDetails() {
+        var exception = new PoiMediaValidationException(400, "AUTHOR_REQUIRED", "author", "AUTHOR_REQUIRED",
+                "Indica el autor o titular de derechos.");
+        var response = handler.mediaValidation(exception);
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getDetail()).doesNotContain("SQL fragments");
+        assertThat(response.getBody().getProperties()).containsEntry("code", "AUTHOR_REQUIRED")
+                .containsEntry("errors", List.of(new PoiMediaValidationException.FieldIssue("author", "AUTHOR_REQUIRED",
+                        "Indica el autor o titular de derechos.")));
+        assertThat(response.getBody().getDetail()).doesNotContain("stack", "MinIO", "private/");
     }
 
     @Test
-    void oversizedMultipartReturnsPayloadTooLargeWithoutLeakingParserDetails() {
-        var response = handler.uploadTooLarge(
-                new org.springframework.web.multipart.MaxUploadSizeExceededException(10_485_760));
-
+    void mapsMultipartLimitToStructuredPayloadTooLarge() {
+        var response = handler.uploadTooLarge(new MaxUploadSizeExceededException(10_485_760));
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.PAYLOAD_TOO_LARGE);
-        assertThat(response.getBody()).isNotNull();
-        assertThat(response.getBody().getDetail())
-                .isEqualTo("El archivo supera el tamaño máximo permitido.")
-                .doesNotContain("MaxUploadSizeExceededException", "10_485_760");
+        assertThat(response.getBody().getProperties()).containsEntry("code", "MEDIA_FILE_TOO_LARGE");
+        assertThat(response.getBody().getProperties().get("errors").toString()).contains("file", "FILE_TOO_LARGE");
+    }
+
+    @Test
+    void mapsMissingUploadMetadataToFieldSpecificFeedback() {
+        var response = handler.missingUploadField(new MissingServletRequestParameterException("author", "String"));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(response.getBody().getProperties()).containsEntry("code", "AUTHOR_REQUIRED");
+        assertThat(response.getBody().getProperties().get("errors").toString())
+                .contains("author", "AUTHOR_REQUIRED", "Indica el autor o titular de derechos.");
     }
 }

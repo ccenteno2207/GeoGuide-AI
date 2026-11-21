@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { AdminApi, AdminPoi, PoiOperationalInfo } from './api';
+import { useAdminFeedback } from './AdminFeedback';
 
 const days = [
   ['MONDAY', 'Lunes'], ['TUESDAY', 'Martes'], ['WEDNESDAY', 'Miércoles'],
@@ -23,13 +24,12 @@ function textToRanges(value: string): Array<{ opensAt: string; closesAt: string 
 }
 
 export function PoiOperationalEditor({ poi, api, onClose }: { poi: AdminPoi; api: AdminApi; onClose: () => void }) {
+  const { showError, showSuccess } = useAdminFeedback();
   const [profile, setProfile] = useState<PoiOperationalInfo | null>(null);
   const [timeZone, setTimeZone] = useState('America/Lima');
   const [hours, setHours] = useState<Record<string, string>>({});
   const [items, setItems] = useState<OperationalItem[]>([]);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -40,7 +40,7 @@ export function PoiOperationalEditor({ poi, api, onClose }: { poi: AdminPoi; api
       setHours(Object.fromEntries(result.weeklyHours.map((day) => [day.day, rangesToText(day.periods)])));
       setItems(result.items);
     }).catch((cause: unknown) => {
-      if (mounted) setError(cause instanceof Error ? cause.message : 'No se pudieron cargar los datos operativos.');
+      if (mounted) showError(cause);
     });
     return () => { mounted = false; };
   }, [api, poi.id]);
@@ -53,7 +53,7 @@ export function PoiOperationalEditor({ poi, api, onClose }: { poi: AdminPoi; api
 
   const save = async () => {
     if (!profile) return;
-    setBusy(true); setError(''); setSaved(false);
+    setBusy(true);
     try {
       const updated = await api.put<PoiOperationalInfo>(`/api/v1/admin/pois/${poi.id}/operational-info`, {
         expectedVersion: profile.version,
@@ -61,15 +61,14 @@ export function PoiOperationalEditor({ poi, api, onClose }: { poi: AdminPoi; api
         weeklyHours: days.map(([day]) => ({ day, periods: textToRanges(hours[day] ?? '') })),
         items,
       });
-      setProfile(updated); setSaved(true);
+      setProfile(updated); showSuccess('Información operativa actualizada.');
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'No se pudieron guardar los datos operativos.');
+      showError(cause);
     } finally { setBusy(false); }
   };
 
   return <section className="panel operational-editor" aria-label={`Información operativa de ${poi.name}`}>
     <div className="section-head"><div><h3>Información operativa · {poi.name}</h3><p>Se actualiza directamente y queda registrada en historial. No reinicia las revisiones ni desactiva el POI.</p></div><button className="secondary" onClick={onClose}>Cerrar</button></div>
-    {error && <p className="error" role="alert">{error}</p>}
     {!profile ? <p className="muted">Cargando información operativa…</p> : <>
       <label>Zona horaria<input aria-label="Zona horaria operativa" value={timeZone} onChange={(event) => setTimeZone(event.target.value)} /></label>
       <h4>Horario semanal</h4>
@@ -83,7 +82,6 @@ export function PoiOperationalEditor({ poi, api, onClose }: { poi: AdminPoi; api
         <div className="inline"><label>Válida desde<input type="date" aria-label="Válida desde" value={item.validFrom ?? ''} onChange={(event) => updateItem(item.id, { validFrom: event.target.value || null })} /></label><label>Válida hasta<input type="date" aria-label="Válida hasta" value={item.validUntil ?? ''} onChange={(event) => updateItem(item.id, { validUntil: event.target.value || null })} /></label><label>Condiciones<input aria-label="Condiciones de promoción" maxLength={1000} value={item.terms ?? ''} onChange={(event) => updateItem(item.id, { terms: event.target.value || null })} /></label><button className="danger" type="button" onClick={() => setItems((current) => current.filter((entry) => entry.id !== item.id))}>Quitar</button></div>
       </fieldset>)}
       <button disabled={busy} onClick={() => void save()}>{busy ? 'Guardando…' : 'Guardar información operativa'}</button>
-      {saved && <p role="status">Información actualizada. El POI continúa {poi.active ? 'activo' : 'desactivado'}; la actualización no requiere aprobación editorial.</p>}
     </>}
   </section>;
 }

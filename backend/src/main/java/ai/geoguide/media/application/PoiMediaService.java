@@ -1,12 +1,14 @@
 package ai.geoguide.media.application;
 
 import ai.geoguide.media.application.port.ObjectStorageProvider;
+import ai.geoguide.media.domain.PoiMediaValidationException;
 import ai.geoguide.media.infrastructure.persistence.PoiMediaRepository;
 import ai.geoguide.media.infrastructure.persistence.PoiMediaRepository.Asset;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Iterator;
 import java.util.UUID;
 import javax.imageio.IIOImage;
@@ -42,18 +44,24 @@ public class PoiMediaService {
     }
 
     public Asset upload(UUID poiId, MultipartFile file, String author, String sourceUrl, String altText, String actor) {
-        if (file == null || file.isEmpty() || file.getSize() > maxBytes) throw new IllegalArgumentException("Image is empty or exceeds the configured size limit.");
-        if (blank(author) || blank(sourceUrl)) throw new IllegalArgumentException("Image author and source reference are required.");
-        if (altText != null && altText.length() > 500) throw new IllegalArgumentException("Alternative text is too long.");
+        if (file == null || file.isEmpty()) throw invalid("FILE_REQUIRED", "file", "FILE_REQUIRED", "Selecciona un archivo JPEG o PNG válido.");
+        if (file.getSize() > maxBytes) throw tooLarge("El archivo supera el tamaño máximo permitido.");
+        if (blank(author)) throw invalid("AUTHOR_REQUIRED", "author", "AUTHOR_REQUIRED", "Indica el autor o titular de derechos.");
+        if (author.length() > 200) throw invalid("AUTHOR_TOO_LONG", "author", "MAX_LENGTH", "El autor no debe superar 200 caracteres.");
+        if (blank(sourceUrl)) throw invalid("SOURCE_REQUIRED", "sourceUrl", "SOURCE_REQUIRED", "Indica una URL HTTPS o una referencia de fuente de prueba válida.");
+        if (sourceUrl.length() > 2048 || !validSourceReference(sourceUrl.trim())) throw invalid("SOURCE_FORMAT_INVALID", "sourceUrl", "INVALID_FORMAT", "La referencia debe ser una URL HTTPS con dominio o una referencia fixture: válida.");
+        if (altText != null && altText.length() > 500) throw invalid("ALT_TEXT_TOO_LONG", "altText", "MAX_LENGTH", "El texto alternativo no debe superar 500 caracteres.");
         try {
             byte[] input = file.getBytes();
-            String mime = detectMime(input);
+            String mime;
+            try { mime = detectMime(input); }
+            catch (IllegalArgumentException invalidType) { throw invalid("FILE_TYPE_INVALID", "file", "UNSUPPORTED_MEDIA_TYPE", "Selecciona un archivo JPEG o PNG válido."); }
             BufferedImage image = decodeWithinLimits(input);
             if (image == null) {
-                throw new IllegalArgumentException("Image bytes are invalid or exceed the configured pixel limit.");
+                throw invalid("FILE_CONTENT_INVALID", "file", "INVALID_IMAGE_CONTENT", "El archivo no contiene una imagen JPEG o PNG decodificable o supera el límite de dimensiones.");
             }
             byte[] safeBytes = reencode(image, mime);
-            if (safeBytes.length > maxBytes) throw new IllegalArgumentException("Sanitized image exceeds the configured size limit.");
+            if (safeBytes.length > maxBytes) throw tooLarge("La imagen optimizada supera el tamaño máximo permitido.");
             UUID id = UUID.randomUUID();
             ObjectStorageProvider.StoredObject stored = storage.storePrivate(id, mime, safeBytes.length, new ByteArrayInputStream(safeBytes));
             try {
@@ -64,7 +72,8 @@ public class PoiMediaService {
                 storage.deletePrivate(stored.opaqueObjectKey());
                 throw exception;
             }
-        } catch (IOException exception) { throw new IllegalArgumentException("Image could not be decoded safely.",exception); }
+        } catch (PoiMediaValidationException exception) { throw exception; }
+        catch (IOException exception) { throw invalid("FILE_DECODE_FAILED", "file", "INVALID_IMAGE_CONTENT", "No se pudo validar la imagen. Selecciona un JPEG o PNG válido."); }
     }
 
     private BufferedImage decodeWithinLimits(byte[] bytes) throws IOException {
@@ -99,4 +108,11 @@ public class PoiMediaService {
         }finally{writer.dispose();}
     }
     private static boolean blank(String s){return s==null||s.isBlank();}
+    private static PoiMediaValidationException invalid(String code,String field,String fieldCode,String message){return new PoiMediaValidationException(400,code,field,fieldCode,message);}
+    private static PoiMediaValidationException tooLarge(String message){return new PoiMediaValidationException(413,"MEDIA_FILE_TOO_LARGE","file","FILE_TOO_LARGE",message);}
+    private static boolean validSourceReference(String value){
+        if(value.matches("(?i)^fixture:[a-z0-9][a-z0-9._/-]{0,199}$")) return true;
+        try { URI uri=URI.create(value); return "https".equalsIgnoreCase(uri.getScheme()) && uri.getHost()!=null && !uri.getHost().isBlank(); }
+        catch (IllegalArgumentException ignored) { return false; }
+    }
 }

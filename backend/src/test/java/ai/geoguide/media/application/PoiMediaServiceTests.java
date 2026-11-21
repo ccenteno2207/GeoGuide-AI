@@ -6,10 +6,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import ai.geoguide.media.application.port.ObjectStorageProvider;
+import ai.geoguide.media.domain.PoiMediaValidationException;
 import ai.geoguide.media.infrastructure.persistence.PoiMediaRepository;
 import ai.geoguide.media.infrastructure.persistence.PoiMediaRepository.Asset;
 import java.awt.image.BufferedImage;
@@ -44,6 +46,8 @@ class PoiMediaServiceTests {
                 "synthetic fixture","fixture:poi-media-1","editor-test");
         assertThat(uploaded.contentType()).isEqualTo("image/png");
         assertThat(uploaded.objectKey()).startsWith("private/");
+        assertThat(uploaded.state()).isEqualTo("DRAFT");
+        assertThat(uploaded.rightsStatus()).isEqualTo("UNVERIFIED");
         verify(storage).storePrivate(any(),org.mockito.ArgumentMatchers.eq("image/png"),anyLong(),any(InputStream.class));
         verify(repository).create(any(Asset.class),org.mockito.ArgumentMatchers.eq("editor-test"));
     }
@@ -52,11 +56,11 @@ class PoiMediaServiceTests {
     void rejectsSvgAndImagesExceedingPixelLimitBeforeStorage() throws Exception {
         assertThatThrownBy(()->service.upload(UUID.randomUUID(),new MockMultipartFile("file","x.svg","image/png",
                 "<svg/>".getBytes()),"synthetic","fixture:x","editor"))
-                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("Only JPEG and PNG");
+                .isInstanceOf(PoiMediaValidationException.class).hasMessageContaining("JPEG o PNG");
         var onePixelService=new PoiMediaService(storage,repository,1_000_000,4);
         assertThatThrownBy(()->onePixelService.upload(UUID.randomUUID(),new MockMultipartFile("file","big.png","image/png",png(3,3)),
                 "synthetic","fixture:y","editor"))
-                .isInstanceOf(IllegalArgumentException.class).hasMessageContaining("pixel limit");
+                .isInstanceOf(PoiMediaValidationException.class).hasMessageContaining("límite de dimensiones");
     }
 
     @Test
@@ -66,8 +70,23 @@ class PoiMediaServiceTests {
 
         assertThatThrownBy(() -> sizeLimitedService.upload(UUID.randomUUID(), oversized,
                 "synthetic fixture", "fixture:oversized", "editor-test"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("size limit");
+                .isInstanceOf(PoiMediaValidationException.class)
+                .satisfies(error -> assertThat(((PoiMediaValidationException) error).status()).isEqualTo(413));
+    }
+
+    @Test
+    void returnsStableFieldErrorsAndDoesNotStoreWhenAuthorOrSourceIsMissing() {
+        var file = new MockMultipartFile("file", "sample.png", "image/png", new byte[]{1});
+        assertThatThrownBy(() -> service.upload(UUID.randomUUID(), file, " ", "fixture:valid", "alt", "editor"))
+                .isInstanceOfSatisfying(PoiMediaValidationException.class, error -> {
+                    assertThat(error.code()).isEqualTo("AUTHOR_REQUIRED");
+                    assertThat(error.errors()).containsExactly(new PoiMediaValidationException.FieldIssue(
+                            "author", "AUTHOR_REQUIRED", "Indica el autor o titular de derechos."));
+                });
+        assertThatThrownBy(() -> service.upload(UUID.randomUUID(), file, "Author", "http://example.test/a", "alt", "editor"))
+                .isInstanceOfSatisfying(PoiMediaValidationException.class, error -> assertThat(error.code()).isEqualTo("SOURCE_FORMAT_INVALID"));
+        verify(storage, never()).storePrivate(any(), anyString(), anyLong(), any(InputStream.class));
+        verify(repository, never()).create(any(Asset.class), anyString());
     }
 
     private static byte[] png(int width,int height)throws Exception{

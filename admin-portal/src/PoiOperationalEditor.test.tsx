@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { PoiOperationalEditor } from './PoiOperationalEditor';
 import type { AdminApi, AdminPoi, PoiOperationalInfo } from './api';
+import { AdminFeedbackProvider } from './AdminFeedback';
 
 const poi: AdminPoi = {
   id: 'poi-active-1', name: 'Museo sintético', description: null, categoryCode: 'MUSEUM',
@@ -25,7 +26,7 @@ describe('POI operational editor', () => {
       })),
     } as unknown as AdminApi;
 
-    render(<PoiOperationalEditor poi={poi} api={api} onClose={() => undefined} />);
+    render(<AdminFeedbackProvider><PoiOperationalEditor poi={poi} api={api} onClose={() => undefined} /></AdminFeedbackProvider>);
     await screen.findByLabelText('Horario Lunes');
     fireEvent.change(screen.getByLabelText('Horario Lunes'), { target: { value: '09:00-17:00' } });
     fireEvent.click(screen.getByRole('button', { name: 'Agregar promoción' }));
@@ -41,7 +42,7 @@ describe('POI operational editor', () => {
       day: 'MONDAY', periods: [{ opensAt: '09:00:00', closesAt: '17:00:00' }],
     }]));
     expect(body.items).toEqual([expect.objectContaining({ type: 'PROMOTION', title: 'Entrada 2x1', active: true })]);
-    expect(await screen.findByText(/El POI continúa activo/)).toBeTruthy();
+    expect((await screen.findByRole('status')).textContent).toContain('Información operativa actualizada.');
     expect(screen.queryByRole('button', { name: /Aprobar|Enviar a revisión/ })).toBeNull();
   });
 });
