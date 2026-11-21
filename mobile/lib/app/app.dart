@@ -12,6 +12,9 @@ import '../core/network/backend_configuration.dart';
 import '../core/network/geoguide_http_client.dart';
 import '../features/discovery/infrastructure/dio_route_discovery_repository.dart';
 import '../features/discovery/infrastructure/dio_poi_operational_info_repository.dart';
+import '../features/discovery/infrastructure/dio_poi_tourism_content_repository.dart';
+import '../features/discovery/presentation/poi_tourism_content_section.dart'
+    show PoiTourismContentLoader;
 import '../features/discovery/presentation/poi_operational_info_section.dart'
     show PoiOperationalInfoLoader;
 import '../features/map/presentation/base_map_page.dart';
@@ -36,6 +39,7 @@ class GeoGuideApp extends StatelessWidget {
     String? backendBaseUrl,
     OfflineDiscovery? offlineDiscovery,
     PoiOperationalInfoLoader? loadPoiOperationalInfo,
+    PoiTourismContentLoader? loadPoiTourismContent,
     this.locationClock,
   }) : routeSession = routeSession ?? AndroidRouteSession.instance,
        _requestCurrentLocation = RequestCurrentLocation(
@@ -50,7 +54,10 @@ class GeoGuideApp extends StatelessWidget {
            (discoverRoute == null ? _createOffline(backendBaseUrl) : null),
        loadPoiOperationalInfo =
            loadPoiOperationalInfo ??
-           _createPoiOperationalInfoLoader(backendBaseUrl);
+           _createPoiOperationalInfoLoader(backendBaseUrl),
+       loadPoiTourismContent =
+           loadPoiTourismContent ??
+           _createPoiTourismContentLoader(backendBaseUrl);
 
   final RequestCurrentLocation _requestCurrentLocation;
   final RouteSessionClient routeSession;
@@ -59,6 +66,7 @@ class GeoGuideApp extends StatelessWidget {
   final SearchDestinations? searchDestinations;
   final OfflineDiscovery? offlineDiscovery;
   final PoiOperationalInfoLoader? loadPoiOperationalInfo;
+  final PoiTourismContentLoader? loadPoiTourismContent;
   final DateTime Function()? locationClock;
   static OfflineDiscovery? _createOffline(String? value) {
     final config = _backendConfiguration(value);
@@ -125,6 +133,17 @@ class GeoGuideApp extends StatelessWidget {
     return repository.getForPoi;
   }
 
+  static PoiTourismContentLoader? _createPoiTourismContentLoader(
+    String? backendBaseUrl,
+  ) {
+    final configuration = _backendConfiguration(backendBaseUrl);
+    if (configuration == null) return null;
+    final repository = DioPoiTourismContentRepository(
+      GeoGuideHttpClient(configuration: configuration),
+    );
+    return repository.getForPoi;
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -139,6 +158,7 @@ class GeoGuideApp extends StatelessWidget {
         offlineDiscovery: offlineDiscovery,
         searchDestinations: searchDestinations,
         loadPoiOperationalInfo: loadPoiOperationalInfo,
+        loadPoiTourismContent: loadPoiTourismContent,
         locationClock: locationClock,
       ),
     );

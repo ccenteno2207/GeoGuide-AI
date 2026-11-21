@@ -124,6 +124,7 @@ class SnapshotCodec {
           };
           poi.remove('primaryMediaUrl');
           poi.remove('primaryMediaPath');
+          poi.remove('tourismSummary');
           return poi;
         })
         .toList(growable: false);

@@ -3,6 +3,63 @@ info:
   title: GeoGuide AI Backend API
   version: 1.0.0
 paths:
+  /api/v1/admin/pois/{poiId}/content:
+    get:
+      summary: Read tourism content draft, current publication and revision history (OIDC/RBAC)
+      responses:
+        '200': { description: Administrative content state; Cache-Control no-store }
+        '401': { description: Authentication required }
+        '403': { description: Role not authorized }
+        '404': { description: POI not found }
+  /api/v1/admin/pois/{poiId}/content/draft:
+    put:
+      summary: Save a versioned tourism content draft (OIDC/RBAC)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PoiTourismDraftRequest' }
+      responses:
+        '200': { description: Draft saved; active POI status is unchanged }
+        '400': { description: Invalid content or HTTPS URL }
+        '401': { description: Authentication required }
+        '403': { description: Editor role required }
+        '409': { description: Stale version or invalid workflow state }
+  /api/v1/admin/pois/{poiId}/content/submit:
+    post:
+      summary: Submit tourism content draft for review (OIDC/RBAC)
+      responses:
+        '200': { description: Content is pending review }
+        '401': { description: Authentication required }
+        '409': { description: Stale version or invalid workflow state }
+  /api/v1/admin/pois/{poiId}/content/publish:
+    post:
+      summary: Publish reviewed tourism content without changing POI activation (OIDC/RBAC)
+      responses:
+        '200': { description: Published version }
+        '401': { description: Authentication required }
+        '403': { description: Reviewer or administrator role required }
+        '409': { description: Stale version or invalid workflow state }
+  /api/v1/admin/pois/{poiId}/content/revert:
+    post:
+      summary: Create a new draft from a prior revision (administrator only)
+      responses:
+        '200': { description: New draft created; not published }
+        '401': { description: Authentication required }
+        '403': { description: Administrator role required }
+        '409': { description: Stale version or invalid workflow state }
+  /api/v1/pois/{poiId}/content:
+    get:
+      summary: Read current tourism content and published photo metadata for an active POI
+      responses:
+        '200': { description: Publicly eligible content; Cache-Control no-store }
+        '404': { description: POI inactive or not found }
+  /api/v1/pois/{poiId}/media/{assetId}/content:
+    get:
+      summary: Stream bytes of a published photo through the backend
+      responses:
+        '200': { description: Published image bytes; no direct object-store URL }
+        '404': { description: Photo unpublished, POI inactive or not found }
   /api/v1/places/{id}:
     get:
       summary: Get point of interest
@@ -57,6 +114,25 @@ paths:
         '504': { $ref: '#/components/responses/RoutingProviderTimeout' }
 components:
   schemas:
+    PoiTourismDraftRequest:
+      type: object
+      required: [expectedVersion, content, reason]
+      properties:
+        expectedVersion: { type: integer, format: int64, minimum: 0 }
+        reason: { type: string, minLength: 1, maxLength: 1000 }
+        content:
+          type: object
+          required: [interestingFacts, recommendations]
+          properties:
+            summary: { type: string, maxLength: 500 }
+            description: { type: string, maxLength: 12000 }
+            history: { type: string, maxLength: 12000 }
+            significance: { type: string, maxLength: 8000 }
+            visitorExperience: { type: string, maxLength: 8000 }
+            interestingFacts: { type: array, maxItems: 20, items: { type: string, maxLength: 1000 } }
+            recommendations: { type: array, maxItems: 20, items: { type: string, maxLength: 1000 } }
+            practicalInfo: { type: string, maxLength: 6000 }
+            officialUrl: { type: string, format: uri, description: Absolute HTTPS URL without embedded credentials. }
     RoutePoint:
       type: object
       required: [latitude, longitude]

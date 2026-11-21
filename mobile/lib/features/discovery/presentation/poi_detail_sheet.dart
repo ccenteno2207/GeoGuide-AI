@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../domain/discovery_poi.dart';
 import 'poi_presentation.dart';
 import 'poi_operational_info_section.dart';
+import 'poi_tourism_content_section.dart';
 import 'poi_thumbnail.dart';
 import 'poi_ui_language.dart';
 
@@ -11,10 +12,12 @@ class PoiDetailSheet extends StatelessWidget {
     super.key,
     required this.poi,
     this.loadOperationalInfo,
+    this.loadTourismContent,
   });
 
   final DiscoveryPoi poi;
   final PoiOperationalInfoLoader? loadOperationalInfo;
+  final PoiTourismContentLoader? loadTourismContent;
 
   @override
   Widget build(BuildContext context) {
@@ -83,6 +86,10 @@ class PoiDetailSheet extends StatelessWidget {
                 PoiOperationalInfoSection(
                   poiId: poi.id,
                   load: loadOperationalInfo,
+                ),
+                PoiTourismContentSection(
+                  poiId: poi.id,
+                  load: loadTourismContent,
                 ),
                 if (poi.sourceLabel case final source?
                     when source.trim().isNotEmpty) ...[

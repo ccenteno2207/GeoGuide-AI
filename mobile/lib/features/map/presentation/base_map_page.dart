@@ -26,6 +26,8 @@ import '../../discovery/presentation/poi_preview_sheet.dart';
 import '../../discovery/presentation/poi_detail_sheet.dart';
 import '../../discovery/presentation/poi_operational_info_section.dart'
     show PoiOperationalInfoLoader;
+import '../../discovery/presentation/poi_tourism_content_section.dart'
+    show PoiTourismContentLoader;
 import '../../discovery/presentation/discovery_filter_sheet.dart';
 import '../../discovery/presentation/poi_result_card.dart';
 import '../../discovery/presentation/poi_result_filter.dart';
@@ -63,6 +65,7 @@ class BaseMapPage extends StatefulWidget {
     this.offlineDiscovery,
     this.searchDestinations,
     this.loadPoiOperationalInfo,
+    this.loadPoiTourismContent,
     this.locationClock,
   });
 
@@ -73,6 +76,7 @@ class BaseMapPage extends StatefulWidget {
   final OfflineDiscovery? offlineDiscovery;
   final SearchDestinations? searchDestinations;
   final PoiOperationalInfoLoader? loadPoiOperationalInfo;
+  final PoiTourismContentLoader? loadPoiTourismContent;
   final DateTime Function()? locationClock;
 
   @override
@@ -1194,6 +1198,7 @@ class _BaseMapPageState extends State<BaseMapPage> with WidgetsBindingObserver {
       builder: (_) => PoiDetailSheet(
         poi: poi,
         loadOperationalInfo: widget.loadPoiOperationalInfo,
+        loadTourismContent: widget.loadPoiTourismContent,
       ),
     );
   }

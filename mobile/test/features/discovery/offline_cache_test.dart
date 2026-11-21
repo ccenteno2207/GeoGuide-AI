@@ -313,6 +313,22 @@ void main() {
       expect(stored.toString(), isNot(contains('/media/primary')));
     },
   );
+  test(
+    'tourism summary and media references are excluded from offline snapshots',
+    () {
+      const codec = SnapshotCodec();
+      final response = envelope();
+      ((response['results'] as List).single as Map)['tourismSummary'] =
+          'Online-only tourism text';
+      ((response['results'] as List).single as Map)['primaryMediaUrl'] =
+          'https://example.test/private/photo';
+      final decoded = codec.fromEnvelope(response, query(), captured);
+      final encoded = utf8.decode(codec.encode(decoded));
+      expect(decoded.pois.single.tourismSummary, isNull);
+      expect(encoded, isNot(contains('Online-only tourism text')));
+      expect(encoded, isNot(contains('primaryMediaUrl')));
+    },
+  );
   test('late consent cannot renew expired online response', () async {
     final app = OfflineDiscovery(
       source: Source(),

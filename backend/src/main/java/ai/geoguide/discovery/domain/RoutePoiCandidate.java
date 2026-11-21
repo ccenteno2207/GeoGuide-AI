@@ -15,16 +15,22 @@ public record RoutePoiCandidate(
         double routeProgress,
         String description,
         ProvenanceSummary provenance,
-        String primaryMediaPath) {
+        String primaryMediaPath,
+        String tourismSummary) {
 
     public RoutePoiCandidate(PoiId poiId, String name, Category category, GeoPoint location,
             boolean active, double distanceToRouteMeters, double routeProgress) {
-        this(poiId, name, category, location, active, distanceToRouteMeters, routeProgress, null, null, null);
+        this(poiId, name, category, location, active, distanceToRouteMeters, routeProgress, null, null, null, null);
     }
 
     public RoutePoiCandidate(PoiId poiId,String name,Category category,GeoPoint location,boolean active,
             double distanceToRouteMeters,double routeProgress,String description,ProvenanceSummary provenance){
-        this(poiId,name,category,location,active,distanceToRouteMeters,routeProgress,description,provenance,null);
+        this(poiId,name,category,location,active,distanceToRouteMeters,routeProgress,description,provenance,null,null);
+    }
+
+    public RoutePoiCandidate(PoiId poiId,String name,Category category,GeoPoint location,boolean active,
+            double distanceToRouteMeters,double routeProgress,String description,ProvenanceSummary provenance,String primaryMediaPath){
+        this(poiId,name,category,location,active,distanceToRouteMeters,routeProgress,description,provenance,primaryMediaPath,null);
     }
 
     public RoutePoiCandidate {
@@ -42,5 +48,6 @@ public record RoutePoiCandidate(
             throw new IllegalArgumentException("routeProgress must be between 0 and 1");
         }
         description = description == null || description.isBlank() ? null : description.trim();
+        tourismSummary = tourismSummary == null || tourismSummary.isBlank() ? null : tourismSummary.trim();
     }
 }

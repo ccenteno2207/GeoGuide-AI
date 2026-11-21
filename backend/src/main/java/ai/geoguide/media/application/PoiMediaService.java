@@ -38,8 +38,13 @@ public class PoiMediaService {
     }
 
     public Asset upload(UUID poiId, MultipartFile file, String author, String sourceUrl, String actor) {
+        return upload(poiId, file, author, sourceUrl, "", actor);
+    }
+
+    public Asset upload(UUID poiId, MultipartFile file, String author, String sourceUrl, String altText, String actor) {
         if (file == null || file.isEmpty() || file.getSize() > maxBytes) throw new IllegalArgumentException("Image is empty or exceeds the configured size limit.");
         if (blank(author) || blank(sourceUrl)) throw new IllegalArgumentException("Image author and source reference are required.");
+        if (altText != null && altText.length() > 500) throw new IllegalArgumentException("Alternative text is too long.");
         try {
             byte[] input = file.getBytes();
             String mime = detectMime(input);
@@ -53,7 +58,8 @@ public class PoiMediaService {
             ObjectStorageProvider.StoredObject stored = storage.storePrivate(id, mime, safeBytes.length, new ByteArrayInputStream(safeBytes));
             try {
                 return repository.create(new Asset(id,poiId,stored.opaqueObjectKey(),mime,stored.sha256(),stored.sizeBytes(),
-                        image.getWidth(),image.getHeight(),author.trim(),sourceUrl.trim(),null,null,null,"UNVERIFIED","DRAFT",false,0),actor);
+                        image.getWidth(),image.getHeight(),author.trim(),sourceUrl.trim(),null,null,null,"UNVERIFIED","DRAFT",false,0,
+                        altText == null ? "" : altText.strip(),0),actor);
             } catch (RuntimeException exception) {
                 storage.deletePrivate(stored.opaqueObjectKey());
                 throw exception;

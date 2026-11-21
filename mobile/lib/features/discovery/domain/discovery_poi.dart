@@ -27,6 +27,7 @@ class DiscoveryPoi {
     this.sourceUrl,
     this.attribution,
     this.primaryMediaUrl,
+    this.tourismSummary,
   });
 
   final String id;
@@ -41,4 +42,5 @@ class DiscoveryPoi {
   final String? sourceUrl;
   final String? attribution;
   final String? primaryMediaUrl;
+  final String? tourismSummary;
 }

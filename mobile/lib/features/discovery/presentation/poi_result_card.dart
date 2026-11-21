@@ -46,7 +46,7 @@ class PoiResultCard extends StatelessWidget {
               ),
           ],
         ),
-        if (poi.description case final description?
+        if ((poi.tourismSummary ?? poi.description) case final description?
             when description.trim().isNotEmpty)
           Text(description, maxLines: 2, overflow: TextOverflow.ellipsis),
         if (poi.sourceLabel case final source? when source.trim().isNotEmpty)
