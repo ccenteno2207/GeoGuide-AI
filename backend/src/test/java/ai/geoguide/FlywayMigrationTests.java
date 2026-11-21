@@ -59,4 +59,25 @@ class FlywayMigrationTests {
                 .doesNotContain("UPDATE geo.destination SET location")
                 .doesNotContain("UPDATE geo.point_of_interest SET location");
     }
+
+    @Test
+    void v014AddsOwnedPhotoProvenanceWithoutChangingExistingMediaOrPublishingIt() throws IOException {
+        var migration = new ClassPathResource("db/migration/V014__support_owned_poi_photographs.sql");
+        assertThat(migration.exists()).isTrue();
+        String sql = migration.getContentAsString(StandardCharsets.UTF_8);
+        assertThat(sql).contains("ALTER COLUMN source_url DROP NOT NULL")
+                .contains("source_type VARCHAR(24) NOT NULL DEFAULT 'EXTERNAL_SOURCE'")
+                .contains("capture_date DATE")
+                .contains("capture_place VARCHAR(300)")
+                .contains("author_declaration_version VARCHAR(40)")
+                .contains("author_declaration_by VARCHAR(200)")
+                .contains("author_declaration_at TIMESTAMPTZ")
+                .contains("source_type = 'EXTERNAL_SOURCE' AND source_url IS NOT NULL")
+                .contains("source_type = 'OWN_PHOTOGRAPH' AND source_url IS NULL")
+                .contains("author_declaration_asset_version IS NOT NULL")
+                .doesNotContain("DROP TABLE")
+                .doesNotContain("DELETE FROM")
+                .doesNotContain("UPDATE media.poi_asset SET review_state")
+                .doesNotContain("UPDATE geo.point_of_interest");
+    }
 }

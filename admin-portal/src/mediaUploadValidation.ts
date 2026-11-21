@@ -1,4 +1,5 @@
-export type MediaUploadFields = 'poiId' | 'file' | 'author' | 'sourceUrl' | 'altText';
+export type MediaSourceType = 'OWN_PHOTOGRAPH' | 'EXTERNAL_SOURCE';
+export type MediaUploadFields = 'poiId' | 'file' | 'author' | 'sourceUrl' | 'altText' | 'authorDeclaration' | 'license' | 'attribution' | 'captureDate' | 'capturePlace';
 export type MediaUploadErrors = Partial<Record<MediaUploadFields, string>>;
 export type MediaRightsFields = 'license' | 'attribution' | 'evidenceReference' | 'reason';
 export type MediaRightsErrors = Partial<Record<MediaRightsFields, string>>;
@@ -13,7 +14,8 @@ export function validMediaSource(value: string): boolean {
 }
 
 export function validateMediaUpload(input: {
-  poiId: string; file: File | null; author: string; sourceUrl: string; altText: string; maxBytes?: number;
+  poiId: string; file: File | null; author: string; sourceUrl: string; altText: string; sourceType?: MediaSourceType;
+  authorDeclarationAccepted?: boolean; license?: string; attribution?: string; captureDate?: string; capturePlace?: string; maxBytes?: number;
 }): MediaUploadErrors {
   const errors: MediaUploadErrors = {};
   if (!input.poiId) errors.poiId = 'Selecciona primero el POI al que pertenece la fotografía.';
@@ -22,9 +24,18 @@ export function validateMediaUpload(input: {
   else if (input.file.size > (input.maxBytes ?? DEFAULT_MEDIA_MAX_BYTES)) errors.file = `El archivo supera el tamaño máximo permitido de ${formatByteLimit(input.maxBytes ?? DEFAULT_MEDIA_MAX_BYTES)}.`;
   if (!input.author.trim()) errors.author = 'Indica el autor o titular de derechos.';
   if (input.author.length > 200) errors.author = 'El autor no debe superar 200 caracteres.';
-  if (!input.sourceUrl.trim()) errors.sourceUrl = 'Indica una fuente HTTPS válida.';
-  else if (!validMediaSource(input.sourceUrl.trim())) errors.sourceUrl = 'Usa una URL HTTPS completa con dominio, por ejemplo: https://archivo.example/foto/123.';
-  else if (input.sourceUrl.length > 2048) errors.sourceUrl = 'La referencia de fuente no debe superar 2048 caracteres.';
+  const sourceType = input.sourceType ?? 'EXTERNAL_SOURCE';
+  if (sourceType === 'EXTERNAL_SOURCE') {
+    if (!input.sourceUrl.trim()) errors.sourceUrl = 'Indica una fuente HTTPS válida.';
+    else if (!validMediaSource(input.sourceUrl.trim())) errors.sourceUrl = 'Usa una URL HTTPS completa con dominio, por ejemplo: https://archivo.example/foto/123.';
+    else if (input.sourceUrl.length > 2048) errors.sourceUrl = 'La referencia de fuente no debe superar 2048 caracteres.';
+  } else {
+    if (!input.authorDeclarationAccepted) errors.authorDeclaration = 'Confirma que eres el autor o que tienes autorización suficiente para incorporar y publicar la fotografía en Rutea.';
+    if (!(input.license ?? '').trim()) errors.license = 'Indica la licencia o autorización de uso realmente concedida.';
+    if (!(input.attribution ?? '').trim()) errors.attribution = 'Indica la atribución real del autor o titular de derechos.';
+    if (input.captureDate && !/^\d{4}-\d{2}-\d{2}$/.test(input.captureDate)) errors.captureDate = 'Usa el formato AAAA-MM-DD.';
+    if ((input.capturePlace ?? '').length > 300) errors.capturePlace = 'El lugar de captura no debe superar 300 caracteres.';
+  }
   // Private drafts may be uploaded without alt text; publication still requires it.
   if (input.altText.length > 500) errors.altText = 'El texto alternativo no debe superar 500 caracteres.';
   return errors;

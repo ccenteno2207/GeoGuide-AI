@@ -86,9 +86,17 @@ public class PoiMediaController {
     @PostMapping(value="/api/v1/admin/pois/{poiId}/media",consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('ADMINISTRATOR','EDITOR')")
     public MediaAssetResponse upload(@PathVariable UUID poiId,@RequestParam("file") MultipartFile file,
-            @RequestParam String author,@RequestParam String sourceUrl,
-            @RequestParam(defaultValue = "") String altText,Authentication auth){
-        return toResponse(service.upload(poiId,file,author,sourceUrl,altText,actor(auth)));
+            @RequestParam String author,@RequestParam(required=false) String sourceUrl,
+            @RequestParam(defaultValue = "") String altText,
+            @RequestParam(defaultValue = "EXTERNAL_SOURCE") String sourceType,
+            @RequestParam(defaultValue = "false") boolean authorDeclarationAccepted,
+            @RequestParam(defaultValue = "") String captureDate,
+            @RequestParam(defaultValue = "") String capturePlace,
+            @RequestParam(defaultValue = "") String license,
+            @RequestParam(defaultValue = "") String attribution,
+            @RequestParam(defaultValue = "") String rightsEvidenceReference,Authentication auth){
+        return toResponse(service.upload(poiId,file,author,sourceUrl,altText,actor(auth),sourceType,
+                authorDeclarationAccepted,captureDate,capturePlace,license,attribution,rightsEvidenceReference));
     }
 
     @PatchMapping("/api/v1/admin/media/{id}/presentation")
@@ -136,10 +144,13 @@ public class PoiMediaController {
                     .cacheControl(CacheControl.noStore()).header("X-Content-Type-Options","nosniff").body(bytes);
         }
     }
-    static MediaAssetResponse toResponse(Asset asset){return new MediaAssetResponse(asset.id(),asset.poiId(),asset.contentType(),asset.sha256(),asset.sizeBytes(),asset.width(),asset.height(),asset.author(),asset.sourceUrl(),asset.license(),asset.attribution(),asset.rightsEvidence(),asset.rightsStatus(),asset.state(),asset.primary(),asset.version(),asset.altText(),asset.displayOrder());}
+    static MediaAssetResponse toResponse(Asset asset){return new MediaAssetResponse(asset.id(),asset.poiId(),asset.contentType(),asset.sha256(),asset.sizeBytes(),asset.width(),asset.height(),asset.author(),asset.sourceUrl(),asset.license(),asset.attribution(),asset.rightsEvidence(),asset.rightsStatus(),asset.state(),asset.primary(),asset.version(),asset.altText(),asset.displayOrder(),asset.sourceType(),asset.captureDate(),asset.capturePlace(),asset.authorDeclarationAccepted(),asset.authorDeclarationVersion(),asset.authorDeclarationBy(),asset.authorDeclarationAt(),asset.authorDeclarationText());}
     public record MediaAssetResponse(UUID id,UUID poiId,String contentType,String sha256,long sizeBytes,int width,int height,
             String author,String sourceUrl,String license,String attribution,String evidenceReference,String rightsStatus,
-            String state,boolean primary,long version,String altText,int displayOrder){}
+            String state,boolean primary,long version,String altText,int displayOrder,String sourceType,
+            java.time.LocalDate captureDate,String capturePlace,boolean authorDeclarationAccepted,
+            String authorDeclarationVersion,String authorDeclarationBy,java.time.Instant authorDeclarationAt,
+            String authorDeclarationText){}
     public record PublicMediaResponse(UUID id,String path,String altText,boolean primary,int displayOrder,String author,String attribution,String license){}
     public record RightsRequest(@PositiveOrZero long expectedVersion,@NotBlank String license,@NotBlank String attribution,
             @NotBlank String evidenceReference,@NotBlank String reason){}

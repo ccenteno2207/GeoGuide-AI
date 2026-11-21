@@ -29,6 +29,22 @@ describe('private POI media upload client validation', () => {
       .toEqual({});
   });
 
+  it('accepts a declared own photograph without a public source URL and requires its rights details', () => {
+    const base = { poiId: 'poi-1', file: validFile(), author: 'María Pérez', sourceUrl: '', altText: '', sourceType: 'OWN_PHOTOGRAPH' as const };
+    expect(validateMediaUpload(base)).toMatchObject({
+      authorDeclaration: expect.stringContaining('Confirma'),
+      license: expect.stringContaining('licencia'),
+      attribution: expect.stringContaining('atribución'),
+    });
+    expect(validateMediaUpload({ ...base, authorDeclarationAccepted: true, license: 'Autorización escrita para Rutea', attribution: '© María Pérez', captureDate: '2026-11-20', capturePlace: 'Obrajillo' })).toEqual({});
+    expect(validateMediaUpload({ ...base, authorDeclarationAccepted: true, license: 'Autorización', attribution: '© María', captureDate: '20/11/2026' })).toMatchObject({ captureDate: 'Usa el formato AAAA-MM-DD.' });
+  });
+
+  it('continues to require HTTPS source references for external images', () => {
+    expect(validateMediaUpload({ poiId: 'poi-1', file: validFile(), author: 'María', sourceUrl: '', altText: '', sourceType: 'EXTERNAL_SOURCE' }))
+      .toMatchObject({ sourceUrl: 'Indica una fuente HTTPS válida.' });
+  });
+
   it('requires auditable rights fields before marking rights documented', async () => {
     const { validateMediaRights } = await import('./mediaUploadValidation');
     expect(validateMediaRights({ license: '', attribution: '', evidenceReference: '', reason: '' })).toMatchObject({
