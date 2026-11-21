@@ -33,6 +33,21 @@ La evidencia ADMIN-POI-04.2 registró `photos=[]` en la API pública y que los c
 | MinIO/API end-to-end | NOT_RUN; no se cargó una fotografía a una instancia. |
 | Fotos reales/publicación | NOT_EXECUTED; no se copiaron originales ni se modificó contenido real. |
 
+## Validación aislada previa al PR — 2026-11-21
+
+| Criterio | Estado | Evidencia |
+|---|---|---|
+| `ADMIN_POI_04_3_FLYWAY_V014` | BLOCKED | En Windows no están disponibles Docker, PostgreSQL ni MinIO. La VM de integración se comprobó solo en lectura; tenía Docker y recursos disponibles, pero no se creó ningún contenedor porque la instrucción prohíbe alterarla. V014 no se ejecutó. |
+| `ADMIN_POI_04_3_POSTGIS` | BLOCKED | `mvn verify` omitió 26 pruebas PostGIS al no encontrar Docker en Windows. La VM no se usó para ejecutar pruebas. |
+| `ADMIN_POI_04_3_MINIO_E2E` | BLOCKED | No hay MinIO local y no se levantó ni modificó infraestructura. Ningún objeto temporal fue creado. |
+| `ADMIN_POI_04_3_API_UPLOAD` | NOT_RUN | Pasan las pruebas unitarias del servicio y controlador; no se envió una carga multipart autenticada contra backend + PostgreSQL + MinIO reales. |
+| `ADMIN_POI_04_3_EXTERNAL_COMPATIBILITY` | NOT_RUN | El wrapper y la validación HTTPS externa tienen cobertura unitaria; no se probó la migración sobre filas externas históricas en PostgreSQL. |
+| `ADMIN_POI_04_3_OPENAPI_VALIDATION` | BLOCKED | Redocly CLI 1.34.5 parseó el documento, pero el lint integral no pasa: rama actual 109 errores / 81 advertencias; `origin/main` sin cambios 112 errores / 81 advertencias. Los hallazgos restantes pertenecen a esquemas preexistentes fuera de las líneas modificadas; las nuevas líneas multipart y `AdminMediaAsset` no aparecen en el reporte tras corregir su sintaxis OAS 3.1. Esto no es un PASS integral. |
+| `ADMIN_POI_04_3_AUTHENTICATED_PORTAL_SMOKE` | NOT_RUN | Sin backend/MinIO aislados ni sesión de prueba disponible; no se probó el portal desplegado ni se alteró la VM. |
+| `ADMIN_POI_04_3_READY_FOR_PR` | BLOCKED | Continúan pendientes Flyway/PostGIS, compatibilidad de filas reales previas, API + MinIO E2E y smoke autenticado; no corresponde publicar la rama. |
+
+La comprobación de solo lectura de la VM confirmó Docker disponible y capacidad de recursos, pero no habilitó su uso: crear el stack temporal cambiaría esa VM y queda fuera de las restricciones de esta validación.
+
 ## Límites
 
 La declaración no es evidencia jurídica independiente. Antes de publicar debe documentarse y revisarse la autorización/licencia aplicable. La migración se debe ejecutar y verificar en un entorno aislado antes de proponer integración. No se autoriza aquí push, PR, merge, despliegue, publicación real ni instalación móvil.
@@ -43,5 +58,5 @@ ADMIN_POI_04_3_EXTERNAL_SOURCE = PRESERVED
 ADMIN_POI_04_3_RIGHTS_REVIEW = REQUIRED_BEFORE_PUBLICATION
 ADMIN_POI_04_3_MEDIA_COMPATIBILITY = AUTOMATED_TESTS_PASS_POSTGIS_PENDING
 ADMIN_POI_04_3_TESTS = PASS_WITH_POSTGIS_SKIPPED
-ADMIN_POI_04_3_READY_FOR_INTEGRATION = NO
+ADMIN_POI_04_3_READY_FOR_PR = BLOCKED
 ```

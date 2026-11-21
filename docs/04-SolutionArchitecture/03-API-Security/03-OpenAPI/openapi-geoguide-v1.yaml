@@ -595,7 +595,7 @@ paths:
                 sourceType: { type: string, enum: [OWN_PHOTOGRAPH, EXTERNAL_SOURCE] }
                 sourceUrl: { type: string, format: uri, maxLength: 2048, description: Required HTTPS source URL only for EXTERNAL_SOURCE; omit for OWN_PHOTOGRAPH }
                 altText: { type: string, maxLength: 500, description: Optional on private draft upload; required before publication }
-                authorDeclarationAccepted: { type: string, enum: ['true', 'false'], description: Multipart form value; OWN_PHOTOGRAPH requires the literal true; records the authenticated actor, time, and declaration version but does not verify rights by itself }
+                authorDeclarationAccepted: { type: string, enum: ['true', 'false'], description: "Multipart form value; OWN_PHOTOGRAPH requires the literal true; records the authenticated actor, time, and declaration version but does not verify rights by itself" }
                 captureDate: { type: string, format: date, description: Optional actual capture date }
                 capturePlace: { type: string, maxLength: 300, description: Optional known capture place }
                 license: { type: string, maxLength: 240, description: Actual license or authorization; not inferred }
@@ -1334,18 +1334,18 @@ components:
         width: { type: integer }
         height: { type: integer }
         author: { type: string }
-        sourceUrl: { type: string, nullable: true }
+        sourceUrl: { type: [string, 'null'] }
         sourceType: { type: string, enum: [OWN_PHOTOGRAPH, EXTERNAL_SOURCE] }
-        captureDate: { type: string, format: date, nullable: true }
-        capturePlace: { type: string, nullable: true }
+        captureDate: { type: [string, 'null'], format: date }
+        capturePlace: { type: [string, 'null'] }
         authorDeclarationAccepted: { type: boolean }
-        authorDeclarationVersion: { type: string, nullable: true }
-        authorDeclarationBy: { type: string, nullable: true }
-        authorDeclarationAt: { type: string, format: date-time, nullable: true }
-        authorDeclarationText: { type: string, nullable: true }
-        license: { type: string, nullable: true }
-        attribution: { type: string, nullable: true }
-        evidenceReference: { type: string, nullable: true }
+        authorDeclarationVersion: { type: [string, 'null'] }
+        authorDeclarationBy: { type: [string, 'null'] }
+        authorDeclarationAt: { type: [string, 'null'], format: date-time }
+        authorDeclarationText: { type: [string, 'null'] }
+        license: { type: [string, 'null'] }
+        attribution: { type: [string, 'null'] }
+        evidenceReference: { type: [string, 'null'] }
         rightsStatus: { type: string, enum: [UNVERIFIED, DOCUMENTED] }
         state: { type: string, enum: [DRAFT, PENDING_REVIEW, PUBLISHED, REJECTED, WITHDRAWN] }
         primary: { type: boolean }
