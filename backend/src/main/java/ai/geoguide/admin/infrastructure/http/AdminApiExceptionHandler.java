@@ -2,6 +2,7 @@ package ai.geoguide.admin.infrastructure.http;
 
 import ai.geoguide.admin.domain.EditorialWorkflowConflictException;
 import ai.geoguide.admin.domain.EditorialCategoryMismatchException;
+import ai.geoguide.admin.infrastructure.persistence.PoiOperationalInfoRepository.OperationalInfoConflictException;
 import ai.geoguide.media.domain.PoiMediaWorkflowConflictException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -38,6 +39,11 @@ public class AdminApiExceptionHandler {
             DataIntegrityViolationException.class})
     ResponseEntity<ProblemDetail> conflict(RuntimeException ignored) {
         return problem(HttpStatus.CONFLICT, "El recurso cambió o la transición solicitada no está permitida.");
+    }
+
+    @ExceptionHandler(OperationalInfoConflictException.class)
+    ResponseEntity<ProblemDetail> operationalInfoConflict(OperationalInfoConflictException ignored) {
+        return problem(HttpStatus.CONFLICT, "La información operativa cambió. Recargue la ficha y vuelva a guardar.");
     }
 
     private ResponseEntity<ProblemDetail> problem(HttpStatus status, String detail) {

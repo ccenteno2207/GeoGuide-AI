@@ -614,6 +614,56 @@ paths:
             image/jpeg: { schema: { type: string, format: binary } }
             image/png: { schema: { type: string, format: binary } }
         '404': { description: No existe media publicada para el POI }
+  /pois/{poiId}/operational-info:
+    get:
+      summary: Consultar horarios y actividades vigentes de un POI activo
+      parameters:
+        - in: path
+          name: poiId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200':
+          description: Datos operativos actuales; no se incluyen en snapshots offline
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PoiOperationalInfo' }
+        '404': { description: POI inexistente o inactivo }
+  /admin/pois/{poiId}/operational-info:
+    get:
+      summary: Leer horarios y actividades para edición administrativa
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: poiId
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        '200': { description: Información operativa y versión vigente, incluso si el POI está desactivado }
+        '401': { description: Token OIDC requerido }
+        '403': { description: Rol administrativo requerido }
+        '404': { description: POI inexistente }
+    put:
+      summary: Actualizar información operativa sin transición editorial ni desactivación
+      description: Requiere rol ADMINISTRATOR o EDITOR; registra actor, versión y auditoría, pero no exige aprobación geográfica, de identidad ni editorial.
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: poiId
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PoiOperationalInfoUpdate' }
+      responses:
+        '200': { description: Información guardada; la activación editorial del POI no cambia }
+        '400': { description: Horario o actividad inválida }
+        '401': { description: Token OIDC requerido }
+        '403': { description: Rol editor o administrador requerido }
+        '404': { description: POI inexistente }
+        '409': { description: Versión obsoleta; recargue la información }
   /places/{id}:
     get:
       summary: Obtener detalle de un punto de interés
@@ -683,6 +733,63 @@ paths:
         '504': { description: Timeout del proveedor de rutas }
 components:
   schemas:
+    PoiOperationalInfo:
+      type: object
+      required: [timeZone, weeklyHours, items, version]
+      properties:
+        timeZone: { type: string, example: America/Lima }
+        weeklyHours:
+          type: array
+          minItems: 7
+          maxItems: 7
+          items: { $ref: '#/components/schemas/PoiDailyHours' }
+        items:
+          type: array
+          maxItems: 50
+          items: { $ref: '#/components/schemas/PoiOperationalItem' }
+        version: { type: integer, format: int64, minimum: 0 }
+    PoiDailyHours:
+      type: object
+      required: [day, periods]
+      properties:
+        day: { type: string, enum: [MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY] }
+        periods:
+          type: array
+          items: { $ref: '#/components/schemas/PoiTimeRange' }
+    PoiTimeRange:
+      type: object
+      required: [opensAt, closesAt]
+      properties:
+        opensAt: { type: string, format: time }
+        closesAt: { type: string, format: time }
+    PoiOperationalItem:
+      type: object
+      required: [id, type, title, active]
+      properties:
+        id: { type: string, format: uuid }
+        type: { type: string, enum: [PERFORMANCE, PROMOTION] }
+        title: { type: string, maxLength: 200 }
+        description: { type: string, nullable: true, maxLength: 2000 }
+        scheduleText: { type: string, nullable: true, maxLength: 500 }
+        validFrom: { type: string, format: date, nullable: true }
+        validUntil: { type: string, format: date, nullable: true }
+        terms: { type: string, nullable: true, maxLength: 1000 }
+        active: { type: boolean }
+    PoiOperationalInfoUpdate:
+      type: object
+      required: [expectedVersion, timeZone, weeklyHours, items]
+      properties:
+        expectedVersion: { type: integer, format: int64, minimum: 0 }
+        timeZone: { type: string, example: America/Lima }
+        weeklyHours:
+          type: array
+          minItems: 7
+          maxItems: 7
+          items: { $ref: '#/components/schemas/PoiDailyHours' }
+        items:
+          type: array
+          maxItems: 50
+          items: { $ref: '#/components/schemas/PoiOperationalItem' }
     DestinationSearchRequest:
       type: object
       required: [query]

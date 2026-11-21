@@ -2,13 +2,19 @@ import 'package:flutter/material.dart';
 
 import '../domain/discovery_poi.dart';
 import 'poi_presentation.dart';
+import 'poi_operational_info_section.dart';
 import 'poi_thumbnail.dart';
 import 'poi_ui_language.dart';
 
 class PoiDetailSheet extends StatelessWidget {
-  const PoiDetailSheet({super.key, required this.poi});
+  const PoiDetailSheet({
+    super.key,
+    required this.poi,
+    this.loadOperationalInfo,
+  });
 
   final DiscoveryPoi poi;
+  final PoiOperationalInfoLoader? loadOperationalInfo;
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +80,10 @@ class PoiDetailSheet extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(reason, locale: spanishPoiUiLocale),
                 ],
+                PoiOperationalInfoSection(
+                  poiId: poi.id,
+                  load: loadOperationalInfo,
+                ),
                 if (poi.sourceLabel case final source?
                     when source.trim().isNotEmpty) ...[
                   const SizedBox(height: 16),

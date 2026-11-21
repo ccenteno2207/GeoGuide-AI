@@ -13,6 +13,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 import org.springframework.mock.web.MockHttpServletRequest;
 import ai.geoguide.admin.infrastructure.http.AdminCatalogController;
+import ai.geoguide.admin.infrastructure.http.PoiOperationalInfoController;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 class AdminSecurityConfigurationTests {
@@ -91,5 +92,19 @@ class AdminSecurityConfigurationTests {
                 AdminCatalogController.ReopenRequest.class, org.springframework.security.core.Authentication.class)
                 .getAnnotation(PreAuthorize.class);
         assertThat(reopen.value()).isEqualTo("hasRole('ADMINISTRATOR')");
+    }
+
+    @Test
+    void operationalInfoEditsAllowEditorOrAdministratorWithoutEditorialReviewAndPublicReadHasNoAdminRole() throws Exception {
+        var update = PoiOperationalInfoController.class.getMethod("update", java.util.UUID.class,
+                PoiOperationalInfoController.UpdateRequest.class, org.springframework.security.core.Authentication.class)
+                .getAnnotation(PreAuthorize.class);
+        var adminRead = PoiOperationalInfoController.class.getMethod("getAdmin", java.util.UUID.class)
+                .getAnnotation(PreAuthorize.class);
+        var publicRead = PoiOperationalInfoController.class.getMethod("getPublic", java.util.UUID.class)
+                .getAnnotation(PreAuthorize.class);
+        assertThat(update.value()).isEqualTo("hasAnyRole('ADMINISTRATOR','EDITOR')");
+        assertThat(adminRead.value()).isEqualTo("hasAnyRole('ADMINISTRATOR','EDITOR','REVIEWER')");
+        assertThat(publicRead).isNull();
     }
 }
